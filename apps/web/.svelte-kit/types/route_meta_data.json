@@ -17,6 +17,12 @@
 	"/api/projects/[id]/files": [
 		"src/routes/api/projects/[id]/files/+server.ts"
 	],
+	"/api/projects/[id]/files/[...path]": [
+		"src/routes/api/projects/[id]/files/[...path]/+server.ts"
+	],
+	"/api/projects/[id]/multiplayer": [
+		"src/routes/api/projects/[id]/multiplayer/+server.ts"
+	],
 	"/auth/login": [
 		"src/routes/+layout.ts",
 		"src/routes/+layout.server.ts"

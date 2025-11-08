@@ -2,6 +2,7 @@
 	import FileTree from './FileTree.svelte';
 	import CodeEditor from './CodeEditor.svelte';
 	import GamePreview from './GamePreview.svelte';
+	import AIChatPanel from './AIChatPanel.svelte';
 	import { fileTree } from '$lib/stores/fileTree.svelte';
 	import { onMount } from 'svelte';
 	import { ArrowLeft, Play } from 'lucide-svelte';
@@ -15,6 +16,16 @@
 	let gamePreview: GamePreview;
 	let showNewFileDialog = $state(false);
 	let newFilePath = $state('');
+
+	// Diff mode state for AI file edits
+	let diffMode = $state(false);
+	let originalContent = $state('');
+	let pendingApproval: {
+		path: string;
+		approvalId: string;
+		onApprove: () => void;
+		onDeny: () => void;
+	} | null = $state(null);
 
 	onMount(() => {
 		// Build file tree from paths
@@ -139,6 +150,106 @@
 			alert('Failed to create file: ' + (error instanceof Error ? error.message : String(error)));
 		}
 	}
+
+	/**
+	 * Refresh file content from database
+	 */
+	async function refreshFile(path: string) {
+		try {
+			const encodedPath = path.slice(1); // Remove leading slash for API
+			const response = await fetch(`/api/projects/${data.project.id}/files/${encodedPath}`);
+
+			if (!response.ok) {
+				throw new Error('Failed to refresh file');
+			}
+
+			const { content } = await response.json();
+			const file = filesMap.get(path);
+			if (file) {
+				file.content = content;
+				file.dirty = false;
+				saveStatus = 'saved';
+			}
+		} catch (error) {
+			console.error('Error refreshing file:', error);
+		}
+	}
+
+	/**
+	 * Handle file edit request from AI chat
+	 */
+	function handleFileEditRequest(
+		path: string,
+		oldContent: string,
+		newContent: string,
+		approvalId: string,
+		onApprove: () => void,
+		onDeny: () => void
+	) {
+		console.log('📝 File edit requested:', path);
+		console.log('🔍 Debug - oldContent length:', oldContent.length);
+		console.log('🔍 Debug - newContent length:', newContent.length);
+
+		// Switch to the file if not already open
+		if (activeFilePath !== path) {
+			openFile(path);
+		}
+
+		// Update file content to new version (for diff view)
+		const file = filesMap.get(path);
+		if (file) {
+			originalContent = oldContent;
+			file.content = newContent;
+			diffMode = true;
+			pendingApproval = { path, approvalId, onApprove, onDeny };
+			console.log('✅ Diff mode enabled:', { diffMode, originalContent: originalContent.slice(0, 50), pendingApproval });
+		} else {
+			console.error('❌ File not found in filesMap:', path);
+		}
+	}
+
+	/**
+	 * Handle file edit completion (after approval or auto-apply)
+	 */
+	async function handleFileEditCompleted(path: string) {
+		console.log('✅ File edit completed:', path);
+		await refreshFile(path);
+		diffMode = false;
+		pendingApproval = null;
+	}
+
+	/**
+	 * Approve diff changes
+	 */
+	function handleApproveDiff() {
+		if (pendingApproval) {
+			console.log('✅ User approved changes');
+			pendingApproval.onApprove();
+			diffMode = false;
+			// Refresh file after approval to ensure DB is synced
+			if (activeFilePath) {
+				refreshFile(activeFilePath);
+			}
+			pendingApproval = null;
+		}
+	}
+
+	/**
+	 * Deny diff changes
+	 */
+	function handleDenyDiff() {
+		if (pendingApproval) {
+			console.log('❌ User denied changes');
+			pendingApproval.onDeny();
+			// Restore original content
+			const file = filesMap.get(pendingApproval.path);
+			if (file) {
+				file.content = originalContent;
+			}
+			diffMode = false;
+			pendingApproval = null;
+		}
+	}
 </script>
 
 <div class="flex h-screen flex-col">
@@ -177,7 +288,7 @@
 	<!-- Editor Layout -->
 	<Resizable.PaneGroup direction="horizontal" class="flex-1">
 		<!-- File Tree Sidebar -->
-		<Resizable.Pane defaultSize={20} minSize={15} maxSize={35}>
+		<Resizable.Pane defaultSize={15} minSize={10} maxSize={25}>
 			<div class="h-full overflow-auto border-r bg-muted/30">
 				<FileTree onFileClick={openFile} onNewFile={handleNewFile} />
 			</div>
@@ -186,7 +297,7 @@
 		<Resizable.Handle withHandle />
 
 		<!-- Code Editor -->
-		<Resizable.Pane defaultSize={50} minSize={30}>
+		<Resizable.Pane defaultSize={35} minSize={25} maxSize={60}>
 			<div class="flex h-full flex-col overflow-hidden">
 				{#if activeFilePath && filesMap.has(activeFilePath)}
 					{@const file = filesMap.get(activeFilePath)!}
@@ -205,6 +316,10 @@
 							onChange={(newContent) => {
 								if (activeFilePath) onContentChange(activeFilePath, newContent);
 							}}
+							bind:diffMode
+							{originalContent}
+							onApproveDiff={handleApproveDiff}
+							onDenyDiff={handleDenyDiff}
 						/>
 					</div>
 				{:else}
@@ -220,17 +335,33 @@
 
 		<Resizable.Handle withHandle />
 
-		<!-- Game Preview -->
-		<Resizable.Pane defaultSize={30} minSize={25} maxSize={50}>
-			<div class="h-full">
-				<GamePreview
-					bind:this={gamePreview}
-					projectId={data.project.id}
-					onRunGame={async () => {
-						// Optional: Add any post-run callbacks here
-					}}
-				/>
-			</div>
+		<!-- Right Panel: Game Preview + AI Chat -->
+		<Resizable.Pane defaultSize={50} minSize={30}>
+			<Resizable.PaneGroup direction="vertical">
+				<!-- Game Preview -->
+				<Resizable.Pane defaultSize={60} minSize={30}>
+					<div class="h-full">
+						<GamePreview
+							bind:this={gamePreview}
+							projectId={data.project.id}
+							onRunGame={async () => {
+								// Optional: Add any post-run callbacks here
+							}}
+						/>
+					</div>
+				</Resizable.Pane>
+
+				<Resizable.Handle withHandle />
+
+				<!-- AI Chat Panel -->
+				<Resizable.Pane defaultSize={40} minSize={20} maxSize={70}>
+					<AIChatPanel
+						projectId={data.project.id}
+						onFileEditRequested={handleFileEditRequest}
+						onFileEditCompleted={handleFileEditCompleted}
+					/>
+				</Resizable.Pane>
+			</Resizable.PaneGroup>
 		</Resizable.Pane>
 	</Resizable.PaneGroup>
 

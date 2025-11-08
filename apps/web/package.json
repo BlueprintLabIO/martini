@@ -58,19 +58,26 @@
 		"vitest-browser-svelte": "^1.1.0"
 	},
 	"dependencies": {
-		"@ai-sdk/openai": "^2.0.64",
+		"@ai-sdk/deepseek": "2.0.0-beta.32",
+		"@ai-sdk/openai": "3.0.0-beta.55",
+		"@ai-sdk/svelte": "4.0.0-beta.94",
 		"@codemirror/lang-javascript": "^6.2.4",
+		"@codemirror/merge": "^6.11.2",
 		"@codemirror/state": "^6.5.2",
 		"@codemirror/view": "^6.38.6",
 		"@supabase/ssr": "^0.7.0",
 		"@supabase/supabase-js": "^2.80.0",
-		"ai": "^5.0.89",
+		"ai": "6.0.0-beta.94",
 		"codemirror": "^6.0.2",
+		"diff": "^8.0.2",
 		"drizzle-orm": "^0.44.7",
 		"esbuild": "^0.25.12",
 		"lucide-svelte": "^0.553.0",
 		"postgres": "^3.4.7",
 		"shadcn-svelte": "^1.0.10",
+		"simple-peer": "^9.11.1",
+		"socket.io-client": "^4.8.1",
+		"vite-plugin-node-polyfills": "^0.24.0",
 		"zod": "^4.1.12"
 	}
 }
