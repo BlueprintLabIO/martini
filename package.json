@@ -1,0 +1,24 @@
+{
+	"name": "martini",
+	"private": true,
+	"version": "0.0.1",
+	"packageManager": "pnpm@10.19.0",
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"dev": "turbo run dev",
+		"build": "turbo run build",
+		"test": "turbo run test",
+		"clean": "turbo run clean && rm -rf node_modules"
+	},
+	"pnpm": {
+		"overrides": {
+			"@lucide/svelte": "npm:lucide-svelte@^0.553.0"
+		}
+	},
+	"devDependencies": {
+		"turbo": "^2.0.0",
+		"typescript": "^5.3.3"
+	}
+}

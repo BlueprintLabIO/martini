@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:;">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+    #game {
+      width: 100%;
+      height: 100%;
+    }
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+
+  <!-- Phaser 3 from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+
+  <!-- Sandbox Runtime -->
+  <script>
+    // Global state
+    let phaserGame = null;
+    let phaserScene = null;
+    let userCodeLoaded = false;
+
+    // gameAPI - Safe wrapper for user code
+    const gameAPI = {
+      _frameCounter: 0,
+      _randomSeed: Date.now(),
+      _entities: [],
+      _sounds: [],
+      _maxEntities: 1000,
+      _maxSounds: 10,
+
+      // Seeded random for deterministic multiplayer
+      random() {
+        const x = Math.sin(this._randomSeed++) * 10000;
+        return x - Math.floor(x);
+      },
+
+      // Get current frame number
+      getFrame() {
+        return this._frameCounter;
+      },
+
+      // Logging (sends to parent)
+      log(message) {
+        parent.postMessage({
+          type: 'LOG',
+          payload: { message: String(message), frame: this._frameCounter }
+        }, '*');
+      },
+
+      // Heartbeat for watchdog
+      _sendHeartbeat() {
+        parent.postMessage({ type: 'HEARTBEAT' }, '*');
+      }
+    };
+
+    // Phaser configuration
+    const config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      parent: 'game',
+      backgroundColor: '#2d2d2d',
+      scale: {
+        mode: Phaser.Scale.WIDTH_CONTROLS_HEIGHT,
+        autoCenter: Phaser.Scale.CENTER_HORIZONTALLY
+      },
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 300 },
+          debug: false
+        }
+      },
+      scene: {
+        preload: preloadFn,
+        create: createFn,
+        update: updateFn
+      }
+    };
+
+    function preloadFn() {
+      phaserScene = this;
+      // Assets would be preloaded here
+    }
+
+    function createFn() {
+      phaserScene = this;
+
+      // Listen for code loading from parent
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'LOAD_CODE') {
+          try {
+            // Clear previous game state if reloading
+            if (userCodeLoaded && phaserScene) {
+              phaserScene.scene.restart();
+            }
+
+            // Execute user's bundled code
+            const userCode = event.data.payload.code;
+            eval(userCode);
+
+            userCodeLoaded = true;
+
+            // Notify parent that game is ready
+            parent.postMessage({ type: 'READY' }, '*');
+          } catch (error) {
+            parent.postMessage({
+              type: 'ERROR',
+              payload: {
+                message: error.message,
+                stack: error.stack,
+                line: error.lineNumber,
+                column: error.columnNumber
+              }
+            }, '*');
+          }
+        }
+      });
+
+      // Notify parent that iframe is ready
+      parent.postMessage({ type: 'READY' }, '*');
+    }
+
+    function updateFn(time, delta) {
+      // Increment frame counter
+      gameAPI._frameCounter++;
+    }
+
+    // Global error handler
+    window.addEventListener('error', (event) => {
+      parent.postMessage({
+        type: 'ERROR',
+        payload: {
+          message: event.message,
+          filename: event.filename,
+          line: event.lineno,
+          column: event.colno,
+          stack: event.error?.stack
+        }
+      }, '*');
+      event.preventDefault();
+    });
+
+    // Block dangerous APIs for security
+    try {
+      delete window.fetch;
+      delete window.XMLHttpRequest;
+      delete window.WebSocket;
+      delete window.localStorage;
+      delete window.sessionStorage;
+      delete window.indexedDB;
+      delete window.open;
+    } catch (e) {
+      // Some browsers may prevent deletion
+      console.warn('Could not delete some APIs');
+    }
+
+    // Start heartbeat (every second)
+    setInterval(() => gameAPI._sendHeartbeat(), 1000);
+
+    // Initialize Phaser game
+    phaserGame = new Phaser.Game(config);
+  </script>
+</body>
+</html>
