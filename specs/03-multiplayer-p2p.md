@@ -2,14 +2,26 @@
 
 ## Overview
 
-WebRTC-based peer-to-peer multiplayer supporting 2-6 players with input synchronization. One player acts as authoritative host, others connect as clients.
+WebRTC-based peer-to-peer multiplayer supporting unlimited players (performance warning at 4+) with input synchronization. One player acts as authoritative host, others connect as clients.
 
 **Key Features:**
 - Zero server compute cost (P2P)
 - Sub-100ms latency (local network)
 - Input sync model (efficient bandwidth)
-- 6-character share codes
+- 6-digit share codes (UPPERCASE letters/numbers, no I/O/0/1)
 - Upgrade path to dedicated servers
+- Anonymous access (no auth required for MVP)
+
+**MVP Scope:**
+- ✅ Anonymous P2P connections
+- ✅ SimplePeer WebRTC wrapper
+- ✅ Free Google STUN servers
+- ✅ Socket.IO signaling server
+- ✅ gameAPI.multiplayer abstraction layer
+- ⏳ JWT validation (future)
+- ⏳ TURN server (future - for ~20% of strict NAT cases)
+- ⏳ Host migration (future)
+- ⏳ Delta compression (future)
 
 ---
 
@@ -155,7 +167,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['https://yourdomain.com'],
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
     methods: ['GET', 'POST']
   }
 });
@@ -193,10 +205,12 @@ io.on('connection', (socket) => {
       return;
     }
 
-    if (room.clients.size >= 5) {
-      // Max 6 players (1 host + 5 clients)
-      socket.emit('error', { message: 'Room is full' });
-      return;
+    // No hard limit, but warn at 4+ players
+    if (room.clients.size >= 3) {
+      // 4+ total players (1 host + 3+ clients)
+      socket.emit('warning', {
+        message: `${room.clients.size + 1} players connected. Performance may degrade with many players.`
+      });
     }
 
     room.clients.add(socket.id);

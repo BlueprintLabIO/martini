@@ -23,13 +23,10 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 				}
 			});
 
-	// Get the session - this will be available to all pages
-	const {
-		data: { session }
-	} = await supabase.auth.getSession();
-
+	// Use the validated session from +layout.server.ts (which uses safeGetSession)
+	// No need to call getSession() again - that would bypass validation
 	return {
 		supabase,
-		session
+		session: data.session
 	};
 };

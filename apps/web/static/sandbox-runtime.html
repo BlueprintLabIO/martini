@@ -14,11 +14,15 @@
     #game {
       width: 100%;
       height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     canvas {
       display: block;
       max-width: 100%;
-      height: auto;
+      max-height: 100%;
+      object-fit: contain;
     }
   </style>
 </head>
@@ -77,8 +81,8 @@
       parent: 'game',
       backgroundColor: '#2d2d2d',
       scale: {
-        mode: Phaser.Scale.WIDTH_CONTROLS_HEIGHT,
-        autoCenter: Phaser.Scale.CENTER_HORIZONTALLY
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
       },
       physics: {
         default: 'arcade',
@@ -158,14 +162,21 @@
     });
 
     // Block dangerous APIs for security
+    // BUT allow WebRTC APIs for multiplayer (RTCPeerConnection, RTCDataChannel, etc.)
     try {
       delete window.fetch;
       delete window.XMLHttpRequest;
-      delete window.WebSocket;
+      delete window.WebSocket; // Blocked - only parent window should connect to signaling
       delete window.localStorage;
       delete window.sessionStorage;
       delete window.indexedDB;
       delete window.open;
+
+      // WebRTC APIs are ALLOWED:
+      // - window.RTCPeerConnection (peer connections)
+      // - window.RTCDataChannel (data channels)
+      // - window.RTCSessionDescription (SDP)
+      // - window.RTCIceCandidate (ICE candidates)
     } catch (e) {
       // Some browsers may prevent deletion
       console.warn('Could not delete some APIs');

@@ -11,7 +11,9 @@
 	onMount(() => {
 		const {
 			data: { subscription }
-		} = data.supabase.auth.onAuthStateChange(() => {
+		} = data.supabase.auth.onAuthStateChange((_event, _session) => {
+			// We don't use _session here as it's unvalidated
+			// Instead, we invalidate to reload data from safeGetSession()
 			invalidate('supabase:auth');
 		});
 

@@ -11,6 +11,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw redirect(303, '/auth/login');
 	}
 
+	// Validate projectId is a UUID (reject static files like .js, .map)
+	const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(params.projectId)) {
+		throw error(404, 'Invalid project ID');
+	}
+
 	// Fetch project
 	const [project] = await db
 		.select()

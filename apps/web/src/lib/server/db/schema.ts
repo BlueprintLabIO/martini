@@ -4,6 +4,8 @@ export const projects = pgTable('projects', {
 	id: uuid('id').defaultRandom().primaryKey(),
 	userId: uuid('user_id').notNull(), // References auth.users.id from Supabase
 	name: text('name').notNull(),
+	shareCode: text('share_code').unique(), // 6-digit multiplayer share code
+	state: text('state').default('draft'), // 'draft' | 'published'
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull()
 });

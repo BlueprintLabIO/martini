@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { AlertCircle, Terminal } from 'lucide-svelte';
+	import MultiplayerManager from '$lib/multiplayer/MultiplayerManager.svelte';
 
 	let { projectId, onRunGame } = $props<{
 		projectId: string;
@@ -14,6 +15,12 @@
 	let isReady = $state(false);
 	let isLoading = $state(false);
 	let lastHeartbeat = $state(Date.now());
+
+	function handleMultiplayerError(error: Error) {
+		gameError = {
+			message: `Multiplayer Error: ${error.message}`
+		};
+	}
 
 	onMount(() => {
 		// Listen for messages from iframe
@@ -129,6 +136,11 @@
 				Console {#if consoleLogs.length > 0}({consoleLogs.length}){/if}
 			</button>
 		</div>
+	</div>
+
+	<!-- Multiplayer Controls -->
+	<div class="border-b bg-background px-4 py-2">
+		<MultiplayerManager {projectId} {iframeEl} onError={handleMultiplayerError} />
 	</div>
 
 	<!-- Game Container -->

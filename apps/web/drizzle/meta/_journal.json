@@ -15,6 +15,13 @@
       "when": 1762570017486,
       "tag": "0001_dry_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762591710941,
+      "tag": "0002_remarkable_doctor_octopus",
+      "breakpoints": true
     }
   ]
 }
