@@ -1,0 +1,812 @@
+
+> @martini/web@0.0.1 dev /Users/yao/blueprint/martini/apps/web
+> vite dev
+
+[2m5:39:05 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+Port 5173 is in use, trying another one...
+
+  [32m[1mVITE[22m v7.2.2[39m  [2mready in [0m[1m2735[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[31m(!) Failed to run dependency scan. Skipping dependency pre-bundling. Error: The following dependencies are imported but could not be resolved:
+
+  [36m@lucide/svelte/icons/file[31m [37m[2m(imported by /Users/yao/blueprint/martini/apps/web/src/lib/components/ui/tree-view/tree-view-file.svelte?id=0)[22m[31m
+  [36m@lucide/svelte/icons/folder[31m [37m[2m(imported by /Users/yao/blueprint/martini/apps/web/src/lib/components/ui/tree-view/tree-view-folder.svelte?id=0)[22m[31m
+  [36m@lucide/svelte/icons/folder-open[31m [37m[2m(imported by /Users/yao/blueprint/martini/apps/web/src/lib/components/ui/tree-view/tree-view-folder.svelte?id=0)[22m[31m
+
+Are they installed?
+    at file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:32522:33
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:34730:15[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m5:39:09 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:272:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[2m5:39:09 PM[22m [31m[1m[vite][22m[39m [31m[2m(ssr)[22m[39m [31mError when evaluating SSR module /src/routes/editor/[projectId]/+page.svelte: Cannot find module '@lucide/svelte/icons/file' imported from '/Users/yao/blueprint/martini/apps/web/src/lib/components/ui/tree-view/tree-view-file.svelte'[39m
+      at fetchModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:34599:34)
+      at RunnableDevEnvironment.fetchModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:35445:10)
+      at fetchModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:35403:17)
+      at handleInvoke (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:26453:27)
+      at EventEmitter.listenerForInvokeHandler (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:26508:19)
+      at EventEmitter.emit (node:events:524:28)
+      at EventEmitter.emit (node:domain:489:12)
+      at Object.send (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:15688:39)
+      at Object.invoke (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:535:31)
+      at Object.invoke (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:584:31)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[500] GET /editor/a6abfc74-27dd-41fd-817f-0f8f90283e9b[0m
+Error: Cannot find module '@lucide/svelte/icons/file' imported from '/Users/yao/blueprint/martini/apps/web/src/lib/components/ui/tree-view/tree-view-file.svelte'
+    at fetchModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:34599:34)
+    at RunnableDevEnvironment.fetchModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:35445:10)
+    at fetchModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:35403:17)
+    at handleInvoke (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:26453:27)
+    at EventEmitter.listenerForInvokeHandler (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:26508:19)
+    at EventEmitter.emit (node:events:524:28)
+    at EventEmitter.emit (node:domain:489:12)
+    at Object.send (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:15688:39)
+    at Object.invoke (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:535:31)
+    at Object.invoke (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:584:31)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:39:23 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/components/ui/tree-view/tree-view-file.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:39:37 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/components/ui/tree-view/tree-view-folder.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:39:49 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/components/ui/context-menu/context-menu-checkbox-item.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:39:58 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/components/ui/context-menu/context-menu-radio-item.svelte[22m
+[36m5:39:59 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:71:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m5:39:59 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:272:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m5:39:59 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:71:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[2m5:40:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33mlucide-svelte, @supabase/ssr, codemirror, @codemirror/lang-javascript, @codemirror/state, paneforge, tailwind-merge, bits-ui[32m[39m
+[2m5:40:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m5:40:03 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:272:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m5:40:03 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:71:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:40:06 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:40:06 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/components/ui/context-menu/context-menu-sub-trigger.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:41:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:41:21 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mpackage.json[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:41:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:41:32 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mpackage.json[22m
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mFile not found: /Users/yao/blueprint/martini/apps/web/src/src/scenes/BootScene.js[0m [1m[35m[plugin virtual-files][0m
+
+    src/src/main.js:2:26:
+[37m      2 │ import { BootScene } from [32m'./scenes/BootScene.js'[37m;
+        ╵                           [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mFile not found: /Users/yao/blueprint/martini/apps/web/src/src/scenes/GameScene.js[0m [1m[35m[plugin virtual-files][0m
+
+    src/src/main.js:4:26:
+[37m      4 │ import { GameScene } from [32m'./scenes/GameScene.js'[37m;
+        ╵                           [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mFile not found: /Users/yao/blueprint/martini/apps/web/src/src/scenes/PreloadScene.js[0m [1m[35m[plugin virtual-files][0m
+
+    src/src/main.js:3:29:
+[37m      3 │ import { PreloadScene } from [32m'./scenes/PreloadScene.js'[37m;
+        ╵                              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+Bundling error: Error: Build failed with 3 errors:
+src/src/main.js:2:26: ERROR: [plugin: virtual-files] File not found: /Users/yao/blueprint/martini/apps/web/src/src/scenes/BootScene.js
+src/src/main.js:3:29: ERROR: [plugin: virtual-files] File not found: /Users/yao/blueprint/martini/apps/web/src/src/scenes/PreloadScene.js
+src/src/main.js:4:26: ERROR: [plugin: virtual-files] File not found: /Users/yao/blueprint/martini/apps/web/src/src/scenes/GameScene.js
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:50:41 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:50:41 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/bundle/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:50:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:50:49 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/bundle/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:50:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:50:57 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/bundle/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:55:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:55:38 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:58:01 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:58:01 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x4)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:58:41 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x5)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:58:41 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x6)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:02:10 PM[22m [36m[1m[vite][22m[39m [32m.env changed, restarting server...[39m
+[2m6:02:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+[2m6:02:11 PM[22m [36m[1m[vite][22m[39m server restarted.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m6:02:16 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:272:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m6:02:21 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:71:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m6:02:22 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:272:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m6:02:22 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:71:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:06:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:06:23 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:06:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:06:30 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x4)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:07:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:07:04 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mpackage.json[22m
