@@ -3,10 +3,16 @@
 	import { AlertCircle, Terminal, Zap, ZapOff } from 'lucide-svelte';
 	import MultiplayerManager from '$lib/multiplayer/MultiplayerManager.svelte';
 
-	let { projectId, onRunGame, hotReloadEnabled = $bindable(true) } = $props<{
+	let {
+		projectId,
+		onRunGame,
+		hotReloadEnabled = $bindable(true),
+		onSendErrorToAI
+	} = $props<{
 		projectId: string;
 		onRunGame: () => Promise<void>;
 		hotReloadEnabled?: boolean;
+		onSendErrorToAI?: (errorMessage: string) => void;
 	}>();
 
 	let iframeEl = $state<HTMLIFrameElement | null>(null);
@@ -144,6 +150,13 @@
 		consoleLogs = [];
 	}
 
+	function handleFixWithAI() {
+		if (!gameError || !onSendErrorToAI) return;
+
+		// Send simple error message to AI (AI will use readFile to investigate)
+		onSendErrorToAI(`Fix this bug:\n\nGame Error: ${gameError.message}`);
+	}
+
 	// Expose runGame to parent
 	export { runGame };
 </script>
@@ -195,10 +208,6 @@
 					<AlertCircle class="mx-auto mb-4 h-12 w-12 text-red-500" />
 					<h4 class="mb-2 text-lg font-bold text-white">Game Error</h4>
 					<p class="mb-4 font-mono text-sm text-red-300">{gameError.message}</p>
-					{#if gameError.stack}
-						<pre
-							class="mb-4 max-h-40 overflow-auto rounded bg-black/50 p-3 text-left text-xs text-gray-400">{gameError.stack}</pre>
-					{/if}
 					<div class="flex gap-2 justify-center">
 						<button
 							onclick={runGame}
@@ -206,6 +215,14 @@
 						>
 							Retry
 						</button>
+						{#if onSendErrorToAI}
+							<button
+								onclick={handleFixWithAI}
+								class="rounded bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700"
+							>
+								🤖 Fix with AI
+							</button>
+						{/if}
 						<button
 							onclick={() => (gameError = null)}
 							class="rounded bg-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-700"

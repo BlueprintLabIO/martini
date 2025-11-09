@@ -578,20 +578,28 @@
         }
 
         // If game already exists, restart the scene
-        if (userCodeLoaded && phaserGame) {
+        if (phaserGame) {
           console.log('🔄 [Iframe] HOT RELOAD: Restarting scene...');
           phaserGame.scene.scenes[0].scene.restart();
           console.log('📤 [Iframe] Sending READY (hot reload)');
-          // Scene is ready after restart - notify parent
           parent.postMessage({ type: 'READY' }, '*');
-          return; // Early return - game already initialized
+          return; // Early return - game already exists
         }
 
-        console.log('🆕 [Iframe] FIRST LOAD: Setting userCodeLoaded = true');
+        // FIRST LOAD: Create Phaser.Game now that user code is ready
+        console.log('🆕 [Iframe] FIRST LOAD: Creating Phaser.Game with user code...');
+        phaserGame = new Phaser.Game(createPhaserConfig());
+        console.log('✅ [Iframe] Phaser.Game created');
+        console.log('✅ [Iframe] Scene started automatically (user code ready!)');
+
+        // Start heartbeat now that game is running
+        setInterval(() => gameAPI._sendHeartbeat(), 1000);
+
         userCodeLoaded = true;
 
-        // First load: READY message will be sent after Phaser.Game is created (see line ~690)
-        console.log('⏳ [Iframe] Waiting for Phaser.Game creation to send READY...');
+        // First load complete - notify parent that game is ready
+        console.log('📤 [Iframe] Sending READY (first load complete)');
+        parent.postMessage({ type: 'READY' }, '*');
 
       } catch (error) {
         console.error('❌ [Iframe] Error loading user code:', error);
@@ -667,42 +675,39 @@
 
     // === Initialize ===
 
-    // Phaser configuration
-    const config = {
-      type: Phaser.AUTO,
-      width: 800,
-      height: 600,
-      parent: 'game',
-      backgroundColor: '#2d2d2d',
-      scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
-      },
-      physics: {
-        default: 'arcade',
-        arcade: {
-          gravity: { y: 300 },
-          debug: false
+    /**
+     * Create Phaser game configuration
+     * Returns config object with wrapper scene that delegates to user scenes
+     */
+    function createPhaserConfig() {
+      return {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        parent: 'game',
+        backgroundColor: '#2d2d2d',
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH
+        },
+        physics: {
+          default: 'arcade',
+          arcade: {
+            gravity: { y: 300 },
+            debug: false
+          }
+        },
+        scene: {
+          preload: preloadFn,
+          create: createFn,
+          update: updateFn
         }
-      },
-      scene: {
-        preload: preloadFn,
-        create: createFn,
-        update: updateFn
-      }
-    };
+      };
+    }
 
-    // Start heartbeat
-    setInterval(() => gameAPI._sendHeartbeat(), 1000);
-
-    // Create Phaser game
-    console.log('🎮 [Iframe] Creating Phaser.Game instance...');
-    phaserGame = new Phaser.Game(config);
-    console.log('✅ [Iframe] Phaser.Game created');
-
-    // Notify parent that sandbox is ready
-    console.log('📤 [Iframe] Sending READY (sandbox initialized)');
-    parent.postMessage({ type: 'READY' }, '*');
+    console.log('🏁 [Iframe] Sandbox initialized, waiting for user code via LOAD_CODE message...');
+    // Don't create Phaser.Game yet - wait for user code to load first
+    // Game will be created inside loadUserCode() when user scenes are ready
   </script>
 </body>
 </html>

@@ -10,6 +10,248 @@
  * Source: Automatically synced from docs/CUSTOM_API.md
  */
 
+/**
+ * Scene architecture deep dive - explains the `this` context confusion
+ */
+export const SCENE_ARCHITECTURE_DOCS = `
+## 🏗️ Scene Architecture Deep Dive
+
+### Understanding the Scene State Pattern
+
+Our platform uses a unique pattern where \`this\` in scene methods refers to a
+**persistent state object**, not the scene definition object. This is often
+confusing for developers coming from traditional OOP.
+
+### How It Works
+
+\`\`\`javascript
+// The scene definition object
+window.scenes = {
+  GameScene: {  // ← This is the definition object
+    create(scene) {
+      // Inside here, \`this\` is NOT the GameScene object above
+      // Instead, \`this\` is a persistent state object that survives scene switches
+      this.score = 0;  // ✅ Stored on state object
+      this.player = scene.add.sprite(100, 100);  // ✅ Accessible in update()
+    }
+  }
+}
+\`\`\`
+
+### Why This Pattern?
+
+This design provides:
+1. **Persistent state** - Data survives across scene restarts
+2. **Hot reload friendly** - State persists when code changes
+3. **Simplified state management** - No manual save/load needed
+
+### The "Helper Method" Problem
+
+\`\`\`javascript
+// ❌ THIS WILL NOT WORK
+window.scenes = {
+  Game: {
+    create(scene) {
+      this.createPlatforms(scene);  // ❌ ERROR!
+    },
+
+    createPlatforms(scene) {
+      // This method is on the definition object,
+      // NOT on the state object (\`this\`)
+    }
+  }
+}
+\`\`\`
+
+**Why it fails:** When you call \`this.createPlatforms()\`, JavaScript looks for
+\`createPlatforms\` on the state object (the current value of \`this\`), not on
+the scene definition object.
+
+### Solutions
+
+#### Solution 1: Local Functions (Recommended for Setup)
+
+\`\`\`javascript
+window.scenes = {
+  Game: {
+    create(scene) {
+      // Define helper as local function
+      const createPlatforms = (scene) => {
+        const platforms = [
+          { x: 400, y: 550, width: 600, height: 20 },
+          { x: 200, y: 450, width: 200, height: 20 }
+        ];
+        platforms.forEach(p => {
+          scene.add.rectangle(p.x, p.y, p.width, p.height, 0x8b4513);
+        });
+      };
+
+      createPlatforms(scene);  // ✅ Works!
+
+      // Other local helpers
+      const createEnemies = (scene) => { /* ... */ };
+      const createUI = (scene) => { /* ... */ };
+
+      createEnemies(scene);
+      createUI(scene);
+    }
+  }
+}
+\`\`\`
+
+**Use when:**
+- Helper is only used once in \`create()\`
+- Logic is specific to scene setup
+- You don't need to access it from \`update()\`
+
+#### Solution 2: Store on State Object (Recommended for Shared Logic)
+
+\`\`\`javascript
+window.scenes = {
+  Game: {
+    create(scene) {
+      // Store method on state object
+      this.checkCollision = (obj1, obj2) => {
+        return Phaser.Math.Distance.Between(
+          obj1.x, obj1.y,
+          obj2.x, obj2.y
+        ) < 30;
+      };
+
+      this.resetPlayer = (scene) => {
+        this.player.x = 100;
+        this.player.y = 100;
+        this.lives -= 1;
+      };
+
+      // Now these work!
+      this.player = scene.add.sprite(100, 100);
+      this.enemy = scene.add.sprite(300, 100);
+    },
+
+    update(scene) {
+      // Can call methods stored on \`this\`
+      if (this.checkCollision(this.player, this.enemy)) {
+        this.resetPlayer(scene);  // ✅ Works!
+      }
+    }
+  }
+}
+\`\`\`
+
+**Use when:**
+- Method is shared between \`create()\` and \`update()\`
+- Logic accesses scene state (\`this.score\`, \`this.player\`, etc.)
+- You need the method to persist across scene restarts
+
+### Decision Guide
+
+\`\`\`
+┌─────────────────────────────────────────────┐
+│ Need a helper function?                     │
+└──────────────┬──────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────────┐
+│ Will it be used in update() or other methods?│
+└──────────────┬────────────────┬──────────────┘
+               │                │
+            NO │                │ YES
+               ▼                ▼
+    ┌──────────────────┐  ┌────────────────────┐
+    │ Local Function   │  │ Store on \`this\`    │
+    │                  │  │                    │
+    │ const helper =   │  │ this.helper =      │
+    │   () => {}       │  │   () => {}         │
+    └──────────────────┘  └────────────────────┘
+\`\`\`
+
+### Common Patterns
+
+#### Pattern 1: Setup Helpers (Local Functions)
+
+\`\`\`javascript
+create(scene) {
+  const createLevel = (levelNum) => {
+    // Generate platforms, enemies, collectibles
+  };
+
+  const setupPhysics = () => {
+    scene.physics.world.setBounds(0, 0, 800, 600);
+  };
+
+  const loadAssets = () => {
+    // Any runtime asset loading
+  };
+
+  createLevel(1);
+  setupPhysics();
+  loadAssets();
+}
+\`\`\`
+
+#### Pattern 2: Game Logic Methods (On \`this\`)
+
+\`\`\`javascript
+create(scene) {
+  // Store game logic methods
+  this.spawnEnemy = (x, y) => {
+    const enemy = scene.add.sprite(x, y, 'enemy');
+    this.enemies.push(enemy);
+    return enemy;
+  };
+
+  this.collectCoin = (coin) => {
+    coin.destroy();
+    this.score += 10;
+    this.scoreText.setText(\`Score: \${this.score}\`);
+  };
+
+  // Initialize state
+  this.score = 0;
+  this.enemies = [];
+  this.scoreText = scene.add.text(10, 10, 'Score: 0');
+}
+
+update(scene) {
+  // Can call methods defined in create()
+  if (gameAPI.getFrame() % 120 === 0) {
+    this.spawnEnemy(700, 100);
+  }
+}
+\`\`\`
+
+#### Pattern 3: Extracting to Separate Files (Advanced)
+
+\`\`\`javascript
+// /src/utils/levelBuilder.js
+export function createPlatforms(scene, platformData) {
+  platformData.forEach(p => {
+    scene.add.rectangle(p.x, p.y, p.width, p.height, 0x8b4513);
+  });
+}
+
+// /src/main.js
+import { createPlatforms } from '/src/utils/levelBuilder.js';
+
+window.scenes = {
+  Game: {
+    create(scene) {
+      const platforms = [
+        { x: 400, y: 550, width: 600, height: 20 }
+      ];
+      createPlatforms(scene, platforms);  // ✅ Works!
+    }
+  }
+}
+\`\`\`
+
+**Use when:**
+- Logic is reusable across multiple scenes
+- File is getting large (> 500 lines)
+- Helper is complex and deserves its own file
+`;
+
 export const CUSTOM_API_DOCS = `# Game Platform Custom API
 
 **Complete reference for building games on our platform**
@@ -65,6 +307,10 @@ window.scenes = {
 ---
 
 ## Scene System
+
+${SCENE_ARCHITECTURE_DOCS}
+
+---
 
 ### Defining Scenes
 

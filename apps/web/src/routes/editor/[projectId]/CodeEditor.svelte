@@ -2,9 +2,12 @@
 	import { onMount } from 'svelte';
 	import { EditorView, basicSetup } from 'codemirror';
 	import { javascript } from '@codemirror/lang-javascript';
+	import { html } from '@codemirror/lang-html';
+	import { markdown } from '@codemirror/lang-markdown';
 	import { EditorState } from '@codemirror/state';
 	import { MergeView } from '@codemirror/merge';
 	import { Check, X } from 'lucide-svelte';
+	import type { Extension } from '@codemirror/state';
 
 	let {
 		content = $bindable(''),
@@ -12,7 +15,8 @@
 		diffMode = $bindable(false),
 		originalContent = '',
 		onApproveDiff,
-		onDenyDiff
+		onDenyDiff,
+		filePath = ''
 	} = $props<{
 		content: string;
 		onChange?: (newContent: string) => void;
@@ -20,11 +24,33 @@
 		originalContent?: string;
 		onApproveDiff?: () => void;
 		onDenyDiff?: () => void;
+		filePath?: string;
 	}>();
 
 	let editorEl: HTMLDivElement;
 	let view: EditorView | null = null;
 	let mergeView: MergeView | null = null;
+
+	/**
+	 * Get language extension based on file path
+	 */
+	function getLanguageExtension(): Extension {
+		const ext = filePath.split('.').pop()?.toLowerCase() || '';
+
+		switch (ext) {
+			case 'html':
+				return html();
+			case 'md':
+			case 'markdown':
+				return markdown();
+			case 'js':
+			case 'ts':
+			case 'jsx':
+			case 'tsx':
+			default:
+				return javascript({ typescript: ext === 'ts' || ext === 'tsx', jsx: ext === 'jsx' || ext === 'tsx' });
+		}
+	}
 
 	onMount(() => {
 		initializeEditor();
@@ -35,16 +61,18 @@
 	});
 
 	function initializeEditor() {
+		const langExtension = getLanguageExtension();
+
 		if (diffMode && originalContent) {
 			// Create merge view
 			mergeView = new MergeView({
 				a: {
 					doc: originalContent,
-					extensions: [basicSetup, javascript(), EditorState.readOnly.of(true)]
+					extensions: [basicSetup, langExtension, EditorState.readOnly.of(true)]
 				},
 				b: {
 					doc: content,
-					extensions: [basicSetup, javascript(), EditorState.readOnly.of(true)]
+					extensions: [basicSetup, langExtension, EditorState.readOnly.of(true)]
 				},
 				parent: editorEl,
 				highlightChanges: true,
@@ -57,7 +85,7 @@
 					doc: content,
 					extensions: [
 						basicSetup,
-						javascript(),
+						langExtension,
 						EditorView.updateListener.of((update) => {
 							if (update.docChanged) {
 								const newContent = update.state.doc.toString();
