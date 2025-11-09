@@ -48,7 +48,7 @@ export const DELETE: RequestHandler = async ({ params, locals, cookies }) => {
 			},
 			setAll(cookiesToSet) {
 				cookiesToSet.forEach(({ name, value, options }) => {
-					cookies.set(name, value, options);
+					cookies.set(name, value, { ...options, path: options.path ?? '/' });
 				});
 			}
 		}

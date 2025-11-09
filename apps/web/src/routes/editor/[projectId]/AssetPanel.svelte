@@ -218,6 +218,45 @@
 		alert('Code snippet copied to clipboard!');
 	}
 
+	async function copyStarterAsset(starterPath: string, filename: string) {
+		if (copyingAssets.has(starterPath)) return;
+
+		// Check if already in project
+		if (assets.some((a) => a.filename === filename)) {
+			alert(`"${filename}" is already in your project!`);
+			return;
+		}
+
+		copyingAssets = new Set([...copyingAssets, starterPath]);
+
+		try {
+			const response = await fetch(`/api/projects/${projectId}/assets/copy-starter`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ starterPath })
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.details || error.error || 'Failed to copy asset');
+			}
+
+			const { asset } = await response.json();
+			assets = [...assets, asset];
+
+			// Show success message briefly
+			alert(`✅ Added "${filename}" to your project!`);
+		} catch (error) {
+			alert(`Failed to copy asset: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		} finally {
+			copyingAssets = new Set([...copyingAssets].filter((p) => p !== starterPath));
+		}
+	}
+
+	function isAssetInProject(filename: string): boolean {
+		return assets.some((a) => a.filename === filename);
+	}
+
 	function formatFileSize(bytes: number): string {
 		if (bytes < 1024) return bytes + ' B';
 		if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -385,17 +424,148 @@
 				</Collapsible.Content>
 			</Collapsible.Root>
 
-			<!-- Starter Pack Section (TODO: Phase 2) -->
+			<!-- Starter Pack Section -->
 			<Collapsible.Root bind:open={starterPackOpen} class="mt-4">
 				<Collapsible.Trigger class="flex w-full items-center gap-1 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground">
 					<span class="text-lg transition-transform" class:rotate-90={starterPackOpen}>›</span>
-					📦 Starter Pack (Coming Soon)
+					📦 Starter Pack ({starterAssets.total} assets)
 				</Collapsible.Trigger>
 				<Collapsible.Content>
-					<div class="mt-2">
-						<p class="py-4 text-center text-xs text-muted-foreground">
-							Free sprites and sounds coming soon!
-						</p>
+					<div class="mt-2 space-y-1">
+						{#if isLoadingStarter}
+							<div class="flex items-center justify-center py-4">
+								<div class="h-4 w-4 animate-spin rounded-full border-2 border-purple-600 border-t-transparent"></div>
+							</div>
+						{:else if starterAssets.total === 0}
+							<p class="py-4 text-center text-xs text-muted-foreground">
+								No starter assets found. Make sure the starter-assets bucket is populated.
+							</p>
+						{:else}
+							<!-- Sprite Sheets -->
+							{#if starterAssets.spritesheets.length > 0}
+								<div class="mb-3">
+									<p class="mb-1 text-xs font-medium text-muted-foreground">Sprite Sheets</p>
+									{#each starterAssets.spritesheets as asset (asset.id)}
+										{@const inProject = isAssetInProject(asset.filename)}
+										{@const isCopying = copyingAssets.has(asset.path || '')}
+										<div
+											class="group flex items-center gap-2 rounded border border-transparent bg-muted/50 p-2 hover:border-purple-500/50 hover:bg-muted"
+											class:opacity-50={inProject}
+										>
+											<!-- Thumbnail -->
+											{#if imageLoadErrors.has(asset.id)}
+												<div class="flex h-8 w-8 items-center justify-center rounded border border-border bg-background">
+													<Image class="h-4 w-4 text-purple-500" />
+												</div>
+											{:else}
+												<img
+													src={asset.url}
+													alt={asset.filename}
+													class="h-8 w-8 rounded border border-border object-cover"
+													onerror={() => handleImageError(asset.id)}
+												/>
+											{/if}
+
+											<!-- Info -->
+											<div class="flex-1 min-w-0">
+												<p class="truncate text-xs font-medium">
+													{asset.filename}
+													{#if inProject}
+														<span class="text-green-500">✓</span>
+													{/if}
+												</p>
+												<p class="text-xs text-muted-foreground">
+													{formatFileSize(asset.sizeBytes)}
+												</p>
+											</div>
+
+											<!-- Actions -->
+											<div class="flex gap-1 opacity-0 group-hover:opacity-100">
+												{#if !inProject}
+													<button
+														onclick={() => copyStarterAsset(asset.path || '', asset.filename)}
+														disabled={isCopying}
+														class="rounded p-1 hover:bg-purple-500/10 hover:text-purple-500 disabled:opacity-50"
+														title="Add to project"
+													>
+														{#if isCopying}
+															<div class="h-3 w-3 animate-spin rounded-full border-2 border-purple-600 border-t-transparent"></div>
+														{:else}
+															<Plus class="h-3 w-3" />
+														{/if}
+													</button>
+												{/if}
+												<button
+													onclick={() => copyCodeSnippet(asset)}
+													class="rounded p-1 hover:bg-background"
+													title="Copy code snippet"
+												>
+													<Copy class="h-3 w-3" />
+												</button>
+											</div>
+										</div>
+									{/each}
+								</div>
+							{/if}
+
+							<!-- Sounds -->
+							{#if starterAssets.sounds.length > 0}
+								<div>
+									<p class="mb-1 text-xs font-medium text-muted-foreground">Sounds</p>
+									{#each starterAssets.sounds as asset (asset.id)}
+										{@const inProject = isAssetInProject(asset.filename)}
+										{@const isCopying = copyingAssets.has(asset.path || '')}
+										<div
+											class="group flex items-center gap-2 rounded border border-transparent bg-muted/50 p-2 hover:border-purple-500/50 hover:bg-muted"
+											class:opacity-50={inProject}
+										>
+											<!-- Icon -->
+											<div class="flex h-8 w-8 items-center justify-center rounded border border-border bg-background">
+												<Music class="h-4 w-4 text-purple-500" />
+											</div>
+
+											<!-- Info -->
+											<div class="flex-1 min-w-0">
+												<p class="truncate text-xs font-medium">
+													{asset.filename}
+													{#if inProject}
+														<span class="text-green-500">✓</span>
+													{/if}
+												</p>
+												<p class="text-xs text-muted-foreground">
+													{formatFileSize(asset.sizeBytes)}
+												</p>
+											</div>
+
+											<!-- Actions -->
+											<div class="flex gap-1 opacity-0 group-hover:opacity-100">
+												{#if !inProject}
+													<button
+														onclick={() => copyStarterAsset(asset.path || '', asset.filename)}
+														disabled={isCopying}
+														class="rounded p-1 hover:bg-purple-500/10 hover:text-purple-500 disabled:opacity-50"
+														title="Add to project"
+													>
+														{#if isCopying}
+															<div class="h-3 w-3 animate-spin rounded-full border-2 border-purple-600 border-t-transparent"></div>
+														{:else}
+															<Plus class="h-3 w-3" />
+														{/if}
+													</button>
+												{/if}
+												<button
+													onclick={() => copyCodeSnippet(asset)}
+													class="rounded p-1 hover:bg-background"
+													title="Copy code snippet"
+												>
+													<Copy class="h-3 w-3" />
+												</button>
+											</div>
+										</div>
+									{/each}
+								</div>
+							{/if}
+						{/if}
 					</div>
 				</Collapsible.Content>
 			</Collapsible.Root>

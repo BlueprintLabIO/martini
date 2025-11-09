@@ -3,8 +3,10 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { projects, assets } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
+import { SECRET_SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 
 /**
  * POST /api/projects/[id]/assets/copy-starter
@@ -71,22 +73,26 @@ export const POST: RequestHandler = async ({ params, request, locals, cookies })
 		);
 	}
 
-	const supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+	// Create service role client for downloading from starter-assets (requires elevated permissions)
+	const serviceSupabase = createClient(PUBLIC_SUPABASE_URL, SECRET_SUPABASE_SERVICE_ROLE_KEY);
+
+	// Create authenticated client for uploading to project-assets (uses user's session)
+	const userSupabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 		cookies: {
 			getAll() {
 				return cookies.getAll();
 			},
 			setAll(cookiesToSet) {
 				cookiesToSet.forEach(({ name, value, options }) => {
-					cookies.set(name, value, options);
+					cookies.set(name, value, { ...options, path: options.path ?? '/' });
 				});
 			}
 		}
 	});
 
 	try {
-		// Download the file from starter-assets bucket
-		const { data: downloadData, error: downloadError } = await supabase.storage
+		// Download the file from starter-assets bucket using service role key
+		const { data: downloadData, error: downloadError } = await serviceSupabase.storage
 			.from('starter-assets')
 			.download(starterPath);
 
@@ -119,9 +125,9 @@ export const POST: RequestHandler = async ({ params, request, locals, cookies })
 			return json({ error: 'Unsupported file type' }, { status: 400 });
 		}
 
-		// Upload to user's project-assets bucket
+		// Upload to user's project-assets bucket using authenticated client
 		const projectStoragePath = `${params.id}/${filename}`;
-		const { data: uploadData, error: uploadError } = await supabase.storage
+		const { data: uploadData, error: uploadError } = await userSupabase.storage
 			.from('project-assets')
 			.upload(projectStoragePath, downloadData, {
 				cacheControl: '3600',
@@ -157,7 +163,7 @@ export const POST: RequestHandler = async ({ params, request, locals, cookies })
 			.returning();
 
 		// Get public URL
-		const { data: urlData } = supabase.storage
+		const { data: urlData } = userSupabase.storage
 			.from('project-assets')
 			.getPublicUrl(uploadData.path);
 

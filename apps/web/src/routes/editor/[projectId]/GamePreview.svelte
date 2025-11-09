@@ -9,7 +9,7 @@
 		hotReloadEnabled?: boolean;
 	}>();
 
-	let iframeEl: HTMLIFrameElement;
+	let iframeEl = $state<HTMLIFrameElement | null>(null);
 	let gameError = $state<{ message: string; stack?: string } | null>(null);
 	let consoleLogs = $state<Array<{ message: string; frame: number }>>([]);
 	let showConsole = $state(false);
@@ -32,6 +32,8 @@
 
 			switch (type) {
 				case 'READY':
+					console.log('✅ [Parent] Received READY from iframe');
+					console.log('   [Parent] Setting isLoading = false, isReady = true');
 					isReady = true;
 					isLoading = false;
 					gameError = null;
@@ -77,11 +79,14 @@
 	});
 
 	async function runGame() {
+		console.log('🎮 [Parent] runGame() called');
+		console.log('   [Parent] isReady:', isReady, '| isLoading:', isLoading);
 		isLoading = true;
 		gameError = null;
 		consoleLogs = [];
 
 		try {
+			console.log('📦 [Parent] Fetching code bundle and assets...');
 			// Fetch bundled code and assets in parallel
 			const [codeResponse, assetsResponse] = await Promise.all([
 				fetch(`/api/projects/${projectId}/bundle`, { method: 'POST' }),
@@ -94,16 +99,18 @@
 			}
 
 			const { code } = await codeResponse.json();
+			console.log('✅ [Parent] Code bundle fetched, size:', code.length, 'chars');
 
 			// Get assets (may fail if not set up yet, that's OK)
-			let assets = [];
+			let assets: Array<{ filename: string; fileType: string; url: string }> = [];
 			if (assetsResponse.ok) {
 				const assetsData = await assetsResponse.json();
 				assets = assetsData.assets || [];
 			}
 
 			// Send bundled code + assets to iframe
-			if (iframeEl && iframeEl.contentWindow) {
+			console.log('📨 [Parent] Sending LOAD_CODE to iframe...');
+			if (iframeEl?.contentWindow) {
 				iframeEl.contentWindow.postMessage(
 					{
 						type: 'LOAD_CODE',
@@ -118,6 +125,9 @@
 					},
 					'*'
 				);
+				console.log('✅ [Parent] LOAD_CODE message sent');
+			} else {
+				console.error('❌ [Parent] iframe contentWindow not available!');
 			}
 
 			// Call parent callback
