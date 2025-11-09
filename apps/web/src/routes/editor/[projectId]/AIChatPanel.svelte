@@ -1,8 +1,17 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { Chat } from '@ai-sdk/svelte';
-	import { ChevronDown, ChevronUp, Zap, ZapOff, Check, X } from 'lucide-svelte';
+	import { Chat, type UIMessage } from '@ai-sdk/svelte';
+	import { ChevronDown, ChevronUp, Zap, ZapOff, Check, X, Plus, Edit2 } from 'lucide-svelte';
 	import { applyEdits } from '$lib/utils/diff';
+
+	type Conversation = {
+		id: string;
+		projectId: string;
+		title: string;
+		isArchived: boolean;
+		createdAt: string;
+		updatedAt: string;
+	};
 
 	let {
 		projectId,
@@ -25,21 +34,180 @@
 	let chat: Chat | null = $state(null);
 	let quickMode = $state(false);
 
+	// Conversation management state
+	let conversations = $state<Conversation[]>([]);
+	let currentConversationId = $state<string | null>(null);
+	let isLoadingConversations = $state(true);
+	let isSavingMessages = $state(false);
+	let showConversationDropdown = $state(false);
+
 	// Track processed approvals to avoid duplicate triggers
 	let processedApprovals = $state<Set<string>>(new Set());
 
+	// Debounce timer for auto-save
+	let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function toggleQuickMode() {
+		quickMode = !quickMode;
+	}
+
+	/**
+	 * Load all conversations for the project
+	 */
+	async function loadConversations() {
+		try {
+			isLoadingConversations = true;
+			const res = await fetch(`/api/projects/${projectId}/conversations`);
+			if (!res.ok) throw new Error('Failed to load conversations');
+			const data = await res.json();
+			conversations = data.conversations || [];
+
+			// Auto-select first conversation or create one if none exist
+			if (conversations.length === 0) {
+				await createNewConversation('New Conversation');
+			} else {
+				// Select most recent conversation
+				currentConversationId = conversations[0].id;
+				await loadMessages(conversations[0].id);
+			}
+		} catch (error) {
+			console.error('Failed to load conversations:', error);
+		} finally {
+			isLoadingConversations = false;
+		}
+	}
+
+	/**
+	 * Create a new conversation
+	 */
+	async function createNewConversation(title?: string) {
+		try {
+			const res = await fetch(`/api/projects/${projectId}/conversations`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ title: title || 'New Conversation' })
+			});
+
+			if (!res.ok) throw new Error('Failed to create conversation');
+			const data = await res.json();
+			const newConversation = data.conversation;
+
+			// Add to list and select
+			conversations = [newConversation, ...conversations];
+			currentConversationId = newConversation.id;
+
+			// Reset chat with empty messages
+			if (chat) {
+				chat.messages = [];
+			}
+		} catch (error) {
+			console.error('Failed to create conversation:', error);
+		}
+	}
+
+	/**
+	 * Load messages for a conversation
+	 */
+	async function loadMessages(conversationId: string) {
+		try {
+			const res = await fetch(`/api/conversations/${conversationId}/messages`);
+			if (!res.ok) throw new Error('Failed to load messages');
+			const data = await res.json();
+
+			// Update chat messages
+			if (chat) {
+				chat.messages = data.messages || [];
+			}
+		} catch (error) {
+			console.error('Failed to load messages:', error);
+		}
+	}
+
+	/**
+	 * Save messages to database (debounced)
+	 */
+	function debouncedSaveMessages() {
+		if (saveTimer) clearTimeout(saveTimer);
+
+		saveTimer = setTimeout(async () => {
+			await saveMessages();
+		}, 2000); // Save 2 seconds after last change
+	}
+
+	/**
+	 * Save messages immediately
+	 */
+	async function saveMessages() {
+		if (!chat || !currentConversationId) return;
+
+		try {
+			isSavingMessages = true;
+			const res = await fetch(`/api/conversations/${currentConversationId}/messages`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ messages: chat.messages })
+			});
+
+			if (!res.ok) throw new Error('Failed to save messages');
+			console.log('💾 Messages saved successfully');
+
+			// Auto-generate title from first user message if still "New Conversation"
+			const currentConv = conversations.find(c => c.id === currentConversationId);
+			if (currentConv && currentConv.title === 'New Conversation' && chat.messages.length > 0) {
+				const firstUserMessage = chat.messages.find(m => m.role === 'user');
+				if (firstUserMessage) {
+					const text = firstUserMessage.parts.find(p => p.type === 'text')?.text || '';
+					const autoTitle = text.slice(0, 50).trim() || 'New Conversation';
+					await updateConversationTitle(currentConversationId, autoTitle);
+				}
+			}
+		} catch (error) {
+			console.error('Failed to save messages:', error);
+		} finally {
+			isSavingMessages = false;
+		}
+	}
+
+	/**
+	 * Update conversation title
+	 */
+	async function updateConversationTitle(conversationId: string, title: string) {
+		try {
+			const res = await fetch(`/api/conversations/${conversationId}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ title })
+			});
+
+			if (!res.ok) throw new Error('Failed to update title');
+
+			// Update local state
+			conversations = conversations.map(c =>
+				c.id === conversationId ? { ...c, title } : c
+			);
+		} catch (error) {
+			console.error('Failed to update title:', error);
+		}
+	}
+
+	/**
+	 * Switch to a different conversation
+	 */
+	async function switchConversation(conversationId: string) {
+		if (conversationId === currentConversationId) return;
+
+		// Save current conversation first
+		await saveMessages();
+
+		// Switch to new conversation
+		currentConversationId = conversationId;
+		await loadMessages(conversationId);
+
+		showConversationDropdown = false;
+	}
+
 	/**
 	 * Determine when to automatically send to continue the conversation.
-	 *
-	 * According to AI SDK v6, after calling addToolApprovalResponse(), we need
-	 * sendAutomaticallyWhen to return true to trigger the actual send.
-	 *
-	 * Return true ONLY when:
-	 * - There are tool parts with state 'approval-responded' (user just approved/denied)
-	 *
-	 * Return false when:
-	 * - Tool parts have state 'approval-requested' (still waiting for user)
-	 * - No tool calls at all (normal conversation flow)
 	 */
 	function shouldAutoSend(chat: Chat): boolean {
 		const lastMessage = chat.messages[chat.messages.length - 1];
@@ -60,62 +228,42 @@
 			}
 		}
 
-		// Auto-send when we have responded approvals and no pending ones
-		const shouldSend = hasApprovalResponses && !hasPendingApprovals;
-		console.log('🤔 shouldAutoSend:', shouldSend, { hasApprovalResponses, hasPendingApprovals });
-		return shouldSend;
-	}
-
-	function toggleQuickMode() {
-		quickMode = !quickMode;
+		return hasApprovalResponses && !hasPendingApprovals;
 	}
 
 	// Initialize chat
-	console.log('🔗 Initializing chat with projectId:', projectId);
 	chat = new Chat({
 		api: '/api/chat',
-		// No initial messages - welcome will be shown as UI placeholder
 		sendAutomaticallyWhen: shouldAutoSend,
 		onError: (error) => {
 			console.error('Chat error:', error);
 		}
 	});
 
-	// Svelte 5 reactive effect to handle approval requests
-	// Watch for changes in message parts, not just message array
+	// Load conversations on mount
+	onMount(async () => {
+		await loadConversations();
+	});
+
+	// Auto-save when messages change
 	$effect(() => {
-		console.log('💡 $effect running - chat:', !!chat, 'onFileEditRequested:', !!onFileEditRequested);
-		if (!chat || !onFileEditRequested) {
-			console.log('❌ $effect early return - missing chat or callback');
-			return;
+		if (chat && chat.messages.length > 0) {
+			debouncedSaveMessages();
 		}
+	});
 
-		// Track all messages and their parts to detect new approval requests
+	// Svelte 5 reactive effect to handle approval requests
+	$effect(() => {
+		if (!chat || !onFileEditRequested) return;
+
 		const messages = chat.messages;
-		console.log('📨 Processing', messages.length, 'messages');
-
-		// Create a deep reactive dependency on message parts by accessing them
 		const allParts = messages.flatMap(m => m.parts);
-		console.log('🔍 Total parts across all messages:', allParts.length);
 
-		// Use untrack to prevent infinite loops when calling triggerDiffView
 		untrack(() => {
 			for (const message of messages) {
 				if (message.role !== 'assistant') continue;
 
-				console.log('👀 Assistant message with', message.parts.length, 'parts:', message.parts.map(p => p.type));
-
 				for (const part of message.parts) {
-					// Check for editFile tool with approval-requested state
-					if (part.type === 'tool-editFile') {
-						console.log('🔧 Found tool-editFile part:', {
-							hasState: 'state' in part,
-							state: (part as any).state,
-							hasApproval: 'approval' in part,
-							approvalId: (part as any).approval?.id
-						});
-					}
-
 					if (
 						part.type === 'tool-editFile' &&
 						'state' in part &&
@@ -125,22 +273,14 @@
 					) {
 						const approvalId = (part as any).approval.id;
 
-						// Only trigger once per approval ID
 						if (!processedApprovals.has(approvalId)) {
-							console.log('🔔 New approval request detected:', approvalId);
 							processedApprovals.add(approvalId);
 
-							// Quick Mode: Auto-approve without showing diff
 							if (quickMode) {
-								console.log('⚡ Quick Mode: Auto-approving edit');
 								handleApproval(approvalId, true);
 							} else {
-								// Safe Mode: Show diff for manual approval
-								console.log('🛡️ Safe Mode: Showing diff for approval');
 								triggerDiffView(part);
 							}
-						} else {
-							console.log('⏭️ Skipping already processed approval:', approvalId);
 						}
 					}
 				}
@@ -152,7 +292,6 @@
 		e.preventDefault();
 		if (!chat || !input.trim() || chat.status === 'loading') return;
 
-		// Send message with projectId metadata (server searches all messages for it)
 		chat.sendMessage({
 			text: input,
 			metadata: { projectId }
@@ -162,22 +301,12 @@
 
 	function handleApproval(approvalId: string, approved: boolean) {
 		if (!chat) return;
-		console.log(approved ? '✅ Sending approval' : '❌ Sending denial', approvalId);
-
-		// According to AI SDK v6, addToolApprovalResponse should automatically trigger
-		// a continuation request to the server. The state changes to 'approval-responded'
-		// and then the SDK should send the approval to continue the conversation.
 		chat.addToolApprovalResponse({
 			id: approvalId,
 			approved
 		});
-
-		console.log('✅ Approval response added - AI SDK should auto-continue');
 	}
 
-	/**
-	 * Handle editFile approval - called when user clicks approve/deny in CodeMirror
-	 */
 	function handleEditFileApproval(part: any, approved: boolean) {
 		const approvalId = part.approval?.id;
 		if (!approvalId) {
@@ -187,30 +316,16 @@
 
 		handleApproval(approvalId, approved);
 
-		// Notify parent of completion if approved
 		if (approved && part.input?.path) {
 			onFileEditCompleted?.(part.input.path);
 		}
 	}
 
-	/**
-	 * Trigger diff view for editFile approval
-	 */
 	function triggerDiffView(part: any) {
-		console.log('🎬 triggerDiffView called');
-
-		if (!chat || !onFileEditRequested) {
-			console.error('❌ triggerDiffView: Missing chat or callback');
-			return;
-		}
+		if (!chat || !onFileEditRequested) return;
 
 		const input = part.input;
-		if (!input || !input.path || !input.edits) {
-			console.warn('❌ triggerDiffView: Missing input data', { input, hasPath: !!input?.path, hasEdits: !!input?.edits });
-			return;
-		}
-
-		console.log('📂 Looking for original content for:', input.path);
+		if (!input || !input.path || !input.edits) return;
 
 		// Find original content from previous readFile
 		let originalContent = '';
@@ -223,39 +338,30 @@
 					(msgPart as any).output?.path === input.path
 				) {
 					originalContent = (msgPart as any).output.content || '';
-					console.log('✅ Found original content:', originalContent.length, 'chars');
 					break;
 				}
 			}
 			if (originalContent) break;
 		}
 
-		if (!originalContent) {
-			console.warn('❌ triggerDiffView: Could not find original content for file:', input.path);
+		if (!originalContent) return;
+
+		const newContent = applyEdits(originalContent, input.edits);
+
+		if (originalContent === newContent) {
+			handleEditFileApproval(part, true);
 			return;
 		}
-
-		// Apply edits to get new content
-		const newContent = applyEdits(originalContent, input.edits);
-		console.log('✏️ Applied edits - old:', originalContent.length, 'new:', newContent.length);
 
 		const approvalId = part.approval?.id;
-		if (!approvalId) {
-			console.error('❌ triggerDiffView: Missing approval ID');
-			return;
-		}
+		if (!approvalId) return;
 
-		console.log('🚀 Calling onFileEditRequested with approvalId:', approvalId);
-
-		// Trigger parent's diff view
 		onFileEditRequested(
 			input.path,
 			originalContent,
 			newContent,
 			approvalId,
-			// On approve
 			() => handleEditFileApproval(part, true),
-			// On deny
 			() => handleEditFileApproval(part, false)
 		);
 	}
@@ -266,9 +372,51 @@
 	<div class="header">
 		<div class="title">
 			<span class="icon">🤖</span>
-			<span class="text">AI Assistant</span>
+			{#if isLoadingConversations}
+				<span class="text">Loading...</span>
+			{:else if currentConversationId}
+				<!-- Conversation Selector -->
+				<div class="conversation-selector">
+					<button
+						class="conversation-btn"
+						onclick={() => showConversationDropdown = !showConversationDropdown}
+					>
+						<span class="conversation-title">
+							{conversations.find(c => c.id === currentConversationId)?.title || 'Select conversation'}
+						</span>
+						<ChevronDown class="h-4 w-4" />
+					</button>
+
+					{#if showConversationDropdown}
+						<div class="conversation-dropdown">
+							{#each conversations.filter(c => !c.isArchived) as conv}
+								<button
+									class="conversation-item"
+									class:active={conv.id === currentConversationId}
+									onclick={() => switchConversation(conv.id)}
+								>
+									{conv.title}
+								</button>
+							{/each}
+						</div>
+					{/if}
+				</div>
+
+				<!-- New Conversation Button -->
+				<button
+					class="new-conversation-btn"
+					onclick={() => createNewConversation()}
+					title="New conversation"
+				>
+					<Plus class="h-4 w-4" />
+				</button>
+			{/if}
+
 			{#if chat?.status === 'loading'}
 				<span class="loading-indicator">●</span>
+			{/if}
+			{#if isSavingMessages}
+				<span class="saving-indicator" title="Saving...">💾</span>
 			{/if}
 		</div>
 
@@ -304,9 +452,9 @@
 							<p class="suggestions-title">Try asking me:</p>
 							<ul class="suggestions-list">
 								<li>"Show me the current game code"</li>
-								<li>"Explain how the Player.js works"</li>
-								<li>"What files are in this project?"</li>
+								<li>"List all the files in this project"</li>
 								<li>"How do I add a jumping animation?"</li>
+								<li>"Make the player move faster"</li>
 							</ul>
 						</div>
 					</div>
@@ -335,7 +483,6 @@
 									</div>
 
 									{#if part.type === 'tool-editFile' && 'state' in part && part.state === 'approval-requested'}
-										<!-- Show approval UI in chat panel (diff view triggered by $effect) -->
 										<div class="approval-request">
 											<div class="approval-details">
 												<div class="file-path">{part.input?.path || 'Unknown file'}</div>
@@ -449,9 +596,108 @@
 		line-height: 0;
 	}
 
+	.saving-indicator {
+		font-size: 0.875rem;
+		opacity: 0.6;
+		animation: pulse 1s infinite;
+	}
+
 	@keyframes pulse {
 		0%, 100% { opacity: 1; }
 		50% { opacity: 0.3; }
+	}
+
+	/* Conversation Selector */
+	.conversation-selector {
+		position: relative;
+	}
+
+	.conversation-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 12px;
+		border: 1px solid hsl(var(--border));
+		border-radius: 6px;
+		background: hsl(var(--background));
+		color: hsl(var(--foreground));
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+		max-width: 300px;
+	}
+
+	.conversation-btn:hover {
+		border-color: hsl(var(--primary));
+		background: hsl(var(--muted) / 0.3);
+	}
+
+	.conversation-title {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.conversation-dropdown {
+		position: absolute;
+		top: calc(100% + 4px);
+		left: 0;
+		min-width: 200px;
+		max-width: 400px;
+		max-height: 300px;
+		overflow-y: auto;
+		background: hsl(var(--background));
+		border: 1px solid hsl(var(--border));
+		border-radius: 8px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		z-index: 100;
+	}
+
+	.conversation-item {
+		display: block;
+		width: 100%;
+		padding: 10px 14px;
+		text-align: left;
+		border: none;
+		background: transparent;
+		color: hsl(var(--foreground));
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: background 0.2s;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.conversation-item:hover {
+		background: hsl(var(--muted) / 0.5);
+	}
+
+	.conversation-item.active {
+		background: hsl(var(--primary) / 0.1);
+		color: hsl(var(--primary));
+		font-weight: 600;
+	}
+
+	.new-conversation-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border: 1px solid hsl(var(--border));
+		border-radius: 6px;
+		background: hsl(var(--background));
+		color: hsl(var(--foreground));
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.new-conversation-btn:hover {
+		border-color: hsl(var(--primary));
+		background: hsl(var(--primary) / 0.1);
+		color: hsl(var(--primary));
 	}
 
 	.quick-mode-btn {
@@ -527,15 +773,6 @@
 	.content {
 		white-space: pre-wrap;
 		word-break: break-word;
-	}
-
-	.tool-calls {
-		margin-top: 8px;
-		padding-top: 8px;
-		border-top: 1px solid hsl(var(--border) / 0.5);
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
 	}
 
 	.tool-call {
@@ -706,74 +943,6 @@
 		border-radius: 4px;
 		font-size: 0.75rem;
 		color: hsl(var(--foreground));
-	}
-
-	.edits-preview {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		font-size: 0.7rem;
-		font-family: 'JetBrains Mono', 'Fira Code', monospace;
-		margin-top: 8px;
-	}
-
-	.edit-item {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.edit-old {
-		color: hsl(0 84% 60%);
-		background: hsl(0 84% 60% / 0.1);
-		padding: 2px 4px;
-		border-radius: 3px;
-	}
-
-	.edit-new {
-		color: hsl(142 76% 36%);
-		background: hsl(142 76% 36% / 0.1);
-		padding: 2px 4px;
-		border-radius: 3px;
-	}
-
-	.approval-buttons {
-		display: flex;
-		gap: 8px;
-	}
-
-	.approve-btn,
-	.deny-btn {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 8px 12px;
-		border: none;
-		border-radius: 6px;
-		font-size: 0.75rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.approve-btn {
-		background: hsl(142 76% 36%);
-		color: white;
-	}
-
-	.approve-btn:hover {
-		background: hsl(142 76% 30%);
-		transform: translateY(-1px);
-	}
-
-	.deny-btn {
-		background: hsl(0 84% 60%);
-		color: white;
-	}
-
-	.deny-btn:hover {
-		background: hsl(0 84% 54%);
-		transform: translateY(-1px);
 	}
 
 	.diff-details {

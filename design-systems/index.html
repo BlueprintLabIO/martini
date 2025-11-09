@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Systems Library - Complete Reference</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .category-card { transition: all 0.3s ease; }
+        .category-card:hover { transform: translateY(-8px); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+    <!-- Hero Header -->
+    <header class="bg-white border-b-4 border-black shadow-xl">
+        <div class="container mx-auto px-8 py-12">
+            <h1 class="text-7xl font-black text-black mb-4 tracking-tight">DESIGN SYSTEMS</h1>
+            <p class="text-2xl text-gray-600 mb-6">Complete reference library for gaming platform interfaces</p>
+            <div class="flex gap-4 items-center text-sm">
+                <span class="bg-black text-white px-4 py-2 font-bold rounded">18 Systems</span>
+                <span class="bg-gray-200 text-gray-800 px-4 py-2 font-bold rounded">100+ Components</span>
+                <span class="bg-gray-200 text-gray-800 px-4 py-2 font-bold rounded">Production Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-8 py-16">
+
+        <!-- Introduction -->
+        <section class="mb-16 bg-white rounded-2xl p-10 shadow-lg border border-gray-200">
+            <h2 class="text-4xl font-bold mb-4 text-gray-900">About This Library</h2>
+            <p class="text-lg text-gray-700 mb-4">
+                A comprehensive collection of 18 complete design systems, each featuring gaming platform components
+                including game cards, player profiles, leaderboards, inventory systems, chat interfaces, and more.
+            </p>
+            <p class="text-lg text-gray-700">
+                All components are built with Tailwind CSS, fully responsive, and use CSS-only interactions
+                (no JavaScript required). Perfect for rapid prototyping and production use.
+            </p>
+        </section>
+
+        <!-- Categories Grid -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-16">
+
+            <!-- Brutalist Category -->
+            <a href="brutalist.html" class="category-card bg-yellow-400 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden">
+                <div class="bg-black text-yellow-400 px-6 py-4 border-b-4 border-black">
+                    <h3 class="text-2xl font-black font-mono">BRUTALIST STYLES</h3>
+                </div>
+                <div class="p-8">
+                    <p class="text-lg font-bold mb-6">Raw, bold, unapologetic design. Hard edges and strong contrasts.</p>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-black text-yellow-400 w-8 h-8 flex items-center justify-center font-bold rounded">01</span>
+                            <span class="font-bold">Neo-Brutalism</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-black text-yellow-400 w-8 h-8 flex items-center justify-center font-bold rounded">06</span>
+                            <span class="font-bold">Anti-Design / Grunge</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-black text-yellow-400 w-8 h-8 flex items-center justify-center font-bold rounded">11</span>
+                            <span class="font-bold">Deconstructivism</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 inline-block bg-black text-yellow-400 px-6 py-3 font-black font-mono hover:bg-gray-800 transition">
+                        VIEW BRUTALIST →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Retro Category -->
+            <a href="retro.html" class="category-card bg-gradient-to-br from-fuchsia-400 via-yellow-300 to-cyan-400 rounded-xl overflow-hidden shadow-2xl hover:shadow-3xl">
+                <div class="bg-white/30 backdrop-blur px-6 py-4 border-b-2 border-white/40">
+                    <h3 class="text-2xl font-black text-white drop-shadow-lg">RETRO & NOSTALGIC</h3>
+                </div>
+                <div class="p-8 bg-white/20 backdrop-blur">
+                    <p class="text-lg font-bold text-white mb-6 drop-shadow">Bold colors, vintage aesthetics, and playful energy.</p>
+                    <div class="space-y-3 text-white">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-white/40 backdrop-blur w-8 h-8 flex items-center justify-center font-bold rounded-full shadow">02</span>
+                            <span class="font-bold">Pop Art</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-white/40 backdrop-blur w-8 h-8 flex items-center justify-center font-bold rounded-full shadow">04</span>
+                            <span class="font-bold">Retrofuturism</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-white/40 backdrop-blur w-8 h-8 flex items-center justify-center font-bold rounded-full shadow">05</span>
+                            <span class="font-bold">Vaporwave</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-white/40 backdrop-blur w-8 h-8 flex items-center justify-center font-bold rounded-full shadow">10</span>
+                            <span class="font-bold">Y2K Futurism</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 inline-block bg-white/40 backdrop-blur text-white px-6 py-3 font-black rounded-full shadow-lg hover:bg-white/50 transition">
+                        VIEW RETRO →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Organic Category -->
+            <a href="organic.html" class="category-card bg-gradient-to-br from-orange-100 via-amber-50 to-green-100 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl border-2 border-orange-200">
+                <div class="bg-white/60 backdrop-blur px-6 py-4 border-b border-orange-200">
+                    <h3 class="text-2xl font-bold text-gray-800">ORGANIC & WARM</h3>
+                </div>
+                <div class="p-8">
+                    <p class="text-lg text-gray-700 mb-6">Natural forms, warm palettes, and timeless elegance.</p>
+                    <div class="space-y-3 text-gray-800">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-orange-400 text-white w-8 h-8 flex items-center justify-center font-bold rounded-lg shadow">03</span>
+                            <span class="font-semibold">Mid-Century Modern</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-green-400 text-white w-8 h-8 flex items-center justify-center font-bold rounded-lg shadow">07</span>
+                            <span class="font-semibold">Biomorphism</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-yellow-500 text-white w-8 h-8 flex items-center justify-center font-bold rounded-lg shadow">08</span>
+                            <span class="font-semibold">Art Deco Revival</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 inline-block bg-orange-500 text-white px-6 py-3 font-bold rounded-lg shadow hover:bg-orange-600 transition">
+                        VIEW ORGANIC →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Digital Category -->
+            <a href="digital.html" class="category-card bg-gray-950 rounded-xl overflow-hidden shadow-2xl border-4 border-green-400 hover:border-green-300">
+                <div class="bg-green-400 px-6 py-4 border-b-4 border-green-500">
+                    <h3 class="text-2xl font-black text-black font-mono">DIGITAL GLITCH</h3>
+                </div>
+                <div class="p-8">
+                    <p class="text-lg font-mono text-green-400 mb-6">Embracing digital decay and technical failure as aesthetic.</p>
+                    <div class="space-y-3 text-green-400">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-green-400 text-black w-8 h-8 flex items-center justify-center font-bold font-mono">09</span>
+                            <span class="font-bold font-mono">Glitch Art</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 inline-block bg-green-400 text-black px-6 py-3 font-black font-mono hover:bg-green-300 transition">
+                        VIEW DIGITAL →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Modern Category -->
+            <a href="modern.html" class="category-card bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl border border-gray-200 lg:col-span-2">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-2xl font-bold text-gray-900">MODERN & CLEAN</h3>
+                </div>
+                <div class="p-8">
+                    <p class="text-lg text-gray-700 mb-6">Contemporary, minimal, and professional design systems from industry leaders.</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-gray-800">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-gray-900 text-white w-8 h-8 flex items-center justify-center font-bold rounded">12</span>
+                            <span class="font-semibold">shadcn/ui</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-black text-white w-8 h-8 flex items-center justify-center font-bold rounded">13</span>
+                            <span class="font-semibold">Vercel / Next.js</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-purple-600 text-white w-8 h-8 flex items-center justify-center font-bold rounded">14</span>
+                            <span class="font-semibold">Linear</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-gradient-to-r from-pink-500 to-purple-500 text-white w-8 h-8 flex items-center justify-center font-bold rounded">15</span>
+                            <span class="font-semibold">Arc Browser</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-blue-500 text-white w-8 h-8 flex items-center justify-center font-bold rounded">16</span>
+                            <span class="font-semibold">Apple / iOS</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-blue-600 text-white w-8 h-8 flex items-center justify-center font-bold rounded">17</span>
+                            <span class="font-semibold">Stripe</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-gray-100 border-2 border-gray-300 w-8 h-8 flex items-center justify-center font-bold rounded">18</span>
+                            <span class="font-semibold">Plain / Minimal</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 inline-block bg-gray-900 text-white px-6 py-3 font-bold rounded-lg shadow hover:bg-gray-800 transition">
+                        VIEW MODERN →
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Component Overview -->
+        <section class="bg-white rounded-2xl p-10 shadow-lg border border-gray-200">
+            <h2 class="text-3xl font-bold mb-6 text-gray-900">Components Included</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                    <h3 class="font-bold text-lg mb-2 text-gray-900">🎮 Game Cards</h3>
+                    <p class="text-sm text-gray-600">Thumbnails, stats, player counts, categories, featured badges</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                    <h3 class="font-bold text-lg mb-2 text-gray-900">👤 Player Profiles</h3>
+                    <p class="text-sm text-gray-600">Avatars, stats, levels, achievements, progress tracking</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                    <h3 class="font-bold text-lg mb-2 text-gray-900">🏆 Leaderboards</h3>
+                    <p class="text-sm text-gray-600">Rankings, scores, player stats, competitive tables</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                    <h3 class="font-bold text-lg mb-2 text-gray-900">🎒 Inventory</h3>
+                    <p class="text-sm text-gray-600">Items, rarity tiers, equipment, collectibles</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                    <h3 class="font-bold text-lg mb-2 text-gray-900">💬 Chat & Social</h3>
+                    <p class="text-sm text-gray-600">Messages, friends lists, online status, invites</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                    <h3 class="font-bold text-lg mb-2 text-gray-900">🧩 UI Components</h3>
+                    <p class="text-sm text-gray-600">Forms, buttons, navigation, search, filters, alerts</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 mt-24">
+        <div class="container mx-auto px-8 text-center">
+            <h3 class="text-2xl font-bold mb-2">Design Systems Library v3.0</h3>
+            <p class="text-gray-400 mb-4">Complete gaming platform interface reference</p>
+            <p class="text-sm text-gray-500">Built with Tailwind CSS • Production Ready • Open Source</p>
+        </div>
+    </footer>
+
+</body>
+</html>
