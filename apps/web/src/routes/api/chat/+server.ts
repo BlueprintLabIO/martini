@@ -29,19 +29,25 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'Invalid messages format' }, { status: 400 });
 	}
 
-	// Extract projectId from ANY message's metadata (approval messages don't have it)
-	// Search from newest to oldest to find the most recent projectId
+	// Extract projectId and planMode from ANY message's metadata (approval messages don't have it)
+	// Search from newest to oldest to find the most recent values
 	let projectId: string | undefined;
+	let planMode: boolean = false;
 	for (let i = messages.length - 1; i >= 0; i--) {
-		const metadata = messages[i]?.metadata as { projectId?: string } | undefined;
-		if (metadata?.projectId) {
+		const metadata = messages[i]?.metadata as { projectId?: string; planMode?: boolean } | undefined;
+		if (metadata?.projectId && !projectId) {
 			projectId = metadata.projectId;
-			break;
 		}
+		if (metadata?.planMode !== undefined && planMode === false) {
+			planMode = metadata.planMode;
+		}
+		// Break early if we found both
+		if (projectId && planMode !== false) break;
 	}
 
 	console.log('=== CHAT API DEBUG ===');
 	console.log('Extracted projectId from messages:', projectId);
+	console.log('Extracted planMode from messages:', planMode);
 
 	if (!projectId) {
 		return json({ error: 'Missing projectId in message metadata' }, { status: 400 });
@@ -83,10 +89,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.where(eq(assets.projectId, projectId));
 
 	// Build dynamic system prompt with file tree and assets
-	const dynamicSystemPrompt = buildSystemPrompt(projectFiles, projectAssets);
+	const dynamicSystemPrompt = buildSystemPrompt(projectFiles, projectAssets, planMode);
 
-	// Create project-scoped tools
-	const tools = createProjectTools(projectId);
+	// Create project-scoped tools (different tools for plan vs act mode)
+	const tools = createProjectTools(projectId, planMode);
 
 	try {
 		// Stream response from DeepSeek

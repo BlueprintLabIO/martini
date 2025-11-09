@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { Chat, type UIMessage } from '@ai-sdk/svelte';
-	import { ChevronDown, ChevronUp, Zap, ZapOff, Check, X, Plus, Edit2 } from 'lucide-svelte';
+	import { ChevronDown, ChevronUp, Zap, ZapOff, Check, X, Plus, Edit2, Pause, Play, StopCircle } from 'lucide-svelte';
 	import { applyEdits } from '$lib/utils/diff';
+
+	// Chat status enum type from AI SDK
+	type ChatStatus = 'submitted' | 'streaming' | 'ready' | 'error';
 
 	type Conversation = {
 		id: string;
@@ -50,7 +53,14 @@
 	let input = $state('');
 	let chat: Chat | null = $state(null);
 	let quickMode = $state(false);
-	let isStreaming = $state(false);
+	let planMode = $state(false);
+	let textareaElement: HTMLTextAreaElement | null = $state(null);
+
+	// Derive chat status from chat instance
+	let chatStatus = $derived<ChatStatus>((chat as any)?.status ?? 'ready');
+
+	// Derive isStreaming from chatStatus for convenience
+	let isStreaming = $derived<boolean>(chatStatus === 'submitted' || chatStatus === 'streaming');
 
 	// Conversation management state
 	let conversations = $state<Conversation[]>([]);
@@ -67,6 +77,28 @@
 
 	function toggleQuickMode() {
 		quickMode = !quickMode;
+	}
+
+	function togglePlanMode() {
+		planMode = !planMode;
+	}
+
+	// Auto-expand textarea as user types
+	function handleTextareaInput() {
+		if (textareaElement) {
+			textareaElement.style.height = 'auto';
+			textareaElement.style.height = Math.min(textareaElement.scrollHeight, 200) + 'px';
+		}
+	}
+
+	// Handle Enter key to send (Shift+Enter for new line)
+	function handleKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault();
+			if (!isStreaming && input.trim()) {
+				handleSubmit(e);
+			}
+		}
 	}
 
 	/**
@@ -254,18 +286,27 @@
 		sendAutomaticallyWhen: shouldAutoSend
 	});
 
+	/**
+	 * Programmatically send a message to the AI
+	 * Used by parent components (e.g., error overlay "Fix with AI" button)
+	 */
+	export function sendMessage(message: string) {
+		if (!chat) return;
+
+		input = message;
+		chat.sendMessage({
+			text: message,
+			metadata: { projectId }
+		});
+		input = ''; // Clear input after sending
+
+		// Auto-save after sending
+		debouncedSaveMessages();
+	}
+
 	// Load conversations on mount
 	onMount(async () => {
 		await loadConversations();
-	});
-
-	// Track streaming state based on message flow
-	$effect(() => {
-		if (chat && chat.messages.length > 0) {
-			const lastMessage = chat.messages[chat.messages.length - 1];
-			// If last message is from user and not followed by assistant, we're streaming
-			isStreaming = lastMessage.role === 'user';
-		}
 	});
 
 	// Auto-save when messages change
@@ -324,9 +365,14 @@
 
 		chat.sendMessage({
 			text: input,
-			metadata: { projectId }
+			metadata: { projectId, planMode }
 		});
 		input = '';
+	}
+
+	async function handleStop() {
+		if (!chat) return;
+		await chat.stop();
 	}
 
 	/**
@@ -343,6 +389,25 @@
 		const input = part.input;
 		if (!input || !input.path || !input.edits) {
 			console.error('[Client-Side Edit] Missing input data:', input);
+			return;
+		}
+
+		// Plan Mode validation: Only allow editing /docs/ files
+		if (planMode && !input.path.startsWith('/docs/')) {
+			console.error('[Plan Mode] Cannot edit non-docs file:', input.path);
+
+			// Auto-deny and send error to AI
+			chat.addToolApprovalResponse({
+				id: approvalId,
+				approved: false
+			});
+
+			chat.addToolResult({
+				state: 'output-error',
+				tool: 'editFile',
+				toolCallId: part.toolCallId,
+				errorText: `Plan mode can only edit files in /docs/ folder. To edit ${input.path}, please switch to Act mode.`
+			});
 			return;
 		}
 
@@ -503,7 +568,6 @@
 	<!-- Header -->
 	<div class="header">
 		<div class="title">
-			<span class="icon">🤖</span>
 			{#if isLoadingConversations}
 				<span class="text">Loading...</span>
 			{:else if currentConversationId}
@@ -512,6 +576,8 @@
 					<button
 						class="conversation-btn"
 						onclick={() => showConversationDropdown = !showConversationDropdown}
+						disabled={isStreaming}
+						title={isStreaming ? "Cannot switch conversations while AI is thinking" : "Switch conversation"}
 					>
 						<span class="conversation-title">
 							{conversations.find(c => c.id === currentConversationId)?.title || 'Select conversation'}
@@ -538,7 +604,8 @@
 				<button
 					class="new-conversation-btn"
 					onclick={() => createNewConversation()}
-					title="New conversation"
+					disabled={isStreaming}
+					title={isStreaming ? "Cannot create new conversation while AI is thinking" : "New conversation"}
 				>
 					<Plus class="h-4 w-4" />
 				</button>
@@ -551,23 +618,6 @@
 				<span class="saving-indicator" title="Saving...">💾</span>
 			{/if}
 		</div>
-
-		<button
-			class="quick-mode-btn"
-			class:active={quickMode}
-			onclick={toggleQuickMode}
-			title={quickMode
-				? 'Quick Mode: Auto-approve all edits without review'
-				: 'Safe Mode: Review and approve each edit manually'}
-		>
-			{#if quickMode}
-				<Zap class="h-4 w-4" />
-				<span>⚡ Quick Mode</span>
-			{:else}
-				<ZapOff class="h-4 w-4" />
-				<span>🛡️ Safe Mode</span>
-			{/if}
-		</button>
 	</div>
 
 	<div class="chat-content">
@@ -577,8 +627,7 @@
 				<!-- Welcome placeholder when no messages -->
 				{#if chat.messages.length === 0}
 					<div class="welcome-placeholder">
-						<div class="welcome-icon">🤖</div>
-						<h3 class="welcome-title">Hi! I'm your AI coding assistant</h3>
+						<h3 class="welcome-title">AI Coding Assistant</h3>
 						<p class="welcome-subtitle">I can help you build your Phaser game!</p>
 						<div class="welcome-suggestions">
 							<p class="suggestions-title">Try asking me:</p>
@@ -676,19 +725,82 @@
 			{/if}
 		</div>
 
-		<!-- Input -->
+		<!-- Input Area -->
 		{#if chat}
-			<form class="input-form" onsubmit={handleSubmit}>
-				<input
-					bind:value={input}
-					placeholder="Ask me about your game code..."
-					disabled={isStreaming}
-					autocomplete="off"
-				/>
-				<button type="submit" disabled={isStreaming || !input.trim()}>
-					{isStreaming ? 'Thinking...' : 'Send'}
-				</button>
-			</form>
+			<div class="input-area">
+				<form class="input-form" onsubmit={handleSubmit}>
+					<textarea
+						bind:value={input}
+						bind:this={textareaElement}
+						oninput={handleTextareaInput}
+						onkeydown={handleKeyDown}
+						placeholder={isStreaming ? "AI is thinking... (type to queue next message)" : "Press Enter to send, Shift+Enter for new line"}
+						autocomplete="off"
+						rows="1"
+					></textarea>
+				</form>
+
+				<!-- Controls Row -->
+				<div class="controls-row">
+					<div class="mode-toggles">
+						<button
+							class="mode-toggle-btn"
+							class:active={planMode}
+							onclick={togglePlanMode}
+							title={planMode
+								? 'Plan Mode: Generate game specs and documentation'
+								: 'Act Mode: Generate and edit game code'}
+							type="button"
+						>
+							{#if planMode}
+								<Pause class="h-4 w-4" />
+								<span>Plan</span>
+							{:else}
+								<Play class="h-4 w-4" />
+								<span>Act</span>
+							{/if}
+						</button>
+
+						<button
+							class="mode-toggle-btn"
+							class:active={quickMode}
+							onclick={toggleQuickMode}
+							title={quickMode
+								? 'Quick Mode: Auto-approve all edits without review'
+								: 'Safe Mode: Review and approve each edit manually'}
+							type="button"
+						>
+							{#if quickMode}
+								<Zap class="h-4 w-4" />
+								<span>Quick</span>
+							{:else}
+								<ZapOff class="h-4 w-4" />
+								<span>Safe</span>
+							{/if}
+						</button>
+					</div>
+
+					{#if isStreaming}
+						<button
+							class="stop-btn"
+							onclick={handleStop}
+							type="button"
+						>
+							<StopCircle class="h-4 w-4" />
+							<span>Stop</span>
+						</button>
+					{:else}
+						<button
+							class="send-btn"
+							onclick={handleSubmit}
+							disabled={!input.trim()}
+							type="button"
+						>
+							Send
+						</button>
+					{/if}
+				</div>
+			</div>
 		{/if}
 	</div>
 </div>
@@ -769,9 +881,14 @@
 		max-width: 300px;
 	}
 
-	.conversation-btn:hover {
+	.conversation-btn:hover:not(:disabled) {
 		border-color: hsl(var(--primary));
 		background: hsl(var(--muted) / 0.3);
+	}
+
+	.conversation-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.conversation-title {
@@ -835,37 +952,15 @@
 		transition: all 0.2s;
 	}
 
-	.new-conversation-btn:hover {
+	.new-conversation-btn:hover:not(:disabled) {
 		border-color: hsl(var(--primary));
 		background: hsl(var(--primary) / 0.1);
 		color: hsl(var(--primary));
 	}
 
-	.quick-mode-btn {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		margin-right: 12px;
-		padding: 6px 12px;
-		border: 1px solid hsl(var(--border));
-		border-radius: 6px;
-		background: hsl(var(--background));
-		color: hsl(var(--muted-foreground));
-		font-size: 0.75rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.quick-mode-btn:hover {
-		border-color: hsl(var(--primary));
-		color: hsl(var(--foreground));
-	}
-
-	.quick-mode-btn.active {
-		background: hsl(var(--primary));
-		color: hsl(var(--primary-foreground));
-		border-color: hsl(var(--primary));
+	.new-conversation-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.messages {
@@ -975,62 +1070,143 @@
 		}
 	}
 
-	.input-form {
-		display: flex;
-		gap: 8px;
-		padding: 12px 16px;
+	/* Input Area */
+	.input-area {
 		border-top: 1px solid hsl(var(--border));
 		background: hsl(var(--background));
 		flex-shrink: 0;
 	}
 
-	.input-form input {
-		flex: 1;
+	.input-form {
+		padding: 12px 16px 0 16px;
+	}
+
+	.input-form textarea {
+		width: 100%;
+		min-height: 42px;
+		max-height: 200px;
 		padding: 10px 14px;
 		border: 1px solid hsl(var(--border));
 		border-radius: 8px;
 		background: hsl(var(--background));
 		color: hsl(var(--foreground));
 		font-size: 0.875rem;
+		font-family: inherit;
+		line-height: 1.5;
+		resize: none;
+		overflow-y: auto;
 		transition: border-color 0.2s;
 	}
 
-	.input-form input:focus {
+	.input-form textarea:focus {
 		outline: none;
 		border-color: hsl(var(--primary));
 		box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
 	}
 
-	.input-form input:disabled {
+	.input-form textarea:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
 
-	.input-form button {
-		padding: 10px 20px;
-		background: hsl(var(--primary));
-		color: hsl(var(--primary-foreground));
+	/* Controls Row */
+	.controls-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 8px 16px 12px 16px;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+	.mode-toggles {
+		display: flex;
+		gap: 6px;
+	}
+
+	.mode-toggle-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 12px;
+		background: hsl(var(--muted));
+		color: hsl(var(--muted-foreground));
+		border: 1px solid hsl(var(--border));
+		border-radius: 6px;
+		font-size: 0.75rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+		white-space: nowrap;
+	}
+
+	.mode-toggle-btn:hover {
+		background: hsl(var(--muted) / 0.8);
+		border-color: hsl(var(--primary) / 0.5);
+	}
+
+	.mode-toggle-btn.active {
+		background: hsl(var(--primary) / 0.15);
+		color: hsl(var(--primary));
+		border-color: hsl(var(--primary));
+		font-weight: 600;
+	}
+
+	.mode-toggle-btn :global(svg) {
+		flex-shrink: 0;
+	}
+
+	.send-btn,
+	.stop-btn {
+		padding: 8px 24px;
 		border: none;
-		border-radius: 8px;
+		border-radius: 6px;
 		font-size: 0.875rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s;
+		white-space: nowrap;
+		display: flex;
+		align-items: center;
+		gap: 6px;
 	}
 
-	.input-form button:hover:not(:disabled) {
+	.send-btn {
+		background: hsl(var(--primary));
+		color: hsl(var(--primary-foreground));
+	}
+
+	.send-btn:hover:not(:disabled) {
 		background: hsl(var(--primary) / 0.9);
 		transform: translateY(-1px);
 	}
 
-	.input-form button:active:not(:disabled) {
+	.send-btn:active:not(:disabled) {
 		transform: translateY(0);
 	}
 
-	.input-form button:disabled {
+	.send-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 		transform: none;
+	}
+
+	.stop-btn {
+		background: hsl(0 84% 60%);
+		color: white;
+	}
+
+	.stop-btn:hover {
+		background: hsl(0 84% 50%);
+		transform: translateY(-1px);
+	}
+
+	.stop-btn:active {
+		transform: translateY(0);
+	}
+
+	.stop-btn :global(svg) {
+		flex-shrink: 0;
 	}
 
 	/* Scrollbar styling */

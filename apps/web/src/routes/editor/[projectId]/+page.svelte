@@ -15,8 +15,11 @@
 	let activeFilePath = $state<string | null>(null);
 	let saveStatus = $state<'saved' | 'saving' | 'unsaved'>('saved');
 	let gamePreview: GamePreview;
+	let aiChatPanel: any;
 	let showNewFileDialog = $state(false);
 	let newFilePath = $state('');
+	let showNewFolderDialog = $state(false);
+	let newFolderPath = $state('');
 	let hotReloadEnabled = $state(true); // Auto-on by default
 
 	// Diff mode state for AI file edits
@@ -121,6 +124,11 @@
 		newFilePath = '/src/';
 	}
 
+	function handleNewFolder() {
+		showNewFolderDialog = true;
+		newFolderPath = '/src/';
+	}
+
 	async function createNewFile() {
 		if (!newFilePath.trim()) return;
 
@@ -156,6 +164,49 @@
 			newFilePath = '';
 		} catch (error) {
 			alert('Failed to create file: ' + (error instanceof Error ? error.message : String(error)));
+		}
+	}
+
+	async function createNewFolder() {
+		if (!newFolderPath.trim()) return;
+
+		// Ensure folder path ends with /
+		let folderPath = newFolderPath.trim();
+		if (!folderPath.endsWith('/')) {
+			folderPath += '/';
+		}
+
+		try {
+			// Create a placeholder file in the folder (e.g., .gitkeep)
+			const placeholderPath = folderPath + '.gitkeep';
+			const response = await fetch(`/api/projects/${data.project.id}/files`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					path: placeholderPath,
+					content: ''
+				})
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				alert(error.error || 'Failed to create folder');
+				return;
+			}
+
+			const { file } = await response.json();
+
+			// Add to local file map
+			filesMap.set(file.path, { content: file.content, dirty: false });
+
+			// Rebuild file tree
+			fileTree.buildTree(Array.from(filesMap.keys()));
+
+			// Close dialog
+			showNewFolderDialog = false;
+			newFolderPath = '';
+		} catch (error) {
+			alert('Failed to create folder: ' + (error instanceof Error ? error.message : String(error)));
 		}
 	}
 
@@ -287,6 +338,15 @@
 			pendingApproval = null;
 		}
 	}
+
+	/**
+	 * Handle "Fix with AI" button from game error overlay
+	 */
+	function handleSendErrorToAI(errorMessage: string) {
+		if (aiChatPanel) {
+			aiChatPanel.sendMessage(errorMessage);
+		}
+	}
 </script>
 
 <div class="flex h-screen flex-col">
@@ -330,7 +390,7 @@
 				<!-- File Tree -->
 				<Resizable.Pane defaultSize={60} minSize={30}>
 					<div class="h-full overflow-auto bg-muted/30">
-						<FileTree onFileClick={openFile} onNewFile={handleNewFile} />
+						<FileTree onFileClick={openFile} onNewFile={handleNewFile} onNewFolder={handleNewFolder} />
 					</div>
 				</Resizable.Pane>
 
@@ -358,6 +418,7 @@
 							onRunGame={async () => {
 								// Optional: Add any post-run callbacks here
 							}}
+							onSendErrorToAI={handleSendErrorToAI}
 						/>
 					</div>
 				</Resizable.Pane>
@@ -388,6 +449,7 @@
 									{originalContent}
 									onApproveDiff={handleApproveDiff}
 									onDenyDiff={handleDenyDiff}
+									filePath={activeFilePath}
 								/>
 							</div>
 						{:else}
@@ -408,6 +470,7 @@
 		<!-- Right Panel: AI Chat -->
 		<Resizable.Pane defaultSize={35} minSize={20} maxSize={40}>
 			<AIChatPanel
+				bind:this={aiChatPanel}
 				projectId={data.project.id}
 				onFileEditRequested={handleFileEditRequest}
 				onFileEditCompleted={handleFileEditCompleted}
@@ -461,6 +524,54 @@
 						onclick={() => {
 							showNewFileDialog = false;
 							newFilePath = '';
+						}}
+						class="flex-1 rounded-md border px-4 py-2 text-sm hover:bg-muted"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						class="flex-1 rounded-md bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700"
+					>
+						Create
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
+
+<!-- New Folder Dialog -->
+{#if showNewFolderDialog}
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+		<div class="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
+			<h3 class="mb-4 text-lg font-semibold">Create New Folder</h3>
+			<form
+				onsubmit={(e) => {
+					e.preventDefault();
+					createNewFolder();
+				}}
+			>
+				<div class="mb-4">
+					<label for="folderPath" class="mb-2 block text-sm font-medium">Folder Path</label>
+					<input
+						id="folderPath"
+						type="text"
+						bind:value={newFolderPath}
+						placeholder="/src/myfolder"
+						required
+						class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+					/>
+					<p class="mt-1 text-xs text-muted-foreground">
+						Must start with / (e.g., /src/entities)
+					</p>
+				</div>
+				<div class="flex gap-3">
+					<button
+						type="button"
+						onclick={() => {
+							showNewFolderDialog = false;
+							newFolderPath = '';
 						}}
 						class="flex-1 rounded-md border px-4 py-2 text-sm hover:bg-muted"
 					>

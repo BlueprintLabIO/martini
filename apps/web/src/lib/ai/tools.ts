@@ -10,9 +10,13 @@ import { fastHash } from '$lib/utils/hash';
  *
  * These tools allow the AI to read, list, and edit files in the project.
  * All tools are scoped to a specific project ID for security.
+ *
+ * @param projectId - The project to scope tools to
+ * @param planMode - If true, provides planning tools (writeSpec); if false, provides coding tools (editFile)
  */
-export function createProjectTools(projectId: string) {
-	return {
+export function createProjectTools(projectId: string, planMode: boolean = false) {
+	// Common tools available in both modes
+	const commonTools = {
 		readFile: tool({
 			description: 'Read the contents of a file in the project. Returns version token for safe editing.',
 			inputSchema: zodSchema(
@@ -72,9 +76,72 @@ export function createProjectTools(projectId: string) {
 			}
 		}),
 
-		editFile: tool({
+		createFile: tool({
 			description:
-				'Edit a file by replacing exact text. ALWAYS read the file first to get the version token.',
+				'Create a new file in the project. Use this for creating design docs, new game files, or any new content.',
+			inputSchema: zodSchema(
+				z.object({
+					path: z
+						.string()
+						.describe(
+							'File path starting with /, e.g., /docs/game-concept.md or /src/scenes/Level2.js'
+						),
+					content: z.string().describe('Content of the new file')
+				})
+			),
+			execute: async ({ path, content }: { path: string; content: string }) => {
+				// Normalize path
+				const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+				try {
+					// Check if file already exists
+					const [existingFile] = await db
+						.select()
+						.from(files)
+						.where(and(eq(files.projectId, projectId), eq(files.path, normalizedPath)))
+						.limit(1);
+
+					if (existingFile) {
+						return {
+							error: 'File already exists',
+							path: normalizedPath,
+							hint: 'Use editFile() to modify existing files, or readFile() to see current content first'
+						};
+					}
+
+					// Create new file
+					await db.insert(files).values({
+						projectId,
+						path: normalizedPath,
+						content,
+						createdAt: new Date(),
+						updatedAt: new Date()
+					});
+
+					return {
+						success: true,
+						path: normalizedPath,
+						lines: content.split('\n').length,
+						size: content.length
+					};
+				} catch (error) {
+					return {
+						error: 'Failed to create file',
+						details: error instanceof Error ? error.message : String(error)
+					};
+				}
+			}
+		})
+	};
+
+	// Both modes get editFile, but Plan mode should only edit /docs/ files
+	// (validation happens client-side in approval flow)
+	return {
+		...commonTools,
+		editFile: tool({
+			description: planMode
+				? 'Edit a design document in /docs folder. ALWAYS read the file first to get the version token. Only use for files in /docs/'
+				: 'Edit a file by replacing exact text. ALWAYS read the file first to get the version token.',
 			inputSchema: zodSchema(
 				z.object({
 					path: z.string().describe('File path to edit'),

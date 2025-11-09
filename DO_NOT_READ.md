@@ -8,3 +8,6 @@ ai chat shows File Updated. In Safe Mode it works fine.
 
 we need a multi-modla ai to handle assets
 
+we want some way for Game Error
+can't access property "y", this.player is undefined to automatically
+be handled by the API
