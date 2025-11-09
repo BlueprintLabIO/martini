@@ -5,59 +5,726 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern & Clean Design Systems</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .glass { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+    </style>
 </head>
-<body class="bg-gray-50" style="font-family: 'Inter', sans-serif;">
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+<body class="bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="bg-white/80 glass border-b border-gray-200 sticky top-0 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="index.html" class="text-gray-900 font-semibold hover:text-gray-700">← Back to Index</a>
+            <a href="index.html" class="text-gray-900 font-semibold hover:text-gray-700 transition">← Back to Index</a>
             <div class="flex gap-4 text-sm font-medium">
-                <a href="#shadcn" class="text-gray-600 hover:text-gray-900">shadcn</a>
-                <a href="#vercel" class="text-gray-600 hover:text-gray-900">Vercel</a>
-                <a href="#linear" class="text-gray-600 hover:text-gray-900">Linear</a>
-                <a href="#arc" class="text-gray-600 hover:text-gray-900">Arc</a>
-                <a href="#apple" class="text-gray-600 hover:text-gray-900">Apple</a>
-                <a href="#stripe" class="text-gray-600 hover:text-gray-900">Stripe</a>
-                <a href="#plain" class="text-gray-600 hover:text-gray-900">Plain</a>
+                <a href="#shadcn" class="text-gray-600 hover:text-gray-900 transition">shadcn</a>
+                <a href="#vercel" class="text-gray-600 hover:text-gray-900 transition">Vercel</a>
+                <a href="#linear" class="text-gray-600 hover:text-gray-900 transition">Linear</a>
+                <a href="#arc" class="text-gray-600 hover:text-gray-900 transition">Arc</a>
+                <a href="#apple" class="text-gray-600 hover:text-gray-900 transition">Apple</a>
+                <a href="#stripe" class="text-gray-600 hover:text-gray-900 transition">Stripe</a>
+                <a href="#plain" class="text-gray-600 hover:text-gray-900 transition">Plain</a>
             </div>
         </div>
     </nav>
+
     <main class="container mx-auto px-6 py-12 space-y-32">
-        <!-- All 7 modern design systems with full components would go here -->
-        <section id="shadcn" class="bg-white p-12 rounded-xl border border-gray-200 shadow-sm">
-            <h2 class="text-5xl font-bold mb-4 text-gray-900">12. shadcn/ui</h2>
-            <p class="text-lg text-gray-600 mb-8">Minimal, accessible component design - complete implementation</p>
+
+        <!-- SHADCN/UI -->
+        <section id="shadcn" class="bg-white p-12 rounded-xl border border-gray-200">
+            <h2 class="text-5xl font-semibold mb-2 text-gray-900">12. shadcn/ui</h2>
+            <p class="text-lg text-gray-600 mb-12">Beautifully designed, accessible components built with Radix and Tailwind</p>
+
+            <!-- Game Cards -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Game Cards</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white">
+                        <div class="h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-5xl">🎮</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1 text-gray-900">Pixel Quest</h4>
+                            <p class="text-sm text-gray-500 mb-3">Adventure • Casual</p>
+                            <div class="flex items-center gap-2 mb-3 text-sm text-gray-600">
+                                <span>👥 2.4K</span><span>⭐ 4.8</span>
+                            </div>
+                            <button class="w-full bg-gray-900 text-white py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition">Play Now</button>
+                        </div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white">
+                        <div class="h-32 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-5xl">🌊</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1 text-gray-900">Ocean Deep</h4>
+                            <p class="text-sm text-gray-500 mb-3">Exploration</p>
+                            <div class="flex items-center gap-2 mb-3 text-sm text-gray-600">
+                                <span>👥 1.8K</span><span>⭐ 4.9</span>
+                            </div>
+                            <button class="w-full bg-gray-900 text-white py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition">Explore</button>
+                        </div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white">
+                        <div class="h-32 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center text-5xl">🌲</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1 text-gray-900">Forest Trail</h4>
+                            <p class="text-sm text-gray-500 mb-3">Puzzle</p>
+                            <div class="flex items-center gap-2 mb-3 text-sm text-gray-600">
+                                <span>👥 3.2K</span><span>⭐ 4.7</span>
+                            </div>
+                            <button class="w-full bg-gray-900 text-white py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition">Start</button>
+                        </div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white relative">
+                        <div class="absolute top-2 right-2 bg-gray-900 text-white px-2 py-1 rounded text-xs font-medium">Featured</div>
+                        <div class="h-32 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-5xl">✨</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1 text-gray-900">Star Collector</h4>
+                            <p class="text-sm text-gray-500 mb-3">Strategy</p>
+                            <div class="flex items-center gap-2 mb-3 text-sm text-gray-600">
+                                <span>👥 5.1K</span><span>⭐ 5.0</span>
+                            </div>
+                            <button class="w-full bg-gray-900 text-white py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition">Play</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Profile -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Player Profile</h3>
+                <div class="grid lg:grid-cols-3 gap-4">
+                    <div class="border border-gray-200 rounded-lg p-6 bg-white">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center text-2xl">👤</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">PlayerOne</h4>
+                                <p class="text-sm text-gray-500">Level 42</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 mb-4 text-sm">
+                            <div class="flex justify-between"><span class="text-gray-600">Games:</span><span class="font-medium text-gray-900">127</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Rank:</span><span class="font-medium text-gray-900">#234</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Score:</span><span class="font-medium text-gray-900">8,450</span></div>
+                        </div>
+                        <button class="w-full border border-gray-300 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition">View Profile</button>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-6 bg-white">
+                        <h4 class="font-semibold mb-4 text-gray-900">Achievements</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="aspect-square border border-gray-200 rounded-md flex items-center justify-center text-2xl bg-gray-50">🏆</div>
+                            <div class="aspect-square border border-gray-200 rounded-md flex items-center justify-center text-2xl bg-gray-50">⭐</div>
+                            <div class="aspect-square border border-gray-200 rounded-md flex items-center justify-center text-2xl bg-gray-50">🎯</div>
+                            <div class="aspect-square border border-gray-200 rounded-md flex items-center justify-center text-2xl bg-gray-50">💎</div>
+                            <div class="aspect-square border border-gray-200 rounded-md flex items-center justify-center text-2xl bg-gray-50">🔥</div>
+                            <div class="aspect-square border border-gray-200 rounded-md flex items-center justify-center text-2xl bg-gray-50 opacity-30">🔒</div>
+                        </div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-6 bg-white">
+                        <h4 class="font-semibold mb-4 text-gray-900">Progress</h4>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                <span>Level 42</span><span>Level 43</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-gray-900 rounded-full" style="width: 65%"></div>
+                            </div>
+                            <p class="text-right text-xs text-gray-500 mt-1">650 / 1000 XP</p>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="bg-gray-100 p-3 rounded-md text-center text-sm font-medium text-gray-900">Streak: 7 days</div>
+                            <div class="border border-gray-200 p-3 rounded-md text-center text-sm text-gray-600">Next: 350 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory & Chat omitted for brevity - full implementations follow similar pattern -->
         </section>
-        <section id="vercel" class="bg-black text-white p-12 rounded-xl">
-            <h2 class="text-5xl font-bold mb-4">13. Vercel / Next.js</h2>
-            <p class="text-gray-400 mb-8">Clean, borderless, performance-focused - complete implementation</p>
+
+        <!-- VERCEL -->
+        <section id="vercel" class="bg-black text-white p-12">
+            <h2 class="text-5xl font-bold mb-2">13. Vercel / Next.js</h2>
+            <p class="text-gray-400 mb-12 text-lg">Clean, borderless, performance-focused design</p>
+
+            <!-- Game Cards -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-6">Game Collection</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer group">
+                        <div class="h-32 bg-zinc-800 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform">⚡</div>
+                        <div class="p-4">
+                            <h4 class="font-medium mb-1">Speed Runner</h4>
+                            <p class="text-sm text-gray-400 mb-3">Action</p>
+                            <div class="flex items-center gap-3 text-sm text-gray-500">
+                                <span>2.1K players</span><span>★ 4.9</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer group">
+                        <div class="h-32 bg-zinc-800 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform">🚀</div>
+                        <div class="p-4">
+                            <h4 class="font-medium mb-1">Space Launch</h4>
+                            <p class="text-sm text-gray-400 mb-3">Simulation</p>
+                            <div class="flex items-center gap-3 text-sm text-gray-500">
+                                <span>1.7K players</span><span>★ 4.8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer group">
+                        <div class="h-32 bg-zinc-800 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform">🎯</div>
+                        <div class="p-4">
+                            <h4 class="font-medium mb-1">Target Practice</h4>
+                            <p class="text-sm text-gray-400 mb-3">Arcade</p>
+                            <div class="flex items-center gap-3 text-sm text-gray-500">
+                                <span>3.4K players</span><span>★ 4.7</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer group border border-zinc-700">
+                        <div class="h-32 bg-zinc-800 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform">✨</div>
+                        <div class="p-4">
+                            <h4 class="font-medium mb-1">Edge Deploy</h4>
+                            <p class="text-sm text-gray-400 mb-3">Featured</p>
+                            <div class="flex items-center gap-3 text-sm text-gray-500">
+                                <span>5.8K players</span><span>★ 5.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Profile -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-6">Dashboard</h3>
+                <div class="grid lg:grid-cols-3 gap-4">
+                    <div class="bg-zinc-900 p-6">
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-12 h-12 bg-zinc-800 flex items-center justify-center text-xl font-mono">VP</div>
+                            <div>
+                                <h4 class="font-medium">VercelPlayer</h4>
+                                <p class="text-sm text-gray-400">Level 88</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between"><span class="text-gray-400">Deployments:</span><span>342</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Rank:</span><span>#128</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Edge Points:</span><span>12,890</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-zinc-900 p-6">
+                        <h4 class="font-medium mb-4">Stats</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="aspect-square bg-zinc-800 flex items-center justify-center text-2xl">⚡</div>
+                            <div class="aspect-square bg-zinc-800 flex items-center justify-center text-2xl">🚀</div>
+                            <div class="aspect-square bg-zinc-800 flex items-center justify-center text-2xl">🎯</div>
+                            <div class="aspect-square bg-zinc-800 flex items-center justify-center text-2xl">✨</div>
+                            <div class="aspect-square bg-zinc-800 flex items-center justify-center text-2xl">🔥</div>
+                            <div class="aspect-square bg-zinc-800 flex items-center justify-center text-2xl opacity-30">🔒</div>
+                        </div>
+                    </div>
+                    <div class="bg-zinc-900 p-6">
+                        <h4 class="font-medium mb-4">Level Progress</h4>
+                        <div class="mb-5">
+                            <div class="flex justify-between text-sm text-gray-400 mb-2">
+                                <span>88</span><span>89</span>
+                            </div>
+                            <div class="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-white rounded-full" style="width: 78%"></div>
+                            </div>
+                            <p class="text-right text-xs text-gray-500 mt-1">780 / 1000</p>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="bg-white text-black p-2 text-center font-medium">Edge Streak: 14</div>
+                            <div class="bg-zinc-800 p-2 text-center text-gray-400">Next: 220 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
-        <section id="linear" class="bg-gray-950 text-white p-12 rounded-xl">
-            <h2 class="text-5xl font-semibold mb-4 bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">14. Linear</h2>
-            <p class="text-gray-400 mb-8">Polished, professional, purple-accented - complete implementation</p>
+
+        <!-- LINEAR -->
+        <section id="linear" class="bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-950 text-white p-12">
+            <h2 class="text-5xl font-semibold mb-2 bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">14. Linear</h2>
+            <p class="text-gray-400 mb-12 text-lg">Polished, professional workflow design</p>
+
+            <!-- Game Cards -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-medium mb-6">Projects</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="bg-white/5 hover:bg-white/10 backdrop-blur border border-white/10 p-4 transition-all cursor-pointer">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center text-2xl mb-3">🎯</div>
+                        <h4 class="font-medium mb-1">Task Master</h4>
+                        <p class="text-sm text-gray-400 mb-2">Productivity</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <span>1.9K</span><span>•</span><span>4.8★</span>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 hover:bg-white/10 backdrop-blur border border-white/10 p-4 transition-all cursor-pointer">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-2xl mb-3">⚡</div>
+                        <h4 class="font-medium mb-1">Sprint</h4>
+                        <p class="text-sm text-gray-400 mb-2">Speed</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <span>2.3K</span><span>•</span><span>4.9★</span>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 hover:bg-white/10 backdrop-blur border border-white/10 p-4 transition-all cursor-pointer">
+                        <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center text-2xl mb-3">✓</div>
+                        <h4 class="font-medium mb-1">Completionist</h4>
+                        <p class="text-sm text-gray-400 mb-2">Achievement</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <span>3.1K</span><span>•</span><span>4.7★</span>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 hover:bg-white/10 backdrop-blur border border-purple-500/50 p-4 transition-all cursor-pointer">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-2xl mb-3">✨</div>
+                        <h4 class="font-medium mb-1">Priority One</h4>
+                        <p class="text-sm text-gray-400 mb-2">Featured</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <span>4.7K</span><span>•</span><span>5.0★</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Profile -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-medium mb-6">Profile</h3>
+                <div class="grid lg:grid-cols-3 gap-3">
+                    <div class="bg-white/5 backdrop-blur border border-white/10 p-6">
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center font-mono">LP</div>
+                            <div>
+                                <h4 class="font-medium">LinearPro</h4>
+                                <p class="text-sm text-gray-400">Level 72</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-gray-400">Issues:</span><span>456</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Cycles:</span><span>24</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Points:</span><span>15,600</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 backdrop-blur border border-white/10 p-6">
+                        <h4 class="font-medium mb-4">Labels</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="aspect-square bg-gradient-to-br from-purple-500/20 to-purple-700/20 border border-purple-500/30 rounded flex items-center justify-center text-xl">🎯</div>
+                            <div class="aspect-square bg-gradient-to-br from-blue-500/20 to-blue-700/20 border border-blue-500/30 rounded flex items-center justify-center text-xl">⚡</div>
+                            <div class="aspect-square bg-gradient-to-br from-green-500/20 to-green-700/20 border border-green-500/30 rounded flex items-center justify-center text-xl">✓</div>
+                            <div class="aspect-square bg-gradient-to-br from-pink-500/20 to-pink-700/20 border border-pink-500/30 rounded flex items-center justify-center text-xl">✨</div>
+                            <div class="aspect-square bg-gradient-to-br from-orange-500/20 to-orange-700/20 border border-orange-500/30 rounded flex items-center justify-center text-xl">🔥</div>
+                            <div class="aspect-square bg-white/5 border border-white/10 rounded flex items-center justify-center text-xl opacity-30">🔒</div>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 backdrop-blur border border-white/10 p-6">
+                        <h4 class="font-medium mb-4">Velocity</h4>
+                        <div class="mb-5">
+                            <div class="flex justify-between text-sm text-gray-400 mb-2">
+                                <span>Cycle 72</span><span>73</span>
+                            </div>
+                            <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full" style="width: 82%"></div>
+                            </div>
+                            <p class="text-right text-xs text-gray-500 mt-1">820 / 1000 pts</p>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-2 text-center font-medium">Active: 18 cycles</div>
+                            <div class="bg-white/5 border border-white/10 p-2 text-center text-gray-400">Goal: 180 pts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
+
+        <!-- ARC BROWSER -->
         <section id="arc" class="bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 text-white p-12 rounded-3xl">
-            <h2 class="text-5xl font-bold mb-4 drop-shadow-lg">15. Arc Browser</h2>
-            <p class="mb-8">Colorful, gradient-rich, modern - complete implementation</p>
+            <h2 class="text-5xl font-bold mb-2 drop-shadow-lg">15. Arc Browser</h2>
+            <p class="mb-12 text-lg text-white/80">Colorful, gradient-rich, playful design</p>
+
+            <!-- Game Cards -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-bold mb-6 drop-shadow">Spaces</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white/10 backdrop-blur-xl rounded-2xl overflow-hidden hover:bg-white/20 transition-all hover:scale-105 cursor-pointer">
+                        <div class="h-28 bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-5xl">🌈</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1">Rainbow Quest</h4>
+                            <p class="text-sm text-white/70 mb-2">Colorful</p>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span>2.8K</span><span>★ 4.9</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-xl rounded-2xl overflow-hidden hover:bg-white/20 transition-all hover:scale-105 cursor-pointer">
+                        <div class="h-28 bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-5xl">🎨</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1">Color Splash</h4>
+                            <p class="text-sm text-white/70 mb-2">Creative</p>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span>3.4K</span><span>★ 4.8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-xl rounded-2xl overflow-hidden hover:bg-white/20 transition-all hover:scale-105 cursor-pointer">
+                        <div class="h-28 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-5xl">🚀</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1">Space Arc</h4>
+                            <p class="text-sm text-white/70 mb-2">Adventure</p>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span>4.1K</span><span>★ 5.0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-xl rounded-2xl overflow-hidden border-2 border-white/40 hover:bg-white/30 transition-all hover:scale-105 cursor-pointer">
+                        <div class="h-28 bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-5xl">✨</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1">Boost</h4>
+                            <p class="text-sm text-white/70 mb-2">Featured</p>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span>6.2K</span><span>★ 5.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Profile -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-bold mb-6 drop-shadow">Profile</h3>
+                <div class="grid lg:grid-cols-3 gap-4">
+                    <div class="bg-white/10 backdrop-blur-xl rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-14 h-14 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-2xl shadow-lg">🎯</div>
+                            <div>
+                                <h4 class="font-semibold">ArcMaster</h4>
+                                <p class="text-sm text-white/70">Level 95</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-white/70">Tabs:</span><span className="font-medium">1,284</span></div>
+                            <div class="flex justify-between"><span class="text-white/70">Boosts:</span><span className="font-medium">42</span></div>
+                            <div class="flex justify-between"><span class="text-white/70">Score:</span><span className="font-medium">28,900</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-xl rounded-2xl p-6">
+                        <h4 class="font-semibold mb-4">Badges</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="aspect-square bg-gradient-to-br from-pink-400/30 to-rose-500/30 rounded-xl flex items-center justify-center text-2xl backdrop-blur">🌈</div>
+                            <div class="aspect-square bg-gradient-to-br from-blue-400/30 to-cyan-500/30 rounded-xl flex items-center justify-center text-2xl backdrop-blur">🎨</div>
+                            <div class="aspect-square bg-gradient-to-br from-purple-400/30 to-indigo-500/30 rounded-xl flex items-center justify-center text-2xl backdrop-blur">🚀</div>
+                            <div class="aspect-square bg-gradient-to-br from-yellow-400/30 to-orange-500/30 rounded-xl flex items-center justify-center text-2xl backdrop-blur">✨</div>
+                            <div class="aspect-square bg-gradient-to-br from-green-400/30 to-emerald-500/30 rounded-xl flex items-center justify-center text-2xl backdrop-blur">🔥</div>
+                            <div class="aspect-square bg-white/10 rounded-xl flex items-center justify-center text-2xl opacity-30">🔒</div>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-xl rounded-2xl p-6">
+                        <h4 class="font-semibold mb-4">Progress</h4>
+                        <div class="mb-5">
+                            <div class="flex justify-between text-sm text-white/70 mb-2">
+                                <span>95</span><span>96</span>
+                            </div>
+                            <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-pink-400 via-purple-500 to-blue-500 rounded-full" style="width: 88%"></div>
+                            </div>
+                            <p class="text-right text-xs text-white/60 mt-1">880 / 1000</p>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="bg-gradient-to-r from-pink-400 to-purple-500 p-3 text-center font-semibold rounded-lg shadow-lg">Streak: 22 days</div>
+                            <div class="bg-white/10 backdrop-blur p-3 text-center text-white/80 rounded-lg">Next: 120 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
+
+        <!-- APPLE / iOS -->
         <section id="apple" class="bg-gradient-to-br from-blue-50 to-purple-50 p-12 rounded-3xl">
-            <h2 class="text-5xl font-semibold mb-4 text-gray-900">16. Apple / iOS</h2>
-            <p class="text-gray-600 mb-8">Frosted glass, smooth, premium - complete implementation</p>
+            <h2 class="text-5xl font-semibold mb-2 text-gray-900">16. Apple / iOS</h2>
+            <p class="text-gray-600 mb-12 text-lg">Frosted glass, smooth animations, premium feel</p>
+
+            <!-- Game Cards -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Apps</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass bg-white/40 backdrop-blur-2xl rounded-2xl overflow-hidden border border-white/20 shadow-lg hover:shadow-xl transition-all">
+                        <div class="h-28 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-5xl">📱</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1 text-gray-900">Phone Game</h4>
+                            <p class="text-sm text-gray-600 mb-2">iOS Exclusive</p>
+                            <div class="flex items-center gap-2 text-sm text-gray-600">
+                                <span>3.2K</span><span>★ 4.9</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass bg-white/40 backdrop-blur-2xl rounded-2xl overflow-hidden border border-white/20 shadow-lg hover:shadow-xl transition-all">
+                        <div class="h-28 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-5xl">🎵</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1 text-gray-900">Music Quest</h4>
+                            <p class="text-sm text-gray-600 mb-2">Entertainment</p>
+                            <div class="flex items-center gap-2 text-sm text-gray-600">
+                                <span>4.8K</span><span>★ 5.0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass bg-white/40 backdrop-blur-2xl rounded-2xl overflow-hidden border border-white/20 shadow-lg hover:shadow-xl transition-all">
+                        <div class="h-28 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center text-5xl">🍏</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1 text-gray-900">Health Track</h4>
+                            <p class="text-sm text-gray-600 mb-2">Wellness</p>
+                            <div class="flex items-center gap-2 text-sm text-gray-600">
+                                <span>2.9K</span><span>★ 4.8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass bg-white/50 backdrop-blur-2xl rounded-2xl overflow-hidden border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all">
+                        <div class="h-28 bg-gradient-to-br from-blue-200 to-purple-200 flex items-center justify-center text-5xl">✨</div>
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-1 text-gray-900">Pro Max</h4>
+                            <p class="text-sm text-gray-600 mb-2">Premium</p>
+                            <div class="flex items-center gap-2 text-sm text-gray-600">
+                                <span>7.1K</span><span>★ 5.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Profile -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Account</h3>
+                <div class="grid lg:grid-cols-3 gap-4">
+                    <div class="glass bg-white/40 backdrop-blur-2xl rounded-2xl p-6 border border-white/20 shadow-lg">
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-2xl shadow-lg">👤</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">AppleUser</h4>
+                                <p class="text-sm text-gray-600">Level 83</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-gray-600">Apps:</span><span class="font-medium text-gray-900">248</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Purchases:</span><span class="font-medium text-gray-900">52</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Credits:</span><span class="font-medium text-gray-900">18,700</span></div>
+                        </div>
+                    </div>
+                    <div class="glass bg-white/40 backdrop-blur-2xl rounded-2xl p-6 border border-white/20 shadow-lg">
+                        <h4 class="font-semibold mb-4 text-gray-900">Collections</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="aspect-square bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center text-2xl shadow">📱</div>
+                            <div class="aspect-square bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center text-2xl shadow">🎵</div>
+                            <div class="aspect-square bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center text-2xl shadow">🍏</div>
+                            <div class="aspect-square bg-gradient-to-br from-pink-100 to-pink-200 rounded-2xl flex items-center justify-center text-2xl shadow">✨</div>
+                            <div class="aspect-square bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center text-2xl shadow">🔥</div>
+                            <div class="aspect-square bg-white/30 rounded-2xl flex items-center justify-center text-2xl opacity-40">🔒</div>
+                        </div>
+                    </div>
+                    <div class="glass bg-white/40 backdrop-blur-2xl rounded-2xl p-6 border border-white/20 shadow-lg">
+                        <h4 class="font-semibold mb-4 text-gray-900">Activity</h4>
+                        <div class="mb-5">
+                            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                <span>83</span><span>84</span>
+                            </div>
+                            <div class="h-2 bg-white/30 rounded-full overflow-hidden shadow-inner">
+                                <div class="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full shadow" style="width: 76%"></div>
+                            </div>
+                            <p class="text-right text-xs text-gray-500 mt-1">760 / 1000</p>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-3 text-center font-semibold rounded-xl shadow-lg">Move Streak: 19</div>
+                            <div class="glass bg-white/30 backdrop-blur p-3 text-center text-gray-700 rounded-xl border border-white/20">Goal: 240 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
-        <section id="stripe" class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-12 rounded-2xl">
-            <h2 class="text-5xl font-bold mb-4">17. Stripe</h2>
-            <p class="text-blue-100 mb-8">Trustworthy, professional - complete implementation</p>
+
+        <!-- STRIPE -->
+        <section id="stripe" class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-12 rounded-2xl shadow-2xl">
+            <h2 class="text-5xl font-bold mb-2">17. Stripe</h2>
+            <p class="text-blue-100 mb-12 text-lg">Trustworthy, professional, payment-focused design</p>
+
+            <!-- Game Cards -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-6">Monetization</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20 hover:bg-white/15 transition-all cursor-pointer">
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center text-3xl mb-3">💳</div>
+                        <h4 class="font-semibold mb-1">Payment Pro</h4>
+                        <p class="text-sm text-blue-100 mb-2">Finance</p>
+                        <div class="flex items-center gap-2 text-sm text-blue-200">
+                            <span>4.2K</span><span>★ 4.9</span>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20 hover:bg-white/15 transition-all cursor-pointer">
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center text-3xl mb-3">💰</div>
+                        <h4 class="font-semibold mb-1">Checkout</h4>
+                        <p class="text-sm text-blue-100 mb-2">Commerce</p>
+                        <div class="flex items-center gap-2 text-sm text-blue-200">
+                            <span>3.8K</span><span>★ 5.0</span>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20 hover:bg-white/15 transition-all cursor-pointer">
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center text-3xl mb-3">📊</div>
+                        <h4 class="font-semibold mb-1">Analytics</h4>
+                        <p class="text-sm text-blue-100 mb-2">Data</p>
+                        <div class="flex items-center gap-2 text-sm text-blue-200">
+                            <span>2.9K</span><span>★ 4.8</span>
+                        </div>
+                    </div>
+                    <div class="bg-white/15 backdrop-blur rounded-lg p-4 border-2 border-white/40 hover:bg-white/20 transition-all cursor-pointer">
+                        <div class="w-12 h-12 bg-white/30 backdrop-blur rounded-lg flex items-center justify-center text-3xl mb-3">✨</div>
+                        <h4 class="font-semibold mb-1">Premium</h4>
+                        <p class="text-sm text-blue-100 mb-2">Elite</p>
+                        <div class="flex items-center gap-2 text-sm text-blue-200">
+                            <span>6.4K</span><span>★ 5.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Profile -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-6">Dashboard</h3>
+                <div class="grid lg:grid-cols-3 gap-4">
+                    <div class="bg-white/10 backdrop-blur rounded-lg p-6 border border-white/20">
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center font-semibold text-lg">SP</div>
+                            <div>
+                                <h4 class="font-semibold">StripePro</h4>
+                                <p class="text-sm text-blue-100">Level 91</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-blue-100">Transactions:</span><span>12,456</span></div>
+                            <div class="flex justify-between"><span class="text-blue-100">Revenue:</span><span>$45.2K</span></div>
+                            <div class="flex justify-between"><span class="text-blue-100">Growth:</span><span>+28%</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-lg p-6 border border-white/20">
+                        <h4 class="font-semibold mb-4">Features</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="aspect-square bg-white/10 backdrop-blur rounded-lg flex items-center justify-center text-2xl border border-white/20">💳</div>
+                            <div class="aspect-square bg-white/10 backdrop-blur rounded-lg flex items-center justify-center text-2xl border border-white/20">💰</div>
+                            <div class="aspect-square bg-white/10 backdrop-blur rounded-lg flex items-center justify-center text-2xl border border-white/20">📊</div>
+                            <div class="aspect-square bg-white/10 backdrop-blur rounded-lg flex items-center justify-center text-2xl border border-white/20">✨</div>
+                            <div class="aspect-square bg-white/10 backdrop-blur rounded-lg flex items-center justify-center text-2xl border border-white/20">🔒</div>
+                            <div class="aspect-square bg-white/5 backdrop-blur rounded-lg flex items-center justify-center text-2xl border border-white/10 opacity-40">🔐</div>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-lg p-6 border border-white/20">
+                        <h4 class="font-semibold mb-4">Growth</h4>
+                        <div class="mb-5">
+                            <div class="flex justify-between text-sm text-blue-100 mb-2">
+                                <span>91</span><span>92</span>
+                            </div>
+                            <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-white rounded-full" style="width: 84%"></div>
+                            </div>
+                            <p class="text-right text-xs text-blue-200 mt-1">840 / 1000</p>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="bg-white text-blue-600 p-3 text-center font-semibold rounded-lg">MRR: $12.4K</div>
+                            <div class="bg-white/10 backdrop-blur border border-white/20 p-3 text-center text-blue-100 rounded-lg">Target: 160 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
-        <section id="plain" class="bg-white p-12">
-            <h2 class="text-5xl font-light mb-4 text-gray-900" style="letter-spacing: 0.1em;">18. PLAIN / MINIMAL</h2>
-            <p class="text-gray-600 mb-8" style="letter-spacing: 0.05em;">Extreme minimalism, luxury spacing - complete implementation</p>
+
+        <!-- PLAIN / MINIMAL -->
+        <section id="plain" class="bg-white p-16">
+            <h2 class="text-6xl font-light mb-4 text-gray-900 tracking-widest">18. PLAIN / MINIMAL</h2>
+            <p class="text-lg text-gray-600 mb-16 tracking-wide">Extreme minimalism, luxury spacing, maximum clarity</p>
+
+            <!-- Game Cards -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-light mb-8 text-gray-900 tracking-wide">COLLECTION</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="border border-gray-300 hover:border-gray-900 transition-colors cursor-pointer">
+                        <div class="aspect-square border-b border-gray-300 flex items-center justify-center text-6xl">○</div>
+                        <div class="p-6">
+                            <h4 class="font-light text-lg mb-2 text-gray-900 tracking-wide">CIRCLE</h4>
+                            <p class="text-sm text-gray-500 tracking-wide">MINIMAL</p>
+                        </div>
+                    </div>
+                    <div class="border border-gray-300 hover:border-gray-900 transition-colors cursor-pointer">
+                        <div class="aspect-square border-b border-gray-300 flex items-center justify-center text-6xl">□</div>
+                        <div class="p-6">
+                            <h4 class="font-light text-lg mb-2 text-gray-900 tracking-wide">SQUARE</h4>
+                            <p class="text-sm text-gray-500 tracking-wide">GEOMETRIC</p>
+                        </div>
+                    </div>
+                    <div class="border border-gray-300 hover:border-gray-900 transition-colors cursor-pointer">
+                        <div class="aspect-square border-b border-gray-300 flex items-center justify-center text-6xl">△</div>
+                        <div class="p-6">
+                            <h4 class="font-light text-lg mb-2 text-gray-900 tracking-wide">TRIANGLE</h4>
+                            <p class="text-sm text-gray-500 tracking-wide">ABSTRACT</p>
+                        </div>
+                    </div>
+                    <div class="border-2 border-gray-900 cursor-pointer">
+                        <div class="aspect-square border-b-2 border-gray-900 flex items-center justify-center text-6xl">✱</div>
+                        <div class="p-6">
+                            <h4 class="font-light text-lg mb-2 text-gray-900 tracking-wide">STAR</h4>
+                            <p class="text-sm text-gray-500 tracking-wide">FEATURED</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Profile -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-light mb-8 text-gray-900 tracking-wide">ACCOUNT</h3>
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="border border-gray-300 p-8">
+                        <div class="mb-8">
+                            <div class="w-16 h-16 border border-gray-900 mb-4"></div>
+                            <h4 class="text-xl font-light text-gray-900 tracking-wide mb-1">USER</h4>
+                            <p class="text-sm text-gray-500 tracking-wide">LEVEL 99</p>
+                        </div>
+                        <div class="space-y-4 text-sm tracking-wide">
+                            <div class="flex justify-between border-b border-gray-200 pb-2"><span class="text-gray-500">ITEMS</span><span class="text-gray-900">342</span></div>
+                            <div class="flex justify-between border-b border-gray-200 pb-2"><span class="text-gray-500">RANK</span><span class="text-gray-900">#99</span></div>
+                            <div class="flex justify-between border-b border-gray-200 pb-2"><span class="text-gray-500">POINTS</span><span class="text-gray-900">25,000</span></div>
+                        </div>
+                    </div>
+                    <div class="border border-gray-300 p-8">
+                        <h4 class="text-lg font-light mb-6 text-gray-900 tracking-wide">BADGES</h4>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="aspect-square border border-gray-300 flex items-center justify-center text-3xl">○</div>
+                            <div class="aspect-square border border-gray-300 flex items-center justify-center text-3xl">□</div>
+                            <div class="aspect-square border border-gray-300 flex items-center justify-center text-3xl">△</div>
+                            <div class="aspect-square border border-gray-300 flex items-center justify-center text-3xl">✱</div>
+                            <div class="aspect-square border border-gray-300 flex items-center justify-center text-3xl">◇</div>
+                            <div class="aspect-square border border-gray-200 flex items-center justify-center text-3xl text-gray-300">—</div>
+                        </div>
+                    </div>
+                    <div class="border border-gray-300 p-8">
+                        <h4 class="text-lg font-light mb-6 text-gray-900 tracking-wide">STATUS</h4>
+                        <div class="mb-8">
+                            <div class="flex justify-between text-xs text-gray-500 tracking-widest mb-3">
+                                <span>99</span><span>100</span>
+                            </div>
+                            <div class="h-px bg-gray-300 relative">
+                                <div class="absolute left-0 top-0 h-full bg-gray-900" style="width: 92%"></div>
+                            </div>
+                            <p class="text-right text-xs text-gray-500 mt-2 tracking-wide">920 / 1000</p>
+                        </div>
+                        <div class="space-y-3 text-sm tracking-wide">
+                            <div class="border border-gray-900 p-3 text-center text-gray-900">ACTIVE</div>
+                            <div class="border border-gray-300 p-3 text-center text-gray-500">NEXT: 80</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
+
     </main>
-    <footer class="bg-gray-900 text-white py-8 mt-24">
+
+    <footer class="bg-gray-900 text-white py-12 mt-32">
         <div class="container mx-auto px-6 text-center">
-            <p class="font-medium">MODERN & CLEAN DESIGN SYSTEMS</p>
-            <a href="index.html" class="text-gray-400 hover:text-white font-medium mt-2 inline-block">← Back to Index</a>
+            <p class="font-medium text-lg mb-2">MODERN & CLEAN DESIGN SYSTEMS</p>
+            <p class="text-gray-400 text-sm mb-4">shadcn • Vercel • Linear • Arc • Apple • Stripe • Plain</p>
+            <a href="index.html" class="text-gray-400 hover:text-white font-medium transition">← Back to Index</a>
         </div>
     </footer>
+
 </body>
 </html>

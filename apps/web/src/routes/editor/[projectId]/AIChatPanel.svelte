@@ -13,6 +13,23 @@
 		updatedAt: string;
 	};
 
+	type ToolInput = {
+		path?: string;
+		edits?: Array<any>;
+	};
+
+	type ToolOutput = {
+		error?: string;
+		lines?: number;
+		size?: number;
+		total?: number;
+		changes?: {
+			old_lines: number;
+			new_lines: number;
+		};
+		diff?: string;
+	};
+
 	let {
 		projectId,
 		onFileEditRequested,
@@ -33,6 +50,7 @@
 	let input = $state('');
 	let chat: Chat | null = $state(null);
 	let quickMode = $state(false);
+	let isStreaming = $state(false);
 
 	// Conversation management state
 	let conversations = $state<Conversation[]>([]);
@@ -209,8 +227,8 @@
 	/**
 	 * Determine when to automatically send to continue the conversation.
 	 */
-	function shouldAutoSend(chat: Chat): boolean {
-		const lastMessage = chat.messages[chat.messages.length - 1];
+	function shouldAutoSend({ messages }: { messages: UIMessage[] }): boolean {
+		const lastMessage = messages[messages.length - 1];
 		if (!lastMessage || lastMessage.role !== 'assistant') return false;
 
 		let hasApprovalResponses = false;
@@ -233,16 +251,21 @@
 
 	// Initialize chat
 	chat = new Chat({
-		api: '/api/chat',
-		sendAutomaticallyWhen: shouldAutoSend,
-		onError: (error) => {
-			console.error('Chat error:', error);
-		}
+		sendAutomaticallyWhen: shouldAutoSend
 	});
 
 	// Load conversations on mount
 	onMount(async () => {
 		await loadConversations();
+	});
+
+	// Track streaming state based on message flow
+	$effect(() => {
+		if (chat && chat.messages.length > 0) {
+			const lastMessage = chat.messages[chat.messages.length - 1];
+			// If last message is from user and not followed by assistant, we're streaming
+			isStreaming = lastMessage.role === 'user';
+		}
 	});
 
 	// Auto-save when messages change
@@ -253,6 +276,11 @@
 	});
 
 	// Svelte 5 reactive effect to handle approval requests
+	// CLIENT-SIDE EXECUTION: We execute editFile locally, then send result back to AI
+	// This enables:
+	// - Instant UI updates (no server round-trip)
+	// - Y.js/CRDT compatibility (client owns mutations)
+	// - No race conditions between DB writes and UI refreshes
 	$effect(() => {
 		if (!chat || !onFileEditRequested) return;
 
@@ -277,9 +305,11 @@
 							processedApprovals.add(approvalId);
 
 							if (quickMode) {
-								handleApproval(approvalId, true);
+								// Quick Mode: Auto-execute locally and approve
+								executeEditFileClientSide(part, approvalId, true);
 							} else {
-								triggerDiffView(part);
+								// Safe Mode: Show diff for manual approval, wait for user
+								executeEditFileClientSide(part, approvalId, false);
 							}
 						}
 					}
@@ -290,13 +320,151 @@
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!chat || !input.trim() || chat.status === 'loading') return;
+		if (!chat || !input.trim() || isStreaming) return;
 
 		chat.sendMessage({
 			text: input,
 			metadata: { projectId }
 		});
 		input = '';
+	}
+
+	/**
+	 * Execute editFile tool client-side (for Y.js/CRDT compatibility)
+	 *
+	 * Flow:
+	 * 1. Apply edits locally to client state (instant UI update)
+	 * 2. Send result back to AI via addToolResult
+	 * 3. Trigger onFileEditCompleted to persist to server
+	 */
+	function executeEditFileClientSide(part: any, approvalId: string, autoApprove: boolean) {
+		if (!chat) return;
+
+		const input = part.input;
+		if (!input || !input.path || !input.edits) {
+			console.error('[Client-Side Edit] Missing input data:', input);
+			return;
+		}
+
+		// Find original content from previous readFile
+		let originalContent = '';
+		for (let i = chat.messages.length - 1; i >= 0; i--) {
+			const msg = chat.messages[i];
+			for (const msgPart of msg.parts) {
+				if (
+					msgPart.type === 'tool-readFile' &&
+					'output' in msgPart &&
+					(msgPart as any).output?.path === input.path
+				) {
+					originalContent = (msgPart as any).output.content || '';
+					break;
+				}
+			}
+			if (originalContent) break;
+		}
+
+		if (!originalContent) {
+			console.error('[Client-Side Edit] Could not find original content for:', input.path);
+			return;
+		}
+
+		try {
+			// Apply edits locally (client-side mutation)
+			const newContent = applyEdits(originalContent, input.edits);
+
+			if (autoApprove) {
+				// Quick Mode: Apply immediately, send success result to AI
+				console.log('[Client-Side Edit] Auto-applying edits to:', input.path);
+
+				// Immediately approve in Quick Mode
+				chat.addToolApprovalResponse({
+					id: approvalId,
+					approved: true
+				});
+
+				// Trigger UI update + server persistence
+				onFileEditRequested?.(
+					input.path,
+					originalContent,
+					newContent,
+					approvalId,
+					() => {
+						// On approve: Send success result to AI
+						chat.addToolResult({
+							tool: 'editFile',
+							toolCallId: part.toolCallId,
+							output: {
+								success: true,
+								path: input.path,
+								changes: {
+									old_lines: originalContent.split('\n').length,
+									new_lines: newContent.split('\n').length
+								}
+							}
+						});
+						onFileEditCompleted?.(input.path);
+					},
+					() => {
+						// On deny: Send error result to AI (should never happen in Quick Mode)
+						chat.addToolResult({
+							state: 'output-error',
+							tool: 'editFile',
+							toolCallId: part.toolCallId,
+							errorText: 'Edit denied by user'
+						});
+					}
+				);
+			} else {
+				// Safe Mode: Show diff, wait for user approval
+				onFileEditRequested?.(
+					input.path,
+					originalContent,
+					newContent,
+					approvalId,
+					() => {
+						// User approved: First approve, then send result
+						chat.addToolApprovalResponse({
+							id: approvalId,
+							approved: true
+						});
+						chat.addToolResult({
+							tool: 'editFile',
+							toolCallId: part.toolCallId,
+							output: {
+								success: true,
+								path: input.path,
+								changes: {
+									old_lines: originalContent.split('\n').length,
+									new_lines: newContent.split('\n').length
+								}
+							}
+						});
+						onFileEditCompleted?.(input.path);
+					},
+					() => {
+						// User denied: First deny, then send error
+						chat.addToolApprovalResponse({
+							id: approvalId,
+							approved: false
+						});
+						chat.addToolResult({
+							state: 'output-error',
+							tool: 'editFile',
+							toolCallId: part.toolCallId,
+							errorText: 'Edit denied by user'
+						});
+					}
+				);
+			}
+		} catch (error) {
+			console.error('[Client-Side Edit] Failed to apply edits:', error);
+			chat.addToolResult({
+				state: 'output-error',
+				tool: 'editFile',
+				toolCallId: part.toolCallId,
+				errorText: `Failed to apply edits: ${error instanceof Error ? error.message : String(error)}`
+			});
+		}
 	}
 
 	function handleApproval(approvalId: string, approved: boolean) {
@@ -321,49 +489,13 @@
 		}
 	}
 
+	/**
+	 * OLD FUNCTION - Now unused, kept for reference
+	 * Safe Mode now uses executeEditFileClientSide(part, approvalId, false)
+	 */
 	function triggerDiffView(part: any) {
-		if (!chat || !onFileEditRequested) return;
-
-		const input = part.input;
-		if (!input || !input.path || !input.edits) return;
-
-		// Find original content from previous readFile
-		let originalContent = '';
-		for (let i = chat.messages.length - 1; i >= 0; i--) {
-			const msg = chat.messages[i];
-			for (const msgPart of msg.parts) {
-				if (
-					msgPart.type === 'tool-readFile' &&
-					'output' in msgPart &&
-					(msgPart as any).output?.path === input.path
-				) {
-					originalContent = (msgPart as any).output.content || '';
-					break;
-				}
-			}
-			if (originalContent) break;
-		}
-
-		if (!originalContent) return;
-
-		const newContent = applyEdits(originalContent, input.edits);
-
-		if (originalContent === newContent) {
-			handleEditFileApproval(part, true);
-			return;
-		}
-
-		const approvalId = part.approval?.id;
-		if (!approvalId) return;
-
-		onFileEditRequested(
-			input.path,
-			originalContent,
-			newContent,
-			approvalId,
-			() => handleEditFileApproval(part, true),
-			() => handleEditFileApproval(part, false)
-		);
+		// This function is deprecated - executeEditFileClientSide handles both modes
+		console.warn('[Deprecated] triggerDiffView called - use executeEditFileClientSide instead');
 	}
 </script>
 
@@ -412,7 +544,7 @@
 				</button>
 			{/if}
 
-			{#if chat?.status === 'loading'}
+			{#if isStreaming}
 				<span class="loading-indicator">●</span>
 			{/if}
 			{#if isSavingMessages}
@@ -468,26 +600,34 @@
 									{part.text}
 								</div>
 							{:else if part.type === 'tool-readFile' || part.type === 'tool-listFiles' || part.type === 'tool-editFile'}
+								{@const input = part.input as ToolInput}
 								<div class="tool-call">
 									<div class="tool-name">
 										{#if part.type === 'tool-readFile'}
-											📖 Reading {part.input && 'path' in part.input ? part.input.path : 'file'}
+											📖 Reading {input?.path || 'file'}
 										{:else if part.type === 'tool-listFiles'}
 											📂 Listing files...
 										{:else if part.type === 'tool-editFile'}
-											✏️ Editing {part.input && 'path' in part.input ? part.input.path : 'file'}
-											{#if 'state' in part}
-												<span class="text-xs text-muted-foreground ml-2">(State: {part.state})</span>
+											✏️ Editing {input?.path || 'file'}
+											{#if 'state' in part && part.state === 'input-streaming'}
+												<span class="text-xs text-muted-foreground ml-2">
+													<span class="streaming-indicator">●</span> Streaming...
+												</span>
 											{/if}
 										{/if}
 									</div>
 
-									{#if part.type === 'tool-editFile' && 'state' in part && part.state === 'approval-requested'}
+									{#if part.type === 'tool-editFile' && 'state' in part && part.state === 'input-streaming' && input}
+										<div class="streaming-preview">
+											<div class="streaming-preview-label">Preview:</div>
+											<pre class="streaming-preview-content">{JSON.stringify(input, null, 2)}</pre>
+										</div>
+									{:else if part.type === 'tool-editFile' && 'state' in part && part.state === 'approval-requested'}
 										<div class="approval-request">
 											<div class="approval-details">
-												<div class="file-path">{part.input?.path || 'Unknown file'}</div>
+												<div class="file-path">{input?.path || 'Unknown file'}</div>
 												<div class="edits-count">
-													{part.input?.edits?.length || 0} change(s) requested
+													{input?.edits?.length || 0} change(s) requested
 												</div>
 												<div class="diff-notice">
 													👉 <strong>Review changes in the code editor above</strong>
@@ -495,19 +635,20 @@
 											</div>
 										</div>
 									{:else if part.output}
+										{@const output = part.output as ToolOutput}
 										<div class="tool-result">
-											{#if part.output.error}
-												<span class="error">❌ {part.output.error}</span>
+											{#if output.error}
+												<span class="error">❌ {output.error}</span>
 											{:else if part.type === 'tool-readFile'}
-												<span class="success">✅ Read {part.output.lines} lines ({part.output.size} bytes)</span>
+												<span class="success">✅ Read {output.lines} lines ({output.size} bytes)</span>
 											{:else if part.type === 'tool-listFiles'}
-												<span class="success">✅ Found {part.output.total} files</span>
+												<span class="success">✅ Found {output.total} files</span>
 											{:else if part.type === 'tool-editFile'}
-												<span class="success">✅ File updated ({part.output.changes?.old_lines} → {part.output.changes?.new_lines} lines)</span>
-												{#if part.output.diff}
+												<span class="success">✅ File updated ({output.changes?.old_lines} → {output.changes?.new_lines} lines)</span>
+												{#if output.diff}
 													<details class="diff-details">
 														<summary>View diff</summary>
-														<pre class="diff-content">{part.output.diff}</pre>
+														<pre class="diff-content">{output.diff}</pre>
 													</details>
 												{/if}
 											{/if}
@@ -519,7 +660,7 @@
 					</div>
 				{/each}
 
-				{#if chat.status === 'loading'}
+				{#if isStreaming}
 					<div class="message assistant">
 						<div class="typing-indicator">
 							<span></span>
@@ -541,11 +682,11 @@
 				<input
 					bind:value={input}
 					placeholder="Ask me about your game code..."
-					disabled={chat.status === 'loading'}
+					disabled={isStreaming}
 					autocomplete="off"
 				/>
-				<button type="submit" disabled={chat.status === 'loading' || !input.trim()}>
-					{chat.status === 'loading' ? 'Thinking...' : 'Send'}
+				<button type="submit" disabled={isStreaming || !input.trim()}>
+					{isStreaming ? 'Thinking...' : 'Send'}
 				</button>
 			</form>
 		{/if}
@@ -1038,5 +1179,44 @@
 	.suggestions-list li:hover {
 		background: hsl(var(--muted) / 0.5);
 		color: hsl(var(--foreground));
+	}
+
+	/* Streaming Preview Styles */
+	.streaming-indicator {
+		color: hsl(var(--primary));
+		animation: pulse 1s infinite;
+		font-size: 1rem;
+		line-height: 0;
+		display: inline-block;
+	}
+
+	.streaming-preview {
+		margin-top: 8px;
+		padding: 8px 10px;
+		background: hsl(var(--muted) / 0.3);
+		border-left: 3px solid hsl(var(--primary));
+		border-radius: 4px;
+		font-size: 0.7rem;
+		max-height: 200px;
+		overflow-y: auto;
+	}
+
+	.streaming-preview-label {
+		font-weight: 600;
+		color: hsl(var(--primary));
+		margin-bottom: 4px;
+		font-size: 0.65rem;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.streaming-preview-content {
+		font-family: 'JetBrains Mono', 'Fira Code', monospace;
+		white-space: pre-wrap;
+		word-break: break-word;
+		color: hsl(var(--foreground));
+		margin: 0;
+		line-height: 1.4;
+		font-size: 0.65rem;
 	}
 </style>

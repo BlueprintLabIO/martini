@@ -1,20 +1,18 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createServerClient } from '@supabase/ssr';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
+import { createClient } from '@supabase/supabase-js';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { SECRET_SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 
 /**
  * GET /api/starter-assets - List all starter assets from the starter-assets bucket
  * Returns assets organized by category (spritesheets, sounds) with metadata
+ *
+ * Note: Uses service role key for listing bucket contents (required permission)
  */
 export const GET: RequestHandler = async () => {
-	const supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-		cookies: {
-			getAll() {
-				return [];
-			}
-		}
-	});
+	// Use service role key - required to list bucket contents even for public buckets
+	const supabase = createClient(PUBLIC_SUPABASE_URL, SECRET_SUPABASE_SERVICE_ROLE_KEY);
 
 	try {
 		// List all files in starter-assets bucket
@@ -24,8 +22,10 @@ export const GET: RequestHandler = async () => {
 		});
 
 		if (error) {
-			console.error('Error listing starter assets:', error);
-			return json({ error: 'Failed to fetch starter assets', details: error.message }, { status: 500 });
+			return json({
+				error: 'Failed to fetch starter assets',
+				details: error.message
+			}, { status: 500 });
 		}
 
 		// Recursively list files in subdirectories
@@ -38,7 +38,6 @@ export const GET: RequestHandler = async () => {
 			});
 
 			if (error) {
-				console.error(`Error listing ${path}:`, error);
 				return;
 			}
 
@@ -46,7 +45,9 @@ export const GET: RequestHandler = async () => {
 				const itemPath = path ? `${path}/${item.name}` : item.name;
 
 				// Skip metadata.json
-				if (item.name === 'metadata.json') continue;
+				if (item.name === 'metadata.json') {
+					continue;
+				}
 
 				// If it's a folder, recurse
 				if (!item.metadata && item.name.indexOf('.') === -1) {

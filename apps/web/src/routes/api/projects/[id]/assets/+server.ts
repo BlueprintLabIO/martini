@@ -137,7 +137,7 @@ export const POST: RequestHandler = async ({ params, request, locals, cookies })
 			},
 			setAll(cookiesToSet) {
 				cookiesToSet.forEach(({ name, value, options }) => {
-					cookies.set(name, value, options);
+					cookies.set(name, value, { ...options, path: options.path ?? '/' });
 				});
 			}
 		}

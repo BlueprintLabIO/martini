@@ -65,7 +65,7 @@ export class MultiplayerClient {
 
 			this.socket.on('connect', () => {
 				console.log('[MultiplayerClient] Connected to signaling server');
-				this.playerId = this.socket!.id;
+				this.playerId = this.socket!.id ?? null;
 
 				// Request to join room
 				this.socket!.emit('join-room', {

@@ -550,6 +550,9 @@
 
     function loadUserCode(code) {
       try {
+        console.log('📥 [Iframe] loadUserCode() called');
+        console.log('   [Iframe] userCodeLoaded:', userCodeLoaded, '| phaserGame exists:', !!phaserGame);
+
         // Clear old scene states
         sceneStates.clear();
         userScenes = {};
@@ -557,6 +560,7 @@
         // Execute user code (defines window.scenes and window.startScene)
         const userFunction = new Function(code);
         userFunction();
+        console.log('✅ [Iframe] User code executed successfully');
 
         // Validate user code
         if (!window.scenes || typeof window.scenes !== 'object') {
@@ -575,15 +579,22 @@
 
         // If game already exists, restart the scene
         if (userCodeLoaded && phaserGame) {
+          console.log('🔄 [Iframe] HOT RELOAD: Restarting scene...');
           phaserGame.scene.scenes[0].scene.restart();
+          console.log('📤 [Iframe] Sending READY (hot reload)');
+          // Scene is ready after restart - notify parent
+          parent.postMessage({ type: 'READY' }, '*');
+          return; // Early return - game already initialized
         }
 
+        console.log('🆕 [Iframe] FIRST LOAD: Setting userCodeLoaded = true');
         userCodeLoaded = true;
 
-        // Notify parent that game is ready
-        parent.postMessage({ type: 'READY' }, '*');
+        // First load: READY message will be sent after Phaser.Game is created (see line ~690)
+        console.log('⏳ [Iframe] Waiting for Phaser.Game creation to send READY...');
 
       } catch (error) {
+        console.error('❌ [Iframe] Error loading user code:', error);
         reportError(error);
       }
     }
@@ -597,6 +608,7 @@
 
       switch (type) {
         case 'LOAD_CODE':
+          console.log('📨 [Iframe] Received LOAD_CODE message from parent');
           loadUserCode(payload.code);
           break;
 
@@ -684,9 +696,12 @@
     setInterval(() => gameAPI._sendHeartbeat(), 1000);
 
     // Create Phaser game
+    console.log('🎮 [Iframe] Creating Phaser.Game instance...');
     phaserGame = new Phaser.Game(config);
+    console.log('✅ [Iframe] Phaser.Game created');
 
     // Notify parent that sandbox is ready
+    console.log('📤 [Iframe] Sending READY (sandbox initialized)');
     parent.postMessage({ type: 'READY' }, '*');
   </script>
 </body>
