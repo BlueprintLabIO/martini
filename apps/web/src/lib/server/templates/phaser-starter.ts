@@ -1,3 +1,8 @@
+/**
+ * Simple Phaser 3 starter template using Custom API
+ * Single scene example for beginners
+ */
+
 export const phaserStarterFiles = [
 	{
 		path: '/index.html',
@@ -5,7 +10,7 @@ export const phaserStarterFiles = [
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>My Phaser Game</title>
+  <title>My First Game</title>
   <style>
     * { margin: 0; padding: 0; }
     body {
@@ -20,64 +25,81 @@ export const phaserStarterFiles = [
 </head>
 <body>
   <div id="game"></div>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <!-- Game runs in sandboxed iframe -->
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>`
 	},
 	{
 		path: '/src/main.js',
-		content: `import { GameScene } from './scenes/GameScene.js';
+		content: `/**
+ * My First Game!
+ *
+ * This is a simple example to get you started.
+ * See CUSTOM_API.md for full documentation.
+ */
 
-const config = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  parent: 'game',
-  backgroundColor: '#2d2d2d',
-  physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 300 },
-      debug: false
+// Define your game scenes
+window.scenes = {
+  Game: {
+    // This runs once when the scene starts
+    create(scene) {
+      // Welcome message
+      scene.add.text(400, 200, 'Hello Phaser!', {
+        fontSize: '48px',
+        color: '#ffffff',
+        fontFamily: 'Arial'
+      }).setOrigin(0.5);
+
+      // Instructions
+      scene.add.text(400, 280, 'Use arrow keys to move the player', {
+        fontSize: '20px',
+        color: '#aaaaaa',
+        fontFamily: 'Arial'
+      }).setOrigin(0.5);
+
+      // Create a player (green circle)
+      this.player = scene.add.circle(400, 400, 20, 0x00ff00);
+      this.speed = 5;
+
+      // Create a platform (green rectangle)
+      const platform = scene.add.graphics();
+      platform.fillStyle(0x00ff00, 1);
+      platform.fillRect(300, 500, 200, 20);
+
+      // Log to console
+      gameAPI.log('Game started!');
+    },
+
+    // This runs every frame (60 times per second)
+    update(scene, time, delta) {
+      // Get keyboard input
+      const cursors = scene.input.keyboard.createCursorKeys();
+
+      // Move player left/right
+      if (cursors.left.isDown) {
+        this.player.x -= this.speed;
+      }
+      if (cursors.right.isDown) {
+        this.player.x += this.speed;
+      }
+
+      // Move player up/down
+      if (cursors.up.isDown) {
+        this.player.y -= this.speed;
+      }
+      if (cursors.down.isDown) {
+        this.player.y += this.speed;
+      }
+
+      // Keep player on screen
+      this.player.x = Phaser.Math.Clamp(this.player.x, 20, 780);
+      this.player.y = Phaser.Math.Clamp(this.player.y, 20, 580);
     }
-  },
-  scene: [GameScene]
+  }
 };
 
-new Phaser.Game(config);`
-	},
-	{
-		path: '/src/scenes/GameScene.js',
-		content: `export class GameScene extends Phaser.Scene {
-  constructor() {
-    super('GameScene');
-  }
-
-  create() {
-    // Add welcome text
-    this.add.text(400, 300, 'Hello Phaser!', {
-      fontSize: '48px',
-      color: '#ffffff',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-
-    // Add instructions
-    this.add.text(400, 400, 'Edit the code to create your game!', {
-      fontSize: '20px',
-      color: '#aaaaaa',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-
-    // Add a bouncing sprite placeholder
-    const graphics = this.add.graphics();
-    graphics.fillStyle(0x00ff00, 1);
-    graphics.fillCircle(400, 200, 30);
-  }
-
-  update() {
-    // Game loop - runs every frame
-  }
-}`
+// This is the first scene that will run
+window.startScene = 'Game';`
 	}
 ];

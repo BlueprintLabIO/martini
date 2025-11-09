@@ -11117,3 +11117,3835 @@ Using the user object as returned from supabase.auth.getSession() or from some s
 Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
 === CHAT API DEBUG ===
 Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+=== CHAT API DEBUG ===
+Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:12 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:12 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:20 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:20 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:27 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:43 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:43 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:48 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:34:56 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:540:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:719:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:728:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:734:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:741:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:748:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:753:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:754:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:767:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:772:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:777:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:782:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:35:29 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:35:29 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:540:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:719:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:728:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:734:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:741:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:748:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:753:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:754:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:767:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:772:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:777:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:35:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:782:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:448:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:539:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:718:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:727:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:733:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:740:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:747:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:752:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:753:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:766:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:771:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:776:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:781:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:40:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/routes/editor/[projectId]/AIChatPanel.svelte?svelte&type=style&lang.css, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:40:30 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:448:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:539:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:718:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:727:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:733:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:740:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:747:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:752:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:753:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:766:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:771:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:776:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:781:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:455:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:546:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:725:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:734:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:740:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:747:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:754:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:759:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:760:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:773:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:778:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:783:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:788:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:40:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:40:42 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:455:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:546:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:725:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:734:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:740:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:747:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:754:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:759:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:760:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:773:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:778:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:783:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:788:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:455:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:546:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:725:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:734:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:740:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:747:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:754:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:759:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:760:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:773:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:778:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:783:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:788:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:40:52 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:40:52 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:455:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:546:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:725:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:734:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:740:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:747:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:754:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:759:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:760:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:773:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:778:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:783:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:40:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:788:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:455:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:546:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:725:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:734:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:740:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:747:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:754:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:759:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:760:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:773:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:778:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:783:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:788:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:41:02 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:41:02 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:455:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:546:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:725:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:734:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:740:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:747:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:754:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:759:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:760:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:773:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:778:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:783:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:02 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:788:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:542:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:721:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:730:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:736:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:743:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:750:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:755:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:756:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:769:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:774:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:779:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:784:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:41:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte?svelte&type=style&lang.css, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:41:08 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:542:1 Unused CSS selector ".tool-calls"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:721:1 Unused CSS selector ".edits-preview"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:730:1 Unused CSS selector ".edit-item"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:736:1 Unused CSS selector ".edit-old"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:743:1 Unused CSS selector ".edit-new"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:750:1 Unused CSS selector ".approval-buttons"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:755:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:756:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:769:1 Unused CSS selector ".approve-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:774:1 Unused CSS selector ".approve-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:779:1 Unused CSS selector ".deny-btn"
+https://svelte.dev/e/css_unused_selector[39m
+[36m12:41:14 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:784:1 Unused CSS selector ".deny-btn:hover"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:41:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte?svelte&type=style&lang.css, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:41:14 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+=== CHAT API DEBUG ===
+Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:10:28 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:10:28 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/server/db/schema.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:10:29 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:10:29 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/server/db/schema.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:10:39 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:10:39 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mdrizzle/meta/_journal.json[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:34:17 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/routes/editor/[projectId]/AIChatPanel.svelte?svelte&type=style&lang.css, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:34:17 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+=== CHAT API DEBUG ===
+Extracted projectId from messages: c410ed9d-1ffc-44e1-b825-4c8d2bad1baf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:42:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:42:27 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:03 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/files/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:13 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:13 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/files/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:17 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:17 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/files/+server.ts[22m
+[36m11:43:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:43:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:80:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:43:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:43:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:80:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:43:50 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:43:50 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:133:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:50 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:43:50 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:43:50 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:43:50 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:133:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:03 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:03 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:133:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:44:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:44:03 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:44:03 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:03 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:133:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:25 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:25 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:149:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:44:25 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:44:25 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:44:25 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:25 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:149:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:149:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:44:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:44:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:44:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:44:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:149:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:45:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:45:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/hot-reload/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:45:43 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:45:43 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/hot-reload/+server.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m11:45:57 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:11:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:45:57 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:149:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:46:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:46:48 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/hot-reload/+server.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:46:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:46:53 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/files/+server.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:01 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/projects/[id]/files/+server.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+[36m11:47:16 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:47:16 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:148:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:16 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:47:16 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:47:16 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:148:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+[36m11:47:27 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:47:27 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:27 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:47:27 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:47:27 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+[36m11:47:36 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:47:36 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:36 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:36 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:47:36 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:47:36 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+[36m11:47:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:404:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:42 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m11:47:42 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:404:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+[36m11:47:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:410:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:52 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:52 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m11:47:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:410:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+[36m11:47:59 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:411:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:59 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:47:59 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m11:47:59 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:411:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /api/projects/c410ed9d-1ffc-44e1-b825-4c8d2bad1baf/hot-reload[0m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m11:48:25 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:411:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m11:48:25 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:48:25 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:48:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:48:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/server/db/schema.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:48:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:48:44 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/server/db/schema.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:48:58 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:48:58 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mdrizzle/meta/_journal.json[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:49:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:49:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m11:51:49 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:412:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:51:49 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:51:49 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m11:51:49 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:412:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m11:51:58 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:424:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:51:58 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:51:58 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m11:51:58 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:424:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:16 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m11:52:16 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:424:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:21 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:21 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x4)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x5)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:31 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x6)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x7)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:37 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x8)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m11:52:49 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:52:49 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:49 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:52:49 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m11:52:49 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:52:49 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:57:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:57:06 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m11:57:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m11:57:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:59:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:59:03 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/server/templates/phaser-scaffold-v2.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:59:23 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m11:59:23 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/server/templates/phaser-starter.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:01:53 PM[22m [36m[1m[vite][22m[39m [32m.env changed, restarting server...[39m
+[2m12:01:53 PM[22m [36m[1m[vite][22m[39m server restarted.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m12:01:56 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:424:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m12:02:02 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m12:02:02 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m12:02:02 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:424:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m12:02:02 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m12:02:02 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 09122914-3245-4df1-ad8c-cf256ec507b9
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 09122914-3245-4df1-ad8c-cf256ec507b9
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:08:41 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AssetPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:08:41 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AssetPanel.svelte[22m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 09122914-3245-4df1-ad8c-cf256ec507b9
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 09122914-3245-4df1-ad8c-cf256ec507b9
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 09122914-3245-4df1-ad8c-cf256ec507b9
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 09122914-3245-4df1-ad8c-cf256ec507b9
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:45:44 PM[22m [36m[1m[vite][22m[39m [32m.env changed, restarting server...[39m
+[2m12:45:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+[2m12:45:44 PM[22m [36m[1m[vite][22m[39m server restarted.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m12:45:51 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:424:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m12:45:59 PM[22m [36m[1m[vite][22m[39m [32m.env changed, restarting server...[39m
+[2m12:45:59 PM[22m [31m[1m[vite][22m[39m [31m[2m(ssr)[22m[39m [31mError when evaluating SSR module /src/routes/editor/[projectId]/+page.svelte: transport was disconnected, cannot call "fetchModule"[39m
+      at reviveInvokeError (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:475:14)
+      at Object.invoke (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:549:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async SSRCompatModuleRunner.getModuleInformation (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:1086:7)
+      at async request (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:1103:83)
+      at async eval (/Users/yao/blueprint/martini/node_modules/.pnpm/bits-ui@2.14.2_@internationalized+date@3.10.0_@sveltejs+kit@2.48.4_@opentelemetry+api@1_c0e53d8bf5830c37b57911dae66225db/node_modules/bits-ui/dist/bits/link-preview/components/link-preview.svelte:6:31)
+      at async ESModulesEvaluator.runInlinedModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:913:3)
+      at async SSRCompatModuleRunner.directRequest (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:1146:59)
+      at async SSRCompatModuleRunner.directRequest (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:15747:22)
+      at async SSRCompatModuleRunner.cachedRequest (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:1053:73)
+[2m12:45:59 PM[22m [31m[1m[vite][22m[39m [31m[2m(ssr)[22m[39m [31mError when evaluating SSR module /src/routes/+layout.ts: Vite module runner has been closed.[39m
+      at SSRCompatModuleRunner.getModuleInformation (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:1081:26)
+      at SSRCompatModuleRunner.cachedModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:1063:18)
+      at SSRCompatModuleRunner.import (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/module-runner.js:1013:34)
+      at instantiateModule (file:///Users/yao/blueprint/martini/node_modules/.pnpm/vite@7.2.2_@types+node@22.19.0_jiti@2.6.1_lightningcss@1.30.2/node_modules/vite/dist/node/chunks/config.js:15720:29)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async loud_ssr_load_module (file:///Users/yao/blueprint/martini/node_modules/.pnpm/@sveltejs+kit@2.48.4_@opentelemetry+api@1.9.0_@sveltejs+vite-plugin-svelte@6.2.1_svelte_f42192d8b22596d148ed4b8fe64696c9/node_modules/@sveltejs/kit/src/exports/vite/dev/index.js:71:11)
+      at async resolve (file:///Users/yao/blueprint/martini/node_modules/.pnpm/@sveltejs+kit@2.48.4_@opentelemetry+api@1.9.0_@sveltejs+vite-plugin-svelte@6.2.1_svelte_f42192d8b22596d148ed4b8fe64696c9/node_modules/@sveltejs/kit/src/exports/vite/dev/index.js:98:18)
+      at async Array.<anonymous> (file:///Users/yao/blueprint/martini/node_modules/.pnpm/@sveltejs+kit@2.48.4_@opentelemetry+api@1.9.0_@sveltejs+vite-plugin-svelte@6.2.1_svelte_f42192d8b22596d148ed4b8fe64696c9/node_modules/@sveltejs/kit/src/exports/vite/dev/index.js:223:41)
+      at async respond_with_error (/Users/yao/blueprint/martini/node_modules/.pnpm/@sveltejs+kit@2.48.4_@opentelemetry+api@1.9.0_@sveltejs+vite-plugin-svelte@6.2.1_svelte_f42192d8b22596d148ed4b8fe64696c9/node_modules/@sveltejs/kit/src/runtime/server/page/respond_with_error.js:45:26)
+      at async render_page (/Users/yao/blueprint/martini/node_modules/.pnpm/@sveltejs+kit@2.48.4_@opentelemetry+api@1.9.0_@sveltejs+vite-plugin-svelte@6.2.1_svelte_f42192d8b22596d148ed4b8fe64696c9/node_modules/@sveltejs/kit/src/runtime/server/page/index.js:362:10)
+[2m12:45:59 PM[22m [36m[1m[vite][22m[39m server restarted.
+[36m1:57:27 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:424:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m1:57:38 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m1:57:38 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[2m1:57:38 PM[22m [31m[1m[vite][22m[39m [31m[2m(ssr)[22m[39m [31mError when evaluating SSR module /src/routes/editor/[projectId]/+page.svelte: src/routes/editor/[projectId]/AssetPanel.svelte:266:12 Event attribute must be a JavaScript expression, not a string
+https://svelte.dev/e/attribute_invalid_event_handler[39m
+  Plugin: [35mvite-plugin-svelte:compile[39m
+  File: [36msrc/routes/editor/[projectId]/AssetPanel.svelte[39m:266:12
+[33m   264 |                          alt={asset.filename}
+   265 |                          class="h-8 w-8 rounded border border-border object-cover"
+   266 |                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                                                                                    ^
+   267 |                        />
+   268 |                        <div class="hidden h-8 w-8 items-center justify-center rounded border border-border bg-background">[39m
+
+[1;31m[500] GET /editor/09122914-3245-4df1-ad8c-cf256ec507b9[0m
+
+[2m1:57:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33mvite-plugin-node-polyfills/shims/buffer, vite-plugin-node-polyfills/shims/global, vite-plugin-node-polyfills/shims/process[32m[39m
+[2m1:57:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[500] GET /editor/09122914-3245-4df1-ad8c-cf256ec507b9[0m
+
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[500] GET /editor/09122914-3245-4df1-ad8c-cf256ec507b9[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:26:37 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:26:37 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AssetPanel.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[2m3:26:38 PM[22m [31m[1m[vite][22m[39m [31m[2m(ssr)[22m[39m [31mError when evaluating SSR module /src/routes/editor/[projectId]/+page.svelte: src/routes/editor/[projectId]/AssetPanel.svelte:267:12 Event attribute must be a JavaScript expression, not a string
+https://svelte.dev/e/attribute_invalid_event_handler[39m
+  Plugin: [35mvite-plugin-svelte:compile[39m
+  File: [36msrc/routes/editor/[projectId]/AssetPanel.svelte[39m:267:12
+[33m   265 |                          alt={asset.filename}
+   266 |                          class="h-8 w-8 rounded border border-border object-cover"
+   267 |                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                                                                                    ^
+   268 |                        />
+   269 |                        <div class="hidden h-8 w-8 items-center justify-center rounded border border-border bg-background">[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[500] GET /editor/09122914-3245-4df1-ad8c-cf256ec507b9[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:26:42 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:26:42 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AssetPanel.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[2m3:26:43 PM[22m [31m[1m[vite][22m[39m [31m[2m(ssr)[22m[39m [31mError when evaluating SSR module /src/routes/editor/[projectId]/+page.svelte: src/routes/editor/[projectId]/AssetPanel.svelte:271:12 Event attribute must be a JavaScript expression, not a string
+https://svelte.dev/e/attribute_invalid_event_handler[39m
+  Plugin: [35mvite-plugin-svelte:compile[39m
+  File: [36msrc/routes/editor/[projectId]/AssetPanel.svelte[39m:271:12
+[33m   269 |                          alt={asset.filename}
+   270 |                          class="h-8 w-8 rounded border border-border object-cover"
+   271 |                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                                                                                    ^
+   272 |                        />
+   273 |                        <div class="hidden h-8 w-8 items-center justify-center rounded border border-border bg-background">[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[500] GET /editor/09122914-3245-4df1-ad8c-cf256ec507b9[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:26:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:26:51 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AssetPanel.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m3:26:52 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:424:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m3:26:52 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:12:5 `iframeEl` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m3:26:52 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:79:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m3:35:24 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:425:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:35:24 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:35:24 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m3:35:24 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:425:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m3:35:30 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:428:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:35:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:35:30 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m3:35:30 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:428:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+[36m3:35:54 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:467:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:35:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:35:54 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m3:35:54 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:467:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:38:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:38:55 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m3:38:56 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:467:6 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:39:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:39:02 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x4)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m4:20:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m4:20:15 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m4:20:24 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m4:20:24 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m4:32:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AssetPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m4:32:09 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AssetPanel.svelte[22m

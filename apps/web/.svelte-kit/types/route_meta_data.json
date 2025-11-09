@@ -8,11 +8,29 @@
 	"/api/chat": [
 		"src/routes/api/chat/+server.ts"
 	],
+	"/api/conversations/[id]": [
+		"src/routes/api/conversations/[id]/+server.ts"
+	],
+	"/api/conversations/[id]/messages": [
+		"src/routes/api/conversations/[id]/messages/+server.ts"
+	],
 	"/api/projects": [
 		"src/routes/api/projects/+server.ts"
 	],
+	"/api/projects/[id]/assets": [
+		"src/routes/api/projects/[id]/assets/+server.ts"
+	],
+	"/api/projects/[id]/assets/copy-starter": [
+		"src/routes/api/projects/[id]/assets/copy-starter/+server.ts"
+	],
+	"/api/projects/[id]/assets/[assetId]": [
+		"src/routes/api/projects/[id]/assets/[assetId]/+server.ts"
+	],
 	"/api/projects/[id]/bundle": [
 		"src/routes/api/projects/[id]/bundle/+server.ts"
+	],
+	"/api/projects/[id]/conversations": [
+		"src/routes/api/projects/[id]/conversations/+server.ts"
 	],
 	"/api/projects/[id]/files": [
 		"src/routes/api/projects/[id]/files/+server.ts"
@@ -22,6 +40,9 @@
 	],
 	"/api/projects/[id]/multiplayer": [
 		"src/routes/api/projects/[id]/multiplayer/+server.ts"
+	],
+	"/api/starter-assets": [
+		"src/routes/api/starter-assets/+server.ts"
 	],
 	"/auth/login": [
 		"src/routes/+layout.ts",

@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { SECRET_COMPLETION_URL, SECRET_COMPLETION_KEY } from '$env/static/private';
 import { fastHash } from '$lib/utils/hash';
 import { applyEdits, generateUnifiedDiff } from '$lib/utils/diff';
+import { MULTIPLAYER_PROMPT_SHORT } from '$lib/ai/multiplayer-prompt';
 
 // DeepSeek client (official provider)
 const deepseek = createDeepSeek({
@@ -45,7 +46,11 @@ BE EXTREMELY CONCISE:
 - Don't explain everything at once - let them ask follow-up questions!
 - Example: "I see you want the player to jump! Let me check the Player.js file first." then DO IT.
 
-Remember: You're not just writing code - you're teaching kids how to bring their game ideas to life! Make it FUN! 🚀`;
+Remember: You're not just writing code - you're teaching kids how to bring their game ideas to life! Make it FUN! 🚀
+
+---
+
+${MULTIPLAYER_PROMPT_SHORT}`;
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { session, user } = await locals.safeGetSession();
@@ -94,6 +99,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'Unauthorized' }, { status: 403 });
 	}
 
+	// Fetch project files for system prompt context
+	const projectFiles = await db
+		.select({
+			path: files.path
+		})
+		.from(files)
+		.where(eq(files.projectId, projectId));
+
+	// Build dynamic system prompt with file tree
+	const fileListSection = projectFiles.length > 0
+		? `\n\nPROJECT FILES:\n${projectFiles.map(f => f.path).join('\n')}\n\nUse readFile(path) to read any of these files. Paths must start with / (e.g., /src/scenes/GameScene.js)`
+		: '';
+
+	const dynamicSystemPrompt = SYSTEM_PROMPT + fileListSection;
+
 	// Define tools for the AI using AI SDK 6 pattern
 	const tools = {
 		readFile: tool({
@@ -102,22 +122,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				path: z.string().describe('File path, e.g., /src/scenes/GameScene.js')
 			})),
 			execute: async ({ path }: { path: string }) => {
-				// Validate path
-				if (!path.startsWith('/')) {
-					return { error: 'Path must start with /', path };
-				}
+				// Normalize path: auto-prepend / if missing (be forgiving!)
+				const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
 				// Fetch file from database
 				const [file] = await db
 					.select()
 					.from(files)
-					.where(and(eq(files.projectId, projectId), eq(files.path, path)))
+					.where(and(eq(files.projectId, projectId), eq(files.path, normalizedPath)))
 					.limit(1);
 
 				if (!file) {
 					return {
 						error: 'File not found',
-						path,
+						path: normalizedPath,
 						hint: 'Use listFiles() to see available files'
 					};
 				}
@@ -172,15 +190,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			})),
 			needsApproval: true, // 🔑 Require user approval for file modifications
 			execute: async ({ path, version, edits }: { path: string; version: string; edits: Array<{ old_text: string; new_text: string }> }) => {
+				// Normalize path: auto-prepend / if missing (be forgiving!)
+				const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
 				// Fetch current file
 				const [file] = await db
 					.select()
 					.from(files)
-					.where(and(eq(files.projectId, projectId), eq(files.path, path)))
+					.where(and(eq(files.projectId, projectId), eq(files.path, normalizedPath)))
 					.limit(1);
 
 				if (!file) {
-					return { error: 'File not found', path };
+					return { error: 'File not found', path: normalizedPath };
 				}
 
 				// Verify version token (optimistic concurrency)
@@ -199,7 +220,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					const newContent = applyEdits(file.content, edits);
 
 					// Generate unified diff for approval UI
-					const diff = generateUnifiedDiff(path, file.content, newContent);
+					const diff = generateUnifiedDiff(normalizedPath, file.content, newContent);
 
 					// Save to database
 					await db
@@ -208,11 +229,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 							content: newContent,
 							updatedAt: new Date()
 						})
-						.where(and(eq(files.projectId, projectId), eq(files.path, path)));
+						.where(and(eq(files.projectId, projectId), eq(files.path, normalizedPath)));
 
 					return {
 						success: true,
-						path,
+						path: normalizedPath,
 						diff,
 						old_version: version,
 						new_version: fastHash(newContent),
@@ -237,7 +258,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// Stream response from DeepSeek
 		const result = streamText({
 			model: deepseek('deepseek-chat'),
-			system: SYSTEM_PROMPT,
+			system: dynamicSystemPrompt,
 			messages: convertToModelMessages(messages),
 			tools,
 			stopWhen: stepCountIs(5), // Allow up to 5 steps for multi-step tool calls

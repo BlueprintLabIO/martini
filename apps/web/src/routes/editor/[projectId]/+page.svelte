@@ -3,9 +3,11 @@
 	import CodeEditor from './CodeEditor.svelte';
 	import GamePreview from './GamePreview.svelte';
 	import AIChatPanel from './AIChatPanel.svelte';
+	import AssetPanel from './AssetPanel.svelte';
+	import DocsPanel from './DocsPanel.svelte';
 	import { fileTree } from '$lib/stores/fileTree.svelte';
 	import { onMount } from 'svelte';
-	import { ArrowLeft, Play } from 'lucide-svelte';
+	import { ArrowLeft, Play, BookOpen, MessageSquare } from 'lucide-svelte';
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
 
 	let { data } = $props();
@@ -16,6 +18,7 @@
 	let gamePreview: GamePreview;
 	let showNewFileDialog = $state(false);
 	let newFilePath = $state('');
+	let hotReloadEnabled = $state(true); // Auto-on by default
 
 	// Diff mode state for AI file edits
 	let diffMode = $state(false);
@@ -26,6 +29,9 @@
 		onApprove: () => void;
 		onDeny: () => void;
 	} | null = $state(null);
+
+	// Bottom panel toggle (AI Chat vs Docs)
+	let bottomPanelView = $state<'chat' | 'docs'>('chat');
 
 	onMount(() => {
 		// Build file tree from paths
@@ -66,6 +72,12 @@
 
 			file.dirty = false;
 			saveStatus = 'saved';
+
+			// Hot reload: auto-run game after save if enabled
+			if (hotReloadEnabled && gamePreview) {
+				console.log('🔥 Hot reload: triggering game reload after save');
+				await gamePreview.runGame();
+			}
 		} catch (error) {
 			console.error('Error saving file:', error);
 			saveStatus = 'unsaved';
@@ -287,11 +299,23 @@
 
 	<!-- Editor Layout -->
 	<Resizable.PaneGroup direction="horizontal" class="flex-1">
-		<!-- File Tree Sidebar -->
+		<!-- File Tree + Asset Panel Sidebar -->
 		<Resizable.Pane defaultSize={15} minSize={10} maxSize={25}>
-			<div class="h-full overflow-auto border-r bg-muted/30">
-				<FileTree onFileClick={openFile} onNewFile={handleNewFile} />
-			</div>
+			<Resizable.PaneGroup direction="vertical">
+				<!-- File Tree -->
+				<Resizable.Pane defaultSize={60} minSize={30}>
+					<div class="h-full overflow-auto bg-muted/30">
+						<FileTree onFileClick={openFile} onNewFile={handleNewFile} />
+					</div>
+				</Resizable.Pane>
+
+				<Resizable.Handle />
+
+				<!-- Asset Panel -->
+				<Resizable.Pane defaultSize={40} minSize={20}>
+					<AssetPanel projectId={data.project.id} />
+				</Resizable.Pane>
+			</Resizable.PaneGroup>
 		</Resizable.Pane>
 
 		<Resizable.Handle withHandle />
@@ -343,6 +367,7 @@
 					<div class="h-full">
 						<GamePreview
 							bind:this={gamePreview}
+							bind:hotReloadEnabled
 							projectId={data.project.id}
 							onRunGame={async () => {
 								// Optional: Add any post-run callbacks here
@@ -353,13 +378,52 @@
 
 				<Resizable.Handle withHandle />
 
-				<!-- AI Chat Panel -->
+				<!-- Bottom Panel: AI Chat + Docs -->
 				<Resizable.Pane defaultSize={40} minSize={20} maxSize={70}>
-					<AIChatPanel
-						projectId={data.project.id}
-						onFileEditRequested={handleFileEditRequest}
-						onFileEditCompleted={handleFileEditCompleted}
-					/>
+					<div class="flex h-full flex-col">
+						<!-- Tab Bar -->
+						<div class="flex border-b bg-muted/30">
+							<button
+								class="flex items-center gap-2 px-4 py-2 text-sm transition-colors {bottomPanelView === 'chat' ? 'border-b-2 border-purple-500 bg-background font-medium' : 'text-muted-foreground hover:text-foreground'}"
+								onclick={() => bottomPanelView = 'chat'}
+							>
+								<MessageSquare class="h-4 w-4" />
+								AI Assistant
+							</button>
+							<button
+								class="flex items-center gap-2 px-4 py-2 text-sm transition-colors {bottomPanelView === 'docs' ? 'border-b-2 border-purple-500 bg-background font-medium' : 'text-muted-foreground hover:text-foreground'}"
+								onclick={() => bottomPanelView = 'docs'}
+							>
+								<BookOpen class="h-4 w-4" />
+								Quick Reference
+							</button>
+						</div>
+
+						<!-- Panel Content -->
+						<div class="flex-1 overflow-hidden">
+							{#if bottomPanelView === 'chat'}
+								<AIChatPanel
+									projectId={data.project.id}
+									onFileEditRequested={handleFileEditRequest}
+									onFileEditCompleted={handleFileEditCompleted}
+								/>
+							{:else}
+								<DocsPanel
+									onInsertCode={(code) => {
+										// Insert code into active file at cursor position
+										if (activeFilePath) {
+											const file = filesMap.get(activeFilePath);
+											if (file) {
+												file.content += '\n\n' + code;
+												file.dirty = true;
+												saveStatus = 'unsaved';
+											}
+										}
+									}}
+								/>
+							{/if}
+						</div>
+					</div>
 				</Resizable.Pane>
 			</Resizable.PaneGroup>
 		</Resizable.Pane>

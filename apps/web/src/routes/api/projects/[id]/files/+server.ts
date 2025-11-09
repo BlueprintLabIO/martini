@@ -112,6 +112,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 		.set({ updatedAt: new Date() })
 		.where(eq(projects.id, params.id));
 
+
 	return json({ success: true, file: updatedFile });
 };
 
@@ -189,6 +190,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		.update(projects)
 		.set({ updatedAt: new Date() })
 		.where(eq(projects.id, params.id));
+
 
 	return json({ success: true, file: updatedFile });
 };

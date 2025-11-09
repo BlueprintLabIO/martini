@@ -29,9 +29,13 @@ always purge old files after refactor or migration.
 
 what is the industry gold standard?
 
+no need to create summary documents all the time.
+
 ### UI Component Libraries
 - **shadcn-svelte**: Pre-built accessible components (tree-view, collapsible, etc.)
 - **CodeMirror 6**: Code editor with JavaScript syntax highlighting
 - **bits-ui**: Low-level UI primitives (used by shadcn)
 - **lucide-svelte**: Icon library
+
+
 

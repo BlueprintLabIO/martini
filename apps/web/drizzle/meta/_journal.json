@@ -22,6 +22,20 @@
       "when": 1762591710941,
       "tag": "0002_remarkable_doctor_octopus",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1762643439668,
+      "tag": "0003_harsh_power_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1762649338560,
+      "tag": "0004_illegal_madame_hydra",
+      "breakpoints": true
     }
   ]
 }

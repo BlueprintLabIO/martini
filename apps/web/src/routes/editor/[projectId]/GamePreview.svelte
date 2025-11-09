@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { AlertCircle, Terminal } from 'lucide-svelte';
+	import { AlertCircle, Terminal, Zap, ZapOff } from 'lucide-svelte';
 	import MultiplayerManager from '$lib/multiplayer/MultiplayerManager.svelte';
 
-	let { projectId, onRunGame } = $props<{
+	let { projectId, onRunGame, hotReloadEnabled = $bindable(true) } = $props<{
 		projectId: string;
 		onRunGame: () => Promise<void>;
+		hotReloadEnabled?: boolean;
 	}>();
 
 	let iframeEl: HTMLIFrameElement;
@@ -81,24 +82,39 @@
 		consoleLogs = [];
 
 		try {
-			// Fetch bundled code from server
-			const response = await fetch(`/api/projects/${projectId}/bundle`, {
-				method: 'POST'
-			});
+			// Fetch bundled code and assets in parallel
+			const [codeResponse, assetsResponse] = await Promise.all([
+				fetch(`/api/projects/${projectId}/bundle`, { method: 'POST' }),
+				fetch(`/api/projects/${projectId}/assets`)
+			]);
 
-			if (!response.ok) {
-				const error = await response.json();
+			if (!codeResponse.ok) {
+				const error = await codeResponse.json();
 				throw new Error(error.details || error.error || 'Failed to bundle code');
 			}
 
-			const { code } = await response.json();
+			const { code } = await codeResponse.json();
 
-			// Send bundled code to iframe
+			// Get assets (may fail if not set up yet, that's OK)
+			let assets = [];
+			if (assetsResponse.ok) {
+				const assetsData = await assetsResponse.json();
+				assets = assetsData.assets || [];
+			}
+
+			// Send bundled code + assets to iframe
 			if (iframeEl && iframeEl.contentWindow) {
 				iframeEl.contentWindow.postMessage(
 					{
 						type: 'LOAD_CODE',
-						payload: { code }
+						payload: {
+							code,
+							assets: assets.map((asset) => ({
+								filename: asset.filename,
+								fileType: asset.fileType,
+								url: asset.url
+							}))
+						}
 					},
 					'*'
 				);
@@ -127,6 +143,23 @@
 	<div class="flex items-center justify-between border-b bg-background px-4 py-2">
 		<h3 class="text-sm font-semibold">Game Preview</h3>
 		<div class="flex gap-2">
+			<button
+				onclick={() => {
+					hotReloadEnabled = !hotReloadEnabled;
+				}}
+				class="flex items-center gap-1 rounded px-2 py-1 text-xs {hotReloadEnabled
+					? 'bg-green-600/10 text-green-600 hover:bg-green-600/20'
+					: 'text-muted-foreground hover:bg-muted'}"
+				title={hotReloadEnabled ? 'Hot reload ON (auto-refresh on save)' : 'Hot reload OFF'}
+			>
+				{#if hotReloadEnabled}
+					<Zap class="h-3 w-3" />
+					Hot Reload
+				{:else}
+					<ZapOff class="h-3 w-3" />
+					Hot Reload
+				{/if}
+			</button>
 			<button
 				onclick={() => (showConsole = !showConsole)}
 				class="flex items-center gap-1 rounded px-2 py-1 text-xs hover:bg-muted"

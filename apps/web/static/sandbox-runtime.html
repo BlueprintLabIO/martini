@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; media-src 'self' data: blob: https://*.supabase.co;">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -34,32 +34,97 @@
 
   <!-- Sandbox Runtime -->
   <script>
-    // Global state
+    /**
+     * Controlled Runtime for Phaser 3 Games
+     *
+     * User code defines scenes via window.scenes object and uses gameAPI.
+     * Sandbox controls the Phaser.Game instance for stability, hot reload, and multiplayer.
+     *
+     * See CUSTOM_API.md for full documentation.
+     */
+
+    // Runtime state
     let phaserGame = null;
-    let phaserScene = null;
+    let userScenes = {};
+    let currentSceneKey = null;
     let userCodeLoaded = false;
 
-    // gameAPI - Safe wrapper for user code
-    const gameAPI = {
+    // Scene state storage (persists across scene switches)
+    const sceneStates = new Map();
+
+    // Global gameAPI - Exposed to user code
+    window.gameAPI = {
       _frameCounter: 0,
       _randomSeed: Date.now(),
-      _entities: [],
-      _sounds: [],
-      _maxEntities: 1000,
-      _maxSounds: 10,
 
-      // Seeded random for deterministic multiplayer
-      random() {
-        const x = Math.sin(this._randomSeed++) * 10000;
-        return x - Math.floor(x);
+      // === Scene Management ===
+
+      /**
+       * Switch to a different scene
+       * @param {string} sceneKey - Key of the scene to switch to
+       * @param {object} data - Optional data to pass to the new scene
+       */
+      switchScene(sceneKey, data = {}) {
+        if (!userScenes[sceneKey]) {
+          this.log(`ERROR: Scene "${sceneKey}" not found`);
+          return;
+        }
+
+        if (phaserGame && phaserGame.scene.scenes[0]) {
+          currentSceneKey = sceneKey;
+          phaserGame.scene.scenes[0].scene.restart(data);
+        }
       },
 
-      // Get current frame number
+      /**
+       * Get the current active scene key
+       * @returns {string} Current scene key
+       */
+      getCurrentScene() {
+        return currentSceneKey;
+      },
+
+      /**
+       * Pause the current scene
+       */
+      pauseScene() {
+        if (phaserGame && phaserGame.scene.scenes[0]) {
+          phaserGame.scene.scenes[0].scene.pause();
+        }
+      },
+
+      /**
+       * Resume the current scene
+       */
+      resumeScene() {
+        if (phaserGame && phaserGame.scene.scenes[0]) {
+          phaserGame.scene.scenes[0].scene.resume();
+        }
+      },
+
+      // === Utilities ===
+
+      /**
+       * Seeded random number generator (for deterministic multiplayer)
+       * DEPRECATED: Use gameAPI.random.next() instead
+       * @returns {number} Random number between 0 and 1
+       */
+      random() {
+        return this.random.next();
+      },
+
+      /**
+       * Get current frame number
+       * @returns {number} Frame count since game started
+       */
       getFrame() {
         return this._frameCounter;
       },
 
-      // Logging (sends to parent)
+      /**
+       * Log a message to the parent console
+       * @param {string} message - Message to log
+       */
       log(message) {
         parent.postMessage({
           type: 'LOG',
@@ -67,11 +132,528 @@
         }, '*');
       },
 
-      // Heartbeat for watchdog
+      // === Advanced Access ===
+
+      /**
+       * Get the current Phaser scene object (advanced users)
+       * @returns {Phaser.Scene} Current scene
+       */
+      get scene() {
+        return phaserGame?.scene?.scenes[0] || null;
+      },
+
+      /**
+       * Get the Phaser game instance (read-only, advanced users)
+       * @returns {Phaser.Game} Game instance
+       */
+      get game() {
+        return phaserGame;
+      },
+
+      // === Multiplayer API ===
+      // Auto-sync players, events, and game state across 2-8 players
+
+      multiplayer: {
+        // Internal state (populated by parent window)
+        _enabled: false,
+        _isHost: false,
+        _myId: null,
+        _players: [],
+        _trackedPlayers: new Map(),
+        _eventHandlers: new Map(),
+
+        /**
+         * 🎮 AUTO-SYNC PLAYER
+         *
+         * Automatically synchronizes a player sprite across all clients.
+         * This is the easiest way to add multiplayer!
+         *
+         * Example (Fire Boy & Water Girl):
+         * ```javascript
+         * create(scene) {
+         *   this.myPlayer = scene.physics.add.sprite(100, 100, 'player');
+         *
+         *   gameAPI.multiplayer.trackPlayer(this.myPlayer, {
+         *     role: gameAPI.multiplayer.isHost() ? 'fireboy' : 'watergirl'
+         *   });
+         * }
+         *
+         * update(scene) {
+         *   // Just write standard Phaser code - sync happens automatically!
+         *   const cursors = scene.input.keyboard.createCursorKeys();
+         *   if (cursors.left.isDown) this.myPlayer.setVelocityX(-160);
+         * }
+         * ```
+         *
+         * @param {Phaser.GameObjects.Sprite} sprite - The player sprite to track
+         * @param {Object} options - Configuration options
+         * @param {string[]} options.sync - Properties to sync (default: ['x', 'y', 'velocityX', 'velocityY', 'frame'])
+         * @param {number} options.updateRate - Updates per second (default: 30). Use 10 for turn-based, 60 for racing
+         * @param {boolean} options.interpolate - Smooth remote players (default: true)
+         * @param {number} options.color - Tint for remote players (default: auto-assign)
+         * @param {string} options.role - Custom metadata (e.g., 'fireboy', 'watergirl')
+         * @returns {Object} Tracker with getRemotePlayers() method
+         */
+        trackPlayer(sprite, options = {}) {
+          if (!this._enabled) {
+            gameAPI.log('⚠️ Multiplayer not enabled. Start multiplayer session first.');
+            return { getRemotePlayers: () => [] };
+          }
+
+          const defaults = {
+            sync: ['x', 'y', 'velocityX', 'velocityY', 'frame'],
+            updateRate: 30,
+            interpolate: true,
+            color: null,
+            role: null
+          };
+
+          const config = { ...defaults, ...options };
+          const trackerId = this._myId;
+
+          // Store tracker
+          const tracker = {
+            sprite,
+            config,
+            remotePlayers: new Map(),
+            lastUpdate: 0,
+
+            getRemotePlayers() {
+              return Array.from(this.remotePlayers.values());
+            }
+          };
+
+          this._trackedPlayers.set(trackerId, tracker);
+
+          // Start update loop
+          const updateInterval = 1000 / config.updateRate;
+
+          const sendUpdate = () => {
+            if (!sprite.active) return;
+
+            const now = Date.now();
+            if (now - tracker.lastUpdate < updateInterval) return;
+            tracker.lastUpdate = now;
+
+            const state = {};
+            config.sync.forEach(prop => {
+              if (prop === 'velocityX' || prop === 'velocityY') {
+                state[prop] = sprite.body?.[prop.replace('velocity', 'velocity.')] || 0;
+              } else {
+                state[prop] = sprite[prop];
+              }
+            });
+
+            this.broadcast('__player_update', {
+              trackerId,
+              state,
+              role: config.role
+            });
+          };
+
+          // Send updates in game loop
+          if (phaserGame?.scene?.scenes[0]) {
+            phaserGame.scene.scenes[0].events.on('update', sendUpdate);
+          }
+
+          gameAPI.log(`✅ Tracking player${config.role ? ` (${config.role})` : ''}`);
+          return tracker;
+        },
+
+        /**
+         * 📡 BROADCAST EVENT
+         *
+         * Send a game event to all connected players.
+         * Use this for collectibles, doors, attacks, etc.
+         *
+         * Example (Collect Coin):
+         * ```javascript
+         * collectCoin(coinId) {
+         *   this.score += 10;
+         *   gameAPI.multiplayer.broadcast('coin-collected', {
+         *     coinId,
+         *     score: this.score
+         *   });
+         * }
+         * ```
+         *
+         * @param {string} eventName - Event identifier (use kebab-case: 'coin-collected', 'door-opened')
+         * @param {any} data - Event data (keep small, <500 bytes)
+         */
+        broadcast(eventName, data) {
+          if (!this._enabled) {
+            gameAPI.log('⚠️ Multiplayer not enabled');
+            return;
+          }
+
+          parent.postMessage({
+            type: 'MULTIPLAYER_BROADCAST',
+            payload: { eventName, data }
+          }, '*');
+        },
+
+        /**
+         * 👂 LISTEN FOR EVENTS
+         *
+         * Register a callback for when other players send events.
+         *
+         * Example (Listen for Coin Collection):
+         * ```javascript
+         * create(scene) {
+         *   gameAPI.multiplayer.on('coin-collected', (peerId, data) => {
+         *     const coin = this.coins.find(c => c.id === data.coinId);
+         *     if (coin) coin.destroy();
+         *     this.updateScoreboard(peerId, data.score);
+         *   });
+         * }
+         * ```
+         *
+         * @param {string} eventName - Event to listen for
+         * @param {Function} callback - Called with (peerId, data) when event received
+         */
+        on(eventName, callback) {
+          if (!this._eventHandlers.has(eventName)) {
+            this._eventHandlers.set(eventName, []);
+          }
+          this._eventHandlers.get(eventName).push(callback);
+        },
+
+        /**
+         * 👑 CHECK IF HOST
+         *
+         * Returns true if you're the host (authoritative player).
+         * Use this to spawn enemies and collectibles to prevent duplicates!
+         *
+         * Example:
+         * ```javascript
+         * create(scene) {
+         *   if (gameAPI.multiplayer.isHost()) {
+         *     this.spawnEnemies();  // Only host spawns
+         *   }
+         * }
+         * ```
+         *
+         * @returns {boolean} True if you're the host
+         */
+        isHost() {
+          return this._isHost;
+        },
+
+        /**
+         * 🆔 GET YOUR PLAYER ID
+         *
+         * @returns {string} Your unique player ID
+         */
+        getMyId() {
+          return this._myId;
+        },
+
+        /**
+         * 👥 GET ALL PLAYERS
+         *
+         * @returns {Array} List of player objects with {id, isHost, role, latency}
+         */
+        getPlayers() {
+          return this._players;
+        },
+
+        /**
+         * 📥 PLAYER JOINED CALLBACK
+         *
+         * Called when a new player connects.
+         *
+         * @param {Function} callback - Called with player object
+         */
+        onPlayerJoined(callback) {
+          this.on('__player_joined', callback);
+        },
+
+        /**
+         * 📤 PLAYER LEFT CALLBACK
+         *
+         * Called when a player disconnects.
+         *
+         * @param {Function} callback - Called with player object
+         */
+        onPlayerLeft(callback) {
+          this.on('__player_left', callback);
+        },
+
+        // Internal: Handle incoming events
+        _handleEvent(peerId, eventName, data) {
+          const handlers = this._eventHandlers.get(eventName);
+          if (handlers) {
+            handlers.forEach(cb => cb(peerId, data));
+          }
+
+          // Handle player updates
+          if (eventName === '__player_update') {
+            this._handlePlayerUpdate(peerId, data);
+          }
+        },
+
+        // Internal: Handle player state updates
+        _handlePlayerUpdate(peerId, { trackerId, state, role }) {
+          // Find tracker
+          const tracker = Array.from(this._trackedPlayers.values())[0];
+          if (!tracker) return;
+
+          // Get or create remote player
+          let remotePlayer = tracker.remotePlayers.get(peerId);
+
+          if (!remotePlayer && phaserGame?.scene?.scenes[0]) {
+            const scene = phaserGame.scene.scenes[0];
+
+            // Create sprite similar to local player
+            remotePlayer = scene.physics.add.sprite(state.x || 0, state.y || 0, tracker.sprite.texture.key);
+
+            if (tracker.config.color) {
+              remotePlayer.setTint(tracker.config.color);
+            }
+
+            tracker.remotePlayers.set(peerId, remotePlayer);
+            gameAPI.log(`👤 Remote player joined${role ? ` (${role})` : ''}`);
+          }
+
+          // Update remote player state
+          if (remotePlayer) {
+            Object.keys(state).forEach(prop => {
+              if (tracker.config.interpolate && (prop === 'x' || prop === 'y')) {
+                // Smooth interpolation
+                remotePlayer[prop] += (state[prop] - remotePlayer[prop]) * 0.3;
+              } else if (prop === 'velocityX' || prop === 'velocityY') {
+                if (remotePlayer.body) {
+                  remotePlayer.body.velocity[prop.replace('velocity', '').toLowerCase()] = state[prop];
+                }
+              } else {
+                remotePlayer[prop] = state[prop];
+              }
+            });
+          }
+        }
+      },
+
+      // === Deterministic Random ===
+
+      random: {
+        _seed: Date.now(),
+
+        /**
+         * 🎲 SET RANDOM SEED
+         *
+         * Set a deterministic seed for random number generation.
+         * Use this to ensure all players spawn the same level layout!
+         *
+         * Example:
+         * ```javascript
+         * if (gameAPI.multiplayer.isHost()) {
+         *   gameAPI.random.setSeed(12345);  // Same seed on all clients
+         *
+         *   for (let i = 0; i < 10; i++) {
+         *     const x = gameAPI.random() * 800;  // Same values everywhere
+         *     scene.add.platform(x, 400);
+         *   }
+         * }
+         * ```
+         *
+         * @param {number} seed - Seed value (any integer)
+         */
+        setSeed(seed) {
+          this._seed = seed;
+          gameAPI.log(`🎲 Random seed set to ${seed}`);
+        },
+
+        /**
+         * Get next deterministic random number (0-1).
+         * IMPORTANT: Use this instead of Math.random() in multiplayer!
+         *
+         * @returns {number} Random number between 0 and 1
+         */
+        next() {
+          const x = Math.sin(this._seed++) * 10000;
+          return x - Math.floor(x);
+        }
+      },
+
+      // Internal: Heartbeat for watchdog
       _sendHeartbeat() {
         parent.postMessage({ type: 'HEARTBEAT' }, '*');
       }
     };
+
+    // Expose scene and game as top-level globals for convenience
+    Object.defineProperty(window, 'scene', {
+      get() { return gameAPI.scene; }
+    });
+
+    Object.defineProperty(window, 'game', {
+      get() { return gameAPI.game; }
+    });
+
+    // === Phaser Scene Wrapper ===
+    // This is the single scene that Phaser sees. It delegates to user scenes.
+
+    function preloadFn() {
+      // Call user's preload if current scene has one
+      if (currentSceneKey && userScenes[currentSceneKey]?.preload) {
+        try {
+          userScenes[currentSceneKey].preload.call(
+            sceneStates.get(currentSceneKey) || {},
+            this
+          );
+        } catch (error) {
+          reportError(error);
+        }
+      }
+    }
+
+    function createFn(data) {
+      // Initialize scene state storage
+      if (!sceneStates.has(currentSceneKey)) {
+        sceneStates.set(currentSceneKey, {});
+      }
+
+      // Call user's create function for current scene
+      if (currentSceneKey && userScenes[currentSceneKey]?.create) {
+        try {
+          userScenes[currentSceneKey].create.call(
+            sceneStates.get(currentSceneKey),
+            this,
+            data
+          );
+        } catch (error) {
+          reportError(error);
+        }
+      }
+    }
+
+    function updateFn(time, delta) {
+      // Increment frame counter
+      gameAPI._frameCounter++;
+
+      // Call user's update function for current scene
+      if (currentSceneKey && userScenes[currentSceneKey]?.update) {
+        try {
+          userScenes[currentSceneKey].update.call(
+            sceneStates.get(currentSceneKey),
+            this,
+            time,
+            delta
+          );
+        } catch (error) {
+          reportError(error);
+        }
+      }
+    }
+
+    // === Code Loading ===
+
+    function loadUserCode(code) {
+      try {
+        // Clear old scene states
+        sceneStates.clear();
+        userScenes = {};
+
+        // Execute user code (defines window.scenes and window.startScene)
+        const userFunction = new Function(code);
+        userFunction();
+
+        // Validate user code
+        if (!window.scenes || typeof window.scenes !== 'object') {
+          throw new Error('User code must define window.scenes object. See CUSTOM_API.md for documentation.');
+        }
+
+        // Store user scenes
+        userScenes = window.scenes;
+
+        // Determine starting scene
+        currentSceneKey = window.startScene || Object.keys(userScenes)[0];
+
+        if (!currentSceneKey || !userScenes[currentSceneKey]) {
+          throw new Error(`Starting scene "${currentSceneKey}" not found in window.scenes`);
+        }
+
+        // If game already exists, restart the scene
+        if (userCodeLoaded && phaserGame) {
+          phaserGame.scene.scenes[0].scene.restart();
+        }
+
+        userCodeLoaded = true;
+
+        // Notify parent that game is ready
+        parent.postMessage({ type: 'READY' }, '*');
+
+      } catch (error) {
+        reportError(error);
+      }
+    }
+
+    // === Message Handling ===
+
+    window.addEventListener('message', (event) => {
+      if (!event.data || !event.data.type) return;
+
+      const { type, payload } = event.data;
+
+      switch (type) {
+        case 'LOAD_CODE':
+          loadUserCode(payload.code);
+          break;
+
+        case 'MULTIPLAYER_STATE':
+          // Update multiplayer state from parent
+          gameAPI.multiplayer = { ...gameAPI.multiplayer, ...payload };
+          break;
+
+        case 'MULTIPLAYER_DATA':
+          // Received data from peer - call user's handler if defined
+          if (window.onMultiplayerData) {
+            window.onMultiplayerData(payload.peerId, payload.data);
+          }
+          break;
+      }
+    });
+
+    // === Error Handling ===
+
+    function reportError(error) {
+      parent.postMessage({
+        type: 'ERROR',
+        payload: {
+          message: error.message,
+          stack: error.stack,
+          line: error.lineNumber,
+          column: error.columnNumber
+        }
+      }, '*');
+    }
+
+    window.addEventListener('error', (event) => {
+      reportError(event.error || { message: event.message });
+      event.preventDefault();
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      reportError(event.reason || { message: 'Unhandled promise rejection' });
+      event.preventDefault();
+    });
+
+    // === Security: Block dangerous APIs ===
+    // WebRTC APIs are ALLOWED for multiplayer
+
+    try {
+      delete window.fetch;
+      delete window.XMLHttpRequest;
+      delete window.WebSocket;
+      delete window.localStorage;
+      delete window.sessionStorage;
+      delete window.indexedDB;
+      delete window.open;
+    } catch (e) {
+      console.warn('Could not delete some APIs');
+    }
+
+    // === Initialize ===
 
     // Phaser configuration
     const config = {
@@ -98,95 +680,14 @@
       }
     };
 
-    function preloadFn() {
-      phaserScene = this;
-      // Assets would be preloaded here
-    }
-
-    function createFn() {
-      phaserScene = this;
-
-      // Listen for code loading from parent
-      window.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'LOAD_CODE') {
-          try {
-            // Clear previous game state if reloading
-            if (userCodeLoaded && phaserScene) {
-              phaserScene.scene.restart();
-            }
-
-            // Execute user's bundled code
-            const userCode = event.data.payload.code;
-            eval(userCode);
-
-            userCodeLoaded = true;
-
-            // Notify parent that game is ready
-            parent.postMessage({ type: 'READY' }, '*');
-          } catch (error) {
-            parent.postMessage({
-              type: 'ERROR',
-              payload: {
-                message: error.message,
-                stack: error.stack,
-                line: error.lineNumber,
-                column: error.columnNumber
-              }
-            }, '*');
-          }
-        }
-      });
-
-      // Notify parent that iframe is ready
-      parent.postMessage({ type: 'READY' }, '*');
-    }
-
-    function updateFn(time, delta) {
-      // Increment frame counter
-      gameAPI._frameCounter++;
-    }
-
-    // Global error handler
-    window.addEventListener('error', (event) => {
-      parent.postMessage({
-        type: 'ERROR',
-        payload: {
-          message: event.message,
-          filename: event.filename,
-          line: event.lineno,
-          column: event.colno,
-          stack: event.error?.stack
-        }
-      }, '*');
-      event.preventDefault();
-    });
-
-    // Block dangerous APIs for security
-    // BUT allow WebRTC APIs for multiplayer (RTCPeerConnection, RTCDataChannel, etc.)
-    try {
-      delete window.fetch;
-      delete window.XMLHttpRequest;
-      delete window.WebSocket; // Blocked - only parent window should connect to signaling
-      delete window.localStorage;
-      delete window.sessionStorage;
-      delete window.indexedDB;
-      delete window.open;
-
-      // WebRTC APIs are ALLOWED:
-      // - window.RTCPeerConnection (peer connections)
-      // - window.RTCDataChannel (data channels)
-      // - window.RTCSessionDescription (SDP)
-      // - window.RTCIceCandidate (ICE candidates)
-    } catch (e) {
-      // Some browsers may prevent deletion
-      console.warn('Could not delete some APIs');
-    }
-
-    // Start heartbeat (every second)
+    // Start heartbeat
     setInterval(() => gameAPI._sendHeartbeat(), 1000);
 
-    // Initialize Phaser game
+    // Create Phaser game
     phaserGame = new Phaser.Game(config);
+
+    // Notify parent that sandbox is ready
+    parent.postMessage({ type: 'READY' }, '*');
   </script>
 </body>
 </html>
