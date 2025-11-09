@@ -287,8 +287,10 @@
           }
 
           parent.postMessage({
-            type: 'MULTIPLAYER_BROADCAST',
-            payload: { eventName, data }
+            type: 'MULTIPLAYER_SEND',
+            payload: {
+              data: { eventName, data }
+            }
           }, '*');
         },
 
@@ -342,9 +344,21 @@
         /**
          * 🆔 GET YOUR PLAYER ID
          *
-         * @returns {string} Your unique player ID
+         * Returns your unique player ID. Guaranteed to be non-null when multiplayer is active.
+         * Returns null in single-player mode (multiplayer not started).
+         *
+         * @returns {string | null} Your unique player ID, or null if multiplayer not enabled
          */
         getMyId() {
+          if (this._enabled && !this._myId) {
+            console.error('⚠️ CRITICAL: Multiplayer enabled but _myId is null! This should never happen.');
+            console.error('   Debug info:', {
+              _enabled: this._enabled,
+              _isHost: this._isHost,
+              _myId: this._myId,
+              _players: this._players
+            });
+          }
           return this._myId;
         },
 
@@ -581,7 +595,8 @@
         if (phaserGame) {
           console.log('🔄 [Iframe] HOT RELOAD: Restarting scene...');
           phaserGame.scene.scenes[0].scene.restart();
-          console.log('📤 [Iframe] Sending READY (hot reload)');
+          console.log('📤 [Iframe] Sending READY + heartbeat (hot reload)');
+          gameAPI._sendHeartbeat();
           parent.postMessage({ type: 'READY' }, '*');
           return; // Early return - game already exists
         }
@@ -598,7 +613,9 @@
         userCodeLoaded = true;
 
         // First load complete - notify parent that game is ready
-        console.log('📤 [Iframe] Sending READY (first load complete)');
+        // Send immediate heartbeat with READY to initialize watchdog
+        console.log('📤 [Iframe] Sending READY + initial heartbeat (first load complete)');
+        gameAPI._sendHeartbeat();
         parent.postMessage({ type: 'READY' }, '*');
 
       } catch (error) {
@@ -621,15 +638,40 @@
           break;
 
         case 'MULTIPLAYER_STATE':
-          // Update multiplayer state from parent
-          gameAPI.multiplayer = { ...gameAPI.multiplayer, ...payload };
+          // Update multiplayer state from parent (preserve existing methods!)
+          console.log('📨 [Iframe] Received MULTIPLAYER_STATE:', payload);
+
+          // Merge state updates into the existing multiplayer object
+          if (payload._enabled !== undefined) gameAPI.multiplayer._enabled = payload._enabled;
+          if (payload._isHost !== undefined) gameAPI.multiplayer._isHost = payload._isHost;
+          if (payload._myId !== undefined) gameAPI.multiplayer._myId = payload._myId;
+          if (payload._players !== undefined) gameAPI.multiplayer._players = payload._players;
+
+          console.log('✅ [Iframe] Multiplayer state updated:', {
+            enabled: gameAPI.multiplayer._enabled,
+            isHost: gameAPI.multiplayer._isHost,
+            myId: gameAPI.multiplayer._myId,
+            players: gameAPI.multiplayer._players
+          });
           break;
 
         case 'MULTIPLAYER_DATA':
-          // Received data from peer - call user's handler if defined
-          if (window.onMultiplayerData) {
-            window.onMultiplayerData(payload.peerId, payload.data);
+          // Received data from peer - handle multiplayer events
+          // Format: { from: peerId, data: { eventName, data } }
+          if (payload.from && payload.data) {
+            const { eventName, data: eventData } = payload.data;
+            gameAPI.multiplayer._handleEvent(payload.from, eventName, eventData);
           }
+          break;
+
+        case 'MULTIPLAYER_PLAYER_JOINED':
+          // Trigger player joined callbacks
+          gameAPI.multiplayer._handleEvent('__system', '__player_joined', payload);
+          break;
+
+        case 'MULTIPLAYER_PLAYER_LEFT':
+          // Trigger player left callbacks
+          gameAPI.multiplayer._handleEvent('__system', '__player_left', payload);
           break;
       }
     });

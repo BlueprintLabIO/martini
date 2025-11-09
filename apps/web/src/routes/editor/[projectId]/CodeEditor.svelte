@@ -32,6 +32,21 @@
 	let mergeView: MergeView | null = null;
 
 	/**
+	 * Scroll to a specific line number in the editor
+	 */
+	export function scrollToLine(lineNumber: number) {
+		const editor = mergeView?.b || view;
+		if (!editor) return;
+
+		const line = Math.max(0, lineNumber - 1); // Convert to 0-indexed
+		const pos = editor.state.doc.line(Math.min(line + 1, editor.state.doc.lines)).from;
+
+		editor.dispatch({
+			effects: EditorView.scrollIntoView(pos, { y: 'center' })
+		});
+	}
+
+	/**
 	 * Get language extension based on file path
 	 */
 	function getLanguageExtension(): Extension {

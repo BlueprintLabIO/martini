@@ -98,7 +98,11 @@ export class MultiplayerHost {
 			});
 
 			this.socket.on('signal', (data: { signal: any; from: string }) => {
-				console.log('[MultiplayerHost] Signal from:', data.from);
+				const signalType = data.signal.type || (data.signal.candidate ? 'candidate' : 'unknown');
+				console.log('[MultiplayerHost] 📨 Signal from:', data.from, '| Type:', signalType);
+				if (data.signal.candidate) {
+					console.log('[MultiplayerHost]   ICE candidate:', data.signal.candidate.candidate?.substring(0, 50) + '...');
+				}
 				this.handleSignal(data.from, data.signal);
 			});
 
@@ -173,17 +177,37 @@ export class MultiplayerHost {
 				}
 			});
 
-			peerConnection = {
-				peer,
-				clientId,
-				approved: true // Already approved by this point
+			// Debug: Comprehensive WebRTC logging
+			// IMPORTANT: Attach ALL event handlers BEFORE calling peer.signal()
+			let iceCandidateCount = 0;
+
+			peer._pc.onconnectionstatechange = () => {
+				console.log('[MultiplayerHost] 🔌 Peer connection state:', peer._pc.connectionState);
 			};
 
-			this.peers.set(clientId, peerConnection);
+			peer._pc.oniceconnectionstatechange = () => {
+				console.log('[MultiplayerHost] 🧊 ICE connection state:', peer._pc.iceConnectionState);
+			};
 
-			// Set up peer event handlers
+			peer._pc.onicegatheringstatechange = () => {
+				console.log('[MultiplayerHost] 🔍 ICE gathering state:', peer._pc.iceGatheringState);
+			};
+
+			peer._pc.onicecandidate = (event) => {
+				if (event.candidate) {
+					iceCandidateCount++;
+					const candidateStr = event.candidate.candidate;
+					const type = candidateStr.match(/typ (\w+)/)?.[1] || 'unknown';
+					console.log(`[MultiplayerHost] 🎯 ICE candidate #${iceCandidateCount} (${type}):`, candidateStr.substring(0, 80) + '...');
+				} else {
+					console.log(`[MultiplayerHost] ✅ ICE gathering complete. Total candidates: ${iceCandidateCount}`);
+				}
+			};
+
+			// Set up peer event handlers BEFORE signaling
 			peer.on('signal', (signal) => {
-				console.log('[MultiplayerHost] Sending signal to:', clientId);
+				const signalType = signal.type || (signal.candidate ? 'candidate' : 'unknown');
+				console.log('[MultiplayerHost] 📤 Sending signal to:', clientId, '| Type:', signalType);
 				this.socket!.emit('signal', {
 					shareCode: this.shareCode,
 					signal,
@@ -215,9 +239,19 @@ export class MultiplayerHost {
 				console.error('[MultiplayerHost] Peer error:', err);
 				this.onError(err);
 			});
+
+			// Store peer connection in map
+			peerConnection = {
+				peer,
+				clientId,
+				approved: true // Already approved by this point
+			};
+
+			this.peers.set(clientId, peerConnection);
 		}
 
-		// Signal the peer
+		// Signal the peer (NOW all handlers are attached and ready to capture events)
+		console.log('[MultiplayerHost] 🔄 Processing signal from', clientId);
 		peerConnection.peer.signal(signal);
 	}
 

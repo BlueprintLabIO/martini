@@ -99,20 +99,14 @@ MULTIPLAYER RED FLAGS:
 ❌ Spawning without gameAPI.multiplayer.isHost() check
 ❌ Event listeners in update() (should be in create)
 ❌ this.method() where method is a peer (see above)
-❌ Using gameAPI.multiplayer.getMyId() without null checks
 ❌ Auto-assigning roles without asking if players should choose
 
-MULTIPLAYER DEFENSIVE PATTERNS:
-✅ Always validate multiplayer values before using them:
-\`\`\`javascript
-const playerId = gameAPI.multiplayer.getMyId();
-// ✅ GOOD: Check for null/invalid values
-if (!playerId || isNaN(parseInt(playerId))) {
-  // Provide fallback or default behavior
-  const defaultRole = 'fireboy';
-  // ... continue with default
-}
-\`\`\`
+MULTIPLAYER GUARANTEES (Trust these!):
+✅ getMyId() returns non-null when multiplayer is active
+✅ getMyId() returns null only in single-player mode
+✅ isHost() returns false in single-player, true for exactly one player in multiplayer
+✅ trackPlayer(), broadcast(), on() are safe to call anytime (won't crash in single-player)
+✅ All methods work reliably - no need for defensive null checks on getMyId() in multiplayer context
 
 ✅ Ask about player choice before auto-assigning:
 When you see multiplayer roles/characters being assigned, ask:

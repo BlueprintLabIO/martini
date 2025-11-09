@@ -46,7 +46,6 @@ declare module '$env/static/private' {
 	export const GIT_EDITOR: string;
 	export const NVM_DIR: string;
 	export const USER: string;
-	export const npm_config_recursive: string;
 	export const COMMAND_MODE: string;
 	export const OPENAI_API_KEY: string;
 	export const PNPM_SCRIPT_SRC_DIR: string;
@@ -116,6 +115,8 @@ declare module '$env/static/public' {
 	export const PUBLIC_SUPABASE_PUBLISHABLE_KEY: string;
 	export const PUBLIC_SUPABASE_PROJECT_ASSETS_BUCKET: string;
 	export const PUBLIC_SUPABASE_STARTER_ASSETS_BUCKET: string;
+	export const PUBLIC_SIGNALING_URL: string;
+	export const PUBLIC_STUN_URLS: string;
 }
 
 /**
@@ -152,7 +153,6 @@ declare module '$env/dynamic/private' {
 		GIT_EDITOR: string;
 		NVM_DIR: string;
 		USER: string;
-		npm_config_recursive: string;
 		COMMAND_MODE: string;
 		OPENAI_API_KEY: string;
 		PNPM_SCRIPT_SRC_DIR: string;
@@ -227,6 +227,8 @@ declare module '$env/dynamic/public' {
 		PUBLIC_SUPABASE_PUBLISHABLE_KEY: string;
 		PUBLIC_SUPABASE_PROJECT_ASSETS_BUCKET: string;
 		PUBLIC_SUPABASE_STARTER_ASSETS_BUCKET: string;
+		PUBLIC_SIGNALING_URL: string;
+		PUBLIC_STUN_URLS: string;
 		[key: `PUBLIC_${string}`]: string | undefined;
 	}
 }

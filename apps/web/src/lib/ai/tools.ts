@@ -9,6 +9,7 @@ import { fastHash } from '$lib/utils/hash';
  * Define AI tools for file operations
  *
  * These tools allow the AI to read, list, and edit files in the project.
+ * ALL mutation operations must happen client side for ownership and reactivity reasons!
  * All tools are scoped to a specific project ID for security.
  *
  * @param projectId - The project to scope tools to
@@ -89,48 +90,17 @@ export function createProjectTools(projectId: string, planMode: boolean = false)
 					content: z.string().describe('Content of the new file')
 				})
 			),
-			execute: async ({ path, content }: { path: string; content: string }) => {
-				// Normalize path
-				const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-				try {
-					// Check if file already exists
-					const [existingFile] = await db
-						.select()
-						.from(files)
-						.where(and(eq(files.projectId, projectId), eq(files.path, normalizedPath)))
-						.limit(1);
-
-					if (existingFile) {
-						return {
-							error: 'File already exists',
-							path: normalizedPath,
-							hint: 'Use editFile() to modify existing files, or readFile() to see current content first'
-						};
-					}
-
-					// Create new file
-					await db.insert(files).values({
-						projectId,
-						path: normalizedPath,
-						content,
-						createdAt: new Date(),
-						updatedAt: new Date()
-					});
-
-					return {
-						success: true,
-						path: normalizedPath,
-						lines: content.split('\n').length,
-						size: content.length
-					};
-				} catch (error) {
-					return {
-						error: 'Failed to create file',
-						details: error instanceof Error ? error.message : String(error)
-					};
-				}
-			}
+			needsApproval: true // 🔑 Require user approval for file creation
+			// ⚠️ NO execute function - client-side execution only!
+			//
+			// ARCHITECTURE: All mutation operations MUST run client-side
+			// Reasons for client-side file creation:
+			// 1. Client ownership - filesMap state is the source of truth
+			// 2. Instant reactivity - file tree updates immediately without fetch cycles
+			// 3. Race condition prevention - no DB write → fetch → refresh loops
+			// 4. CRDT/Y.js compatibility - future real-time collaboration requires client mutations
+			// 5. Optimistic UI - new file visible instantly, async server persistence
+			// 6. Consistent pattern - all mutations (create/edit/delete) work the same way
 		})
 	};
 

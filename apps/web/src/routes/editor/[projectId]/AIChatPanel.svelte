@@ -4,6 +4,59 @@
 	import { ChevronDown, ChevronUp, Zap, ZapOff, Check, X, Plus, Edit2, Pause, Play, StopCircle } from 'lucide-svelte';
 	import { applyEdits } from '$lib/utils/diff';
 
+	/**
+	 * Extract a preview snippet from edits showing before/after context
+	 *
+	 * Edits are search/replace operations with old_text and new_text properties.
+	 * This function finds where the first edit occurs and shows surrounding context.
+	 */
+	function extractDiffPreview(originalContent: string, edits: any[]): { before: string; after: string; lineStart: number } | null {
+		if (!edits || edits.length === 0) return null;
+
+		const firstEdit = edits[0];
+		if (!firstEdit.old_text || firstEdit.new_text === undefined) return null;
+
+		// Find where the old_text appears in the original content
+		const matchIndex = originalContent.indexOf(firstEdit.old_text);
+		if (matchIndex === -1) {
+			// Text not found, show first 100 chars of old_text and new_text
+			return {
+				before: firstEdit.old_text.slice(0, 200),
+				after: firstEdit.new_text.slice(0, 200),
+				lineStart: 1
+			};
+		}
+
+		// Calculate line number from character position
+		const beforeMatch = originalContent.slice(0, matchIndex);
+		const lineNumber = beforeMatch.split('\n').length;
+
+		// Extract context: 2 lines before + the changed text + 2 lines after
+		const lines = originalContent.split('\n');
+		const contextBefore = 2;
+		const contextAfter = 2;
+
+		// Find which line(s) contain the old_text
+		const oldTextLines = firstEdit.old_text.split('\n').length;
+		const startLine = Math.max(0, lineNumber - 1 - contextBefore); // -1 for 0-indexed
+		const endLine = Math.min(lines.length, lineNumber - 1 + oldTextLines + contextAfter);
+
+		// Extract before snippet (with context)
+		const beforeLines = lines.slice(startLine, endLine);
+		const before = beforeLines.join('\n');
+
+		// Extract after snippet (replace old with new in context)
+		const afterContent = originalContent.slice(0, matchIndex) + firstEdit.new_text + originalContent.slice(matchIndex + firstEdit.old_text.length);
+		const afterLines = afterContent.split('\n').slice(startLine, endLine);
+		const after = afterLines.join('\n');
+
+		return {
+			before: before || '(empty)',
+			after: after || '(empty)',
+			lineStart: lineNumber
+		};
+	}
+
 	// Chat status enum type from AI SDK
 	type ChatStatus = 'submitted' | 'streaming' | 'ready' | 'error';
 
@@ -36,7 +89,8 @@
 	let {
 		projectId,
 		onFileEditRequested,
-		onFileEditCompleted
+		onFileEditCompleted,
+		onFileCreateRequested
 	} = $props<{
 		projectId: string;
 		onFileEditRequested?: (
@@ -45,9 +99,17 @@
 			newContent: string,
 			approvalId: string,
 			onApprove: () => void,
+			onDeny: () => void,
+			firstChangeLine?: number
+		) => void;
+		onFileEditCompleted?: (path: string, newContent?: string) => void;
+		onFileCreateRequested?: (
+			path: string,
+			content: string,
+			approvalId: string,
+			onApprove: () => void,
 			onDeny: () => void
 		) => void;
-		onFileEditCompleted?: (path: string) => void;
 	}>();
 
 	let input = $state('');
@@ -72,6 +134,9 @@
 	// Track processed approvals to avoid duplicate triggers
 	let processedApprovals = $state<Set<string>>(new Set());
 
+	// Cache original content for diff previews (keyed by file path)
+	let originalContentCache = $state<Map<string, string>>(new Map());
+
 	// Debounce timer for auto-save
 	let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -94,6 +159,9 @@
 	// Handle Enter key to send (Shift+Enter for new line)
 	function handleKeyDown(e: KeyboardEvent) {
 		if (e.key === 'Enter' && !e.shiftKey) {
+			// Only handle Enter if the textarea itself is focused
+			if (e.target !== textareaElement) return;
+
 			e.preventDefault();
 			if (!isStreaming && input.trim()) {
 				handleSubmit(e);
@@ -316,6 +384,30 @@
 		}
 	});
 
+	// Cache original content from readFile tool results for diff previews
+	$effect(() => {
+		if (!chat) return;
+
+		for (const message of chat.messages) {
+			if (message.role !== 'assistant') continue;
+
+			for (const part of message.parts) {
+				if (
+					part.type === 'tool-readFile' &&
+					'output' in part &&
+					(part as any).output?.path &&
+					(part as any).output?.content
+				) {
+					const path = (part as any).output.path;
+					const content = (part as any).output.content;
+					if (!originalContentCache.has(path)) {
+						originalContentCache.set(path, content);
+					}
+				}
+			}
+		}
+	});
+
 	// Svelte 5 reactive effect to handle approval requests
 	// CLIENT-SIDE EXECUTION: We execute editFile locally, then send result back to AI
 	// This enables:
@@ -359,6 +451,44 @@
 		});
 	});
 
+	// Reactive effect to handle createFile approval requests
+	// CLIENT-SIDE EXECUTION: All file mutations must run client-side for ownership and reactivity
+	$effect(() => {
+		if (!chat || !onFileCreateRequested) return;
+
+		const messages = chat.messages;
+
+		untrack(() => {
+			for (const message of messages) {
+				if (message.role !== 'assistant') continue;
+
+				for (const part of message.parts) {
+					if (
+						part.type === 'tool-createFile' &&
+						'state' in part &&
+						(part as any).state === 'approval-requested' &&
+						'approval' in part &&
+						(part as any).approval?.id
+					) {
+						const approvalId = (part as any).approval.id;
+
+						if (!processedApprovals.has(approvalId)) {
+							processedApprovals.add(approvalId);
+
+							if (quickMode) {
+								// Quick Mode: Auto-create without approval
+								executeCreateFileClientSide(part, approvalId, true);
+							} else {
+								// Safe Mode: Request user approval
+								executeCreateFileClientSide(part, approvalId, false);
+							}
+						}
+					}
+				}
+			}
+		});
+	});
+
 	function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (!chat || !input.trim() || isStreaming) return;
@@ -368,6 +498,11 @@
 			metadata: { projectId, planMode }
 		});
 		input = '';
+
+		// Reset textarea height to initial state
+		if (textareaElement) {
+			textareaElement.style.height = 'auto';
+		}
 	}
 
 	async function handleStop() {
@@ -437,9 +572,19 @@
 			// Apply edits locally (client-side mutation)
 			const newContent = applyEdits(originalContent, input.edits);
 
+			// Extract first changed line for scrolling
+			let firstChangeLine: number | undefined = undefined;
+			if (input.edits && input.edits.length > 0 && input.edits[0].old_text) {
+				const matchIndex = originalContent.indexOf(input.edits[0].old_text);
+				if (matchIndex !== -1) {
+					const beforeMatch = originalContent.slice(0, matchIndex);
+					firstChangeLine = beforeMatch.split('\n').length;
+				}
+			}
+
 			if (autoApprove) {
-				// Quick Mode: Apply immediately, send success result to AI
-				console.log('[Client-Side Edit] Auto-applying edits to:', input.path);
+				// Quick Mode: Apply immediately WITHOUT showing diff UI
+				console.log('[Quick Mode] Auto-applying edits to:', input.path);
 
 				// Immediately approve in Quick Mode
 				chat.addToolApprovalResponse({
@@ -447,38 +592,22 @@
 					approved: true
 				});
 
-				// Trigger UI update + server persistence
-				onFileEditRequested?.(
-					input.path,
-					originalContent,
-					newContent,
-					approvalId,
-					() => {
-						// On approve: Send success result to AI
-						chat.addToolResult({
-							tool: 'editFile',
-							toolCallId: part.toolCallId,
-							output: {
-								success: true,
-								path: input.path,
-								changes: {
-									old_lines: originalContent.split('\n').length,
-									new_lines: newContent.split('\n').length
-								}
-							}
-						});
-						onFileEditCompleted?.(input.path);
-					},
-					() => {
-						// On deny: Send error result to AI (should never happen in Quick Mode)
-						chat.addToolResult({
-							state: 'output-error',
-							tool: 'editFile',
-							toolCallId: part.toolCallId,
-							errorText: 'Edit denied by user'
-						});
+				// Send success result to AI
+				chat.addToolResult({
+					tool: 'editFile',
+					toolCallId: part.toolCallId,
+					output: {
+						success: true,
+						path: input.path,
+						changes: {
+							old_lines: originalContent.split('\n').length,
+							new_lines: newContent.split('\n').length
+						}
 					}
-				);
+				});
+
+				// Apply changes directly via onFileEditCompleted (bypasses approval UI)
+				onFileEditCompleted?.(input.path, newContent);
 			} else {
 				// Safe Mode: Show diff, wait for user approval
 				onFileEditRequested?.(
@@ -518,7 +647,8 @@
 							toolCallId: part.toolCallId,
 							errorText: 'Edit denied by user'
 						});
-					}
+					},
+					firstChangeLine
 				);
 			}
 		} catch (error) {
@@ -528,6 +658,107 @@
 				tool: 'editFile',
 				toolCallId: part.toolCallId,
 				errorText: `Failed to apply edits: ${error instanceof Error ? error.message : String(error)}`
+			});
+		}
+	}
+
+	/**
+	 * Execute createFile tool client-side
+	 *
+	 * CLIENT-SIDE EXECUTION: All mutations must run client-side for:
+	 * - Client ownership of filesMap state
+	 * - Instant reactivity (no fetch/refresh needed)
+	 * - Race condition prevention
+	 * - CRDT/Y.js compatibility for future collaboration
+	 */
+	function executeCreateFileClientSide(part: any, approvalId: string, autoApprove: boolean) {
+		if (!chat) return;
+
+		const input = part.input;
+		if (!input || !input.path || input.content === undefined) {
+			console.error('[Client-Side Create] Missing input data:', input);
+			return;
+		}
+
+		// Normalize path: ensure it starts with /
+		const normalizedPath = input.path.startsWith('/') ? input.path : `/${input.path}`;
+
+		try {
+			if (autoApprove) {
+				// Quick Mode: Auto-create without approval UI
+				console.log('[Quick Mode] Auto-creating file:', normalizedPath);
+
+				// Immediately approve
+				chat.addToolApprovalResponse({
+					id: approvalId,
+					approved: true
+				});
+
+				// Send success result to AI
+				chat.addToolResult({
+					tool: 'createFile',
+					toolCallId: part.toolCallId,
+					output: {
+						success: true,
+						path: normalizedPath,
+						lines: input.content.split('\n').length,
+						size: input.content.length
+					}
+				});
+
+				// Trigger parent to create file (updates filesMap, tree, persists to server)
+				onFileCreateRequested?.(
+					normalizedPath,
+					input.content,
+					approvalId,
+					() => {}, // Already approved
+					() => {}  // Won't be called
+				);
+			} else {
+				// Safe Mode: Request user approval
+				onFileCreateRequested?.(
+					normalizedPath,
+					input.content,
+					approvalId,
+					() => {
+						// User approved: Send success to AI
+						chat.addToolApprovalResponse({
+							id: approvalId,
+							approved: true
+						});
+						chat.addToolResult({
+							tool: 'createFile',
+							toolCallId: part.toolCallId,
+							output: {
+								success: true,
+								path: normalizedPath,
+								lines: input.content.split('\n').length,
+								size: input.content.length
+							}
+						});
+					},
+					() => {
+						// User denied: Send error to AI
+						chat.addToolApprovalResponse({
+							id: approvalId,
+							approved: false
+						});
+						chat.addToolResult({
+							state: 'output-error',
+							tool: 'createFile',
+							toolCallId: part.toolCallId,
+							errorText: 'File creation denied by user'
+						});
+					}
+				);
+			}
+		} catch (error) {
+			console.error('[Client-Side Create] Failed:', error);
+			chat.addToolResult({
+				state: 'output-error',
+				tool: 'createFile',
+				toolCallId: part.toolCallId,
+				errorText: `Failed to create file: ${error instanceof Error ? error.message : String(error)}`
 			});
 		}
 	}
@@ -648,7 +879,7 @@
 								<div class="content">
 									{part.text}
 								</div>
-							{:else if part.type === 'tool-readFile' || part.type === 'tool-listFiles' || part.type === 'tool-editFile'}
+							{:else if part.type === 'tool-readFile' || part.type === 'tool-listFiles' || part.type === 'tool-editFile' || part.type === 'tool-createFile'}
 								{@const input = part.input as ToolInput}
 								<div class="tool-call">
 									<div class="tool-name">
@@ -656,6 +887,13 @@
 											📖 Reading {input?.path || 'file'}
 										{:else if part.type === 'tool-listFiles'}
 											📂 Listing files...
+										{:else if part.type === 'tool-createFile'}
+											📄 Creating {input?.path || 'file'}
+											{#if 'state' in part && part.state === 'input-streaming'}
+												<span class="text-xs text-muted-foreground ml-2">
+													<span class="streaming-indicator">●</span> Streaming...
+												</span>
+											{/if}
 										{:else if part.type === 'tool-editFile'}
 											✏️ Editing {input?.path || 'file'}
 											{#if 'state' in part && part.state === 'input-streaming'}
@@ -667,10 +905,27 @@
 									</div>
 
 									{#if part.type === 'tool-editFile' && 'state' in part && part.state === 'input-streaming' && input}
-										<div class="streaming-preview">
-											<div class="streaming-preview-label">Preview:</div>
-											<pre class="streaming-preview-content">{JSON.stringify(input, null, 2)}</pre>
-										</div>
+										{@const originalContent = originalContentCache.get(input.path) || ''}
+										{@const diffPreview = originalContent && input.edits ? extractDiffPreview(originalContent, input.edits) : null}
+										{#if diffPreview}
+											<div class="diff-preview">
+												<div class="diff-preview-header">Line {diffPreview.lineStart}</div>
+												<div class="diff-preview-panels">
+													<div class="diff-preview-panel before">
+														<div class="diff-preview-label">Before:</div>
+														<pre class="diff-preview-code">{diffPreview.before}</pre>
+													</div>
+													<div class="diff-preview-panel after">
+														<div class="diff-preview-label">After:</div>
+														<pre class="diff-preview-code">{diffPreview.after}</pre>
+													</div>
+												</div>
+											</div>
+										{:else}
+											<div class="streaming-preview">
+												<div class="streaming-preview-label">Preparing changes...</div>
+											</div>
+										{/if}
 									{:else if part.type === 'tool-editFile' && 'state' in part && part.state === 'approval-requested'}
 										<div class="approval-request">
 											<div class="approval-details">
@@ -692,6 +947,8 @@
 												<span class="success">✅ Read {output.lines} lines ({output.size} bytes)</span>
 											{:else if part.type === 'tool-listFiles'}
 												<span class="success">✅ Found {output.total} files</span>
+											{:else if part.type === 'tool-createFile'}
+												<span class="success">✅ File created ({output.lines} lines, {output.size} bytes)</span>
 											{:else if part.type === 'tool-editFile'}
 												<span class="success">✅ File updated ({output.changes?.old_lines} → {output.changes?.new_lines} lines)</span>
 												{#if output.diff}
@@ -1394,5 +1651,72 @@
 		margin: 0;
 		line-height: 1.4;
 		font-size: 0.65rem;
+	}
+
+	/* Diff Preview Styles */
+	.diff-preview {
+		margin-top: 8px;
+		border: 1px solid hsl(var(--border));
+		border-radius: 6px;
+		overflow: hidden;
+		background: hsl(var(--background));
+	}
+
+	.diff-preview-header {
+		padding: 6px 10px;
+		background: hsl(var(--muted) / 0.5);
+		border-bottom: 1px solid hsl(var(--border));
+		font-size: 0.65rem;
+		font-weight: 600;
+		color: hsl(var(--muted-foreground));
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.diff-preview-panels {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0;
+	}
+
+	.diff-preview-panel {
+		padding: 8px;
+		overflow-x: auto;
+	}
+
+	.diff-preview-panel.before {
+		background: hsl(0 84% 60% / 0.05);
+		border-right: 1px solid hsl(var(--border));
+	}
+
+	.diff-preview-panel.after {
+		background: hsl(142 76% 36% / 0.05);
+	}
+
+	.diff-preview-label {
+		font-size: 0.6rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		margin-bottom: 4px;
+		opacity: 0.7;
+	}
+
+	.diff-preview-panel.before .diff-preview-label {
+		color: hsl(0 84% 60%);
+	}
+
+	.diff-preview-panel.after .diff-preview-label {
+		color: hsl(142 76% 36%);
+	}
+
+	.diff-preview-code {
+		font-family: 'JetBrains Mono', 'Fira Code', monospace;
+		font-size: 0.65rem;
+		line-height: 1.4;
+		margin: 0;
+		white-space: pre-wrap;
+		word-break: break-word;
+		color: hsl(var(--foreground));
 	}
 </style>
