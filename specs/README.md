@@ -43,12 +43,10 @@ A platform where kids create 2D multiplayer games by prompting an AI. Games run 
    - Runtime watchdog
 
 4. **[03-multiplayer-p2p.md](./03-multiplayer-p2p.md)**
-   - WebRTC peer-to-peer
-   - Socket.io signaling server
-   - Input synchronization
+   - WebRTC P2P via Trystero
+   - Nostr relays (serverless)
+   - Lobby approval system
    - Share code generation
-   - Host/client architecture
-   - Upgrade path to dedicated servers
 
 5. **[04-auth-storage.md](./04-auth-storage.md)**
    - Supabase authentication
@@ -101,17 +99,15 @@ A platform where kids create 2D multiplayer games by prompting an AI. Games run 
 
 **Frontend:**
 - SvelteKit + TypeScript
-- CodeMirror 6 (lightweight code editor)
-- Yjs + y-codemirror.next (collaborative editing, Phase 2+)
+- CodeMirror 6 (code editor)
+- Trystero (P2P WebRTC via Nostr)
 - Phaser 3
-- simple-peer (WebRTC)
 - Tailwind CSS
 
 **Backend:**
-- Node.js/Bun
-- Socket.io (signaling)
+- SvelteKit API routes
 - Supabase (DB, Auth, Storage)
-- OpenAI GPT-4
+- OpenAI GPT-4 / DeepSeek
 
 **Deployment:**
 - Cloudflare Pages (frontend)
