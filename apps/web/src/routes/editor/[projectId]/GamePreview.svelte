@@ -21,7 +21,7 @@
 	let showConsole = $state(false);
 	let isReady = $state(false);
 	let isLoading = $state(false);
-	let lastHeartbeat = $state(Date.now());
+	let lastHeartbeat = $state<number | null>(null);
 
 	function handleMultiplayerError(error: Error) {
 		gameError = {
@@ -43,6 +43,7 @@
 					isReady = true;
 					isLoading = false;
 					gameError = null;
+					lastHeartbeat = Date.now(); // Reset heartbeat when game becomes ready
 					break;
 
 				case 'ERROR':
@@ -66,10 +67,13 @@
 
 		window.addEventListener('message', handleMessage);
 
-		// Watchdog - check for frozen game
+		// Watchdog - check for frozen game (only when ready and not loading)
 		const watchdogInterval = setInterval(() => {
+			// Only enforce watchdog when game is running (not during initialization or error states)
+			if (!isReady || isLoading || lastHeartbeat === null) return;
+
 			const elapsed = Date.now() - lastHeartbeat;
-			if (elapsed > 5000 && isReady) {
+			if (elapsed > 5000) {
 				gameError = {
 					message: 'Game froze (no heartbeat for 5 seconds)',
 					stack: 'The game may have an infinite loop or blocking operation.'

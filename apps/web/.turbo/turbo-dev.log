@@ -33061,3 +33061,5892 @@ APICallError [AI_APICallError]: An assistant message with 'tool_calls' must be f
 
 
 [1;1H[0J[2m10:21:07 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/ai/system-prompt.ts[22m
+[36m10:27:15 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:87:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:15 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m10:27:15 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:87:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m10:27:21 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:88:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:21 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m10:27:21 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:88:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m10:27:28 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:91:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:28 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/GamePreview.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:28 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/GamePreview.svelte[22m
+[36m10:27:28 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:91:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:42 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:42 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m10:27:44 PM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:91:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:48 PM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x4)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+APICallError [AI_APICallError]: An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)
+    at file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+provider-utils@4.0.0-beta.31_zod@4.1.12/node_modules/[4m@ai-sdk[24m/provider-utils/dist/index.mjs:2199:14
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async postToApi (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+provider-utils@4.0.0-beta.31_zod@4.1.12/node_modules/[4m@ai-sdk[24m/provider-utils/dist/index.mjs:2040:28)
+    at async OpenAICompatibleChatLanguageModel.doStream (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+openai-compatible@2.0.0-beta.32_zod@4.1.12/node_modules/[4m@ai-sdk[24m/openai-compatible/dist/index.mjs:465:50)
+    at async fn (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:5780:25)
+    at async file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1761:24
+    at async _retryWithExponentialBackoff (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1921:12)
+    at async streamStep (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:5737:15)
+    at async fn (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:6079:9)
+    at async file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1761:24 {
+  cause: [90mundefined[39m,
+  url: [32m'https://api.deepseek.com/chat/completions'[39m,
+  requestBodyValues: {
+    model: [32m'deepseek-chat'[39m,
+    user: [90mundefined[39m,
+    max_tokens: [90mundefined[39m,
+    temperature: [33m0.7[39m,
+    top_p: [90mundefined[39m,
+    frequency_penalty: [90mundefined[39m,
+    presence_penalty: [90mundefined[39m,
+    response_format: [90mundefined[39m,
+    stop: [90mundefined[39m,
+    seed: [90mundefined[39m,
+    reasoning_effort: [90mundefined[39m,
+    verbosity: [90mundefined[39m,
+    messages: [
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m
+    ],
+    tools: [ [36m[Object][39m, [36m[Object][39m, [36m[Object][39m, [36m[Object][39m ],
+    tool_choice: [32m'auto'[39m,
+    stream: [33mtrue[39m,
+    stream_options: [90mundefined[39m
+  },
+  statusCode: [33m400[39m,
+  responseHeaders: {
+    [32m'access-control-allow-credentials'[39m: [32m'true'[39m,
+    [32m'cf-cache-status'[39m: [32m'DYNAMIC'[39m,
+    [32m'cf-ray'[39m: [32m'99bcf9a8bebd328d-SYD'[39m,
+    connection: [32m'keep-alive'[39m,
+    [32m'content-length'[39m: [32m'264'[39m,
+    [32m'content-type'[39m: [32m'application/json'[39m,
+    date: [32m'Sun, 09 Nov 2025 11:29:56 GMT'[39m,
+    server: [32m'cloudflare'[39m,
+    [32m'set-cookie'[39m: [32m'__cf_bm=kEt7n2WOPbJc4HnKZsEErDWrcdRnGf595t7lyy1tdyY-1762687796-1.0.1.1-uHGmZLi6fU.Xke9fRrOhHdm02DNle.hKEQLbzu_FGsTZk8GGnR3WXgU4kRmDkf3S5Zj56T5.TdyyIWwwNOafJDfFgOy4vUATIaMJgu3UzOM; path=/; expires=Sun, 09-Nov-25 11:59:56 GMT; domain=.deepseek.com; HttpOnly; Secure; SameSite=None'[39m,
+    [32m'strict-transport-security'[39m: [32m'max-age=31536000; includeSubDomains; preload'[39m,
+    vary: [32m'origin, access-control-request-method, access-control-request-headers'[39m,
+    [32m'x-content-type-options'[39m: [32m'nosniff'[39m,
+    [32m'x-ds-trace-id'[39m: [32m'552b8e0254cae1cbbd46e86e6c66e422'[39m
+  },
+  responseBody: [32m`{"error":{"message":"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}`[39m,
+  isRetryable: [33mfalse[39m,
+  data: {
+    error: {
+      message: [32m"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)"[39m,
+      type: [32m'invalid_request_error'[39m,
+      param: [1mnull[22m,
+      code: [32m'invalid_request_error'[39m
+    }
+  },
+  [[32mSymbol(vercel.ai.error)[39m]: [33mtrue[39m,
+  [[32mSymbol(vercel.ai.error.AI_APICallError)[39m]: [33mtrue[39m
+}
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+APICallError [AI_APICallError]: An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)
+    at file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+provider-utils@4.0.0-beta.31_zod@4.1.12/node_modules/[4m@ai-sdk[24m/provider-utils/dist/index.mjs:2199:14
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async postToApi (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+provider-utils@4.0.0-beta.31_zod@4.1.12/node_modules/[4m@ai-sdk[24m/provider-utils/dist/index.mjs:2040:28)
+    at async OpenAICompatibleChatLanguageModel.doStream (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+openai-compatible@2.0.0-beta.32_zod@4.1.12/node_modules/[4m@ai-sdk[24m/openai-compatible/dist/index.mjs:465:50)
+    at async fn (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:5780:25)
+    at async file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1761:24
+    at async _retryWithExponentialBackoff (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1921:12)
+    at async streamStep (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:5737:15)
+    at async fn (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:6079:9)
+    at async file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1761:24 {
+  cause: [90mundefined[39m,
+  url: [32m'https://api.deepseek.com/chat/completions'[39m,
+  requestBodyValues: {
+    model: [32m'deepseek-chat'[39m,
+    user: [90mundefined[39m,
+    max_tokens: [90mundefined[39m,
+    temperature: [33m0.7[39m,
+    top_p: [90mundefined[39m,
+    frequency_penalty: [90mundefined[39m,
+    presence_penalty: [90mundefined[39m,
+    response_format: [90mundefined[39m,
+    stop: [90mundefined[39m,
+    seed: [90mundefined[39m,
+    reasoning_effort: [90mundefined[39m,
+    verbosity: [90mundefined[39m,
+    messages: [
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m
+    ],
+    tools: [ [36m[Object][39m, [36m[Object][39m, [36m[Object][39m, [36m[Object][39m ],
+    tool_choice: [32m'auto'[39m,
+    stream: [33mtrue[39m,
+    stream_options: [90mundefined[39m
+  },
+  statusCode: [33m400[39m,
+  responseHeaders: {
+    [32m'access-control-allow-credentials'[39m: [32m'true'[39m,
+    [32m'cf-cache-status'[39m: [32m'DYNAMIC'[39m,
+    [32m'cf-ray'[39m: [32m'99c06b6ab9e9a955-SYD'[39m,
+    connection: [32m'keep-alive'[39m,
+    [32m'content-length'[39m: [32m'264'[39m,
+    [32m'content-type'[39m: [32m'application/json'[39m,
+    date: [32m'Sun, 09 Nov 2025 21:31:53 GMT'[39m,
+    server: [32m'cloudflare'[39m,
+    [32m'set-cookie'[39m: [32m'__cf_bm=Ohhl4CoMFM7CzwNbunD5SmTqojwpHHhYDx3nvsPedzs-1762723913-1.0.1.1-peUs3lqXcU5ePLPk.ZD2nTj200tE.h8m0I6fRFxD6ClKXgJlgiIaAzOipivvtRctDn21hTE1erJbREzXFf6s2bK70PDcQPPvj.ePahNCukk; path=/; expires=Sun, 09-Nov-25 22:01:53 GMT; domain=.deepseek.com; HttpOnly; Secure; SameSite=None'[39m,
+    [32m'strict-transport-security'[39m: [32m'max-age=31536000; includeSubDomains; preload'[39m,
+    vary: [32m'origin, access-control-request-method, access-control-request-headers'[39m,
+    [32m'x-content-type-options'[39m: [32m'nosniff'[39m,
+    [32m'x-ds-trace-id'[39m: [32m'7d8c60fa530e8217dcbe7cb558ae9f16'[39m
+  },
+  responseBody: [32m`{"error":{"message":"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}`[39m,
+  isRetryable: [33mfalse[39m,
+  data: {
+    error: {
+      message: [32m"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)"[39m,
+      type: [32m'invalid_request_error'[39m,
+      param: [1mnull[22m,
+      code: [32m'invalid_request_error'[39m
+    }
+  },
+  [[32mSymbol(vercel.ai.error)[39m]: [33mtrue[39m,
+  [[32mSymbol(vercel.ai.error.AI_APICallError)[39m]: [33mtrue[39m
+}
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+APICallError [AI_APICallError]: An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)
+    at file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+provider-utils@4.0.0-beta.31_zod@4.1.12/node_modules/[4m@ai-sdk[24m/provider-utils/dist/index.mjs:2199:14
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async postToApi (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+provider-utils@4.0.0-beta.31_zod@4.1.12/node_modules/[4m@ai-sdk[24m/provider-utils/dist/index.mjs:2040:28)
+    at async OpenAICompatibleChatLanguageModel.doStream (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/@ai-sdk+openai-compatible@2.0.0-beta.32_zod@4.1.12/node_modules/[4m@ai-sdk[24m/openai-compatible/dist/index.mjs:465:50)
+    at async fn (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:5780:25)
+    at async file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1761:24
+    at async _retryWithExponentialBackoff (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1921:12)
+    at async streamStep (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:5737:15)
+    at async fn (file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:6079:9)
+    at async file:///Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/ai@6.0.0-beta.94_zod@4.1.12/node_modules/[4mai[24m/dist/index.mjs:1761:24 {
+  cause: [90mundefined[39m,
+  url: [32m'https://api.deepseek.com/chat/completions'[39m,
+  requestBodyValues: {
+    model: [32m'deepseek-chat'[39m,
+    user: [90mundefined[39m,
+    max_tokens: [90mundefined[39m,
+    temperature: [33m0.7[39m,
+    top_p: [90mundefined[39m,
+    frequency_penalty: [90mundefined[39m,
+    presence_penalty: [90mundefined[39m,
+    response_format: [90mundefined[39m,
+    stop: [90mundefined[39m,
+    seed: [90mundefined[39m,
+    reasoning_effort: [90mundefined[39m,
+    verbosity: [90mundefined[39m,
+    messages: [
+      [36m[Object][39m, [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m, [36m[Object][39m,
+      [36m[Object][39m, [36m[Object][39m, [36m[Object][39m
+    ],
+    tools: [ [36m[Object][39m, [36m[Object][39m, [36m[Object][39m, [36m[Object][39m ],
+    tool_choice: [32m'auto'[39m,
+    stream: [33mtrue[39m,
+    stream_options: [90mundefined[39m
+  },
+  statusCode: [33m400[39m,
+  responseHeaders: {
+    [32m'access-control-allow-credentials'[39m: [32m'true'[39m,
+    [32m'cf-cache-status'[39m: [32m'DYNAMIC'[39m,
+    [32m'cf-ray'[39m: [32m'99c06c69ac8ce7e0-SYD'[39m,
+    connection: [32m'keep-alive'[39m,
+    [32m'content-length'[39m: [32m'264'[39m,
+    [32m'content-type'[39m: [32m'application/json'[39m,
+    date: [32m'Sun, 09 Nov 2025 21:32:34 GMT'[39m,
+    server: [32m'cloudflare'[39m,
+    [32m'set-cookie'[39m: [32m'__cf_bm=kNWZqglX_zuQMXziZmE4wpIxnKlufdSYbtTcumltm78-1762723954-1.0.1.1-LpRMNDzPmh74CFE545aedM5.1WJACnvQU6iMKR5WjcGMhtcKQ6JUCxbicKiBSSs.5lvAyrsmeR6gPO8T92ISkBJXIDLkL9fLkXCLleOYdTc; path=/; expires=Sun, 09-Nov-25 22:02:34 GMT; domain=.deepseek.com; HttpOnly; Secure; SameSite=None'[39m,
+    [32m'strict-transport-security'[39m: [32m'max-age=31536000; includeSubDomains; preload'[39m,
+    vary: [32m'origin, access-control-request-method, access-control-request-headers'[39m,
+    [32m'x-content-type-options'[39m: [32m'nosniff'[39m,
+    [32m'x-ds-trace-id'[39m: [32m'8ce1762b7b4a0d8b8474f9af0a1b68fe'[39m
+  },
+  responseBody: [32m`{"error":{"message":"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}`[39m,
+  isRetryable: [33mfalse[39m,
+  data: {
+    error: {
+      message: [32m"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)"[39m,
+      type: [32m'invalid_request_error'[39m,
+      param: [1mnull[22m,
+      code: [32m'invalid_request_error'[39m
+    }
+  },
+  [[32mSymbol(vercel.ai.error)[39m]: [33mtrue[39m,
+  [[32mSymbol(vercel.ai.error.AI_APICallError)[39m]: [33mtrue[39m
+}
+[36m8:38:22 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:825:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:38:22 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1286:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:38:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:38:22 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:38:22 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:825:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:38:22 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1286:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:38:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:38:37 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m8:38:55 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:852:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:38:55 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1313:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:38:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:38:55 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:38:55 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:852:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:38:55 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1313:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:01 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:855:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:01 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1316:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:39:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:39:01 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:39:01 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:855:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:01 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1316:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:879:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1340:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:39:19 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:39:19 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:39:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:879:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1340:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:896:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1357:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1444:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:39:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/routes/editor/[projectId]/AIChatPanel.svelte?svelte&type=style&lang.css, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:39:30 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:39:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:896:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1357:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:30 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1444:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:48 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:896:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:48 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1357:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:39:48 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1444:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:39:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte?svelte&type=style&lang.css, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:39:48 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:02 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/CodeEditor.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:02 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/CodeEditor.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:08 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:15 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:27 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m8:40:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m8:40:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m8:40:41 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:897:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:41 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1358:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:41 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1445:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:41 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:40:41 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:897:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:41 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1358:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:41 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1445:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:59 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:901:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:59 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1362:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:59 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1449:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:59 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:40:59 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:40:59 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:901:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:59 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1362:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:40:59 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1449:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+[36m8:46:17 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:906:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:17 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1367:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:17 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1454:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:46:17 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:46:17 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:46:17 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:906:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:17 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1367:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:17 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1454:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:28 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:909:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:28 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1370:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:28 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1457:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:46:28 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:46:28 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:46:28 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:909:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:28 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1370:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:46:28 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1457:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+[36m8:49:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:935:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:49:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1396:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:49:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1483:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:49:52 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:49:52 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:49:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:935:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:49:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1396:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:49:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1483:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:50:06 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:942:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:50:06 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1403:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:50:06 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1490:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:50:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:50:06 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:50:06 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:942:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:50:06 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1403:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:50:06 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1490:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m8:50:37 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m8:50:37 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:942:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:50:37 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1403:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:50:37 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1490:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:55:38 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:55:38 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/ai/tools.ts[22m
+[36m8:55:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:950:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:55:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1411:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:55:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1498:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:55:52 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:55:52 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:55:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:950:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:55:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1411:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:55:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1498:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:05 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:988:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:05 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1449:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:05 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1536:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:56:05 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:56:05 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:56:05 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:988:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:05 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1449:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:05 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1536:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:56:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:56:16 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/ai/tools.ts[22m
+[36m8:56:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1089:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1550:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1637:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:56:29 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:56:29 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:56:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1089:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1550:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:56:29 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1637:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+[36m8:56:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:56:52 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:56:52 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m8:56:52 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m8:57:00 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:57:00 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/+page.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:57:00 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/+page.svelte[22m
+[36m8:57:00 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m8:57:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1096:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1557:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1644:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:57:19 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:57:19 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:57:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1096:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1557:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1644:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:31 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1098:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:31 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1559:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:31 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1646:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:57:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/routes/editor/[projectId]/AIChatPanel.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:57:31 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/editor/[projectId]/AIChatPanel.svelte[22m
+[36m8:57:31 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1098:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:31 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1559:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m8:57:31 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1646:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:02:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:02:41 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/routes/api/chat/+server.ts[22m
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m9:03:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m9:03:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1098:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m9:03:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1559:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m9:03:19 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1646:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found ";"[0m
+
+    src/main.js:302:1:
+[37m      302 │ }[32m;[37m
+          │  [32m^[37m
+          ╵  [32m}[0m
+
+Bundling error: Error: Build failed with 1 error:
+src/main.js:302:1: ERROR: Expected "}" but found ";"
+    at failureErrorWithLog (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1467:15)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:926:25
+    at runOnEndCallbacks (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:1307:45)
+    at buildResponseToResult (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:924:7)
+    at /Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:951:16
+    at responseCallbacks.<computed> (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/yao/blueprint/martini/node_modules/[4m.pnpm[24m/esbuild@0.25.12/node_modules/[4mesbuild[24m/lib/main.js:581:7)
+[90m    at Socket.emit (node:events:524:28)[39m
+[90m    at Socket.emit (node:domain:489:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+📊 Message count: 23 total, sending last 5 to model
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+📊 Message count: 24 total, sending last 5 to model
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+📊 Message count: 25 total, sending last 5 to model
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:16:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:16:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/gameAPI.ts[22m
+[2m9:16:34 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/lib/multiplayer/gameAPI.ts (resolved id: /Users/yao/blueprint/martini/apps/web/src/lib/multiplayer/gameAPI.ts) in /Users/yao/blueprint/martini/apps/web/src/lib/multiplayer/MultiplayerManager.svelte. Does the file exist?
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+[1;31m[404] GET /src/lib/multiplayer/gameAPI.ts[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:16:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:16:42 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:16:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:16:54 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:17:05 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:17:05 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:17:20 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:17:20 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x2)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:17:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:17:33 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x4)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:18:19 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x5)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:18:19 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x6)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:18:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x7)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:18:31 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mstatic/sandbox-runtime.html[22m [33m(x8)[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:19:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:19:06 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/ai/system-prompt.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:19:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:19:48 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/ai/api-docs-prompt.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/0.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/1.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/3.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/4.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/5.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/6.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/app.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/matchers.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/server/internal.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.js[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:20:08 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+📊 Message count: 27 total, sending last 5 to model
+=== CHAT API DEBUG ===
+Extracted projectId from messages: 79ffb8f5-e004-499b-b7b8-a2f295c3cc2e
+Extracted planMode from messages: [33mfalse[39m
+📊 Message count: 28 total, sending last 5 to model
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:33:57 AM[22m [36m[1m[vite][22m[39m [32m.env changed, restarting server...[39m
+[2m9:33:58 AM[22m [36m[1m[vite][22m[39m server restarted.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m9:34:01 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m9:34:07 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:91:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m9:34:07 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1098:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m9:34:07 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1559:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m9:34:07 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1646:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+[36m9:34:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m9:34:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:91:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m9:34:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1098:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m9:34:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1559:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m9:34:08 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1646:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:34:40 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:34:40 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerHost.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:34:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:34:41 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerClient.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:39:47 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:39:47 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerHost.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:39:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:39:48 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerHost.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:39:49 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:39:49 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerHost.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:39:50 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:39:50 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerHost.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:40:13 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:40:13 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerClient.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:40:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:40:14 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerClient.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:40:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:40:22 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerClient.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:44:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css, /src/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:44:55 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerHost.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:17:47 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:17:47 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mpackage.json[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:28 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:28 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:28 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:28 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:29 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:29 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:30 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:31 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+[2m10:19:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33mtrystero/supabase[32m[39m
+[2m10:19:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:32 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:32 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:33 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+[36m10:19:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m10:19:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1098:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m10:19:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1559:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m10:19:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1646:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+[36m10:19:34 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:91:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:34 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:35 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:35 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:50 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:19:50 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.env.example[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/0.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/1.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/3.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/5.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/6.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/app.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/matchers.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/server/internal.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:04 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.js[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:20:05 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:35 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:35 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:43 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:43 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/0.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/1.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/3.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/5.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/6.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/app.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/matchers.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/server/internal.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.js[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:26:56 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/0.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/1.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/3.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/5.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/nodes/6.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/app.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/client/matchers.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/server/internal.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.js[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.js[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:27:06 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2m.svelte-kit/generated/root.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:28:17 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:28:17 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:28:18 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:28:18 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:28:49 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:28:49 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:39 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:39 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:40 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:40 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:41 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:42 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+[2m10:37:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33mtrystero/torrent[32m[39m
+[2m10:37:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:43 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:37:43 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m10:37:45 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m10:37:45 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:91:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m10:37:45 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1098:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m10:37:45 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1559:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m10:37:45 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1646:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:38:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:38:01 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:38:02 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:38:02 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:38:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:38:03 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:38:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:38:04 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:41:51 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:41:51 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:41:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:41:54 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/Multiplayer.ts[22m
+[2m10:41:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33mtrystero/nostr[32m[39m
+[2m10:41:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m10:41:56 AM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:19:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+[36m10:41:56 AM [vite-plugin-svelte] src/routes/editor/[projectId]/GamePreview.svelte:91:16 `runGame` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update[39m
+[36m10:41:56 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1098:1 Unused CSS selector ".icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m10:41:56 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1559:1 Unused CSS selector ".welcome-icon"
+https://svelte.dev/e/css_unused_selector[39m
+[36m10:41:56 AM [vite-plugin-svelte] src/routes/editor/[projectId]/AIChatPanel.svelte:1646:1 Unused CSS selector ".streaming-preview-content"
+https://svelte.dev/e/css_unused_selector[39m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:41:57 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/multiplayer/MultiplayerManager.svelte, /src/app.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:41:57 AM[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/lib/multiplayer/MultiplayerManager.svelte[22m
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.

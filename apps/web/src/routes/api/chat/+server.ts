@@ -95,11 +95,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const tools = createProjectTools(projectId, planMode);
 
 	try {
+		// Context management: Keep only last 5 messages to avoid hitting token limits
+		// System prompt is always sent (not counted in the 5)
+		// Each message can contain multiple parts (text + tool calls), so 5 messages ≈ 2-3 conversation turns
+		const recentMessages = messages.slice(-5);
+
+		console.log(`📊 Message count: ${messages.length} total, sending last ${recentMessages.length} to model`);
+
 		// Stream response from DeepSeek
 		const result = streamText({
 			model: deepseek('deepseek-chat'),
 			system: dynamicSystemPrompt,
-			messages: convertToModelMessages(messages),
+			messages: convertToModelMessages(recentMessages),
 			tools,
 			stopWhen: stepCountIs(5), // Allow up to 5 steps for multi-step tool calls
 			temperature: 0.7

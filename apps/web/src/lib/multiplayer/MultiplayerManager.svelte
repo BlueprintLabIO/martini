@@ -4,15 +4,12 @@
 	 *
 	 * Handles:
 	 * - Host/client role selection
-	 * - Connection to signaling server
-	 * - P2P peer management
+	 * - P2P peer management via Trystero
 	 * - Lobby approval UI
 	 * - Communication with game sandbox
 	 */
 
-	import { MultiplayerHost } from './MultiplayerHost';
-	import { MultiplayerClient } from './MultiplayerClient';
-	import { MULTIPLAYER_API_INJECTION } from './gameAPI';
+	import { Multiplayer } from './Multiplayer';
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import { Check, X, Users, Copy, Loader } from 'lucide-svelte';
@@ -29,8 +26,7 @@
 
 	// State
 	let mode: 'idle' | 'host' | 'client' = $state('idle');
-	let host: MultiplayerHost | null = $state(null);
-	let client: MultiplayerClient | null = $state(null);
+	let multiplayer: Multiplayer | null = $state(null);
 	let shareCode: string = $state('');
 	let joinCode: string = $state('');
 	let connectionStatus: 'disconnected' | 'connecting' | 'pending' | 'connected' = $state(
@@ -41,9 +37,8 @@
 	let errorMessage: string | null = $state(null);
 	let showLobby: boolean = $state(false);
 
-	// Get env vars
-	const signalingUrl = import.meta.env.PUBLIC_SIGNALING_URL || 'ws://localhost:3001';
-	const stunUrls = (import.meta.env.PUBLIC_STUN_URLS || 'stun:stun.l.google.com:19302').split(',');
+	// Unique app identifier for Trystero (Nostr strategy)
+	const appId = 'martini-game-platform-v1';
 
 	/**
 	 * Start as host - generate share code and create room
@@ -65,11 +60,11 @@
 			const data = await response.json();
 			shareCode = data.shareCode;
 
-			// Create host
-			host = new MultiplayerHost({
+			// Create multiplayer instance as host
+			multiplayer = new Multiplayer({
 				shareCode,
-				signalingUrl,
-				stunUrls,
+				isHost: true,
+				appId,
 				onError: handleError,
 				onClientJoined: handleClientJoined,
 				onClientLeft: handleClientLeft,
@@ -77,14 +72,14 @@
 				onDataReceived: handleDataFromClient
 			});
 
-			await host.connect();
+			await multiplayer.connect();
 
 			mode = 'host';
 			connectionStatus = 'connected';
 			showLobby = true;
 
 			// Inject multiplayer API into sandbox
-			injectMultiplayerAPI(true, shareCode, host.getPlayerId()!);
+			injectMultiplayerAPI(true, shareCode, multiplayer.getPlayerId()!);
 
 			console.log('[MultiplayerManager] Started as host with code:', shareCode);
 		} catch (error) {
@@ -105,20 +100,22 @@
 			connectionStatus = 'connecting';
 			errorMessage = null;
 
-			// Create client
-			client = new MultiplayerClient({
+			// Create multiplayer instance as client
+			multiplayer = new Multiplayer({
 				shareCode: joinCode.toUpperCase(),
-				signalingUrl,
-				stunUrls,
+				isHost: false,
+				appId,
 				onError: handleError,
 				onConnected: handleConnectedToHost,
 				onDisconnected: handleDisconnected,
 				onPending: handlePending,
 				onDenied: handleDenied,
-				onDataReceived: handleDataFromHost
+				onDataReceived: handleDataFromHost,
+				onClientJoined: () => {}, // Not used by client
+				onClientLeft: () => {} // Not used by client
 			});
 
-			await client.connect();
+			await multiplayer.connect();
 
 			mode = 'client';
 
@@ -132,14 +129,9 @@
 	 * Stop multiplayer and disconnect
 	 */
 	function stop() {
-		if (host) {
-			host.disconnect();
-			host = null;
-		}
-
-		if (client) {
-			client.disconnect();
-			client = null;
+		if (multiplayer) {
+			multiplayer.disconnect();
+			multiplayer = null;
 		}
 
 		mode = 'idle';
@@ -176,7 +168,18 @@
 			connectedClients = [...connectedClients, clientId];
 		}
 
-		// Notify sandbox
+		// Update players list in sandbox
+		if (iframeEl?.contentWindow && multiplayer) {
+			const allPlayers = [multiplayer.getPlayerId()!, ...connectedClients];
+			sendToSandbox({
+				type: 'MULTIPLAYER_STATE',
+				payload: {
+					_players: allPlayers
+				}
+			});
+		}
+
+		// Notify sandbox of join event
 		sendToSandbox({
 			type: 'MULTIPLAYER_PLAYER_JOINED',
 			payload: { playerId: clientId }
@@ -186,7 +189,18 @@
 	function handleClientLeft(clientId: string) {
 		connectedClients = connectedClients.filter((id) => id !== clientId);
 
-		// Notify sandbox
+		// Update players list in sandbox
+		if (iframeEl?.contentWindow && multiplayer) {
+			const allPlayers = [multiplayer.getPlayerId()!, ...connectedClients];
+			sendToSandbox({
+				type: 'MULTIPLAYER_STATE',
+				payload: {
+					_players: allPlayers
+				}
+			});
+		}
+
+		// Notify sandbox of leave event
 		sendToSandbox({
 			type: 'MULTIPLAYER_PLAYER_LEFT',
 			payload: { playerId: clientId }
@@ -197,7 +211,7 @@
 		connectionStatus = 'connected';
 
 		// Inject multiplayer API into sandbox
-		injectMultiplayerAPI(false, joinCode.toUpperCase(), client!.getPlayerId()!);
+		injectMultiplayerAPI(false, joinCode.toUpperCase(), multiplayer!.getPlayerId()!);
 	}
 
 	function handleDisconnected() {
@@ -234,8 +248,8 @@
 	 * Approve pending client (host only)
 	 */
 	function approveClient(clientId: string) {
-		if (host) {
-			host.approveClient(clientId);
+		if (multiplayer) {
+			multiplayer.approveClient(clientId);
 		}
 	}
 
@@ -243,14 +257,15 @@
 	 * Deny pending client (host only)
 	 */
 	function denyClient(clientId: string) {
-		if (host) {
-			host.denyClient(clientId);
+		if (multiplayer) {
+			multiplayer.denyClient(clientId);
 			pendingClients = pendingClients.filter((id) => id !== clientId);
 		}
 	}
 
 	/**
-	 * Inject multiplayer API into sandbox iframe
+	 * Initialize multiplayer API in sandbox iframe
+	 * Sends state to the built-in gameAPI.multiplayer in sandbox-runtime.html
 	 */
 	function injectMultiplayerAPI(isHost: boolean, roomCode: string, playerId: string) {
 		if (!iframeEl || !iframeEl.contentWindow) {
@@ -258,26 +273,26 @@
 			return;
 		}
 
-		// Inject the API code
-		const script = `(function() { ${MULTIPLAYER_API_INJECTION} })();`;
+		// Validate required values
+		if (!playerId) {
+			throw new Error('[MultiplayerManager] Cannot initialize multiplayer without player ID');
+		}
 
+		console.log('[MultiplayerManager] Initializing multiplayer:', {
+			isHost,
+			playerId,
+			roomCode
+		});
+
+		// Send multiplayer state to built-in API in sandbox-runtime.html
 		iframeEl.contentWindow.postMessage(
 			{
-				type: 'EVAL_CODE',
-				payload: { code: script }
-			},
-			'*'
-		);
-
-		// Initialize multiplayer state
-		iframeEl.contentWindow.postMessage(
-			{
-				type: 'MULTIPLAYER_INIT',
+				type: 'MULTIPLAYER_STATE',
 				payload: {
-					isHost,
-					roomCode,
-					playerId,
-					players: isHost ? [playerId, ...connectedClients] : [playerId]
+					_enabled: true,
+					_isHost: isHost,
+					_myId: playerId,
+					_players: isHost ? [playerId, ...connectedClients] : [playerId]
 				}
 			},
 			'*'
@@ -304,12 +319,14 @@
 		if (event.data.type === 'MULTIPLAYER_SEND') {
 			const { data } = event.data.payload;
 
-			if (host) {
-				// Broadcast to all clients
-				host.broadcast(data);
-			} else if (client) {
-				// Send to host
-				client.send(data);
+			if (multiplayer) {
+				if (mode === 'host') {
+					// Broadcast to all clients
+					multiplayer.broadcast(data);
+				} else if (mode === 'client') {
+					// Send to host
+					multiplayer.send(data);
+				}
 			}
 		}
 	}

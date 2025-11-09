@@ -96,8 +96,13 @@ export class MultiplayerClient {
 			});
 
 			this.socket.on('signal', (data: { signal: any; from: string }) => {
-				console.log('[MultiplayerClient] Signal from host');
+				const signalType = data.signal.type || (data.signal.candidate ? 'candidate' : 'unknown');
+				console.log('[MultiplayerClient] 📨 Signal from host | Type:', signalType);
+				if (data.signal.candidate) {
+					console.log('[MultiplayerClient]   ICE candidate:', data.signal.candidate.candidate?.substring(0, 50) + '...');
+				}
 				if (this.peer) {
+					console.log('[MultiplayerClient] 🔄 Processing signal from host');
 					this.peer.signal(data.signal);
 				}
 			});
@@ -152,8 +157,35 @@ export class MultiplayerClient {
 			}
 		});
 
+		// Debug: Comprehensive WebRTC logging
+		let iceCandidateCount = 0;
+
+		this.peer._pc.onconnectionstatechange = () => {
+			console.log('[MultiplayerClient] 🔌 Peer connection state:', this.peer!._pc.connectionState);
+		};
+
+		this.peer._pc.oniceconnectionstatechange = () => {
+			console.log('[MultiplayerClient] 🧊 ICE connection state:', this.peer!._pc.iceConnectionState);
+		};
+
+		this.peer._pc.onicegatheringstatechange = () => {
+			console.log('[MultiplayerClient] 🔍 ICE gathering state:', this.peer!._pc.iceGatheringState);
+		};
+
+		this.peer._pc.onicecandidate = (event) => {
+			if (event.candidate) {
+				iceCandidateCount++;
+				const candidateStr = event.candidate.candidate;
+				const type = candidateStr.match(/typ (\w+)/)?.[1] || 'unknown';
+				console.log(`[MultiplayerClient] 🎯 ICE candidate #${iceCandidateCount} (${type}):`, candidateStr.substring(0, 80) + '...');
+			} else {
+				console.log(`[MultiplayerClient] ✅ ICE gathering complete. Total candidates: ${iceCandidateCount}`);
+			}
+		};
+
 		this.peer.on('signal', (signal) => {
-			console.log('[MultiplayerClient] Sending signal to host');
+			const signalType = signal.type || (signal.candidate ? 'candidate' : 'unknown');
+			console.log('[MultiplayerClient] 📤 Sending signal to host | Type:', signalType);
 			this.socket!.emit('signal', {
 				shareCode: this.shareCode,
 				signal

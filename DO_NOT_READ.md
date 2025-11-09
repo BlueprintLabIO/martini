@@ -11,3 +11,7 @@ we need a multi-modla ai to handle assets
 we want some way for Game Error
 can't access property "y", this.player is undefined to automatically
 be handled by the API
+
+well if we constantly get these bugs, maybe we should just break
+the files down into smaller files or use some patterns to guarantee 
+correctness. can you think of any ways to do this?

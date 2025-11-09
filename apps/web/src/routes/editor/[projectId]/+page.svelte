@@ -16,6 +16,7 @@
 	let saveStatus = $state<'saved' | 'saving' | 'unsaved'>('saved');
 	let gamePreview: GamePreview;
 	let aiChatPanel: any;
+	let codeEditor: any; // Reference to CodeEditor component
 	let showNewFileDialog = $state(false);
 	let newFilePath = $state('');
 	let showNewFolderDialog = $state(false);
@@ -30,6 +31,7 @@
 		approvalId: string;
 		onApprove: () => void;
 		onDeny: () => void;
+		firstChangeLine?: number;
 	} | null = $state(null);
 
 	onMount(() => {
@@ -243,11 +245,13 @@
 		newContent: string,
 		approvalId: string,
 		onApprove: () => void,
-		onDeny: () => void
+		onDeny: () => void,
+		firstChangeLine?: number
 	) {
 		console.log('📝 File edit requested:', path);
 		console.log('🔍 Debug - oldContent length:', oldContent.length);
 		console.log('🔍 Debug - newContent length:', newContent.length);
+		console.log('🔍 Debug - firstChangeLine:', firstChangeLine);
 
 		// Switch to the file if not already open
 		if (activeFilePath !== path) {
@@ -260,8 +264,15 @@
 			originalContent = oldContent;
 			file.content = newContent;
 			diffMode = true;
-			pendingApproval = { path, approvalId, onApprove, onDeny };
+			pendingApproval = { path, approvalId, onApprove, onDeny, firstChangeLine };
 			console.log('✅ Diff mode enabled:', { diffMode, originalContent: originalContent.slice(0, 50), pendingApproval });
+
+			// Scroll to the first changed line after a brief delay (to ensure editor is ready)
+			if (firstChangeLine && codeEditor) {
+				setTimeout(() => {
+					codeEditor.scrollToLine(firstChangeLine);
+				}, 100);
+			}
 		} else {
 			console.error('❌ File not found in filesMap:', path);
 		}
@@ -274,9 +285,20 @@
 	 * We just need to persist to server and clean up UI state.
 	 *
 	 * No refreshFile needed - client already has latest state!
+	 *
+	 * @param path - File path to update
+	 * @param newContent - Optional new content (used in Quick Mode to apply changes directly)
 	 */
-	async function handleFileEditCompleted(path: string) {
+	async function handleFileEditCompleted(path: string, newContent?: string) {
 		console.log('✅ [Client-Side Edit] Persisting to server:', path);
+
+		// If newContent provided (Quick Mode), update file content directly
+		if (newContent) {
+			const file = filesMap.get(path);
+			if (file) {
+				file.content = newContent;
+			}
+		}
 
 		// Save the already-updated content to server
 		const file = filesMap.get(path);
@@ -336,6 +358,67 @@
 			}
 			diffMode = false;
 			pendingApproval = null;
+		}
+	}
+
+	/**
+	 * Handle file creation request from AI chat
+	 *
+	 * CLIENT-SIDE EXECUTION: File creation happens client-side for:
+	 * - Instant reactivity - file appears in tree immediately
+	 * - Client ownership - filesMap is source of truth
+	 * - No race conditions - direct state updates
+	 */
+	async function handleFileCreateRequest(
+		path: string,
+		content: string,
+		approvalId: string,
+		onApprove: () => void,
+		onDeny: () => void
+	) {
+		console.log('📄 File creation requested:', path);
+
+		// Check if file already exists
+		if (filesMap.has(path)) {
+			console.error('❌ File already exists:', path);
+			alert(`File already exists: ${path}`);
+			onDeny();
+			return;
+		}
+
+		// In Quick Mode, auto-approve has already happened in AIChatPanel
+		// In Safe Mode, we could show a confirmation dialog here if needed
+		// For now, we'll just proceed with creation
+
+		// Add to local filesMap
+		filesMap.set(path, { content, dirty: false });
+
+		// Rebuild file tree to show new file
+		fileTree.buildTree(Array.from(filesMap.keys()));
+
+		// Open the new file
+		openFile(path);
+
+		// Persist to server
+		try {
+			const response = await fetch(`/api/projects/${data.project.id}/files`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ path, content })
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to save file to server');
+			}
+
+			console.log('✅ File created and saved to server:', path);
+			onApprove();
+		} catch (error) {
+			console.error('❌ Failed to save file to server:', error);
+			// File is still in UI, but server save failed
+			// User can try to save again manually
+			alert('File created locally but failed to save to server. Changes may be lost on refresh.');
+			onDeny();
 		}
 	}
 
@@ -441,6 +524,7 @@
 							</div>
 							<div class="flex-1 overflow-auto">
 								<CodeEditor
+									bind:this={codeEditor}
 									bind:content={file.content}
 									onChange={(newContent) => {
 										if (activeFilePath) onContentChange(activeFilePath, newContent);
@@ -474,6 +558,7 @@
 				projectId={data.project.id}
 				onFileEditRequested={handleFileEditRequest}
 				onFileEditCompleted={handleFileEditCompleted}
+				onFileCreateRequested={handleFileCreateRequest}
 			/>
 		</Resizable.Pane>
 	</Resizable.PaneGroup>

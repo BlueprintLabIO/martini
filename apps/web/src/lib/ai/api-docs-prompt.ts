@@ -559,8 +559,18 @@ create(scene) {
 
 Get your unique player ID.
 
+**Returns:** \`string | null\` - Your player ID, or \`null\` if multiplayer is not active
+
+**Guarantees:**
+- Returns non-null when multiplayer is active (after "Start Multiplayer" clicked)
+- Returns \`null\` in single-player mode
+- ID is stable throughout the session (doesn't change)
+
 \`\`\`javascript
 const myId = gameAPI.multiplayer.getMyId();
+
+// In multiplayer mode, myId is guaranteed to be a valid string
+// In single-player mode, myId will be null
 \`\`\`
 
 #### \`gameAPI.multiplayer.getPlayers()\`

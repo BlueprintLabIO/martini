@@ -80,6 +80,7 @@
 		"shadcn-svelte": "^1.0.10",
 		"simple-peer": "^9.11.1",
 		"socket.io-client": "^4.8.1",
+		"trystero": "^0.22.0",
 		"vite-plugin-node-polyfills": "^0.24.0",
 		"zod": "^4.1.12"
 	}
