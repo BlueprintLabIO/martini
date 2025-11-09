@@ -1,12 +1,11 @@
 <script lang="ts">
 	/**
-	 * MultiplayerManager - Component to manage multiplayer connections
+	 * MultiplayerManager - Manages P2P multiplayer via Trystero
 	 *
-	 * Handles:
-	 * - Host/client role selection
-	 * - P2P peer management via Trystero
-	 * - Lobby approval UI
-	 * - Communication with game sandbox
+	 * Features:
+	 * - Host/client roles
+	 * - Lobby approval system
+	 * - Game sandbox communication
 	 */
 
 	import { Multiplayer } from './Multiplayer';
@@ -37,8 +36,13 @@
 	let errorMessage: string | null = $state(null);
 	let showLobby: boolean = $state(false);
 
-	// Unique app identifier for Trystero (Nostr strategy)
+	// App ID for Trystero
 	const appId = 'martini-game-platform-v1';
+
+	// Action sender/receivers
+	let sendJoinRequest: ((data: any, peerId?: string) => void) | null = null;
+	let sendApprovalResponse: ((data: any, peerId: string) => void) | null = null;
+	let sendGameData: ((data: any, peerId?: string) => void) | null = null;
 
 	/**
 	 * Start as host - generate share code and create room
@@ -60,28 +64,52 @@
 			const data = await response.json();
 			shareCode = data.shareCode;
 
-			// Create multiplayer instance as host
-			multiplayer = new Multiplayer({
-				shareCode,
-				isHost: true,
-				appId,
-				onError: handleError,
-				onClientJoined: handleClientJoined,
-				onClientLeft: handleClientLeft,
-				onJoinRequest: handleJoinRequest,
-				onDataReceived: handleDataFromClient
+			// Create multiplayer instance
+			multiplayer = new Multiplayer({ appId, roomId: shareCode });
+
+			// Set up actions for approval flow
+			[sendJoinRequest, receiveJoinRequest] = multiplayer.room.makeAction('join-req');
+			[sendApprovalResponse, receiveApprovalResponse] = multiplayer.room.makeAction('approval');
+			[sendGameData, receiveGameData] = multiplayer.room.makeAction('game-data');
+
+			// Host: Listen for join requests
+			receiveJoinRequest((data: any, peerId: string) => {
+				console.log('[Host] Join request from:', peerId, data);
+				if (!pendingClients.includes(peerId)) {
+					pendingClients = [...pendingClients, peerId];
+				}
 			});
 
-			await multiplayer.connect();
+			// Host: Listen for game data from clients
+			receiveGameData((data: any, peerId: string) => {
+				sendToSandbox({
+					type: 'MULTIPLAYER_DATA',
+					payload: { from: peerId, data }
+				});
+			});
+
+			// Host: Handle peer leave
+			multiplayer.room.onPeerLeave((peerId: string) => {
+				console.log('[Host] Peer left:', peerId);
+				pendingClients = pendingClients.filter((id) => id !== peerId);
+				connectedClients = connectedClients.filter((id) => id !== peerId);
+
+				// Update sandbox
+				updateSandboxPlayers();
+				sendToSandbox({
+					type: 'MULTIPLAYER_PLAYER_LEFT',
+					payload: { playerId: peerId }
+				});
+			});
 
 			mode = 'host';
 			connectionStatus = 'connected';
 			showLobby = true;
 
 			// Inject multiplayer API into sandbox
-			injectMultiplayerAPI(true, shareCode, multiplayer.getPlayerId()!);
+			injectMultiplayerAPI(true, shareCode, multiplayer.selfId);
 
-			console.log('[MultiplayerManager] Started as host with code:', shareCode);
+			console.log('[Host] Started with code:', shareCode);
 		} catch (error) {
 			handleError(error as Error);
 		}
@@ -100,30 +128,73 @@
 			connectionStatus = 'connecting';
 			errorMessage = null;
 
-			// Create multiplayer instance as client
-			multiplayer = new Multiplayer({
-				shareCode: joinCode.toUpperCase(),
-				isHost: false,
-				appId,
-				onError: handleError,
-				onConnected: handleConnectedToHost,
-				onDisconnected: handleDisconnected,
-				onPending: handlePending,
-				onDenied: handleDenied,
-				onDataReceived: handleDataFromHost,
-				onClientJoined: () => {}, // Not used by client
-				onClientLeft: () => {} // Not used by client
+			const code = joinCode.toUpperCase();
+
+			// Create multiplayer instance
+			multiplayer = new Multiplayer({ appId, roomId: code });
+
+			// Set up actions
+			[sendJoinRequest, receiveJoinRequest] = multiplayer.room.makeAction('join-req');
+			[sendApprovalResponse, receiveApprovalResponse] = multiplayer.room.makeAction('approval');
+			[sendGameData, receiveGameData] = multiplayer.room.makeAction('game-data');
+
+			// Client: Listen for approval response
+			receiveApprovalResponse((data: any, peerId: string) => {
+				console.log('[Client] Approval response:', data);
+				if (data.approved) {
+					connectionStatus = 'connected';
+					injectMultiplayerAPI(false, code, multiplayer!.selfId);
+				} else {
+					errorMessage = 'Host denied your request';
+					stop();
+				}
 			});
 
-			await multiplayer.connect();
+			// Client: Listen for game data from host
+			receiveGameData((data: any) => {
+				sendToSandbox({
+					type: 'MULTIPLAYER_DATA',
+					payload: { from: 'host', data }
+				});
+			});
+
+			// Client: Send join request when NEW peer joins
+			multiplayer.room.onPeerJoin((peerId: string) => {
+				console.log('[Client] Peer joined (host):', peerId);
+				connectionStatus = 'pending';
+				sendJoinRequest?.({ clientId: multiplayer!.selfId });
+			});
+
+			// Client: Handle host disconnect
+			multiplayer.room.onPeerLeave(() => {
+				errorMessage = 'Host disconnected';
+				connectionStatus = 'disconnected';
+			});
 
 			mode = 'client';
 
-			console.log('[MultiplayerManager] Started as client with code:', joinCode);
+			console.log('[Client] Joining room:', code);
+
+			// IMPORTANT: Check if host is already in room
+			// onPeerJoin only fires for peers that join AFTER us
+			const existingPeers = Object.keys(multiplayer.room.getPeers());
+			console.log('[Client] Existing peers in room:', existingPeers);
+
+			if (existingPeers.length > 0) {
+				// Host is already here, send join request immediately
+				console.log('[Client] Host already in room, sending join request');
+				connectionStatus = 'pending';
+				sendJoinRequest?.({ clientId: multiplayer.selfId });
+			}
 		} catch (error) {
 			handleError(error as Error);
 		}
 	}
+
+	// Action receivers (declared at component level for reactivity)
+	let receiveJoinRequest: (callback: (data: any, peerId: string) => void) => void;
+	let receiveApprovalResponse: (callback: (data: any, peerId: string) => void) => void;
+	let receiveGameData: (callback: (data: any, peerId: string) => void) => void;
 
 	/**
 	 * Stop multiplayer and disconnect
@@ -142,9 +213,55 @@
 		connectedClients = [];
 		showLobby = false;
 		errorMessage = null;
+		sendJoinRequest = null;
+		sendApprovalResponse = null;
+		sendGameData = null;
 	}
 
-	// Event handlers
+	/**
+	 * Approve pending client (host only)
+	 */
+	function approveClient(clientId: string) {
+		console.log('[Host] Approving client:', clientId);
+
+		// Remove from pending, add to connected
+		pendingClients = pendingClients.filter((id) => id !== clientId);
+		if (!connectedClients.includes(clientId)) {
+			connectedClients = [...connectedClients, clientId];
+		}
+
+		// Send approval
+		sendApprovalResponse?.({ approved: true }, clientId);
+
+		// Update sandbox
+		updateSandboxPlayers();
+		sendToSandbox({
+			type: 'MULTIPLAYER_PLAYER_JOINED',
+			payload: { playerId: clientId }
+		});
+	}
+
+	/**
+	 * Deny pending client (host only)
+	 */
+	function denyClient(clientId: string) {
+		console.log('[Host] Denying client:', clientId);
+		pendingClients = pendingClients.filter((id) => id !== clientId);
+		sendApprovalResponse?.({ approved: false }, clientId);
+	}
+
+	/**
+	 * Update sandbox with current player list
+	 */
+	function updateSandboxPlayers() {
+		if (!iframeEl?.contentWindow || !multiplayer) return;
+
+		const allPlayers = [multiplayer.selfId, ...connectedClients];
+		sendToSandbox({
+			type: 'MULTIPLAYER_STATE',
+			payload: { _players: allPlayers }
+		});
+	}
 
 	function handleError(error: Error) {
 		console.error('[MultiplayerManager] Error:', error);
@@ -153,181 +270,51 @@
 		onError(error);
 	}
 
-	function handleJoinRequest(clientId: string) {
-		if (!pendingClients.includes(clientId)) {
-			pendingClients = [...pendingClients, clientId];
-		}
-	}
-
-	function handleClientJoined(clientId: string) {
-		// Remove from pending
-		pendingClients = pendingClients.filter((id) => id !== clientId);
-
-		// Add to connected
-		if (!connectedClients.includes(clientId)) {
-			connectedClients = [...connectedClients, clientId];
-		}
-
-		// Update players list in sandbox
-		if (iframeEl?.contentWindow && multiplayer) {
-			const allPlayers = [multiplayer.getPlayerId()!, ...connectedClients];
-			sendToSandbox({
-				type: 'MULTIPLAYER_STATE',
-				payload: {
-					_players: allPlayers
-				}
-			});
-		}
-
-		// Notify sandbox of join event
-		sendToSandbox({
-			type: 'MULTIPLAYER_PLAYER_JOINED',
-			payload: { playerId: clientId }
-		});
-	}
-
-	function handleClientLeft(clientId: string) {
-		connectedClients = connectedClients.filter((id) => id !== clientId);
-
-		// Update players list in sandbox
-		if (iframeEl?.contentWindow && multiplayer) {
-			const allPlayers = [multiplayer.getPlayerId()!, ...connectedClients];
-			sendToSandbox({
-				type: 'MULTIPLAYER_STATE',
-				payload: {
-					_players: allPlayers
-				}
-			});
-		}
-
-		// Notify sandbox of leave event
-		sendToSandbox({
-			type: 'MULTIPLAYER_PLAYER_LEFT',
-			payload: { playerId: clientId }
-		});
-	}
-
-	function handleConnectedToHost() {
-		connectionStatus = 'connected';
-
-		// Inject multiplayer API into sandbox
-		injectMultiplayerAPI(false, joinCode.toUpperCase(), multiplayer!.getPlayerId()!);
-	}
-
-	function handleDisconnected() {
-		errorMessage = 'Disconnected from host';
-		connectionStatus = 'disconnected';
-	}
-
-	function handlePending() {
-		connectionStatus = 'pending';
-	}
-
-	function handleDenied() {
-		errorMessage = 'Host denied your request to join';
-		connectionStatus = 'disconnected';
-	}
-
-	function handleDataFromClient(clientId: string, data: any) {
-		// Forward to sandbox
-		sendToSandbox({
-			type: 'MULTIPLAYER_DATA',
-			payload: { from: clientId, data }
-		});
-	}
-
-	function handleDataFromHost(data: any) {
-		// Forward to sandbox
-		sendToSandbox({
-			type: 'MULTIPLAYER_DATA',
-			payload: { from: 'host', data }
-		});
-	}
-
-	/**
-	 * Approve pending client (host only)
-	 */
-	function approveClient(clientId: string) {
-		if (multiplayer) {
-			multiplayer.approveClient(clientId);
-		}
-	}
-
-	/**
-	 * Deny pending client (host only)
-	 */
-	function denyClient(clientId: string) {
-		if (multiplayer) {
-			multiplayer.denyClient(clientId);
-			pendingClients = pendingClients.filter((id) => id !== clientId);
-		}
-	}
-
 	/**
 	 * Initialize multiplayer API in sandbox iframe
-	 * Sends state to the built-in gameAPI.multiplayer in sandbox-runtime.html
 	 */
 	function injectMultiplayerAPI(isHost: boolean, roomCode: string, playerId: string) {
-		if (!iframeEl || !iframeEl.contentWindow) {
+		if (!iframeEl?.contentWindow) {
 			console.error('[MultiplayerManager] Iframe not ready');
 			return;
 		}
 
-		// Validate required values
-		if (!playerId) {
-			throw new Error('[MultiplayerManager] Cannot initialize multiplayer without player ID');
-		}
+		console.log('[MultiplayerManager] Initializing multiplayer API');
 
-		console.log('[MultiplayerManager] Initializing multiplayer:', {
-			isHost,
-			playerId,
-			roomCode
+		sendToSandbox({
+			type: 'MULTIPLAYER_STATE',
+			payload: {
+				_enabled: true,
+				_isHost: isHost,
+				_myId: playerId,
+				_players: isHost ? [playerId, ...connectedClients] : [playerId]
+			}
 		});
-
-		// Send multiplayer state to built-in API in sandbox-runtime.html
-		iframeEl.contentWindow.postMessage(
-			{
-				type: 'MULTIPLAYER_STATE',
-				payload: {
-					_enabled: true,
-					_isHost: isHost,
-					_myId: playerId,
-					_players: isHost ? [playerId, ...connectedClients] : [playerId]
-				}
-			},
-			'*'
-		);
 	}
 
 	/**
 	 * Send message to sandbox iframe
 	 */
 	function sendToSandbox(message: any) {
-		if (!iframeEl || !iframeEl.contentWindow) {
-			return;
-		}
-
-		iframeEl.contentWindow.postMessage(message, '*');
+		iframeEl?.contentWindow?.postMessage(message, '*');
 	}
 
 	/**
 	 * Listen for messages from sandbox
 	 */
 	function handleSandboxMessage(event: MessageEvent) {
-		if (!event.data || !event.data.type) return;
+		if (!event.data?.type || event.data.type !== 'MULTIPLAYER_SEND') return;
 
-		if (event.data.type === 'MULTIPLAYER_SEND') {
-			const { data } = event.data.payload;
+		const { data } = event.data.payload;
 
-			if (multiplayer) {
-				if (mode === 'host') {
-					// Broadcast to all clients
-					multiplayer.broadcast(data);
-				} else if (mode === 'client') {
-					// Send to host
-					multiplayer.send(data);
-				}
-			}
+		if (mode === 'host') {
+			// Broadcast to all connected clients
+			connectedClients.forEach((peerId) => {
+				sendGameData?.(data, peerId);
+			});
+		} else if (mode === 'client') {
+			// Send to host (broadcast to all)
+			sendGameData?.(data);
 		}
 	}
 
