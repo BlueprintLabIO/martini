@@ -32,6 +32,9 @@
   <!-- Phaser 3 from CDN -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 
+  <!-- Martini Multiplayer SDK (Advanced deterministic multiplayer) -->
+  <script src="/martini-multiplayer.browser.js"></script>
+
   <!-- Sandbox Runtime -->
   <script>
     /**
@@ -104,14 +107,6 @@
 
       // === Utilities ===
 
-      /**
-       * Seeded random number generator (for deterministic multiplayer)
-       * DEPRECATED: Use gameAPI.random.next() instead
-       * @returns {number} Random number between 0 and 1
-       */
-      random() {
-        return this.random.next();
-      },
 
       /**
        * Get current frame number
@@ -151,343 +146,17 @@
       },
 
       // === Multiplayer API ===
-      // Auto-sync players, events, and game state across 2-8 players
+      // Will be replaced by Martini SDK integration
+      // TODO: Implement new @martini/phaser adapter
 
-      multiplayer: {
-        // Internal state (populated by parent window)
-        _enabled: false,
-        _isHost: false,
-        _myId: null,
-        _players: [],
-        _trackedPlayers: new Map(),
-        _eventHandlers: new Map(),
-
-        /**
-         * 🎮 AUTO-SYNC PLAYER
-         *
-         * Automatically synchronizes a player sprite across all clients.
-         * This is the easiest way to add multiplayer!
-         *
-         * Example (Fire Boy & Water Girl):
-         * ```javascript
-         * create(scene) {
-         *   this.myPlayer = scene.physics.add.sprite(100, 100, 'player');
-         *
-         *   gameAPI.multiplayer.trackPlayer(this.myPlayer, {
-         *     role: gameAPI.multiplayer.isHost() ? 'fireboy' : 'watergirl'
-         *   });
-         * }
-         *
-         * update(scene) {
-         *   // Just write standard Phaser code - sync happens automatically!
-         *   const cursors = scene.input.keyboard.createCursorKeys();
-         *   if (cursors.left.isDown) this.myPlayer.setVelocityX(-160);
-         * }
-         * ```
-         *
-         * @param {Phaser.GameObjects.Sprite} sprite - The player sprite to track
-         * @param {Object} options - Configuration options
-         * @param {string[]} options.sync - Properties to sync (default: ['x', 'y', 'velocityX', 'velocityY', 'frame'])
-         * @param {number} options.updateRate - Updates per second (default: 30). Use 10 for turn-based, 60 for racing
-         * @param {boolean} options.interpolate - Smooth remote players (default: true)
-         * @param {number} options.color - Tint for remote players (default: auto-assign)
-         * @param {string} options.role - Custom metadata (e.g., 'fireboy', 'watergirl')
-         * @returns {Object} Tracker with getRemotePlayers() method
-         */
-        trackPlayer(sprite, options = {}) {
-          if (!this._enabled) {
-            gameAPI.log('⚠️ Multiplayer not enabled. Start multiplayer session first.');
-            return { getRemotePlayers: () => [] };
-          }
-
-          const defaults = {
-            sync: ['x', 'y', 'velocityX', 'velocityY', 'frame'],
-            updateRate: 30,
-            interpolate: true,
-            color: null,
-            role: null
-          };
-
-          const config = { ...defaults, ...options };
-          const trackerId = this._myId;
-
-          // Store tracker
-          const tracker = {
-            sprite,
-            config,
-            remotePlayers: new Map(),
-            lastUpdate: 0,
-
-            getRemotePlayers() {
-              return Array.from(this.remotePlayers.values());
-            }
-          };
-
-          this._trackedPlayers.set(trackerId, tracker);
-
-          // Start update loop
-          const updateInterval = 1000 / config.updateRate;
-
-          const sendUpdate = () => {
-            if (!sprite.active) return;
-
-            const now = Date.now();
-            if (now - tracker.lastUpdate < updateInterval) return;
-            tracker.lastUpdate = now;
-
-            const state = {};
-            config.sync.forEach(prop => {
-              if (prop === 'velocityX' || prop === 'velocityY') {
-                state[prop] = sprite.body?.[prop.replace('velocity', 'velocity.')] || 0;
-              } else {
-                state[prop] = sprite[prop];
-              }
-            });
-
-            this.broadcast('__player_update', {
-              trackerId,
-              state,
-              role: config.role
-            });
-          };
-
-          // Send updates in game loop
-          if (phaserGame?.scene?.scenes[0]) {
-            phaserGame.scene.scenes[0].events.on('update', sendUpdate);
-          }
-
-          gameAPI.log(`✅ Tracking player${config.role ? ` (${config.role})` : ''}`);
-          return tracker;
-        },
-
-        /**
-         * 📡 BROADCAST EVENT
-         *
-         * Send a game event to all connected players.
-         * Use this for collectibles, doors, attacks, etc.
-         *
-         * Example (Collect Coin):
-         * ```javascript
-         * collectCoin(coinId) {
-         *   this.score += 10;
-         *   gameAPI.multiplayer.broadcast('coin-collected', {
-         *     coinId,
-         *     score: this.score
-         *   });
-         * }
-         * ```
-         *
-         * @param {string} eventName - Event identifier (use kebab-case: 'coin-collected', 'door-opened')
-         * @param {any} data - Event data (keep small, <500 bytes)
-         */
-        broadcast(eventName, data) {
-          if (!this._enabled) {
-            gameAPI.log('⚠️ Multiplayer not enabled');
-            return;
-          }
-
-          parent.postMessage({
-            type: 'MULTIPLAYER_SEND',
-            payload: {
-              data: { eventName, data }
-            }
-          }, '*');
-        },
-
-        /**
-         * 👂 LISTEN FOR EVENTS
-         *
-         * Register a callback for when other players send events.
-         *
-         * Example (Listen for Coin Collection):
-         * ```javascript
-         * create(scene) {
-         *   gameAPI.multiplayer.on('coin-collected', (peerId, data) => {
-         *     const coin = this.coins.find(c => c.id === data.coinId);
-         *     if (coin) coin.destroy();
-         *     this.updateScoreboard(peerId, data.score);
-         *   });
-         * }
-         * ```
-         *
-         * @param {string} eventName - Event to listen for
-         * @param {Function} callback - Called with (peerId, data) when event received
-         */
-        on(eventName, callback) {
-          if (!this._eventHandlers.has(eventName)) {
-            this._eventHandlers.set(eventName, []);
-          }
-          this._eventHandlers.get(eventName).push(callback);
-        },
-
-        /**
-         * 👑 CHECK IF HOST
-         *
-         * Returns true if you're the host (authoritative player).
-         * Use this to spawn enemies and collectibles to prevent duplicates!
-         *
-         * Example:
-         * ```javascript
-         * create(scene) {
-         *   if (gameAPI.multiplayer.isHost()) {
-         *     this.spawnEnemies();  // Only host spawns
-         *   }
-         * }
-         * ```
-         *
-         * @returns {boolean} True if you're the host
-         */
-        isHost() {
-          return this._isHost;
-        },
-
-        /**
-         * 🆔 GET YOUR PLAYER ID
-         *
-         * Returns your unique player ID. Guaranteed to be non-null when multiplayer is active.
-         * Returns null in single-player mode (multiplayer not started).
-         *
-         * @returns {string | null} Your unique player ID, or null if multiplayer not enabled
-         */
-        getMyId() {
-          if (this._enabled && !this._myId) {
-            console.error('⚠️ CRITICAL: Multiplayer enabled but _myId is null! This should never happen.');
-            console.error('   Debug info:', {
-              _enabled: this._enabled,
-              _isHost: this._isHost,
-              _myId: this._myId,
-              _players: this._players
-            });
-          }
-          return this._myId;
-        },
-
-        /**
-         * 👥 GET ALL PLAYERS
-         *
-         * @returns {Array} List of player objects with {id, isHost, role, latency}
-         */
-        getPlayers() {
-          return this._players;
-        },
-
-        /**
-         * 📥 PLAYER JOINED CALLBACK
-         *
-         * Called when a new player connects.
-         *
-         * @param {Function} callback - Called with player object
-         */
-        onPlayerJoined(callback) {
-          this.on('__player_joined', callback);
-        },
-
-        /**
-         * 📤 PLAYER LEFT CALLBACK
-         *
-         * Called when a player disconnects.
-         *
-         * @param {Function} callback - Called with player object
-         */
-        onPlayerLeft(callback) {
-          this.on('__player_left', callback);
-        },
-
-        // Internal: Handle incoming events
-        _handleEvent(peerId, eventName, data) {
-          const handlers = this._eventHandlers.get(eventName);
-          if (handlers) {
-            handlers.forEach(cb => cb(peerId, data));
-          }
-
-          // Handle player updates
-          if (eventName === '__player_update') {
-            this._handlePlayerUpdate(peerId, data);
-          }
-        },
-
-        // Internal: Handle player state updates
-        _handlePlayerUpdate(peerId, { trackerId, state, role }) {
-          // Find tracker
-          const tracker = Array.from(this._trackedPlayers.values())[0];
-          if (!tracker) return;
-
-          // Get or create remote player
-          let remotePlayer = tracker.remotePlayers.get(peerId);
-
-          if (!remotePlayer && phaserGame?.scene?.scenes[0]) {
-            const scene = phaserGame.scene.scenes[0];
-
-            // Create sprite similar to local player
-            remotePlayer = scene.physics.add.sprite(state.x || 0, state.y || 0, tracker.sprite.texture.key);
-
-            if (tracker.config.color) {
-              remotePlayer.setTint(tracker.config.color);
-            }
-
-            tracker.remotePlayers.set(peerId, remotePlayer);
-            gameAPI.log(`👤 Remote player joined${role ? ` (${role})` : ''}`);
-          }
-
-          // Update remote player state
-          if (remotePlayer) {
-            Object.keys(state).forEach(prop => {
-              if (tracker.config.interpolate && (prop === 'x' || prop === 'y')) {
-                // Smooth interpolation
-                remotePlayer[prop] += (state[prop] - remotePlayer[prop]) * 0.3;
-              } else if (prop === 'velocityX' || prop === 'velocityY') {
-                if (remotePlayer.body) {
-                  remotePlayer.body.velocity[prop.replace('velocity', '').toLowerCase()] = state[prop];
-                }
-              } else {
-                remotePlayer[prop] = state[prop];
-              }
-            });
+      // === Multiplayer API (Martini SDK) ===
+      // Placeholder - will be integrated with @martini/phaser
+      
+      multiplayer: null,  // Will be initialized by Martini SDK
           }
         }
       },
 
-      // === Deterministic Random ===
-
-      random: {
-        _seed: Date.now(),
-
-        /**
-         * 🎲 SET RANDOM SEED
-         *
-         * Set a deterministic seed for random number generation.
-         * Use this to ensure all players spawn the same level layout!
-         *
-         * Example:
-         * ```javascript
-         * if (gameAPI.multiplayer.isHost()) {
-         *   gameAPI.random.setSeed(12345);  // Same seed on all clients
-         *
-         *   for (let i = 0; i < 10; i++) {
-         *     const x = gameAPI.random() * 800;  // Same values everywhere
-         *     scene.add.platform(x, 400);
-         *   }
-         * }
-         * ```
-         *
-         * @param {number} seed - Seed value (any integer)
-         */
-        setSeed(seed) {
-          this._seed = seed;
-          gameAPI.log(`🎲 Random seed set to ${seed}`);
-        },
-
-        /**
-         * Get next deterministic random number (0-1).
-         * IMPORTANT: Use this instead of Math.random() in multiplayer!
-         *
-         * @returns {number} Random number between 0 and 1
-         */
-        next() {
-          const x = Math.sin(this._seed++) * 10000;
-          return x - Math.floor(x);
-        }
-      },
 
       // Internal: Heartbeat for watchdog
       _sendHeartbeat() {
@@ -672,6 +341,35 @@
         case 'MULTIPLAYER_PLAYER_LEFT':
           // Trigger player left callbacks
           gameAPI.multiplayer._handleEvent('__system', '__player_left', payload);
+          break;
+
+        case 'CAPTURE_SCREENSHOT':
+          // Capture canvas screenshot and send back to parent
+          const canvas = document.querySelector('canvas');
+          if (canvas) {
+            try {
+              const dataUrl = canvas.toDataURL('image/png');
+              parent.postMessage({
+                type: 'SCREENSHOT_CAPTURED',
+                payload: {
+                  image: dataUrl,
+                  width: canvas.width,
+                  height: canvas.height,
+                  timestamp: Date.now()
+                }
+              }, '*');
+            } catch (error) {
+              parent.postMessage({
+                type: 'SCREENSHOT_ERROR',
+                payload: { error: error.message }
+              }, '*');
+            }
+          } else {
+            parent.postMessage({
+              type: 'SCREENSHOT_ERROR',
+              payload: { error: 'Canvas not found in iframe. Game may not be loaded yet.' }
+            }, '*');
+          }
           break;
       }
     });

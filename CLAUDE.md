@@ -1,10 +1,3 @@
-# CLAUDE.md - Implementation Guide
-
-## Project Overview
-Browser-based multiplayer game platform for kids. AI generates Phaser 3 games, sandboxed iframes, P2P WebRTC multiplayer.
-
-**Stack:** SvelteKit + TypeScript + Tailwind + Supabase + Phaser 3
-
 use psql and SECRET_DATABASE_URL if necessary to view the db.
 do not run ops on the db without asking for permission.
 use src/lib/db/schema.ts for basic structure check
@@ -30,6 +23,8 @@ always purge old files after refactor or migration.
 what is the industry gold standard?
 
 no need to create summary documents all the time.
+
+read ai-sdk-v6-usage-guide.md if the change is anything to do with ai sdk
 
 ### UI Component Libraries
 - **shadcn-svelte**: Pre-built accessible components (tree-view, collapsible, etc.)

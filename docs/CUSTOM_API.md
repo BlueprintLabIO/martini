@@ -225,19 +225,6 @@ create(scene) {
 }
 ```
 
-### `gameAPI.random()`
-
-Get a seeded random number (0-1). **Use this for multiplayer games** to ensure deterministic behavior across all players.
-
-```javascript
-create(scene) {
-  // Spawn enemy at random position
-  const x = gameAPI.random() * 800;
-  const y = gameAPI.random() * 600;
-
-  this.enemy = scene.add.circle(x, y, 15, 0xff0000);
-}
-```
 
 ### `gameAPI.getFrame()`
 
@@ -259,17 +246,33 @@ update(scene) {
 ### Auto-Sync Players
 
 The easiest way to add multiplayer - automatically syncs player position, velocity, and animations.
+Uses a **factory function pattern** where you define how remote players are created.
 
 #### `gameAPI.multiplayer.trackPlayer(sprite, options)`
+
+**⚡ CRITICAL:** You MUST provide a `createRemotePlayer` function that defines how remote players look!
 
 ```javascript
 // Fire Boy & Water Girl example
 create(scene) {
-  this.myPlayer = scene.physics.add.sprite(100, 100, 'player');
+  const myRole = gameAPI.multiplayer.isHost() ? 'fireboy' : 'watergirl';
+  const myColor = myRole === 'fireboy' ? 0xff3300 : 0x0033ff;
 
-  // ✨ One line enables multiplayer
+  // Create YOUR player
+  this.myPlayer = scene.add.circle(100, 100, 20, myColor);
+  scene.physics.add.existing(this.myPlayer);
+
+  // ✨ Track with factory function for remote players
   gameAPI.multiplayer.trackPlayer(this.myPlayer, {
-    role: gameAPI.multiplayer.isHost() ? 'fireboy' : 'watergirl'
+    role: myRole,
+    createRemotePlayer: (scene, remoteRole, initialState) => {
+      // Create remote player based on THEIR role (not yours!)
+      const color = remoteRole === 'fireboy' ? 0xff3300 : 0x0033ff;
+      const remote = scene.add.circle(initialState.x, initialState.y, 20, color);
+      scene.physics.add.existing(remote);
+      remote.body.setCollideWorldBounds(true);
+      return remote;  // ✅ Must return the sprite!
+    }
   });
 
   // Host spawns level (prevents duplicates)
@@ -281,15 +284,29 @@ create(scene) {
 update(scene) {
   // Standard Phaser code - no manual sync needed!
   const cursors = scene.input.keyboard.createCursorKeys();
-  if (cursors.left.isDown) this.myPlayer.setVelocityX(-160);
+  if (cursors.left.isDown) this.myPlayer.body.setVelocityX(-160);
 }
 ```
 
+**How it works:**
+1. Each player calls `trackPlayer()` with their local player sprite
+2. The runtime broadcasts position updates to other players
+3. When another player joins, YOUR `createRemotePlayer` function is called with THEIR role
+4. You create a sprite matching their role (fireboy = red, watergirl = blue)
+5. The runtime automatically syncs their position/velocity to your created sprite
+
 **Options:**
 - `sync`: Array of properties to sync (default: `['x', 'y', 'velocityX', 'velocityY', 'frame']`)
-- `updateRate`: Updates per second (default: 30)
-- `role`: Custom metadata (e.g., 'fireboy', 'watergirl')
-- `color`: Tint for remote players
+- `updateRate`: Updates per second (default: 30). Use 10 for turn-based, 60 for racing
+- `interpolate`: Smooth remote player movement (default: true)
+- `role`: Custom metadata (e.g., 'fireboy', 'watergirl') - passed to createRemotePlayer
+- `createRemotePlayer`: **REQUIRED** - Function `(scene, role, initialState) => sprite`
+
+**createRemotePlayer function signature:**
+- `scene`: The Phaser scene to create sprites in
+- `role`: The remote player's role string (what THEY passed to trackPlayer)
+- `initialState`: Object with `{x, y, velocityX, velocityY}` for initial position
+- **Returns:** The created sprite/game object (must not be null!)
 
 ### Game Events
 
@@ -363,20 +380,224 @@ const players = gameAPI.multiplayer.getPlayers();
 console.log(`${players.length} players connected`);
 ```
 
-### Deterministic Random
+### Host-Only Spawning
 
-Use `gameAPI.random()` instead of `Math.random()` to ensure all players see the same level layout.
+**Always use host-only spawning for level generation and dynamic content.**
+
+The host is responsible for spawning all game objects (enemies, collectibles, platforms) and broadcasting their state to all players. This ensures consistency without complex synchronization.
 
 ```javascript
-if (gameAPI.multiplayer.isHost()) {
-  gameAPI.random.setSeed(12345); // Same seed = same level
+create(scene) {
+  if (gameAPI.multiplayer.isHost()) {
+    // Host spawns all level objects
+    for (let i = 0; i < 10; i++) {
+      const x = Math.random() * 800;
+      const platform = scene.add.rectangle(x, 400, 100, 20, 0x8b4513);
 
-  for (let i = 0; i < 10; i++) {
-    const x = gameAPI.random() * 800;  // Same on all clients
-    scene.add.platform(x, 400);
+      // Broadcast to all players
+      gameAPI.multiplayer.broadcast('spawn-platform', { x, y: 400, width: 100, height: 20 });
+    }
+  }
+
+  // All players listen for spawn events
+  gameAPI.multiplayer.on('spawn-platform', (peerId, data) => {
+    scene.add.rectangle(data.x, data.y, data.width, data.height, 0x8b4513);
+  });
+}
+```
+
+---
+
+## Advanced Multiplayer SDK
+
+For complex multiplayer games requiring **deterministic synchronization**, **action validation**, or **server-authoritative gameplay**, use the Martini Multiplayer SDK instead of the simple `gameAPI.multiplayer` API.
+
+### When to Use Advanced SDK
+
+Use the advanced SDK when you need:
+- **Deterministic gameplay** - All clients execute the same actions in the same order
+- **Rollback/replay** - Time-travel debugging and replay systems
+- **Action validation** - Server-side validation of cooldowns, proximity, rate limits
+- **Variable tick rates** - Physics at 30Hz, AI at 10Hz, etc.
+- **Complex state management** - Schema validation, auto-clamping, diff/patch sync
+
+For simple games (collect coins, race games, party games), stick with `gameAPI.multiplayer`.
+
+### Basic Setup
+
+```javascript
+// Available globally in sandbox
+const { PhaserMultiplayerRuntime, TrysteroTransport } = MartiniMultiplayer;
+
+create(scene) {
+  // 1. Create transport (P2P networking layer)
+  const transport = new TrysteroTransport({
+    roomId: 'my-game-room-123',  // Unique room ID
+    appId: 'my-game'              // Your game name
+  });
+
+  // 2. Define game logic (deterministic actions + state)
+  const gameLogic = {
+    setup: ({ playerIds }) => ({
+      players: Object.fromEntries(
+        playerIds.map(id => [id, { score: 0, x: 100, y: 100 }])
+      )
+    }),
+
+    actions: {
+      move: {
+        input: { dx: 'number', dy: 'number' },
+        apply: ({ game, playerId, input }) => {
+          game.players[playerId].x += input.dx;
+          game.players[playerId].y += input.dy;
+        }
+      },
+
+      collect: {
+        input: { coinId: 'number' },
+        cooldown: 100,  // Can only collect every 100ms
+        apply: ({ game, playerId, input }) => {
+          game.players[playerId].score += 10;
+        }
+      }
+    },
+
+    systems: {
+      physics: {
+        rate: 30,  // Run physics at 30 FPS
+        tick: ({ game, dt }) => {
+          // Update physics simulation
+          Object.values(game.players).forEach(player => {
+            player.y += 0.5;  // Apply gravity
+          });
+        }
+      }
+    }
+  };
+
+  // 3. Create runtime
+  this.runtime = new PhaserMultiplayerRuntime(gameLogic, transport);
+
+  // 4. Track local player sprite
+  this.player = scene.add.circle(100, 100, 20, 0x00ff00);
+  scene.physics.add.existing(this.player);
+
+  this.runtime.trackPlayer(this.player, {
+    role: 'player',
+    createRemotePlayer: (scene, role, initialState) => {
+      const remote = scene.add.circle(initialState.x, initialState.y, 20, 0xff0000);
+      scene.physics.add.existing(remote);
+      return remote;
+    }
+  });
+
+  // 5. Use actions instead of direct state changes
+  const api = this.runtime.getAPI();
+  scene.input.on('pointerdown', () => {
+    api.actions.collect({ coinId: 123 });
+  });
+
+  // 6. Listen for state changes
+  api.onChange((state) => {
+    this.scoreText.setText(`Score: ${state.players[this.runtime.getMyId()].score}`);
+  });
+
+  // 7. Start the runtime
+  this.runtime.start();
+}
+
+update(scene) {
+  // Control local player normally
+  const cursors = scene.input.keyboard.createCursorKeys();
+  const api = this.runtime.getAPI();
+
+  if (cursors.left.isDown) {
+    api.actions.move({ dx: -5, dy: 0 });
+  }
+  if (cursors.right.isDown) {
+    api.actions.move({ dx: 5, dy: 0 });
   }
 }
 ```
+
+### Key Differences from Simple API
+
+| Feature | Simple API (`gameAPI.multiplayer`) | Advanced SDK (`MartiniMultiplayer`) |
+|---------|-----------------------------------|-------------------------------------|
+| **State Management** | Manual (you broadcast changes) | Automatic (deterministic sync) |
+| **Action Validation** | None | Cooldowns, proximity, rate limits |
+| **Execution Order** | Best-effort (may differ) | Guaranteed same order on all clients |
+| **Host Authority** | Yes (host spawns objects) | Yes (host executes actions first) |
+| **Complexity** | Low (good for simple games) | Medium (good for complex games) |
+| **Code Size** | 10-30 lines | 50-100 lines (schema + actions) |
+
+### Advanced Features
+
+**Schema Validation:**
+```javascript
+const gameLogic = {
+  schema: {
+    score: { type: 'number', min: 0, max: 9999 },
+    health: { type: 'number', min: 0, max: 100, default: 100 },
+    position: {
+      x: { type: 'number', min: 0, max: 800 },
+      y: { type: 'number', min: 0, max: 600 }
+    }
+  },
+  // ...
+};
+```
+
+**Proximity-Based Actions:**
+```javascript
+actions: {
+  openDoor: {
+    input: { doorId: 'number' },
+    proximity: {
+      maxDistance: 50,
+      targetPosition: (game, input) => game.doors[input.doorId]
+    },
+    apply: ({ game, input }) => {
+      game.doors[input.doorId].open = true;
+    }
+  }
+}
+```
+
+**Deterministic Random:**
+```javascript
+import { createSeededRandom } from 'MartiniMultiplayer';
+
+const rand = createSeededRandom(12345);
+const x = rand.nextInt(0, 800);  // Same on all clients
+```
+
+### Migration from Simple API
+
+If you have existing code using `gameAPI.multiplayer.trackPlayer()`, here's how to migrate:
+
+**Before (Simple API):**
+```javascript
+gameAPI.multiplayer.trackPlayer(this.player, {
+  role: 'player',
+  createRemotePlayer: (scene, role, state) => {
+    return scene.add.sprite(state.x, state.y, 'player');
+  }
+});
+```
+
+**After (Advanced SDK):**
+```javascript
+const runtime = new MartiniMultiplayer.PhaserMultiplayerRuntime(gameLogic, transport);
+runtime.trackPlayer(this.player, {
+  role: 'player',
+  createRemotePlayer: (scene, role, state) => {
+    return scene.add.sprite(state.x, state.y, 'player');
+  }
+});
+```
+
+The API is intentionally similar for easy migration!
 
 ---
 
@@ -426,19 +647,35 @@ window.scenes = {
       this.player = scene.add.circle(400, 300, 20, 0x00ff00);
       this.speed = 5;
 
-      // Create collectibles
+      // Create score display
       this.score = 0;
       this.scoreText = scene.add.text(10, 10, 'Score: 0', {
         fontSize: '24px',
         color: '#fff'
       });
 
+      // Host spawns collectibles
       this.coins = [];
-      for (let i = 0; i < 5; i++) {
-        const x = gameAPI.random() * 800;
-        const y = gameAPI.random() * 600;
-        this.coins.push(scene.add.circle(x, y, 10, 0xffff00));
+      if (gameAPI.multiplayer.isHost()) {
+        for (let i = 0; i < 5; i++) {
+          const x = Math.random() * 800;
+          const y = Math.random() * 600;
+          const coin = scene.add.circle(x, y, 10, 0xffff00);
+          this.coins.push(coin);
+
+          // Broadcast coin spawn
+          gameAPI.multiplayer.broadcast('spawn-coin', { id: i, x, y });
+        }
       }
+
+      // All players listen for coin spawns
+      gameAPI.multiplayer.on('spawn-coin', (peerId, data) => {
+        if (!gameAPI.multiplayer.isHost()) {
+          const coin = scene.add.circle(data.x, data.y, 10, 0xffff00);
+          coin.coinId = data.id;
+          this.coins.push(coin);
+        }
+      });
     },
 
     update(scene) {
@@ -519,13 +756,29 @@ window.scenes = {
       if (cursors.left.isDown) this.player.x -= this.speed;
       if (cursors.right.isDown) this.player.x += this.speed;
 
-      // Spawn enemies
-      this.spawnTimer += delta;
-      if (this.spawnTimer > 1000) {
-        this.spawnTimer = 0;
-        const x = gameAPI.random() * 800;
-        const enemy = scene.add.circle(x, -20, 15, 0xff0000);
-        this.enemies.push(enemy);
+      // Host spawns enemies
+      if (gameAPI.multiplayer.isHost()) {
+        this.spawnTimer += delta;
+        if (this.spawnTimer > 1000) {
+          this.spawnTimer = 0;
+          const x = Math.random() * 800;
+          const enemy = scene.add.circle(x, -20, 15, 0xff0000);
+          this.enemies.push(enemy);
+
+          // Broadcast enemy spawn
+          gameAPI.multiplayer.broadcast('spawn-enemy', { x });
+        }
+      }
+
+      // All players listen for enemy spawns
+      if (!this.enemyListenerAdded) {
+        gameAPI.multiplayer.on('spawn-enemy', (peerId, data) => {
+          if (!gameAPI.multiplayer.isHost()) {
+            const enemy = scene.add.circle(data.x, -20, 15, 0xff0000);
+            this.enemies.push(enemy);
+          }
+        });
+        this.enemyListenerAdded = true;
       }
 
       // Move enemies

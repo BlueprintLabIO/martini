@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { files } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { fastHash } from '$lib/utils/hash';
+import { getConsoleLogs } from './game-console-output';
 
 /**
  * Define AI tools for file operations
@@ -18,6 +19,31 @@ import { fastHash } from '$lib/utils/hash';
 export function createProjectTools(projectId: string, planMode: boolean = false) {
 	// Common tools available in both modes
 	const commonTools = {
+		getConsoleLogs: tool({
+			description: 'Get recent console output from the game (errors, gameAPI.log() messages). Use this to see runtime errors and verify code execution.',
+			inputSchema: zodSchema(
+				z.object({
+					limit: z.number().default(20).describe('Number of recent logs to return (default: 20)')
+				})
+			),
+			execute: async ({ limit }: { limit: number }) => {
+				const logs = getConsoleLogs(projectId, limit);
+
+				if (logs.length === 0) {
+					return {
+						logs: [],
+						message: 'No console logs yet. Game may not be running or no logs have been generated.',
+						hint: 'Ask user to run the game and try an action that should generate logs'
+					};
+				}
+
+				return {
+					logs: logs.map(l => `[Frame ${l.frame}] ${l.message}`),
+					total: logs.length
+				};
+			}
+		}),
+
 		readFile: tool({
 			description: 'Read the contents of a file in the project. Returns version token for safe editing.',
 			inputSchema: zodSchema(
@@ -79,7 +105,7 @@ export function createProjectTools(projectId: string, planMode: boolean = false)
 
 		createFile: tool({
 			description:
-				'Create a new file in the project. Use this for creating design docs, new game files, or any new content.',
+				'Create a new file in the project. Can also be used to completely rewrite an existing file with new content. Use this for creating design docs, new game files, or when you need to replace an entire file.',
 			inputSchema: zodSchema(
 				z.object({
 					path: z
@@ -87,7 +113,7 @@ export function createProjectTools(projectId: string, planMode: boolean = false)
 						.describe(
 							'File path starting with /, e.g., /docs/game-concept.md or /src/scenes/Level2.js'
 						),
-					content: z.string().describe('Content of the new file')
+					content: z.string().describe('Content of the new file. IMPORTANT: Use actual newline characters (not escaped \\n sequences). Multi-line content should have real line breaks, not literal backslash-n.')
 				})
 			),
 			needsApproval: true // 🔑 Require user approval for file creation
@@ -101,6 +127,14 @@ export function createProjectTools(projectId: string, planMode: boolean = false)
 			// 4. CRDT/Y.js compatibility - future real-time collaboration requires client mutations
 			// 5. Optimistic UI - new file visible instantly, async server persistence
 			// 6. Consistent pattern - all mutations (create/edit/delete) work the same way
+		}),
+
+		captureScreenshot: tool({
+			description: 'Capture a screenshot of the game canvas. Use this to debug visual bugs, collision issues, or sprite positioning problems.',
+			inputSchema: zodSchema(z.object({})),
+			needsApproval: false // No approval needed - just captures current state
+			// ⚠️ NO execute function - client-side execution only!
+			// Screenshot capture must happen client-side to access the canvas element
 		})
 	};
 

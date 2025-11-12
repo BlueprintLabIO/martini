@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fire Boy & Water Girl - Martini v2 Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Arial', sans-serif;
+    }
+    #info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #fff;
+      background: rgba(0,0,0,0.7);
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      max-width: 300px;
+      z-index: 100;
+    }
+    #info h2 {
+      margin: 0 0 10px 0;
+      color: #00ff88;
+    }
+    #info p {
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+    .role {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .fireboy { background: #ff3300; color: white; }
+    .watergirl { background: #0033ff; color: white; }
+  </style>
+</head>
+<body>
+  <div id="info">
+    <h2>🎮 Fire Boy & Water Girl v2</h2>
+    <p><strong>Room:</strong> <span id="room-id">...</span></p>
+    <p><strong>You are:</strong> <span id="my-role" class="role">...</span></p>
+    <p><strong>Status:</strong> <span id="status">Connecting...</span></p>
+    <br>
+    <p><strong>Controls:</strong></p>
+    <p>Arrow Keys - Move & Jump</p>
+  </div>
+
+  <div id="game"></div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

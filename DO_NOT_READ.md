@@ -3,15 +3,23 @@ ok let's dive into implementing the app, but first, I want you to identify indus
 just implement one new planned feature I can manually try out at a time, explain the scope and get me to confirm. the project already has some features implemented.
 
 
-in wuick mode the code editor does not update even though the 
-ai chat shows File Updated. In Safe Mode it works fine.
+ok the game is kind of working. there are some bugs, for instance, on one screen it's just two red, and on another its just two blue players. 
+
+Game Error
+Cannot read properties of undefined (reading 'setVelocity')
+
+My main player can enter the game fine, but the client shows this: "Game Error
+Cannot read properties of undefined (reading 'setVelocity')" which is annoying
+
+
+the lava is not placed correctly, screenshot and fix
 
 we need a multi-modla ai to handle assets
 
-we want some way for Game Error
-can't access property "y", this.player is undefined to automatically
-be handled by the API
 
-well if we constantly get these bugs, maybe we should just break
-the files down into smaller files or use some patterns to guarantee 
-correctness. can you think of any ways to do this?
+ok great, can you impport it in the sveltekit web app and implement it?  completely purge the old system. remember to update the prompts for the AI so it can use this new API effectively. 
+
+
+chat images are stored in a public bucket, probs need to change
+this later for security
+

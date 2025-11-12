@@ -25,7 +25,7 @@
 		"@eslint/js": "^9.38.0",
 		"@internationalized/date": "^3.10.0",
 		"@playwright/test": "^1.56.1",
-		"@sveltejs/adapter-cloudflare": "^4.0.0",
+		"@sveltejs/adapter-node": "^5.4.0",
 		"@sveltejs/kit": "^2.47.1",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@tailwindcss/vite": "^4.1.14",
@@ -59,6 +59,7 @@
 		"vitest-browser-svelte": "^1.1.0"
 	},
 	"dependencies": {
+		"@ai-sdk/anthropic": "^2.0.43",
 		"@ai-sdk/deepseek": "2.0.0-beta.32",
 		"@ai-sdk/openai": "3.0.0-beta.55",
 		"@ai-sdk/svelte": "4.0.0-beta.94",

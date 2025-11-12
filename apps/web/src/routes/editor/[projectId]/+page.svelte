@@ -4,43 +4,48 @@
 	import GamePreview from './GamePreview.svelte';
 	import AIChatPanel from './AIChatPanel.svelte';
 	import AssetPanel from './AssetPanel.svelte';
+	// import MultiplayerManager from '$lib/multiplayer/MultiplayerManager.svelte'; // REMOVED - will use Martini SDK
 	import { fileTree } from '$lib/stores/fileTree.svelte';
 	import { onMount } from 'svelte';
 	import { ArrowLeft, Play } from 'lucide-svelte';
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
+	import { Switch } from '$lib/components/ui/switch/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
 
 	let { data } = $props();
 
-	let filesMap = $state<Map<string, { content: string; dirty: boolean }>>(new Map());
+	// Use plain object instead of Map for proper Svelte 5 reactivity
+	let filesMap = $state<Record<string, { content: string; dirty: boolean }>>({});
 	let activeFilePath = $state<string | null>(null);
 	let saveStatus = $state<'saved' | 'saving' | 'unsaved'>('saved');
 	let gamePreview: GamePreview;
 	let aiChatPanel: any;
 	let codeEditor: any; // Reference to CodeEditor component
+	let iframeEl = $state<HTMLIFrameElement | null>(null); // Shared iframe ref for multiplayer
 	let showNewFileDialog = $state(false);
 	let newFilePath = $state('');
 	let showNewFolderDialog = $state(false);
 	let newFolderPath = $state('');
 	let hotReloadEnabled = $state(true); // Auto-on by default
 
-	// Diff mode state for AI file edits
-	let diffMode = $state(false);
-	let originalContent = $state('');
-	let pendingApproval: {
-		path: string;
-		approvalId: string;
-		onApprove: () => void;
-		onDeny: () => void;
-		firstChangeLine?: number;
-	} | null = $state(null);
+	// Editor mode: 'basic' shows only game preview + AI chat, 'advanced' shows full IDE
+	let editorMode = $state<'basic' | 'advanced'>('basic');
+	let isAdvancedMode = $state(false);
 
 	onMount(() => {
+		// Load editor mode from localStorage (default: basic)
+		const savedMode = localStorage.getItem('editor-mode');
+		if (savedMode === 'basic' || savedMode === 'advanced') {
+			editorMode = savedMode;
+			isAdvancedMode = savedMode === 'advanced';
+		}
+
 		// Build file tree from paths
 		fileTree.buildTree(data.files.map((f) => f.path));
 
-		// Load files into map
+		// Load files into object
 		data.files.forEach((file) => {
-			filesMap.set(file.path, { content: file.content, dirty: false });
+			filesMap[file.path] = { content: file.content, dirty: false };
 		});
 
 		// Open first file by default
@@ -49,13 +54,19 @@
 		}
 	});
 
+	// Sync isAdvancedMode with editorMode
+	$effect(() => {
+		editorMode = isAdvancedMode ? 'advanced' : 'basic';
+		localStorage.setItem('editor-mode', editorMode);
+	});
+
 	function openFile(path: string) {
 		activeFilePath = path;
 		fileTree.setActiveFile(path);
 	}
 
 	async function saveFile(path: string) {
-		const file = filesMap.get(path);
+		const file = filesMap[path];
 		if (!file?.dirty) return;
 
 		saveStatus = 'saving';
@@ -71,7 +82,8 @@
 				throw new Error('Failed to save file');
 			}
 
-			file.dirty = false;
+			// Trigger reactivity by reassigning
+			filesMap[path] = { ...file, dirty: false };
 			saveStatus = 'saved';
 
 			// Hot reload: auto-run game after save if enabled
@@ -88,10 +100,10 @@
 	// Auto-save after 2s of inactivity
 	let saveTimeout: ReturnType<typeof setTimeout>;
 	function onContentChange(path: string, newContent: string) {
-		const file = filesMap.get(path);
+		const file = filesMap[path];
 		if (file) {
-			file.content = newContent;
-			file.dirty = true;
+			// Trigger reactivity by reassigning
+			filesMap[path] = { content: newContent, dirty: true };
 			saveStatus = 'unsaved';
 
 			clearTimeout(saveTimeout);
@@ -109,7 +121,7 @@
 
 	async function handleRunGame() {
 		// Save all dirty files first
-		const savePromises = Array.from(filesMap.entries())
+		const savePromises = Object.entries(filesMap)
 			.filter(([_, file]) => file.dirty)
 			.map(([path, _]) => saveFile(path));
 
@@ -119,6 +131,11 @@
 		if (gamePreview) {
 			await gamePreview.runGame();
 		}
+	}
+
+	function handleMultiplayerError(error: Error) {
+		console.error('[Editor] Multiplayer error:', error);
+		// Could show a toast notification here
 	}
 
 	function handleNewFile() {
@@ -153,10 +170,10 @@
 			const { file } = await response.json();
 
 			// Add to local file map
-			filesMap.set(file.path, { content: file.content, dirty: false });
+			filesMap[file.path] = { content: file.content, dirty: false };
 
 			// Rebuild file tree
-			fileTree.buildTree(Array.from(filesMap.keys()));
+			fileTree.buildTree(Object.keys(filesMap));
 
 			// Open the new file
 			openFile(file.path);
@@ -199,10 +216,10 @@
 			const { file } = await response.json();
 
 			// Add to local file map
-			filesMap.set(file.path, { content: file.content, dirty: false });
+			filesMap[file.path] = { content: file.content, dirty: false };
 
 			// Rebuild file tree
-			fileTree.buildTree(Array.from(filesMap.keys()));
+			fileTree.buildTree(Object.keys(filesMap));
 
 			// Close dialog
 			showNewFolderDialog = false;
@@ -225,10 +242,10 @@
 			}
 
 			const { content } = await response.json();
-			const file = filesMap.get(path);
+			const file = filesMap[path];
 			if (file) {
-				file.content = content;
-				file.dirty = false;
+				// Trigger reactivity by reassigning
+				filesMap[path] = { content, dirty: false };
 				saveStatus = 'saved';
 			}
 		} catch (error) {
@@ -236,72 +253,29 @@
 		}
 	}
 
-	/**
-	 * Handle file edit request from AI chat
-	 */
-	function handleFileEditRequest(
-		path: string,
-		oldContent: string,
-		newContent: string,
-		approvalId: string,
-		onApprove: () => void,
-		onDeny: () => void,
-		firstChangeLine?: number
-	) {
-		console.log('📝 File edit requested:', path);
-		console.log('🔍 Debug - oldContent length:', oldContent.length);
-		console.log('🔍 Debug - newContent length:', newContent.length);
-		console.log('🔍 Debug - firstChangeLine:', firstChangeLine);
-
-		// Switch to the file if not already open
-		if (activeFilePath !== path) {
-			openFile(path);
-		}
-
-		// Update file content to new version (for diff view)
-		const file = filesMap.get(path);
-		if (file) {
-			originalContent = oldContent;
-			file.content = newContent;
-			diffMode = true;
-			pendingApproval = { path, approvalId, onApprove, onDeny, firstChangeLine };
-			console.log('✅ Diff mode enabled:', { diffMode, originalContent: originalContent.slice(0, 50), pendingApproval });
-
-			// Scroll to the first changed line after a brief delay (to ensure editor is ready)
-			if (firstChangeLine && codeEditor) {
-				setTimeout(() => {
-					codeEditor.scrollToLine(firstChangeLine);
-				}, 100);
-			}
-		} else {
-			console.error('❌ File not found in filesMap:', path);
-		}
-	}
 
 	/**
-	 * Handle file edit completion (after approval or auto-apply)
+	 * Handle file edit completion - auto-approved edits from AI
 	 *
-	 * CLIENT-SIDE EXECUTION: File content is already updated in filesMap by approval callback.
-	 * We just need to persist to server and clean up UI state.
-	 *
-	 * No refreshFile needed - client already has latest state!
+	 * CLIENT-SIDE EXECUTION: File content is already updated in filesMap by AI.
+	 * We just need to persist to server.
 	 *
 	 * @param path - File path to update
-	 * @param newContent - Optional new content (used in Quick Mode to apply changes directly)
+	 * @param newContent - New content to apply
 	 */
 	async function handleFileEditCompleted(path: string, newContent?: string) {
 		console.log('✅ [Client-Side Edit] Persisting to server:', path);
 
-		// If newContent provided (Quick Mode), update file content directly
+		// Update file content - MUST reassign to trigger Svelte 5 reactivity!
 		if (newContent) {
-			const file = filesMap.get(path);
+			const file = filesMap[path];
 			if (file) {
-				file.content = newContent;
+				filesMap[path] = { ...file, content: newContent };
 			}
 		}
 
-		// Save the already-updated content to server
-		const file = filesMap.get(path);
+		// Save to server
+		const file = filesMap[path];
 		if (file) {
 			try {
 				const response = await fetch(`/api/projects/${data.project.id}/files`, {
@@ -314,50 +288,14 @@
 					throw new Error('Failed to save file');
 				}
 
-				file.dirty = false;
+				// Trigger reactivity for dirty flag update
+				filesMap[path] = { ...file, dirty: false };
 				saveStatus = 'saved';
 				console.log('✅ [Client-Side Edit] Saved to server successfully');
 			} catch (error) {
 				console.error('❌ [Client-Side Edit] Failed to save:', error);
 				saveStatus = 'unsaved';
 			}
-		}
-
-		// Clean up diff UI state
-		diffMode = false;
-		pendingApproval = null;
-	}
-
-	/**
-	 * Approve diff changes
-	 */
-	function handleApproveDiff() {
-		if (pendingApproval) {
-			console.log('✅ User approved changes');
-			pendingApproval.onApprove();
-			diffMode = false;
-			// Refresh file after approval to ensure DB is synced
-			if (activeFilePath) {
-				refreshFile(activeFilePath);
-			}
-			pendingApproval = null;
-		}
-	}
-
-	/**
-	 * Deny diff changes
-	 */
-	function handleDenyDiff() {
-		if (pendingApproval) {
-			console.log('❌ User denied changes');
-			pendingApproval.onDeny();
-			// Restore original content
-			const file = filesMap.get(pendingApproval.path);
-			if (file) {
-				file.content = originalContent;
-			}
-			diffMode = false;
-			pendingApproval = null;
 		}
 	}
 
@@ -368,6 +306,9 @@
 	 * - Instant reactivity - file appears in tree immediately
 	 * - Client ownership - filesMap is source of truth
 	 * - No race conditions - direct state updates
+	 *
+	 * SMART FALLBACK: If file exists, treat as overwrite (PUT instead of POST)
+	 * This handles cases where AI uses createFile to rewrite an entire file.
 	 */
 	async function handleFileCreateRequest(
 		path: string,
@@ -376,48 +317,51 @@
 		onApprove: () => void,
 		onDeny: () => void
 	) {
-		console.log('📄 File creation requested:', path);
+		const fileExists = path in filesMap;
 
-		// Check if file already exists
-		if (filesMap.has(path)) {
-			console.error('❌ File already exists:', path);
-			alert(`File already exists: ${path}`);
-			onDeny();
-			return;
+		if (fileExists) {
+			console.log('📝 File already exists, treating createFile as overwrite:', path);
+		} else {
+			console.log('📄 File creation requested:', path);
 		}
 
-		// In Quick Mode, auto-approve has already happened in AIChatPanel
-		// In Safe Mode, we could show a confirmation dialog here if needed
-		// For now, we'll just proceed with creation
+		// Update local filesMap (works for both create and overwrite)
+		filesMap[path] = { content, dirty: false };
 
-		// Add to local filesMap
-		filesMap.set(path, { content, dirty: false });
+		// Rebuild file tree to show new file (if it's actually new)
+		if (!fileExists) {
+			fileTree.buildTree(Object.keys(filesMap));
+		}
 
-		// Rebuild file tree to show new file
-		fileTree.buildTree(Array.from(filesMap.keys()));
-
-		// Open the new file
+		// Open the file
 		openFile(path);
 
 		// Persist to server
 		try {
+			// Use PUT if file exists (overwrite), POST if new file
+			const method = fileExists ? 'PUT' : 'POST';
 			const response = await fetch(`/api/projects/${data.project.id}/files`, {
-				method: 'POST',
+				method,
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ path, content })
 			});
 
 			if (!response.ok) {
-				throw new Error('Failed to save file to server');
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to save file to server');
 			}
 
-			console.log('✅ File created and saved to server:', path);
+			if (fileExists) {
+				console.log('✅ File overwritten and saved to server:', path);
+			} else {
+				console.log('✅ File created and saved to server:', path);
+			}
 			onApprove();
 		} catch (error) {
 			console.error('❌ Failed to save file to server:', error);
 			// File is still in UI, but server save failed
 			// User can try to save again manually
-			alert('File created locally but failed to save to server. Changes may be lost on refresh.');
+			alert(`File ${fileExists ? 'overwrite' : 'creation'} failed: ${error instanceof Error ? error.message : String(error)}`);
 			onDeny();
 		}
 	}
@@ -446,6 +390,16 @@
 		<h1 class="text-lg font-semibold">{data.project.name}</h1>
 
 		<div class="ml-auto flex items-center gap-3">
+			<!-- Mode Toggle -->
+			<div class="flex items-center gap-2 rounded-md border bg-background px-3 py-1.5">
+				<Label for="editor-mode" class="cursor-pointer text-xs font-medium">
+					{editorMode === 'basic' ? 'Basic' : 'Advanced'}
+				</Label>
+				<Switch id="editor-mode" bind:checked={isAdvancedMode} />
+			</div>
+
+			<div class="h-6 w-px bg-border"></div>
+
 			<span class="text-xs text-muted-foreground">
 				{#if saveStatus === 'saving'}
 					💾 Saving...
@@ -455,6 +409,15 @@
 					• Unsaved changes
 				{/if}
 			</span>
+
+			<!-- Multiplayer Controls -->
+			<MultiplayerManager
+				projectId={data.project.id}
+				{iframeEl}
+				onGameReady={() => console.log('✅ [Editor] Multiplayer ready')}
+				onError={handleMultiplayerError}
+			/>
+
 			<button
 				onclick={handleRunGame}
 				class="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
@@ -466,102 +429,133 @@
 	</header>
 
 	<!-- Editor Layout -->
-	<Resizable.PaneGroup direction="horizontal" class="flex-1">
-		<!-- Left Panel: File Tree + Asset Panel Sidebar -->
-		<Resizable.Pane defaultSize={20} minSize={10} maxSize={25}>
-			<Resizable.PaneGroup direction="vertical">
-				<!-- File Tree -->
-				<Resizable.Pane defaultSize={60} minSize={30}>
-					<div class="h-full overflow-auto bg-muted/30">
-						<FileTree onFileClick={openFile} onNewFile={handleNewFile} onNewFolder={handleNewFolder} />
-					</div>
-				</Resizable.Pane>
+	{#if editorMode === 'basic'}
+		<!-- Basic Mode: Game Preview (left) + AI Chat (right) -->
+		<Resizable.PaneGroup direction="horizontal" class="flex-1">
+			<!-- Game Preview -->
+			<Resizable.Pane defaultSize={60} minSize={40} maxSize={80}>
+				<div class="h-full">
+					<GamePreview
+						bind:this={gamePreview}
+						bind:hotReloadEnabled
+						bind:iframeEl
+						projectId={data.project.id}
+						onRunGame={async () => {
+							// Optional: Add any post-run callbacks here
+						}}
+						onSendErrorToAI={handleSendErrorToAI}
+					/>
+				</div>
+			</Resizable.Pane>
 
-				<Resizable.Handle />
+			<Resizable.Handle withHandle />
 
-				<!-- Asset Panel -->
-				<Resizable.Pane defaultSize={40} minSize={20}>
-					<AssetPanel projectId={data.project.id} />
-				</Resizable.Pane>
-			</Resizable.PaneGroup>
-		</Resizable.Pane>
+			<!-- AI Chat -->
+			<Resizable.Pane defaultSize={40} minSize={20} maxSize={60}>
+				<AIChatPanel
+					bind:this={aiChatPanel}
+					projectId={data.project.id}
+					onFileEditCompleted={handleFileEditCompleted}
+					onFileCreateRequested={handleFileCreateRequest}
+					hideToggles={true}
+				/>
+			</Resizable.Pane>
+		</Resizable.PaneGroup>
+	{:else}
+		<!-- Advanced Mode: Full IDE Layout -->
+		<Resizable.PaneGroup direction="horizontal" class="flex-1">
+			<!-- Left Panel: File Tree + Asset Panel Sidebar -->
+			<Resizable.Pane defaultSize={20} minSize={10} maxSize={25}>
+				<Resizable.PaneGroup direction="vertical">
+					<!-- File Tree -->
+					<Resizable.Pane defaultSize={60} minSize={30}>
+						<div class="h-full overflow-auto bg-muted/30">
+							<FileTree onFileClick={openFile} onNewFile={handleNewFile} onNewFolder={handleNewFolder} />
+						</div>
+					</Resizable.Pane>
 
-		<Resizable.Handle withHandle />
+					<Resizable.Handle />
 
-		<!-- Middle Panel: Game Preview (top) + Code Editor (bottom) -->
-		<Resizable.Pane defaultSize={45} minSize={40} maxSize={70}>
-			<Resizable.PaneGroup direction="vertical">
-				<!-- Game Preview -->
-				<Resizable.Pane defaultSize={50} minSize={30}>
-					<div class="h-full">
-						<GamePreview
-							bind:this={gamePreview}
-							bind:hotReloadEnabled
-							projectId={data.project.id}
-							onRunGame={async () => {
-								// Optional: Add any post-run callbacks here
-							}}
-							onSendErrorToAI={handleSendErrorToAI}
-						/>
-					</div>
-				</Resizable.Pane>
+					<!-- Asset Panel -->
+					<Resizable.Pane defaultSize={40} minSize={20}>
+						<AssetPanel projectId={data.project.id} />
+					</Resizable.Pane>
+				</Resizable.PaneGroup>
+			</Resizable.Pane>
 
-				<Resizable.Handle withHandle />
+			<Resizable.Handle withHandle />
 
-				<!-- Code Editor -->
-				<Resizable.Pane defaultSize={50} minSize={30}>
-					<div class="flex h-full flex-col overflow-hidden">
-						{#if activeFilePath && filesMap.has(activeFilePath)}
-							{@const file = filesMap.get(activeFilePath)!}
-							<div class="border-b bg-muted/50 px-4 py-2">
-								<div class="flex items-center gap-2">
-									<span class="text-sm font-medium">{getFileName(activeFilePath)}</span>
-									{#if file.dirty}
-										<span class="h-2 w-2 rounded-full bg-orange-500" title="Unsaved changes"></span>
-									{/if}
+			<!-- Middle Panel: Game Preview (top) + Code Editor (bottom) -->
+			<Resizable.Pane defaultSize={45} minSize={40} maxSize={70}>
+				<Resizable.PaneGroup direction="vertical">
+					<!-- Game Preview -->
+					<Resizable.Pane defaultSize={50} minSize={30}>
+						<div class="h-full">
+							<GamePreview
+								bind:this={gamePreview}
+								bind:hotReloadEnabled
+								bind:iframeEl
+								projectId={data.project.id}
+								onRunGame={async () => {
+									// Optional: Add any post-run callbacks here
+								}}
+								onSendErrorToAI={handleSendErrorToAI}
+							/>
+						</div>
+					</Resizable.Pane>
+
+					<Resizable.Handle withHandle />
+
+					<!-- Code Editor -->
+					<Resizable.Pane defaultSize={50} minSize={30}>
+						<div class="flex h-full flex-col overflow-hidden">
+							{#if activeFilePath && activeFilePath in filesMap}
+								{@const file = filesMap[activeFilePath]!}
+								<div class="border-b bg-muted/50 px-4 py-2">
+									<div class="flex items-center gap-2">
+										<span class="text-sm font-medium">{getFileName(activeFilePath)}</span>
+										{#if file.dirty}
+											<span class="h-2 w-2 rounded-full bg-orange-500" title="Unsaved changes"></span>
+										{/if}
+									</div>
+									<span class="text-xs text-muted-foreground">{activeFilePath}</span>
 								</div>
-								<span class="text-xs text-muted-foreground">{activeFilePath}</span>
-							</div>
-							<div class="flex-1 overflow-auto">
-								<CodeEditor
-									bind:this={codeEditor}
-									bind:content={file.content}
-									onChange={(newContent) => {
-										if (activeFilePath) onContentChange(activeFilePath, newContent);
-									}}
-									bind:diffMode
-									{originalContent}
-									onApproveDiff={handleApproveDiff}
-									onDenyDiff={handleDenyDiff}
-									filePath={activeFilePath}
-								/>
-							</div>
-						{:else}
-							<div class="flex h-full items-center justify-center text-muted-foreground">
-								<div class="text-center">
-									<p class="text-lg">No file selected</p>
-									<p class="mt-2 text-sm">Click a file in the tree to start editing</p>
+								<div class="flex-1 overflow-auto">
+									<CodeEditor
+										bind:this={codeEditor}
+										bind:content={file.content}
+										onChange={(newContent) => {
+											if (activeFilePath) onContentChange(activeFilePath, newContent);
+										}}
+										filePath={activeFilePath}
+									/>
 								</div>
-							</div>
-						{/if}
-					</div>
-				</Resizable.Pane>
-			</Resizable.PaneGroup>
-		</Resizable.Pane>
+							{:else}
+								<div class="flex h-full items-center justify-center text-muted-foreground">
+									<div class="text-center">
+										<p class="text-lg">No file selected</p>
+										<p class="mt-2 text-sm">Click a file in the tree to start editing</p>
+									</div>
+								</div>
+							{/if}
+						</div>
+					</Resizable.Pane>
+				</Resizable.PaneGroup>
+			</Resizable.Pane>
 
-		<Resizable.Handle withHandle />
+			<Resizable.Handle withHandle />
 
-		<!-- Right Panel: AI Chat -->
-		<Resizable.Pane defaultSize={35} minSize={20} maxSize={40}>
-			<AIChatPanel
-				bind:this={aiChatPanel}
-				projectId={data.project.id}
-				onFileEditRequested={handleFileEditRequest}
-				onFileEditCompleted={handleFileEditCompleted}
-				onFileCreateRequested={handleFileCreateRequest}
-			/>
-		</Resizable.Pane>
-	</Resizable.PaneGroup>
+			<!-- Right Panel: AI Chat -->
+			<Resizable.Pane defaultSize={35} minSize={20} maxSize={40}>
+				<AIChatPanel
+					bind:this={aiChatPanel}
+					projectId={data.project.id}
+					onFileEditCompleted={handleFileEditCompleted}
+					onFileCreateRequested={handleFileCreateRequest}
+				/>
+			</Resizable.Pane>
+		</Resizable.PaneGroup>
+	{/if}
 
 	<!-- Status Bar -->
 	<footer class="flex items-center gap-4 border-t bg-muted/30 px-4 py-1.5 text-xs text-muted-foreground">
@@ -569,7 +563,7 @@
 		{#if activeFilePath}
 			<span>•</span>
 			<span>{activeFilePath}</span>
-			{@const file = filesMap.get(activeFilePath)}
+			{@const file = filesMap[activeFilePath]}
 			{#if file}
 				<span>•</span>
 				<span>{file.content.split('\n').length} lines</span>

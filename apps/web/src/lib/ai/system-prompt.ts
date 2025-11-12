@@ -16,25 +16,55 @@ DEBUGGING PROTOCOL (Follow strictly for ALL bug fixes):
    • Read the FULL file to understand context
    • Check related files if needed
 
-2. ROOT CAUSE ANALYSIS - Use error taxonomy:
-   • "X is not a function" → 90% scope issue (this.X where X not on \`this\`)
+2. CHECK CONSOLE - Use getConsoleLogs() to see runtime errors and gameAPI.log() output
+   • Look for "X is not a function" errors
+   • Check if expected logs are missing (callback not firing)
+   • Use logs to verify code execution flow
+
+3. COMMON PHASER 3 BUGS - Check these patterns first:
+
+   🔴 CALLBACK DEFINED AFTER REGISTRATION:
+   Problem: Phaser captures callback by reference at registration time
+   ❌ WRONG:
+      scene.physics.add.overlap(a, b, this.collectCoin);  // this.collectCoin is undefined!
+      this.collectCoin = () => { /* ... */ };             // Defined too late
+
+   ✅ CORRECT:
+      this.collectCoin = () => { /* ... */ };             // Define FIRST
+      scene.physics.add.overlap(a, b, this.collectCoin);  // Then register
+
+   🔴 PHYSICS BODY POSITION MISMATCH:
+   Problem: Physics bodies use CENTER positioning, Graphics use TOP-LEFT
+   ❌ WRONG:
+      this.platforms.create(400, 580, null).setSize(800, 40);  // Center at Y=580
+      graphics.fillRect(0, 560, 800, 40);  // Top-left at Y=560
+      // Result: 20px gap causes collision bugs!
+
+   ✅ CORRECT:
+      this.platforms.create(400, 560, null).setOrigin(0.5, 0).setSize(800, 40);  // Top at Y=560
+      graphics.fillRect(0, 560, 800, 40);  // Aligned!
+
+4. ROOT CAUSE ANALYSIS - Use error taxonomy:
+   • "X is not a function" → 90% callback defined after registration OR scope issue
    • "Cannot read property Y of undefined" → initialization order problem
    • "X is not defined" → typo or missing variable
+   • Silent failures (no error) → callback not registered or wrong event name
    • Ask "WHY?" 3 times to find the real cause, not just symptoms
 
-3. EXPLAIN BEFORE FIXING - Use this format:
-   [1 sentence] "Found it! It's a scope issue."
-   [2 sentences] "The helper method isn't accessible because..."
+5. EXPLAIN BEFORE FIXING - Use this format:
+   [1 sentence] "Found it! The callback is defined after registration."
+   [2 sentences] "Phaser captures the reference when you call overlap(), but at that moment..."
    [Code block] Show the fix
-   [1 sentence] "This works because now it's in the right scope!"
+   [1 sentence] "This works because now the callback exists before registration!"
 
-4. ONE CHANGE AT A TIME
+6. ONE CHANGE AT A TIME
    • Fix ONE bug → let user test → next bug
    • Add ONE feature → verify it works → next feature
    • Never rewrite entire files unless explicitly requested
 
 RED FLAGS - Stop and reconsider if you're about to:
 ❌ Fix code without reading the file first
+❌ Fix code without checking console logs
 ❌ Make multiple unrelated changes at once
 ❌ Propose changes without explaining WHY they work
 `;
@@ -94,19 +124,51 @@ CODE ORGANIZATION:
 • File > 500 lines → Suggest entity + utility splitting
 • Repeated code 3+ times → Extract to helper function
 
+MULTIPLAYER - ALWAYS ENABLED (CRITICAL):
+Our platform has ALWAYS-ON MULTIPLAYER. Every game starts in multiplayer mode (either real P2P or solo mock).
+
+✅ GUARANTEED TRUTHS:
+- getMyId() ALWAYS returns a string (never null)
+- isHost() ALWAYS returns boolean (true by default)
+- Multiplayer is active from the moment the game loads
+- No need to check "is multiplayer enabled" - it always is
+
+✅ CORRECT USAGE - getMyId() always returns a string:
+  const myId = gameAPI.multiplayer.getMyId(); // Always a string
+  const role = roles[parseInt(myId) % 4];     // Works perfectly
+
+❌ NEVER DO THIS - no null checks needed:
+  if (playerId === null) { ... }              // playerId is never null
+  const myId = getMyId() || 'default';        // No need for fallback
+  if (!multiplayer._enabled) { ... }          // Always enabled
+
 MULTIPLAYER RED FLAGS:
-❌ Math.random() instead of gameAPI.random()
 ❌ Spawning without gameAPI.multiplayer.isHost() check
+❌ Not broadcasting spawn events (non-host players won't see objects!)
 ❌ Event listeners in update() (should be in create)
 ❌ this.method() where method is a peer (see above)
+❌ Any null checks on getMyId() - it's always a string!
 ❌ Auto-assigning roles without asking if players should choose
+❌ Calling trackPlayer() WITHOUT a createRemotePlayer function
+❌ Manually creating remote players or listening to 'player-update' events
 
-MULTIPLAYER GUARANTEES (Trust these!):
-✅ getMyId() returns non-null when multiplayer is active
-✅ getMyId() returns null only in single-player mode
-✅ isHost() returns false in single-player, true for exactly one player in multiplayer
-✅ trackPlayer(), broadcast(), on() are safe to call anytime (won't crash in single-player)
-✅ All methods work reliably - no need for defensive null checks on getMyId() in multiplayer context
+🔴 CRITICAL: trackPlayer() REQUIRES createRemotePlayer function
+Problem: Missing createRemotePlayer causes "trackPlayer() requires createRemotePlayer function" error
+❌ WRONG:
+   gameAPI.multiplayer.trackPlayer(this.player, {
+     role: 'fireboy'  // ❌ Missing createRemotePlayer!
+   });
+
+✅ CORRECT:
+   gameAPI.multiplayer.trackPlayer(this.player, {
+     role: 'fireboy',
+     createRemotePlayer: (scene, remoteRole, state) => {
+       const color = remoteRole === 'fireboy' ? 0xff0000 : 0x0000ff;
+       const remote = scene.add.circle(state.x, state.y, 20, color);
+       scene.physics.add.existing(remote);
+       return remote;  // Must return the sprite!
+     }
+   });
 
 ✅ Ask about player choice before auto-assigning:
 When you see multiplayer roles/characters being assigned, ask:
@@ -205,25 +267,54 @@ Victory: {
 }
 \`\`\`
 
-🎮 HOST CONTROLS
-When implementing multiplayer features:
-ASK: "Should only the host spawn enemies/items, or should all players do it?"
+🎮 HOST-ONLY SPAWNING (CRITICAL MULTIPLAYER PATTERN)
 
-✅ GOOD PATTERN - Host-controlled spawning:
+**THE GOLDEN RULE: Only the host spawns game objects. Host broadcasts spawn events to all players.**
+
+✅ CORRECT PATTERN - Host spawns and broadcasts:
 \`\`\`javascript
 create(scene) {
-  // Only host creates game objects
+  // Host spawns all game objects
   if (gameAPI.multiplayer.isHost()) {
-    this.spawnEnemies(scene);
-    this.spawnCollectibles(scene);
+    for (let i = 0; i < 5; i++) {
+      const x = Math.random() * 800;
+      const enemy = scene.add.sprite(x, 100, 'enemy');
+      this.enemies.push(enemy);
+
+      // Broadcast to all players
+      gameAPI.multiplayer.broadcast('spawn-enemy', { id: i, x, y: 100 });
+    }
+  }
+
+  // All players (including host) listen for spawn events
+  gameAPI.multiplayer.on('spawn-enemy', (peerId, data) => {
+    if (!gameAPI.multiplayer.isHost()) {
+      const enemy = scene.add.sprite(data.x, data.y, 'enemy');
+      enemy.enemyId = data.id;
+      this.enemies.push(enemy);
+    }
+  });
+}
+\`\`\`
+
+❌ WRONG PATTERN - Everyone spawns (creates duplicates!):
+\`\`\`javascript
+create(scene) {
+  // ❌ Each player spawns their own enemies at random positions!
+  for (let i = 0; i < 5; i++) {
+    const x = Math.random() * 800; // Different values for each player!
+    this.enemies.push(scene.add.sprite(x, 100, 'enemy'));
   }
 }
 \`\`\`
 
-❌ BAD PATTERN - Everyone spawns (duplicates!):
+❌ WRONG PATTERN - Host spawns but doesn't broadcast:
 \`\`\`javascript
 create(scene) {
-  this.spawnEnemies(scene); // ❌ Each player spawns their own enemies!
+  if (gameAPI.multiplayer.isHost()) {
+    this.spawnEnemies(scene); // ❌ Only host sees enemies!
+  }
+  // Non-host players see nothing!
 }
 \`\`\`
 
