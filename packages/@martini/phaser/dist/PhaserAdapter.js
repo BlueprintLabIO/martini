@@ -161,16 +161,24 @@ export class PhaserAdapter {
             }
         }
         // Update remote sprites (sprites from other players)
-        // Note: For now, we just update existing sprites. Creating remote sprites
-        // is left to the game code (they can listen to state changes and create sprites)
+        // Store target positions for interpolation
         for (const [key, spriteData] of Object.entries(state._sprites)) {
             // Skip if this is our own sprite
             if (this.trackedSprites.has(key))
                 continue;
-            // If we have a remote sprite for this key, update it
+            // If we have a remote sprite for this key, store target position
             const remoteSprite = this.remoteSprites.get(key);
             if (remoteSprite) {
-                this.applySpriteData(remoteSprite, spriteData);
+                // Store target position for smooth interpolation
+                remoteSprite._targetX = spriteData.x;
+                remoteSprite._targetY = spriteData.y;
+                remoteSprite._targetRotation = spriteData.rotation;
+                // First update - snap to position immediately
+                if (remoteSprite._targetX !== undefined && remoteSprite.x === undefined) {
+                    remoteSprite.x = remoteSprite._targetX;
+                    remoteSprite.y = remoteSprite._targetY;
+                    remoteSprite.rotation = remoteSprite._targetRotation || 0;
+                }
             }
         }
     }
@@ -210,6 +218,25 @@ export class PhaserAdapter {
      */
     registerRemoteSprite(key, sprite) {
         this.remoteSprites.set(key, sprite);
+    }
+    /**
+     * Call this in your Phaser update() loop to smoothly interpolate remote sprites
+     * This should be called every frame (60 FPS) for smooth movement
+     */
+    updateInterpolation() {
+        if (this.isHost())
+            return; // Only clients interpolate
+        const lerpFactor = 0.3; // Adjust for smoothness (0.1 = very smooth, 0.5 = snappy)
+        for (const [key, sprite] of this.remoteSprites.entries()) {
+            if (sprite._targetX !== undefined) {
+                // Lerp towards target position
+                sprite.x += (sprite._targetX - sprite.x) * lerpFactor;
+                sprite.y += (sprite._targetY - sprite.y) * lerpFactor;
+                if (sprite._targetRotation !== undefined) {
+                    sprite.rotation += (sprite._targetRotation - sprite.rotation) * lerpFactor;
+                }
+            }
+        }
     }
     /**
      * Unregister a remote sprite

@@ -101,6 +101,11 @@ export declare class PhaserAdapter {
      */
     registerRemoteSprite(key: string, sprite: any): void;
     /**
+     * Call this in your Phaser update() loop to smoothly interpolate remote sprites
+     * This should be called every frame (60 FPS) for smooth movement
+     */
+    updateInterpolation(): void;
+    /**
      * Unregister a remote sprite
      */
     unregisterRemoteSprite(key: string): void;

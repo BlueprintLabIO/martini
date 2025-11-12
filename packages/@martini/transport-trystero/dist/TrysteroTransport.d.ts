@@ -64,6 +64,7 @@ export declare class TrysteroTransport implements Transport {
     private peers;
     private hadRemotePeers;
     private readyResolve;
+    private explicitHostMode;
     constructor(options: TrysteroTransportOptions);
     /**
      * Send message to specific peer or broadcast to all
