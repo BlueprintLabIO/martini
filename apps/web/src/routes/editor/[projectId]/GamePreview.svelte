@@ -1,33 +1,27 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { AlertCircle, Terminal, Zap, ZapOff } from 'lucide-svelte';
-	import MultiplayerManager from '$lib/multiplayer/MultiplayerManager.svelte';
+	import { addConsoleLog, clearConsoleLogs } from '$lib/ai/game-console-output';
 
 	let {
 		projectId,
 		onRunGame,
 		hotReloadEnabled = $bindable(true),
-		onSendErrorToAI
+		onSendErrorToAI,
+		iframeEl = $bindable()
 	} = $props<{
 		projectId: string;
 		onRunGame: () => Promise<void>;
 		hotReloadEnabled?: boolean;
 		onSendErrorToAI?: (errorMessage: string) => void;
+		iframeEl?: HTMLIFrameElement | null;
 	}>();
-
-	let iframeEl = $state<HTMLIFrameElement | null>(null);
 	let gameError = $state<{ message: string; stack?: string } | null>(null);
 	let consoleLogs = $state<Array<{ message: string; frame: number }>>([]);
 	let showConsole = $state(false);
 	let isReady = $state(false);
 	let isLoading = $state(false);
 	let lastHeartbeat = $state<number | null>(null);
-
-	function handleMultiplayerError(error: Error) {
-		gameError = {
-			message: `Multiplayer Error: ${error.message}`
-		};
-	}
 
 	onMount(() => {
 		// Listen for messages from iframe
@@ -57,6 +51,8 @@
 					if (consoleLogs.length > 100) {
 						consoleLogs = consoleLogs.slice(-100);
 					}
+					// Also store in AI-accessible buffer
+					addConsoleLog(projectId, payload);
 					break;
 
 				case 'HEARTBEAT':
@@ -94,6 +90,7 @@
 		isLoading = true;
 		gameError = null;
 		consoleLogs = [];
+		clearConsoleLogs(projectId); // Clear AI-accessible buffer too
 
 		try {
 			console.log('📦 [Parent] Fetching code bundle and assets...');
@@ -196,11 +193,6 @@
 				Console {#if consoleLogs.length > 0}({consoleLogs.length}){/if}
 			</button>
 		</div>
-	</div>
-
-	<!-- Multiplayer Controls -->
-	<div class="border-b bg-background px-4 py-2">
-		<MultiplayerManager {projectId} {iframeEl} onError={handleMultiplayerError} />
 	</div>
 
 	<!-- Game Container -->

@@ -28,7 +28,6 @@
 declare module '$env/static/private' {
 	export const SECRET_DATABASE_URL: string;
 	export const SECRET_SUPABASE_SERVICE_ROLE_KEY: string;
-	export const SECRET_COMPLETION_URL: string;
 	export const SECRET_COMPLETION_KEY: string;
 	export const NVM_INC: string;
 	export const NoDefaultCurrentDirectoryInExePath: string;
@@ -46,7 +45,6 @@ declare module '$env/static/private' {
 	export const GIT_EDITOR: string;
 	export const NVM_DIR: string;
 	export const USER: string;
-	export const npm_config_recursive: string;
 	export const COMMAND_MODE: string;
 	export const OPENAI_API_KEY: string;
 	export const PNPM_SCRIPT_SRC_DIR: string;
@@ -99,7 +97,6 @@ declare module '$env/static/private' {
 	export const DEBUG: string;
 	export const CLAUDECODE: string;
 	export const npm_node_execpath: string;
-	export const NODE_ENV: string;
 }
 
 /**
@@ -136,7 +133,6 @@ declare module '$env/dynamic/private' {
 	export const env: {
 		SECRET_DATABASE_URL: string;
 		SECRET_SUPABASE_SERVICE_ROLE_KEY: string;
-		SECRET_COMPLETION_URL: string;
 		SECRET_COMPLETION_KEY: string;
 		NVM_INC: string;
 		NoDefaultCurrentDirectoryInExePath: string;
@@ -154,7 +150,6 @@ declare module '$env/dynamic/private' {
 		GIT_EDITOR: string;
 		NVM_DIR: string;
 		USER: string;
-		npm_config_recursive: string;
 		COMMAND_MODE: string;
 		OPENAI_API_KEY: string;
 		PNPM_SCRIPT_SRC_DIR: string;
@@ -207,7 +202,6 @@ declare module '$env/dynamic/private' {
 		DEBUG: string;
 		CLAUDECODE: string;
 		npm_node_execpath: string;
-		NODE_ENV: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

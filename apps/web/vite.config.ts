@@ -10,11 +10,11 @@ export default defineConfig({
 		sveltekit(),
 		devtoolsJson(),
 		nodePolyfills({
-			include: ['events', 'util', 'buffer', 'process', 'stream'],
+			include: ['events', 'util', 'buffer', 'stream'],
 			globals: {
 				Buffer: true,
 				global: true,
-				process: true,
+				process: false,  // Don't polyfill process - use native Node.js process
 			},
 		}),
 	],

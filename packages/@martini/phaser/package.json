@@ -1,0 +1,36 @@
+{
+  "name": "@martini/phaser",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "private": true,
+  "description": "Phaser 3 adapter for @martini/core - host-authoritative multiplayer",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && pnpm build:browser",
+    "build:browser": "esbuild browser.ts --bundle --format=iife --global-name=MartiniMultiplayer --outfile=dist/martini-multiplayer.browser.js",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "@martini/core": "workspace:*",
+    "phaser": "^3.0.0"
+  },
+  "dependencies": {
+    "@martini/core": "workspace:*",
+    "@martini/transport-trystero": "workspace:*"
+  }
+}

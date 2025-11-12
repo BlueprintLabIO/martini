@@ -1,19 +1,47 @@
 import { streamText, convertToModelMessages, stepCountIs, type UIMessage } from 'ai';
-import { createDeepSeek } from '@ai-sdk/deepseek';
+import { createAnthropic } from '@ai-sdk/anthropic';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { projects, files, assets } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { SECRET_COMPLETION_URL, SECRET_COMPLETION_KEY } from '$env/static/private';
+import { SECRET_COMPLETION_KEY } from '$env/static/private';
 import { buildSystemPrompt } from '$lib/ai/system-prompt';
 import { createProjectTools } from '$lib/ai/tools';
 
-// DeepSeek client (official provider)
-const deepseek = createDeepSeek({
-	baseURL: SECRET_COMPLETION_URL,
+// Anthropic client (Claude)
+const anthropic = createAnthropic({
 	apiKey: SECRET_COMPLETION_KEY
 });
+
+/**
+ * Get recent messages by finding last N user messages and including everything in between
+ *
+ * This ensures we never break tool use/result pairs since we always include complete
+ * conversation turns (user message → assistant response with tools → user message with results)
+ */
+function getRecentMessagesByUserTurns(messages: UIMessage[], userTurnCount: number = 5): UIMessage[] {
+	if (messages.length === 0) return messages;
+
+	// Find indices of user messages
+	const userMessageIndices: number[] = [];
+	for (let i = 0; i < messages.length; i++) {
+		if (messages[i].role === 'user') {
+			userMessageIndices.push(i);
+		}
+	}
+
+	// If we have fewer user messages than requested, return all messages
+	if (userMessageIndices.length <= userTurnCount) {
+		return messages;
+	}
+
+	// Get the index of the Nth-from-last user message
+	const startIndex = userMessageIndices[userMessageIndices.length - userTurnCount];
+
+	// Return everything from that point onwards
+	return messages.slice(startIndex);
+}
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { session, user } = await locals.safeGetSession();
@@ -95,16 +123,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const tools = createProjectTools(projectId, planMode);
 
 	try {
-		// Context management: Keep only last 5 messages to avoid hitting token limits
-		// System prompt is always sent (not counted in the 5)
-		// Each message can contain multiple parts (text + tool calls), so 5 messages ≈ 2-3 conversation turns
-		const recentMessages = messages.slice(-5);
+		// Context management: Keep only last N user turns to avoid hitting token limits
+		// This ensures we never break tool use/result pairs (they're always in the same turn)
+		const recentMessages = getRecentMessagesByUserTurns(messages, 5);
 
-		console.log(`📊 Message count: ${messages.length} total, sending last ${recentMessages.length} to model`);
+		console.log(`📊 Message count: ${messages.length} total, sending last ${recentMessages.length} to model (${recentMessages.filter(m => m.role === 'user').length} user turns)`);
 
-		// Stream response from DeepSeek
+		// Stream response from Claude
 		const result = streamText({
-			model: deepseek('deepseek-chat'),
+			model: anthropic('claude-haiku-4-5'),
 			system: dynamicSystemPrompt,
 			messages: convertToModelMessages(recentMessages),
 			tools,

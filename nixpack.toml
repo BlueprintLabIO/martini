@@ -1,0 +1,20 @@
+[phases.setup]
+# Pin to nixpkgs commit with Node 22.12.0
+# Commit: 21808d22b1cda1898b71cf1a1beb524a97add2c4 (2025-01-22)
+nixpkgsArchive = '21808d22b1cda1898b71cf1a1beb524a97add2c4'
+nixPkgs = ["nodejs_22", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm run build"]
+
+[start]
+cmd = "node build"
+
+[variables]
+NODE_ENV = "production"
+PORT = "3000"
+# Increase Node heap to 4GB for build (fixes "JavaScript heap out of memory")
+NODE_OPTIONS = "--max-old-space-size=4096"

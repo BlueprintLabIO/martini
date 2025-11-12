@@ -41,6 +41,12 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.where(eq(assets.projectId, params.id))
 		.orderBy(assets.createdAt);
 
+	// Filter out chat images (marked with metadata.isChat)
+	const gameAssets = projectAssets.filter((asset) => {
+		const metadata = asset.metadata as { isChat?: boolean } | null;
+		return !metadata?.isChat;
+	});
+
 	// Get public URLs for each asset
 	const supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 		cookies: {
@@ -50,7 +56,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		}
 	});
 
-	const assetsWithUrls = projectAssets.map((asset) => {
+	const assetsWithUrls = gameAssets.map((asset) => {
 		const { data } = supabase.storage
 			.from('project-assets')
 			.getPublicUrl(asset.storagePath);

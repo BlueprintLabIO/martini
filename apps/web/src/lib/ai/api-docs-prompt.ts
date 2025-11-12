@@ -444,19 +444,6 @@ create(scene) {
 }
 \`\`\`
 
-### \`gameAPI.random()\`
-
-Get a seeded random number (0-1). **Use this for multiplayer games** to ensure deterministic behavior across all players.
-
-\`\`\`javascript
-create(scene) {
-  // Spawn enemy at random position
-  const x = gameAPI.random() * 800;
-  const y = gameAPI.random() * 600;
-
-  this.enemy = scene.add.circle(x, y, 15, 0xff0000);
-}
-\`\`\`
 
 ### \`gameAPI.getFrame()\`
 
@@ -478,17 +465,33 @@ update(scene) {
 ### Auto-Sync Players
 
 The easiest way to add multiplayer - automatically syncs player position, velocity, and animations.
+Uses a **factory function pattern** where you define how remote players are created.
 
 #### \`gameAPI.multiplayer.trackPlayer(sprite, options)\`
+
+**⚡ CRITICAL:** You MUST provide a \`createRemotePlayer\` function that defines how remote players look!
 
 \`\`\`javascript
 // Fire Boy & Water Girl example
 create(scene) {
-  this.myPlayer = scene.physics.add.sprite(100, 100, 'player');
+  const myRole = gameAPI.multiplayer.isHost() ? 'fireboy' : 'watergirl';
+  const myColor = myRole === 'fireboy' ? 0xff3300 : 0x0033ff;
 
-  // ✨ One line enables multiplayer
+  // Create YOUR player
+  this.myPlayer = scene.add.circle(100, 100, 20, myColor);
+  scene.physics.add.existing(this.myPlayer);
+
+  // ✨ Track with factory function for remote players
   gameAPI.multiplayer.trackPlayer(this.myPlayer, {
-    role: gameAPI.multiplayer.isHost() ? 'fireboy' : 'watergirl'
+    role: myRole,
+    createRemotePlayer: (scene, remoteRole, initialState) => {
+      // Create remote player based on THEIR role (not yours!)
+      const color = remoteRole === 'fireboy' ? 0xff3300 : 0x0033ff;
+      const remote = scene.add.circle(initialState.x, initialState.y, 20, color);
+      scene.physics.add.existing(remote);
+      remote.body.setCollideWorldBounds(true);
+      return remote;  // ✅ Must return the sprite!
+    }
   });
 
   // Host spawns level (prevents duplicates)
@@ -500,15 +503,56 @@ create(scene) {
 update(scene) {
   // Standard Phaser code - no manual sync needed!
   const cursors = scene.input.keyboard.createCursorKeys();
-  if (cursors.left.isDown) this.myPlayer.setVelocityX(-160);
+  if (cursors.left.isDown) this.myPlayer.body.setVelocityX(-160);
 }
 \`\`\`
 
+**How it works:**
+1. Each player calls \`trackPlayer()\` with their local player sprite
+2. The runtime broadcasts position updates to other players
+3. When another player joins, YOUR \`createRemotePlayer\` function is called with THEIR role
+4. You create a sprite matching their role (fireboy = red, watergirl = blue)
+5. The runtime automatically syncs their position/velocity to your created sprite
+
 **Options:**
 - \`sync\`: Array of properties to sync (default: \`['x', 'y', 'velocityX', 'velocityY', 'frame']\`)
-- \`updateRate\`: Updates per second (default: 30)
-- \`role\`: Custom metadata (e.g., 'fireboy', 'watergirl')
-- \`color\`: Tint for remote players
+- \`updateRate\`: Updates per second (default: 30). Use 10 for turn-based, 60 for racing
+- \`interpolate\`: Smooth remote player movement (default: true)
+- \`role\`: Custom metadata (e.g., 'fireboy', 'watergirl') - passed to createRemotePlayer
+- \`createRemotePlayer\`: **REQUIRED** - Function \`(scene, role, initialState) => sprite\`
+
+**createRemotePlayer function signature:**
+- \`scene\`: The Phaser scene to create sprites in
+- \`role\`: The remote player's role string (what THEY passed to trackPlayer)
+- \`initialState\`: Object with \`{x, y, velocityX, velocityY}\` for initial position
+- **Returns:** The created sprite/game object (must not be null!)
+
+**Common patterns:**
+
+\`\`\`javascript
+// Pattern 1: Role-based sprites
+createRemotePlayer: (scene, role, state) => {
+  const sprite = scene.add.sprite(state.x, state.y, role); // 'fireboy' or 'watergirl' texture
+  scene.physics.add.existing(sprite);
+  return sprite;
+}
+
+// Pattern 2: Role-based colors
+createRemotePlayer: (scene, role, state) => {
+  const colors = { fireboy: 0xff3300, watergirl: 0x0033ff };
+  const remote = scene.add.circle(state.x, state.y, 20, colors[role]);
+  scene.physics.add.existing(remote);
+  return remote;
+}
+
+// Pattern 3: Team-based (4 players)
+createRemotePlayer: (scene, role, state) => {
+  const teamColors = { red: 0xff0000, blue: 0x0000ff, green: 0x00ff00, yellow: 0xffff00 };
+  const remote = scene.add.rectangle(state.x, state.y, 32, 32, teamColors[role]);
+  scene.physics.add.existing(remote);
+  return remote;
+}
+\`\`\`
 
 ### Game Events
 
@@ -582,18 +626,31 @@ const players = gameAPI.multiplayer.getPlayers();
 console.log(\`\${players.length} players connected\`);
 \`\`\`
 
-### Deterministic Random
+### Host-Only Spawning Pattern
 
-Use \`gameAPI.random()\` instead of \`Math.random()\` to ensure all players see the same level layout.
+**CRITICAL RULE: Only the host spawns game objects (enemies, collectibles, level elements).**
+
+The host uses Math.random() and broadcasts spawn events to all players. This ensures consistency without complex seed synchronization.
 
 \`\`\`javascript
-if (gameAPI.multiplayer.isHost()) {
-  gameAPI.random.setSeed(12345); // Same seed = same level
+create(scene) {
+  if (gameAPI.multiplayer.isHost()) {
+    // Host spawns all level objects
+    for (let i = 0; i < 10; i++) {
+      const x = Math.random() * 800;
+      const platform = scene.add.rectangle(x, 400, 100, 20, 0x8b4513);
 
-  for (let i = 0; i < 10; i++) {
-    const x = gameAPI.random() * 800;  // Same on all clients
-    scene.add.platform(x, 400);
+      // Broadcast to all players
+      gameAPI.multiplayer.broadcast('spawn-platform', { x, y: 400, width: 100, height: 20 });
+    }
   }
+
+  // All players listen for spawn events
+  gameAPI.multiplayer.on('spawn-platform', (peerId, data) => {
+    if (!gameAPI.multiplayer.isHost()) {
+      scene.add.rectangle(data.x, data.y, data.width, data.height, 0x8b4513);
+    }
+  });
 }
 \`\`\`
 
@@ -634,20 +691,85 @@ create(scene) {
 
 ## 5 CRITICAL MULTIPLAYER RULES
 
-1. ALWAYS call trackPlayer() in create() after creating player sprite
-2. ALWAYS wrap enemy/collectible spawning in if (gameAPI.multiplayer.isHost())
-3. ALWAYS use gameAPI.random() not Math.random() in multiplayer
-4. ALWAYS broadcast() when game state changes (coins, doors, attacks)
-5. ALWAYS register on() in create(), NEVER in update()
+1. ALWAYS call trackPlayer() with a createRemotePlayer function - this defines how other players appear on your screen
+2. ALWAYS wrap ALL spawning (enemies, collectibles, level objects) in if (gameAPI.multiplayer.isHost())
+3. ALWAYS broadcast spawn events so non-host players can create the same objects
+4. ALWAYS register on() listeners in create(), NEVER in update()
+5. NEVER manually create remote players or listen to 'player-update' events - trackPlayer() handles this automatically
+
+## Host-Only Spawning Pattern
+
+**THE GOLDEN RULE: Only host spawns, all players listen**
+
+\`\`\`javascript
+create(scene) {
+  // ✅ CORRECT: Host spawns and broadcasts
+  if (gameAPI.multiplayer.isHost()) {
+    for (let i = 0; i < 5; i++) {
+      const x = Math.random() * 800;
+      const enemy = scene.add.sprite(x, 100, 'enemy');
+      this.enemies.push(enemy);
+
+      // Tell other players to spawn it too
+      gameAPI.multiplayer.broadcast('spawn-enemy', { id: i, x, y: 100 });
+    }
+  }
+
+  // All players (including host) listen for spawns
+  gameAPI.multiplayer.on('spawn-enemy', (peerId, data) => {
+    if (!gameAPI.multiplayer.isHost()) {
+      const enemy = scene.add.sprite(data.x, data.y, 'enemy');
+      enemy.enemyId = data.id;
+      this.enemies.push(enemy);
+    }
+  });
+}
+
+// ❌ WRONG: Everyone spawns (creates duplicates!)
+create(scene) {
+  for (let i = 0; i < 5; i++) {
+    const x = Math.random() * 800;  // Different random values!
+    this.enemies.push(scene.add.sprite(x, 100, 'enemy'));
+  }
+}
+\`\`\`
 
 ## Common Mistakes
 
-❌ this.enemy = scene.add.sprite(400, 300, 'enemy');
-✅ if (gameAPI.multiplayer.isHost()) { this.enemy = scene.add.sprite(400, 300, 'enemy'); }
+❌ Everyone spawns enemies (duplicates!)
+\`\`\`javascript
+create(scene) {
+  this.enemy = scene.add.sprite(400, 300, 'enemy');
+}
+\`\`\`
 
-❌ const x = Math.random() * 800;
-✅ const x = gameAPI.random() * 800;
+✅ Host spawns and broadcasts
+\`\`\`javascript
+create(scene) {
+  if (gameAPI.multiplayer.isHost()) {
+    this.enemy = scene.add.sprite(400, 300, 'enemy');
+    gameAPI.multiplayer.broadcast('spawn-enemy', { x: 400, y: 300 });
+  }
 
-❌ update(scene) { gameAPI.multiplayer.on('attack', ...); }
-✅ create(scene) { gameAPI.multiplayer.on('attack', ...); }
+  gameAPI.multiplayer.on('spawn-enemy', (peerId, data) => {
+    if (!gameAPI.multiplayer.isHost()) {
+      this.enemy = scene.add.sprite(data.x, data.y, 'enemy');
+    }
+  });
+}
+\`\`\`
+
+❌ Registering listeners in update() (memory leak!)
+\`\`\`javascript
+update(scene) {
+  gameAPI.multiplayer.on('attack', ...); // ❌ Creates new listener every frame!
+}
+\`\`\`
+
+✅ Register once in create()
+\`\`\`javascript
+create(scene) {
+  gameAPI.multiplayer.on('attack', ...); // ✅ Registered once
+}
+\`\`\`
 `;
