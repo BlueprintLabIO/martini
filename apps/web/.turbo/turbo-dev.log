@@ -12530,3 +12530,4 @@ https://svelte.dev/e/non_reactive_update[39m
 https://svelte.dev/e/non_reactive_update[39m
 [36m6:02:03 PM [vite-plugin-svelte] src/routes/editor/[projectId]/+page.svelte:23:5 `codeEditor` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
 https://svelte.dev/e/non_reactive_update[39m
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed.[39m
