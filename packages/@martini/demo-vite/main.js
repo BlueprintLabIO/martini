@@ -225,6 +225,11 @@ const gameLogic = defineGame({
         const speed = 200;
         const jumpSpeed = -350;
 
+        // CLIENT: Smooth interpolation every frame
+        if (!isHost) {
+          this.adapter.updateInterpolation();
+        }
+
         // Capture local input
         const input = {
           left: this.cursors.left.isDown,
@@ -258,7 +263,6 @@ const gameLogic = defineGame({
             }
           }
         }
-        // CLIENT: Physics is handled by host, we just render
       }
     }
   };

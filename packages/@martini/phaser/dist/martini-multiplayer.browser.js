@@ -32,8 +32,8 @@ var MartiniMultiplayer = (() => {
 
   // ../core/dist/defineGame.js
   function defineGame(definition) {
-    if (!definition.actions || Object.keys(definition.actions).length === 0) {
-      throw new Error("Game must define at least one action");
+    if (!definition.actions) {
+      definition.actions = {};
     }
     for (const [name2, action] of Object.entries(definition.actions)) {
       if (typeof action.apply !== "function") {
@@ -189,6 +189,10 @@ var MartiniMultiplayer = (() => {
      * Execute an action (validates input, applies to state, broadcasts)
      */
     submitAction(actionName, input) {
+      if (!this.gameDef.actions) {
+        console.warn("No actions defined in game");
+        return;
+      }
       const action = this.gameDef.actions[actionName];
       if (!action) {
         console.warn(`Action "${actionName}" not found`);
@@ -308,6 +312,10 @@ var MartiniMultiplayer = (() => {
     }
     handleActionFromClient(payload) {
       const { actionName, input, playerId } = payload;
+      if (!this.gameDef.actions) {
+        console.warn("No actions defined");
+        return;
+      }
       const action = this.gameDef.actions[actionName];
       if (!action) {
         console.warn(`Unknown action from client: ${actionName}`);
@@ -481,7 +489,14 @@ var MartiniMultiplayer = (() => {
         if (this.trackedSprites.has(key)) continue;
         const remoteSprite = this.remoteSprites.get(key);
         if (remoteSprite) {
-          this.applySpriteData(remoteSprite, spriteData);
+          remoteSprite._targetX = spriteData.x;
+          remoteSprite._targetY = spriteData.y;
+          remoteSprite._targetRotation = spriteData.rotation;
+          if (remoteSprite._targetX !== void 0 && remoteSprite.x === void 0) {
+            remoteSprite.x = remoteSprite._targetX;
+            remoteSprite.y = remoteSprite._targetY;
+            remoteSprite.rotation = remoteSprite._targetRotation || 0;
+          }
         }
       }
     }
@@ -514,6 +529,23 @@ var MartiniMultiplayer = (() => {
      */
     registerRemoteSprite(key, sprite) {
       this.remoteSprites.set(key, sprite);
+    }
+    /**
+     * Call this in your Phaser update() loop to smoothly interpolate remote sprites
+     * This should be called every frame (60 FPS) for smooth movement
+     */
+    updateInterpolation() {
+      if (this.isHost()) return;
+      const lerpFactor = 0.3;
+      for (const [key, sprite] of this.remoteSprites.entries()) {
+        if (sprite._targetX !== void 0) {
+          sprite.x += (sprite._targetX - sprite.x) * lerpFactor;
+          sprite.y += (sprite._targetY - sprite.y) * lerpFactor;
+          if (sprite._targetRotation !== void 0) {
+            sprite.rotation += (sprite._targetRotation - sprite.rotation) * lerpFactor;
+          }
+        }
+      }
     }
     /**
      * Unregister a remote sprite
@@ -12908,24 +12940,61 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       this.peerLeaveHandlers = [];
       this.connectionChangeHandlers = [];
       this.errorHandlers = [];
-      this.currentHost = null;
+      this.hostDisconnectHandlers = [];
+      this.permanentHost = null;
       this.connectionState = "connecting";
       this.peers = /* @__PURE__ */ new Set();
       this.hadRemotePeers = false;
+      this.readyResolve = null;
       const { roomId, appId = "martini-game", rtcConfig = {
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-      } } = options;
+      }, isHost } = options;
+      this.explicitHostMode = isHost;
+      if (isHost === true) {
+        this.permanentHost = selfId;
+        console.log("[TrysteroTransport] Explicit host mode - I am the host:", selfId);
+      } else if (isHost === false) {
+        console.log("[TrysteroTransport] Explicit client mode - will NEVER become host");
+      }
       this.room = joinRoom({ appId, rtcConfig }, roomId);
       const [send, receive] = this.room.makeAction("wire");
       this.sendWire = send;
       const cleanup = receive((message, peerId) => {
+        if ("type" in message && message.type === "host_query") {
+          if (this.permanentHost === selfId) {
+            console.log("[TrysteroTransport] Received host query, announcing myself as host");
+            this.send({
+              type: "host_announce",
+              hostId: selfId,
+              timestamp: Date.now()
+            });
+          }
+        }
+        if ("type" in message && message.type === "host_announce") {
+          const announcedHost = message.hostId;
+          if (this.permanentHost === null) {
+            console.log("[TrysteroTransport] Discovered existing host:", announcedHost);
+            this.permanentHost = announcedHost;
+            if (this.readyResolve) {
+              this.readyResolve();
+              this.readyResolve = null;
+            }
+          } else if (this.permanentHost !== announcedHost) {
+            const allKnownPeers = [selfId, announcedHost, ...Array.from(this.peers)].sort();
+            const correctHost = allKnownPeers[0];
+            if (this.permanentHost !== correctHost) {
+              console.log("[TrysteroTransport] Host conflict detected! Correcting:", this.permanentHost, "->", correctHost);
+              this.permanentHost = correctHost;
+            }
+          }
+        }
         if ("type" in message && message.type === "heartbeat") {
-          if (this.currentHost !== message.sessionId) {
-            this.currentHost = message.sessionId || null;
+          if (this.permanentHost !== message.sessionId) {
+            this.permanentHost = message.sessionId || null;
           }
         }
         if ("type" in message && message.type === "host_migration") {
-          this.currentHost = message.newHost || null;
+          this.permanentHost = message.newHost || null;
         }
         this.messageHandlers.forEach((handler) => {
           try {
@@ -12940,22 +13009,43 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       };
       this.room.onPeerJoin((peerId) => {
         this.peers.add(peerId);
+        if (this.permanentHost === null) {
+          if (this.explicitHostMode === false) {
+            this.permanentHost = peerId;
+            console.log("[TrysteroTransport] Client mode: discovered host is", peerId);
+          } else {
+            const allPeers = [selfId, ...Array.from(this.peers)].sort();
+            this.permanentHost = allPeers[0];
+            console.log("[TrysteroTransport] Host elected:", this.permanentHost);
+          }
+        }
+        console.log("[TrysteroTransport] Peer joined:", peerId, "Host:", this.permanentHost, "Am I host?", this.isHost());
+        if (this.readyResolve) {
+          this.readyResolve();
+          this.readyResolve = null;
+        }
         this.updateConnectionState();
         this.peerJoinHandlers.forEach((handler) => handler(peerId));
       });
       this.room.onPeerLeave((peerId) => {
         this.peers.delete(peerId);
         this.updateConnectionState();
-        if (peerId === this.currentHost) {
-          this.handleHostMigration();
+        if (peerId === this.permanentHost) {
+          console.log("[TrysteroTransport] HOST DISCONNECTED - Game should end!");
+          this.hostDisconnectHandlers.forEach((handler) => handler());
         }
         this.peerLeaveHandlers.forEach((handler) => handler(peerId));
       });
       const initialPeers = this.room.getPeers();
       const peerArray = Array.isArray(initialPeers) ? initialPeers : Object.keys(initialPeers);
-      this.currentHost = peerArray.length === 0 ? selfId : null;
       this.peers = new Set(peerArray);
       this.updateConnectionState();
+      console.log("[TrysteroTransport] Initialized:", {
+        selfId,
+        initialPeers: peerArray.length,
+        permanentHost: this.permanentHost,
+        note: "Host election pending - waiting for peer discovery or timeout"
+      });
     }
     // ============================================================================
     // Transport Interface Implementation
@@ -13040,7 +13130,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
      * Check if this peer is the authoritative host
      */
     isHost() {
-      return selfId === this.currentHost;
+      return selfId === this.permanentHost;
     }
     /**
      * Disconnect from the room
@@ -13079,6 +13169,67 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       };
     }
     /**
+     * Register handler for when the host disconnects
+     * In sticky host pattern, game should end when this happens
+     */
+    onHostDisconnect(callback) {
+      this.hostDisconnectHandlers.push(callback);
+      return () => {
+        const idx = this.hostDisconnectHandlers.indexOf(callback);
+        if (idx >= 0) {
+          this.hostDisconnectHandlers.splice(idx, 1);
+        }
+      };
+    }
+    /**
+     * Wait for transport to be ready (peers discovered, host elected)
+     *
+     * Uses active host discovery protocol:
+     * 1. Broadcasts "host_query" to ask if anyone is host
+     * 2. Waits 3 seconds for "host_announce" responses
+     * 3. If response received, uses announced host
+     * 4. If no response AND no peers discovered, becomes solo host
+     * 5. If conflict (two hosts), uses deterministic tiebreaker (lowest peer ID)
+     *
+     * This solves the race condition where both tabs open simultaneously.
+     *
+     * @example
+     * ```ts
+     * const transport = new TrysteroTransport({ roomId });
+     * await transport.waitForReady();
+     * const isHost = transport.isHost(); // Now reliable!
+     * ```
+     */
+    async waitForReady() {
+      if (this.permanentHost !== null) {
+        console.log("[TrysteroTransport] Already ready, host:", this.permanentHost);
+        return;
+      }
+      console.log("[TrysteroTransport] Starting active host discovery...");
+      this.send({
+        type: "host_query",
+        timestamp: Date.now()
+      });
+      return new Promise((resolve) => {
+        this.readyResolve = resolve;
+        setTimeout(() => {
+          if (this.readyResolve) {
+            if (this.permanentHost === null && this.peers.size === 0) {
+              console.log("[TrysteroTransport] No peers found after 3s - becoming solo host");
+              this.permanentHost = selfId;
+            } else if (this.permanentHost === null && this.peers.size > 0) {
+              const allPeers = [selfId, ...Array.from(this.peers)].sort();
+              this.permanentHost = allPeers[0];
+              console.log("[TrysteroTransport] Multiple peers, no host announced - electing:", this.permanentHost);
+            }
+            console.log("[TrysteroTransport] Ready! Host:", this.permanentHost, "Am I host?", this.isHost());
+            this.readyResolve();
+            this.readyResolve = null;
+          }
+        }, 3e3);
+      });
+    }
+    /**
      * Register error handler
      */
     onError(callback) {
@@ -13103,18 +13254,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       if (this.peers.size > 0) {
         this.hadRemotePeers = true;
         this.setConnectionState("connected");
-      } else if (!this.hadRemotePeers && this.currentHost === selfId) {
+      } else if (!this.hadRemotePeers && this.permanentHost === selfId) {
         this.setConnectionState("connected");
       } else if (this.hadRemotePeers && this.connectionState === "connected") {
         this.setConnectionState("disconnected");
-      }
-    }
-    handleHostMigration() {
-      const allPeers = [selfId, ...Array.from(this.peers)].sort();
-      const newHost = allPeers[0];
-      this.currentHost = newHost;
-      if (newHost === selfId) {
-        console.log("[TrysteroTransport] Became new host after migration");
       }
     }
     notifyError(error) {
@@ -13139,7 +13282,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
      * Get current host peer ID
      */
     getCurrentHost() {
-      return this.currentHost;
+      return this.permanentHost;
     }
   };
 

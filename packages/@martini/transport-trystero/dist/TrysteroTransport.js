@@ -46,14 +46,16 @@ export class TrysteroTransport {
         const { roomId, appId = 'martini-game', rtcConfig = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         }, isHost } = options;
+        // Store explicit host mode
+        this.explicitHostMode = isHost;
         // Explicit host mode (industry standard: separate host/join URLs)
         if (isHost === true) {
             this.permanentHost = selfId;
             console.log('[TrysteroTransport] Explicit host mode - I am the host:', selfId);
         }
         else if (isHost === false) {
-            // Client mode - waiting for host
-            console.log('[TrysteroTransport] Explicit client mode - waiting for host');
+            // Client mode - waiting for host, NEVER auto-elect
+            console.log('[TrysteroTransport] Explicit client mode - will NEVER become host');
         }
         // else: undefined = automatic election
         // Join room via Trystero (currently only MQTT strategy supported)
@@ -123,11 +125,20 @@ export class TrysteroTransport {
         // Setup peer join/leave listeners
         this.room.onPeerJoin((peerId) => {
             this.peers.add(peerId);
-            // STICKY HOST: Only set host if not already set
+            // STICKY HOST: Only set host if not already set AND not in explicit client mode
             if (this.permanentHost === null) {
-                const allPeers = [selfId, ...Array.from(this.peers)].sort();
-                this.permanentHost = allPeers[0];
-                console.log('[TrysteroTransport] Host elected:', this.permanentHost);
+                // If explicit client mode (isHost: false), discover host from peer
+                if (this.explicitHostMode === false) {
+                    // In client mode, the peer we joined is the host
+                    this.permanentHost = peerId;
+                    console.log('[TrysteroTransport] Client mode: discovered host is', peerId);
+                }
+                // If explicit host mode or auto mode, use alphabetical election
+                else {
+                    const allPeers = [selfId, ...Array.from(this.peers)].sort();
+                    this.permanentHost = allPeers[0];
+                    console.log('[TrysteroTransport] Host elected:', this.permanentHost);
+                }
             }
             console.log('[TrysteroTransport] Peer joined:', peerId, 'Host:', this.permanentHost, 'Am I host?', this.isHost());
             // Signal ready if waiting
