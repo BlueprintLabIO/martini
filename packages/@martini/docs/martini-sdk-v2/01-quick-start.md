@@ -7,7 +7,7 @@ This guide gets you from zero to a working host-authoritative Phaser game in les
 ## 1. Install Dependencies
 
 ```bash
-pnpm add @martini/core @martini/phaser @martini/transport-p2p phaser
+pnpm add @martini/core @martini/phaser @martini/transport-trystero phaser
 ```
 
 > Use `npm` or `yarn` if you prefer; the package list is the same.

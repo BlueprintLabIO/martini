@@ -11,7 +11,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TrysteroTransport } from '../TrysteroTransport';
-import type { WireMessage } from '@martini/multiplayer';
+import type { WireMessage } from '@martini/core';
 
 // Mock Trystero
 vi.mock('trystero/mqtt', () => {
@@ -152,11 +152,12 @@ describe('TrysteroTransport', () => {
   });
 
   describe('Host Election', () => {
-    it('first peer becomes host', () => {
-      transport = new TrysteroTransport({ roomId: 'test-room' });
+    it('first peer becomes host when explicit isHost=true', () => {
+      transport = new TrysteroTransport({ roomId: 'test-room', isHost: true });
 
-      // First peer in empty room should be host
+      // Explicit host mode - immediate host
       expect(transport.isHost()).toBe(true);
+      expect(transport.getCurrentHost()).toBe(transport.getPlayerId());
     });
 
     it('tracks current host from heartbeat messages', () => {
@@ -199,27 +200,29 @@ describe('TrysteroTransport', () => {
       expect(transport.getCurrentHost()).toBe('peer-3');
     });
 
-    it('promotes self to host when current host disconnects', () => {
-      transport = new TrysteroTransport({ roomId: 'test-room' });
+    it('notifies when host disconnects (sticky host pattern)', () => {
+      // In sticky host pattern, host NEVER migrates - game ends instead
+      transport = new TrysteroTransport({ roomId: 'test-room', isHost: true });
       const room = transport.getRoom() as any;
 
+      let hostDisconnectCalled = false;
+      transport.onHostDisconnect(() => {
+        hostDisconnectCalled = true;
+      });
+
+      // Simulate another peer joining (this peer is host)
       room.__simulatePeerJoin('peer-2');
-      const heartbeat: WireMessage = {
-        type: 'heartbeat',
-        tick: 1,
-        revision: 1,
-        sessionId: 'peer-2',
-        queueChecksum: '',
-        queueTail: [],
-        snapshotTick: 0
-      };
-      room.__simulateMessage(heartbeat, 'peer-2');
-      expect(transport.getCurrentHost()).toBe('peer-2');
-
-      room.__simulatePeerLeave('peer-2');
-
-      expect(transport.getCurrentHost()).toBe(transport.getPlayerId());
       expect(transport.isHost()).toBe(true);
+
+      // If WE (the host) disconnect, notification fires
+      // Note: In real usage, the host leaving ends the game
+      // This test verifies the notification mechanism works
+      const hostId = transport.getPlayerId();
+
+      // Simulate ourselves leaving (host disconnect)
+      room.__simulatePeerLeave(hostId);
+
+      expect(hostDisconnectCalled).toBe(true);
     });
   });
 
@@ -352,16 +355,15 @@ describe('TrysteroTransport', () => {
       transport.onMessage((msg, sender) => received.push({ msg, sender }));
 
       const message: WireMessage = {
-        type: 'leave',
-        playerId: 'peer-x',
-        tick: 42,
-        reason: 'test'
+        type: 'event',
+        payload: { eventName: 'test', payload: { data: 'test' } },
+        senderId: 'peer-x'
       };
 
       transport.deliver?.(message, 'peer-x');
 
       expect(received).toHaveLength(1);
-      expect(received[0].msg.type).toBe('leave');
+      expect(received[0].msg.type).toBe('event');
       expect(received[0].sender).toBe('peer-x');
     });
   });
@@ -423,10 +425,10 @@ describe('TrysteroTransport', () => {
   });
 
   describe('Connection State Management', () => {
-    it('starts in connecting state', () => {
-      transport = new TrysteroTransport({ roomId: 'test-room' });
+    it('starts in connected state when explicit host', () => {
+      transport = new TrysteroTransport({ roomId: 'test-room', isHost: true });
 
-      // When alone in room, should be connected
+      // Explicit host mode - immediately connected
       expect(transport.getConnectionState()).toBe('connected');
     });
 
