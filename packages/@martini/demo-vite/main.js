@@ -183,12 +183,13 @@ const gameLogic = defineGame({
             for (const [key, data] of Object.entries(state._sprites)) {
               // Create sprite if needed
               if (!this.players[key]) {
-                console.log('Creating sprite on client:', key, data);
                 const spriteId = key.replace('player-', '');
                 const color = spriteId === playerId ? 0x0033ff : 0xff3300;
+
+                // CLIENT: Create visual-only sprites (no physics)
+                // Host is authoritative - we just render what host tells us
                 const sprite = this.add.circle(data.x || 400, data.y || 400, 20, color);
-                this.physics.add.existing(sprite);
-                this.physics.add.collider(sprite, platform);
+
                 this.players[key] = sprite;
                 this.adapter.registerRemoteSprite(key, sprite);
 
