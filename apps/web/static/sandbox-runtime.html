@@ -2,7 +2,18 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; media-src 'self' data: blob: https://*.supabase.co;">
+
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'none';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;
+    style-src 'unsafe-inline';
+    img-src 'self' data: blob: https://*.supabase.co;
+    media-src 'self' data: blob: https://*.supabase.co;
+    connect-src https://*.supabase.co wss://*.supabase.co https://mqtt.trystero.cloud;
+    worker-src blob:;
+  ">
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -29,272 +40,201 @@
 <body>
   <div id="game"></div>
 
-  <!-- Phaser 3 from CDN -->
+  <!-- Load dependencies -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-
-  <!-- Martini Multiplayer SDK (Advanced deterministic multiplayer) -->
   <script src="/martini-multiplayer.browser.js"></script>
 
   <!-- Sandbox Runtime -->
   <script>
     /**
-     * Controlled Runtime for Phaser 3 Games
+     * Martini SDK Sandbox Runtime
      *
-     * User code defines scenes via window.scenes object and uses gameAPI.
-     * Sandbox controls the Phaser.Game instance for stability, hot reload, and multiplayer.
-     *
-     * See CUSTOM_API.md for full documentation.
+     * Executes user TypeScript (compiled to JS) in isolated iframe.
+     * Provides: security, HMR support, automatic Martini SDK wiring.
      */
 
-    // Runtime state
-    let phaserGame = null;
-    let userScenes = {};
-    let currentSceneKey = null;
-    let userCodeLoaded = false;
+    let currentGame = null;
+    let isFirstLoad = true;
 
-    // Scene state storage (persists across scene switches)
-    const sceneStates = new Map();
-
-    // Global gameAPI - Exposed to user code
-    window.gameAPI = {
-      _frameCounter: 0,
-      _randomSeed: Date.now(),
-
-      // === Scene Management ===
-
-      /**
-       * Switch to a different scene
-       * @param {string} sceneKey - Key of the scene to switch to
-       * @param {object} data - Optional data to pass to the new scene
-       */
-      switchScene(sceneKey, data = {}) {
-        if (!userScenes[sceneKey]) {
-          this.log(`ERROR: Scene "${sceneKey}" not found`);
-          return;
-        }
-
-        if (phaserGame && phaserGame.scene.scenes[0]) {
-          currentSceneKey = sceneKey;
-          phaserGame.scene.scenes[0].scene.restart(data);
-        }
-      },
-
-      /**
-       * Get the current active scene key
-       * @returns {string} Current scene key
-       */
-      getCurrentScene() {
-        return currentSceneKey;
-      },
-
-      /**
-       * Pause the current scene
-       */
-      pauseScene() {
-        if (phaserGame && phaserGame.scene.scenes[0]) {
-          phaserGame.scene.scenes[0].scene.pause();
-        }
-      },
-
-      /**
-       * Resume the current scene
-       */
-      resumeScene() {
-        if (phaserGame && phaserGame.scene.scenes[0]) {
-          phaserGame.scene.scenes[0].scene.resume();
-        }
-      },
-
-      // === Utilities ===
-
-
-      /**
-       * Get current frame number
-       * @returns {number} Frame count since game started
-       */
-      getFrame() {
-        return this._frameCounter;
-      },
-
-      /**
-       * Log a message to the parent console
-       * @param {string} message - Message to log
-       */
-      log(message) {
-        parent.postMessage({
-          type: 'LOG',
-          payload: { message: String(message), frame: this._frameCounter }
-        }, '*');
-      },
-
-      // === Advanced Access ===
-
-      /**
-       * Get the current Phaser scene object (advanced users)
-       * @returns {Phaser.Scene} Current scene
-       */
-      get scene() {
-        return phaserGame?.scene?.scenes[0] || null;
-      },
-
-      /**
-       * Get the Phaser game instance (read-only, advanced users)
-       * @returns {Phaser.Game} Game instance
-       */
-      get game() {
-        return phaserGame;
-      },
-
-      // === Multiplayer API ===
-      // Will be replaced by Martini SDK integration
-      // TODO: Implement new @martini/phaser adapter
-
-      // === Multiplayer API (Martini SDK) ===
-      // Placeholder - will be integrated with @martini/phaser
-      
-      multiplayer: null,  // Will be initialized by Martini SDK
-          }
-        }
-      },
-
-
-      // Internal: Heartbeat for watchdog
-      _sendHeartbeat() {
-        parent.postMessage({ type: 'HEARTBEAT' }, '*');
-      }
+    // HMR support - exposed globally for user code
+    window.__HMR__ = {
+      runtime: null,
+      adapter: null,
+      savedState: null
     };
 
-    // Expose scene and game as top-level globals for convenience
-    Object.defineProperty(window, 'scene', {
-      get() { return gameAPI.scene; }
-    });
+    // Security: Block dangerous APIs (defense in depth)
+    delete window.localStorage;
+    delete window.sessionStorage;
+    delete window.indexedDB;
+    delete window.open;
 
-    Object.defineProperty(window, 'game', {
-      get() { return gameAPI.game; }
-    });
-
-    // === Phaser Scene Wrapper ===
-    // This is the single scene that Phaser sees. It delegates to user scenes.
-
-    function preloadFn() {
-      // Call user's preload if current scene has one
-      if (currentSceneKey && userScenes[currentSceneKey]?.preload) {
-        try {
-          userScenes[currentSceneKey].preload.call(
-            sceneStates.get(currentSceneKey) || {},
-            this
-          );
-        } catch (error) {
-          reportError(error);
-        }
+    // Allow fetch ONLY for multiplayer services
+    const originalFetch = window.fetch;
+    window.fetch = (url, ...args) => {
+      const urlStr = url.toString();
+      if (
+        urlStr.includes('supabase.co') ||
+        urlStr.includes('trystero.cloud') ||
+        urlStr.includes('mqtt')
+      ) {
+        return originalFetch(url, ...args);
       }
-    }
+      throw new Error('fetch() blocked by sandbox - only multiplayer services allowed');
+    };
 
-    function createFn(data) {
-      // Initialize scene state storage
-      if (!sceneStates.has(currentSceneKey)) {
-        sceneStates.set(currentSceneKey, {});
-      }
+    // Watchdog - prevent infinite loops
+    setInterval(() => {
+      parent.postMessage({ type: 'HEARTBEAT' }, '*');
+    }, 1000);
 
-      // Call user's create function for current scene
-      if (currentSceneKey && userScenes[currentSceneKey]?.create) {
-        try {
-          userScenes[currentSceneKey].create.call(
-            sceneStates.get(currentSceneKey),
-            this,
-            data
-          );
-        } catch (error) {
-          reportError(error);
-        }
-      }
-    }
-
-    function updateFn(time, delta) {
-      // Increment frame counter
-      gameAPI._frameCounter++;
-
-      // Call user's update function for current scene
-      if (currentSceneKey && userScenes[currentSceneKey]?.update) {
-        try {
-          userScenes[currentSceneKey].update.call(
-            sceneStates.get(currentSceneKey),
-            this,
-            time,
-            delta
-          );
-        } catch (error) {
-          reportError(error);
-        }
-      }
-    }
-
-    // === Code Loading ===
-
-    function loadUserCode(code) {
+    /**
+     * Load and execute user code
+     */
+    async function loadUserCode(code, roomId, isHost) {
       try {
-        console.log('📥 [Iframe] loadUserCode() called');
-        console.log('   [Iframe] userCodeLoaded:', userCodeLoaded, '| phaserGame exists:', !!phaserGame);
+        console.log('[Sandbox] Loading user code...', { isFirstLoad, roomId, isHost });
 
-        // Clear old scene states
-        sceneStates.clear();
-        userScenes = {};
-
-        // Execute user code (defines window.scenes and window.startScene)
-        const userFunction = new Function(code);
-        userFunction();
-        console.log('✅ [Iframe] User code executed successfully');
-
-        // Validate user code
-        if (!window.scenes || typeof window.scenes !== 'object') {
-          throw new Error('User code must define window.scenes object. See CUSTOM_API.md for documentation.');
+        // HMR: Save state (skip on first load)
+        if (!isFirstLoad && window.__HMR__.runtime) {
+          console.log('[Sandbox] HMR: Capturing current state...');
+          window.__HMR__.savedState = captureState();
         }
 
-        // Store user scenes
-        userScenes = window.scenes;
+        // Destroy existing game
+        if (currentGame) {
+          console.log('[Sandbox] Destroying previous game...');
+          currentGame.destroy(true);
+          currentGame = null;
 
-        // Determine starting scene
-        currentSceneKey = window.startScene || Object.keys(userScenes)[0];
-
-        if (!currentSceneKey || !userScenes[currentSceneKey]) {
-          throw new Error(`Starting scene "${currentSceneKey}" not found in window.scenes`);
+          // Small delay to ensure cleanup
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
-        // If game already exists, restart the scene
-        if (phaserGame) {
-          console.log('🔄 [Iframe] HOT RELOAD: Restarting scene...');
-          phaserGame.scene.scenes[0].scene.restart();
-          console.log('📤 [Iframe] Sending READY + heartbeat (hot reload)');
-          gameAPI._sendHeartbeat();
-          parent.postMessage({ type: 'READY' }, '*');
-          return; // Early return - game already exists
+        // Clear old references
+        window.__HMR__.runtime = null;
+        window.__HMR__.adapter = null;
+
+        // Inject multiplayer config as globals (accessed by user's main.ts)
+        window.__ROOM_ID__ = roomId;
+        window.__IS_HOST__ = isHost;
+
+        // Execute user code (IIFE bundle from esbuild)
+        console.log('[Sandbox] Executing user code...');
+        eval(code);
+
+        // Wait for game to initialize
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // HMR: Restore state (skip on first load)
+        if (!isFirstLoad && window.__HMR__.savedState) {
+          console.log('[Sandbox] HMR: Restoring state...');
+          restoreState(window.__HMR__.savedState);
+          window.__HMR__.savedState = null;
         }
 
-        // FIRST LOAD: Create Phaser.Game now that user code is ready
-        console.log('🆕 [Iframe] FIRST LOAD: Creating Phaser.Game with user code...');
-        phaserGame = new Phaser.Game(createPhaserConfig());
-        console.log('✅ [Iframe] Phaser.Game created');
-        console.log('✅ [Iframe] Scene started automatically (user code ready!)');
+        isFirstLoad = false;
 
-        // Start heartbeat now that game is running
-        setInterval(() => gameAPI._sendHeartbeat(), 1000);
-
-        userCodeLoaded = true;
-
-        // First load complete - notify parent that game is ready
-        // Send immediate heartbeat with READY to initialize watchdog
-        console.log('📤 [Iframe] Sending READY + initial heartbeat (first load complete)');
-        gameAPI._sendHeartbeat();
+        // Notify parent
         parent.postMessage({ type: 'READY' }, '*');
+        console.log('[Sandbox] Code loaded successfully');
 
       } catch (error) {
-        console.error('❌ [Iframe] Error loading user code:', error);
+        console.error('[Sandbox] Error loading user code:', error);
         reportError(error);
       }
     }
 
-    // === Message Handling ===
+    /**
+     * Capture current game state for HMR
+     */
+    function captureState() {
+      if (!window.__HMR__.runtime) {
+        return null;
+      }
 
+      const runtime = window.__HMR__.runtime;
+      const adapter = window.__HMR__.adapter;
+
+      // Capture core state from runtime
+      const gameState = JSON.parse(JSON.stringify(runtime.getState()));
+
+      // Capture sprite states (if adapter exists)
+      const sprites = [];
+      if (adapter && adapter.trackedSprites) {
+        for (const [key, { sprite }] of adapter.trackedSprites.entries()) {
+          sprites.push({
+            key,
+            x: sprite.x,
+            y: sprite.y,
+            texture: sprite.texture?.key || 'default',
+            velocityX: sprite.body?.velocity?.x,
+            velocityY: sprite.body?.velocity?.y,
+            scaleX: sprite.scaleX,
+            scaleY: sprite.scaleY,
+            rotation: sprite.rotation,
+            alpha: sprite.alpha
+          });
+        }
+      }
+
+      return {
+        gameState,
+        sprites,
+        capturedAt: Date.now()
+      };
+    }
+
+    /**
+     * Restore game state after HMR
+     */
+    function restoreState(savedState) {
+      if (!window.__HMR__.runtime || !savedState) {
+        return;
+      }
+
+      console.log('[HMR] Restoring state from', new Date(savedState.capturedAt));
+
+      const runtime = window.__HMR__.runtime;
+
+      // Restore core game state
+      runtime.mutateState((state) => {
+        Object.assign(state, savedState.gameState);
+      });
+
+      // Sprites will be recreated by scene's onChange listener
+      console.log('[HMR] State restored successfully');
+    }
+
+    /**
+     * Error reporting
+     */
+    function reportError(error) {
+      parent.postMessage({
+        type: 'ERROR',
+        payload: {
+          message: error.message,
+          stack: error.stack,
+          line: error.lineNumber,
+          column: error.columnNumber
+        }
+      }, '*');
+    }
+
+    // Global error handlers
+    window.addEventListener('error', (event) => {
+      reportError(event.error || { message: event.message });
+      event.preventDefault();
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      reportError(event.reason || { message: 'Unhandled promise rejection' });
+      event.preventDefault();
+    });
+
+    /**
+     * Message handling from parent
+     */
     window.addEventListener('message', (event) => {
       if (!event.data || !event.data.type) return;
 
@@ -302,49 +242,11 @@
 
       switch (type) {
         case 'LOAD_CODE':
-          console.log('📨 [Iframe] Received LOAD_CODE message from parent');
-          loadUserCode(payload.code);
-          break;
-
-        case 'MULTIPLAYER_STATE':
-          // Update multiplayer state from parent (preserve existing methods!)
-          console.log('📨 [Iframe] Received MULTIPLAYER_STATE:', payload);
-
-          // Merge state updates into the existing multiplayer object
-          if (payload._enabled !== undefined) gameAPI.multiplayer._enabled = payload._enabled;
-          if (payload._isHost !== undefined) gameAPI.multiplayer._isHost = payload._isHost;
-          if (payload._myId !== undefined) gameAPI.multiplayer._myId = payload._myId;
-          if (payload._players !== undefined) gameAPI.multiplayer._players = payload._players;
-
-          console.log('✅ [Iframe] Multiplayer state updated:', {
-            enabled: gameAPI.multiplayer._enabled,
-            isHost: gameAPI.multiplayer._isHost,
-            myId: gameAPI.multiplayer._myId,
-            players: gameAPI.multiplayer._players
-          });
-          break;
-
-        case 'MULTIPLAYER_DATA':
-          // Received data from peer - handle multiplayer events
-          // Format: { from: peerId, data: { eventName, data } }
-          if (payload.from && payload.data) {
-            const { eventName, data: eventData } = payload.data;
-            gameAPI.multiplayer._handleEvent(payload.from, eventName, eventData);
-          }
-          break;
-
-        case 'MULTIPLAYER_PLAYER_JOINED':
-          // Trigger player joined callbacks
-          gameAPI.multiplayer._handleEvent('__system', '__player_joined', payload);
-          break;
-
-        case 'MULTIPLAYER_PLAYER_LEFT':
-          // Trigger player left callbacks
-          gameAPI.multiplayer._handleEvent('__system', '__player_left', payload);
+          const { code, roomId = 'default-room', isHost = false } = payload;
+          loadUserCode(code, roomId, isHost);
           break;
 
         case 'CAPTURE_SCREENSHOT':
-          // Capture canvas screenshot and send back to parent
           const canvas = document.querySelector('canvas');
           if (canvas) {
             try {
@@ -367,87 +269,14 @@
           } else {
             parent.postMessage({
               type: 'SCREENSHOT_ERROR',
-              payload: { error: 'Canvas not found in iframe. Game may not be loaded yet.' }
+              payload: { error: 'Canvas not found - game may not be loaded' }
             }, '*');
           }
           break;
       }
     });
 
-    // === Error Handling ===
-
-    function reportError(error) {
-      parent.postMessage({
-        type: 'ERROR',
-        payload: {
-          message: error.message,
-          stack: error.stack,
-          line: error.lineNumber,
-          column: error.columnNumber
-        }
-      }, '*');
-    }
-
-    window.addEventListener('error', (event) => {
-      reportError(event.error || { message: event.message });
-      event.preventDefault();
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-      reportError(event.reason || { message: 'Unhandled promise rejection' });
-      event.preventDefault();
-    });
-
-    // === Security: Block dangerous APIs ===
-    // WebRTC APIs are ALLOWED for multiplayer
-
-    try {
-      delete window.fetch;
-      delete window.XMLHttpRequest;
-      delete window.WebSocket;
-      delete window.localStorage;
-      delete window.sessionStorage;
-      delete window.indexedDB;
-      delete window.open;
-    } catch (e) {
-      console.warn('Could not delete some APIs');
-    }
-
-    // === Initialize ===
-
-    /**
-     * Create Phaser game configuration
-     * Returns config object with wrapper scene that delegates to user scenes
-     */
-    function createPhaserConfig() {
-      return {
-        type: Phaser.AUTO,
-        width: 800,
-        height: 600,
-        parent: 'game',
-        backgroundColor: '#2d2d2d',
-        scale: {
-          mode: Phaser.Scale.FIT,
-          autoCenter: Phaser.Scale.CENTER_BOTH
-        },
-        physics: {
-          default: 'arcade',
-          arcade: {
-            gravity: { y: 300 },
-            debug: false
-          }
-        },
-        scene: {
-          preload: preloadFn,
-          create: createFn,
-          update: updateFn
-        }
-      };
-    }
-
-    console.log('🏁 [Iframe] Sandbox initialized, waiting for user code via LOAD_CODE message...');
-    // Don't create Phaser.Game yet - wait for user code to load first
-    // Game will be created inside loadUserCode() when user scenes are ready
+    console.log('[Sandbox] Martini SDK runtime initialized, waiting for user code...');
   </script>
 </body>
 </html>
