@@ -14,12 +14,12 @@
 		<div class="container">
 			<div class="hero-content">
 				<h1 class="hero-title">
-					Build multiplayer games<br />
-					<span class="gradient-text">in minutes, not months</span>
+					Multiplayer that feels<br />
+					<span class="gradient-text">as easy as single-player</span>
 				</h1>
 				<p class="hero-description">
-					Martini is a declarative, type-safe framework for building real-time multiplayer games.
-					Works with any game engine. Deploy anywhere.
+					Sketch your state, name a few actions, and Martini keeps every player glued together.
+					No socket wrangling, no backend spelunking—just game feel, faster.
 				</p>
 				<div class="hero-actions">
 					<a href="#demos" class="btn btn-primary">
@@ -30,6 +30,20 @@
 						<Github class="icon" size={16} />
 						View on GitHub
 					</a>
+				</div>
+				<div class="hero-stats">
+					<div class="stat">
+						<div class="stat-label">Get a room running in</div>
+						<div class="stat-value">5 min</div>
+					</div>
+					<div class="stat">
+						<div class="stat-label">Test coverage</div>
+						<div class="stat-value">96%+</div>
+					</div>
+					<div class="stat">
+						<div class="stat-label">License</div>
+						<div class="stat-value">MIT / OSS</div>
+					</div>
 				</div>
 			</div>
 
@@ -68,44 +82,145 @@ export const game = defineGame({
 	</section>
 
 	<!-- Features Section -->
-	<section class="features">
-		<div class="container">
-			<h2 class="section-title">Why Martini?</h2>
-			<div class="features-grid">
-				<div class="feature-card">
-					<div class="feature-icon">
-						<Zap size={24} />
+		<section class="features">
+			<div class="container">
+				<h2 class="section-title">Why Martini?</h2>
+				<p class="section-description">
+					Bun makes server-side JS feel fast; Martini does the same for multiplayer loops. Drop it in,
+					stop thinking about plumbing, and keep iterating on the fun part.
+				</p>
+				<div class="features-grid">
+					<div class="feature-card">
+						<div class="feature-icon">
+							<Zap size={24} />
+						</div>
+						<h3>Host-Authoritative</h3>
+						<p>
+							Pick any device or micro-server to be “the adult in the room.” Martini streams byte-sized
+							diffs to everyone else, so inputs feel instant and desyncs stay gone.
+						</p>
 					</div>
-					<h3>Host-Authoritative</h3>
-					<p>Deterministic game state with automatic conflict resolution. No server required.</p>
-				</div>
 
-				<div class="feature-card">
+					<div class="feature-card">
 					<div class="feature-icon">
 						<Users size={24} />
 					</div>
-					<h3>P2P or Server</h3>
-					<p>Use WebRTC for P2P or plug in your own transport. Scales from 2 to 100+ players.</p>
-				</div>
-
-				<div class="feature-card">
-					<div class="feature-icon">
-						<Code size={24} />
+						<h3>P2P now, server later</h3>
+						<p>
+							Run free peer-to-peer playtests today, then flip to WebSocket or custom relays with a single import.
+						</p>
 					</div>
-					<h3>Type-Safe</h3>
-					<p>Full TypeScript support with type inference for game state and actions.</p>
-				</div>
 
-				<div class="feature-card">
-					<div class="feature-icon">
-						<Gamepad2 size={24} />
+					<div class="feature-card">
+						<div class="feature-icon">
+							<Code size={24} />
+						</div>
+						<h3>Type-Safe</h3>
+						<p>TypeScript autocomplete keeps your state/actions honest, no guessing or `any` soup.</p>
 					</div>
-					<h3>Engine Agnostic</h3>
-					<p>Works with Phaser, PixiJS, Three.js, or any rendering engine you prefer.</p>
+
+					<div class="feature-card">
+						<div class="feature-icon">
+							<Gamepad2 size={24} />
+						</div>
+						<h3>Engine-agnostic</h3>
+						<p>
+							Phaser today, Unity tomorrow, Godot next jam—Martini only cares about data, not your
+							rendering stack.
+						</p>
+					</div>
 				</div>
 			</div>
-		</div>
-	</section>
+		</section>
+
+		<!-- Approach Section -->
+		<section class="approach">
+			<div class="container">
+				<h2 class="section-title">How Martini Works</h2>
+				<p class="section-description">
+					Same mindset as Bun’s “install, import, ship” flow—except we’re syncing multiplayer state.
+				</p>
+				<div class="approach-grid">
+					<div class="approach-card">
+						<h3>1. Describe your world</h3>
+						<p>Use plain objects for players, bullets, timers. Actions mutate state directly.</p>
+					</div>
+					<div class="approach-card">
+						<h3>2. Drop in your engine</h3>
+						<p>Keep Phaser physics, Unity behaviours, or Godot scenes. Martini only mirrors data.</p>
+					</div>
+					<div class="approach-card">
+						<h3>3. Test instantly</h3>
+						<p>Demos open two panes so you can watch host vs. client updates in real time.</p>
+					</div>
+					<div class="approach-card">
+						<h3>4. Scale on your terms</h3>
+						<p>Switch transports without rewriting logic. Diff streams keep payloads tiny and cheap.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Comparison Section -->
+		<section class="comparison">
+			<div class="container">
+				<h2 class="section-title">How It Compares</h2>
+				<p class="section-description">
+					Think of Martini as the "game-side glue" that sits between your engine and whatever backend or
+					matching service you prefer.
+				</p>
+				<div class="comparison-table-wrapper">
+					<table class="comparison-table">
+						<thead>
+							<tr>
+								<th>Feature</th>
+								<th>Martini</th>
+								<th>Photon / Colyseus</th>
+								<th>Rune / Playroom</th>
+								<th>Unity / Godot Netcode</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Where code lives</td>
+								<td>Inside your game files, same repo as art + logic</td>
+								<td>Split between client + bespoke server rooms</td>
+								<td>Uploaded mini-apps inside their walled garden</td>
+								<td>Engine-specific scripts & RPC nodes</td>
+							</tr>
+							<tr>
+								<td>Setup time</td>
+								<td>`pnpm add`, define a game, press play</td>
+								<td>Provision servers, auth, serialization</td>
+								<td>Follow platform ingestion rules & SDKs</td>
+								<td>Wire RPCs, manage sync manually</td>
+							</tr>
+							<tr>
+								<td>Engine choice</td>
+								<td>Phaser, Unity, Godot, Three.js, custom engines</td>
+								<td>Engine-agnostic but backend flow dictates APIs</td>
+								<td>Browser-first templates, limited engine hooks</td>
+								<td>Locked to the engine you picked</td>
+							</tr>
+							<tr>
+								<td>Hosting model</td>
+								<td>P2P by default, swap in WebSocket or custom infra anytime</td>
+								<td>Requires managed or self-hosted fleets</td>
+								<td>Fully managed only</td>
+								<td>You host everything yourself</td>
+							</tr>
+							<tr>
+								<td>Cost control</td>
+								<td>MIT OSS; pay only for infra you already use</td>
+								<td>Usage tiers, per-CCU or server bills</td>
+								<td>Revenue share / per-MAU fees</td>
+								<td>Free tooling, high engineering time</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</section>
 
 	<!-- Demos Section -->
 	<section id="demos" class="demos">
@@ -259,6 +374,37 @@ export const game = defineGame({
 		flex-wrap: wrap;
 	}
 
+	.hero-stats {
+		margin-top: 2.5rem;
+		display: flex;
+		justify-content: center;
+		gap: 2rem;
+		flex-wrap: wrap;
+	}
+
+	.stat {
+		background: white;
+		border: 1px solid #e5e5e5;
+		border-radius: 12px;
+		padding: 1rem 1.5rem;
+		min-width: 160px;
+		box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
+	}
+
+	.stat-label {
+		font-size: 0.85rem;
+		color: #6b7280;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		margin-bottom: 0.25rem;
+	}
+
+	.stat-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: #111827;
+	}
+
 	.btn {
 		display: inline-flex;
 		align-items: center;
@@ -406,6 +552,87 @@ export const game = defineGame({
 		line-height: 1.6;
 		color: #525252;
 		margin: 0;
+	}
+
+	/* Approach Section */
+	.approach {
+		padding: 5rem 0;
+		background: #f9fafb;
+	}
+
+	.approach-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: 1.5rem;
+		margin-top: 3rem;
+	}
+
+	.approach-card {
+		background: white;
+		border-radius: 12px;
+		border: 1px solid #e5e5e5;
+		padding: 1.5rem;
+		min-height: 190px;
+		box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+	}
+
+	.approach-card h3 {
+		margin: 0 0 0.75rem 0;
+		font-size: 1.125rem;
+		color: #0f172a;
+	}
+
+	.approach-card p {
+		margin: 0;
+		color: #475569;
+		line-height: 1.6;
+		font-size: 0.95rem;
+	}
+
+	/* Comparison Section */
+	.comparison {
+		padding: 5rem 0;
+		background: white;
+	}
+
+	.comparison-table-wrapper {
+		margin-top: 3rem;
+		overflow-x: auto;
+	}
+
+	.comparison-table {
+		width: 100%;
+		border-collapse: collapse;
+		min-width: 720px;
+		font-size: 0.95rem;
+	}
+
+	.comparison-table th,
+	.comparison-table td {
+		border: 1px solid #e5e5e5;
+		padding: 0.85rem 1rem;
+		text-align: left;
+		vertical-align: top;
+		line-height: 1.5;
+	}
+
+	.comparison-table th {
+		background: #0f172a;
+		color: white;
+		font-weight: 600;
+		font-size: 0.9rem;
+	}
+
+	.comparison-table td:first-child,
+	.comparison-table th:first-child {
+		background: #f8fafc;
+		font-weight: 600;
+		color: #0f172a;
+		width: 180px;
+	}
+
+	.comparison-table tbody tr:nth-child(odd) {
+		background: #fcfcfc;
 	}
 
 	/* Demos Section */
