@@ -27,40 +27,70 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		return json({ error: 'Unauthorized' }, { status: 403 });
 	}
 
-	// Fetch all JavaScript files
+	// Fetch all source files (TypeScript or JavaScript)
 	const projectFiles = await db
 		.select()
 		.from(files)
 		.where(eq(files.projectId, params.id));
 
-	const jsFiles = projectFiles.filter(
-		(f) => f.path.endsWith('.js') && f.path.startsWith('/src/')
+	const sourceFiles = projectFiles.filter(
+		(f) => (f.path.endsWith('.ts') || f.path.endsWith('.js')) && f.path.startsWith('/src/')
 	);
 
-	if (jsFiles.length === 0) {
-		return json({ error: 'No JavaScript files found in /src/' }, { status: 400 });
+	if (sourceFiles.length === 0) {
+		return json({ error: 'No source files found in /src/' }, { status: 400 });
 	}
 
-	// Find entry point (main.js)
-	const entryFile = jsFiles.find((f) => f.path === '/src/main.js');
+	// Find entry point (main.ts or main.js)
+	const entryFile = sourceFiles.find((f) => f.path === '/src/main.ts' || f.path === '/src/main.js');
 
 	if (!entryFile) {
-		return json({ error: 'Entry point /src/main.js not found' }, { status: 400 });
+		return json({ error: 'Entry point /src/main.ts or /src/main.js not found' }, { status: 400 });
 	}
 
 	try {
 		// Create virtual file system for esbuild
 		const fileMap = new Map<string, string>();
-		jsFiles.forEach((file) => {
+		sourceFiles.forEach((file) => {
 			// Remove leading slash for esbuild
 			const path = file.path.startsWith('/') ? file.path.slice(1) : file.path;
 			fileMap.set(path, file.content);
 		});
 
-		// esbuild plugin to resolve virtual files
+		// esbuild plugin to resolve virtual files and globals
 		const virtualPlugin: esbuild.Plugin = {
 			name: 'virtual-files',
 			setup(build) {
+				// Handle @martini/* imports (map to global MartiniMultiplayer)
+				build.onResolve({ filter: /^@martini\/(phaser|core)$/ }, (args) => {
+					return { path: args.path, namespace: 'martini-global' };
+				});
+
+				build.onLoad({ filter: /.*/, namespace: 'martini-global' }, (args) => {
+					// Map @martini imports to global MartiniMultiplayer
+					return {
+						contents: `
+							export const defineGame = window.MartiniMultiplayer.defineGame;
+							export const GameRuntime = window.MartiniMultiplayer.GameRuntime;
+							export const PhaserAdapter = window.MartiniMultiplayer.PhaserAdapter;
+							export const TrysteroTransport = window.MartiniMultiplayer.TrysteroTransport;
+						`,
+						loader: 'js'
+					};
+				});
+
+				// Handle phaser import (map to global Phaser)
+				build.onResolve({ filter: /^phaser$/ }, (args) => {
+					return { path: args.path, namespace: 'phaser-global' };
+				});
+
+				build.onLoad({ filter: /.*/, namespace: 'phaser-global' }, () => {
+					return {
+						contents: 'export default window.Phaser;',
+						loader: 'js'
+					};
+				});
+
 				// Resolve file paths
 				build.onResolve({ filter: /.*/ }, (args) => {
 					// Handle relative imports
@@ -83,7 +113,18 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 							}
 						}
 
-						const resolved = resolvedParts.join('/');
+						let resolved = resolvedParts.join('/');
+
+						// Try adding .ts extension if no extension found
+						if (!resolved.endsWith('.ts') && !resolved.endsWith('.js')) {
+							// Check if .ts file exists
+							if (fileMap.has(resolved + '.ts')) {
+								resolved += '.ts';
+							} else if (fileMap.has(resolved + '.js')) {
+								resolved += '.js';
+							}
+						}
+
 						return { path: resolved, namespace: 'virtual' };
 					}
 
@@ -111,7 +152,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
 					return {
 						contents: content,
-						loader: 'js'
+						loader: args.path.endsWith('.ts') ? 'ts' : 'js'
 					};
 				});
 			}
@@ -121,8 +162,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		const result = await esbuild.build({
 			stdin: {
 				contents: entryFile.content,
-				sourcefile: 'src/main.js',
-				loader: 'js'
+				sourcefile: entryFile.path.startsWith('/') ? entryFile.path.slice(1) : entryFile.path,
+				loader: entryFile.path.endsWith('.ts') ? 'ts' : 'js'
 			},
 			bundle: true,
 			format: 'iife',
@@ -131,7 +172,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 			write: false,
 			plugins: [virtualPlugin],
 			minify: false, // Keep readable for debugging
-			sourcemap: false
+			sourcemap: 'inline' // Enable source maps for better error messages
 		});
 
 		const bundledCode = result.outputFiles[0].text;

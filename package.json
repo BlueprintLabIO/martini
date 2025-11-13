@@ -7,7 +7,8 @@
 		"node": ">=18"
 	},
 	"scripts": {
-		"dev": "turbo run dev",
+		"dev": "turbo run dev --filter=@martini/web",
+		"dev:all": "turbo run dev",
 		"build": "turbo run build",
 		"test": "turbo run test",
 		"clean": "turbo run clean && rm -rf node_modules",

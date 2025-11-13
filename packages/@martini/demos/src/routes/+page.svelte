@@ -1,49 +1,84 @@
 <script lang="ts">
 	import { demoGames } from '$lib/games';
-	import { Gamepad2, Users, Zap, Code, Github, ArrowRight } from 'lucide-svelte';
+	import { Gamepad2, Users, Zap, Code, Github, ArrowRight, Moon, Sun, Copy, Check } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+
+	let darkMode = false;
+	let copied = false;
+
+	onMount(() => {
+		// Check for saved preference or system preference
+		if (typeof window !== 'undefined') {
+			const savedMode = localStorage.getItem('darkMode');
+			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+			darkMode = savedMode ? savedMode === 'true' : prefersDark;
+		}
+	});
+
+	function toggleDarkMode() {
+		darkMode = !darkMode;
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('darkMode', String(darkMode));
+		}
+	}
+
+	async function copyInstallCommand() {
+		await navigator.clipboard.writeText('npm install @martini/core @martini/phaser');
+		copied = true;
+		setTimeout(() => copied = false, 2000);
+	}
 </script>
 
 <svelte:head>
-	<title>Martini - Multiplayer Game Framework</title>
-	<meta name="description" content="Build real-time multiplayer games with ease. Declarative, type-safe, and framework-agnostic." />
+	<title>Martini — Multiplayer for JavaScript games</title>
+	<meta name="description" content="A fast JavaScript multiplayer framework. Build real-time games with P2P or dedicated servers." />
 </svelte:head>
 
-<div class="page">
+<div class="page" class:dark={darkMode}>
+	<!-- Dark Mode Toggle -->
+	<button class="theme-toggle" on:click={toggleDarkMode} aria-label="Toggle dark mode">
+		{#if darkMode}
+			<Sun size={20} />
+		{:else}
+			<Moon size={20} />
+		{/if}
+	</button>
+
 	<!-- Hero Section -->
 	<section class="hero">
 		<div class="container">
 			<div class="hero-content">
 				<h1 class="hero-title">
-					Multiplayer that feels<br />
-					<span class="gradient-text">as easy as single-player</span>
+					Write multiplayer<br />like single-player
 				</h1>
 				<p class="hero-description">
-					Sketch your state, name a few actions, and Martini keeps every player glued together.
-					No socket wrangling, no backend spelunking—just game feel, faster.
+					Declarative state. Automatic sync. Zero server code. Battle-tested with 96%+ coverage.
 				</p>
+
+				<!-- Install Command -->
+				<div class="install-command">
+					<button class="install-cmd-btn" on:click={copyInstallCommand}>
+						<span class="cmd-prompt">$</span>
+						<code>npm install @martini/core @martini/phaser</code>
+						<span class="copy-btn">
+							{#if copied}
+								<Check size={16} />
+							{:else}
+								<Copy size={16} />
+							{/if}
+						</span>
+					</button>
+				</div>
+
 				<div class="hero-actions">
 					<a href="#demos" class="btn btn-primary">
-						Try Interactive Demos
+						Play Interactive Demos
 						<ArrowRight class="icon" size={16} />
 					</a>
 					<a href="https://github.com/yourusername/martini" class="btn btn-secondary">
 						<Github class="icon" size={16} />
-						View on GitHub
+						GitHub
 					</a>
-				</div>
-				<div class="hero-stats">
-					<div class="stat">
-						<div class="stat-label">Get a room running in</div>
-						<div class="stat-value">5 min</div>
-					</div>
-					<div class="stat">
-						<div class="stat-label">Test coverage</div>
-						<div class="stat-value">96%+</div>
-					</div>
-					<div class="stat">
-						<div class="stat-label">License</div>
-						<div class="stat-value">MIT / OSS</div>
-					</div>
 				</div>
 			</div>
 
@@ -55,9 +90,15 @@
 						<span></span>
 						<span></span>
 					</div>
-					<span class="code-title">game.ts</span>
+					<span class="code-title">game.ts — 15 lines handles everything</span>
 				</div>
-				<pre class="code-content"><code>{`import { defineGame } from '@martini/core';
+				<pre class="code-content"><code>{`// This 15-line game definition handles:
+// ✓ State synchronization
+// ✓ Player join/leave
+// ✓ Network optimization
+// ✓ All multiplayer plumbing
+
+import { defineGame } from '@martini/core';
 
 export const game = defineGame({
   setup: ({ playerIds }) => ({
@@ -86,76 +127,98 @@ export const game = defineGame({
 			<div class="container">
 				<h2 class="section-title">Why Martini?</h2>
 				<p class="section-description">
-					Bun makes server-side JS feel fast; Martini does the same for multiplayer loops. Drop it in,
-					stop thinking about plumbing, and keep iterating on the fun part.
+					Most multiplayer frameworks make you write hundreds of lines of socket code and manage separate servers.
+					Martini gives you a declarative, 10-line API that's battle-tested (96%+ coverage) and keeps all your code in one place.
 				</p>
 				<div class="features-grid">
 					<div class="feature-card">
 						<div class="feature-icon">
-							<Zap size={24} />
-						</div>
-						<h3>Host-Authoritative</h3>
-						<p>
-							Pick any device or micro-server to be “the adult in the room.” Martini streams byte-sized
-							diffs to everyone else, so inputs feel instant and desyncs stay gone.
-						</p>
-					</div>
-
-					<div class="feature-card">
-					<div class="feature-icon">
-						<Users size={24} />
-					</div>
-						<h3>P2P now, server later</h3>
-						<p>
-							Run free peer-to-peer playtests today, then flip to WebSocket or custom relays with a single import.
-						</p>
-					</div>
-
-					<div class="feature-card">
-						<div class="feature-icon">
 							<Code size={24} />
 						</div>
-						<h3>Type-Safe</h3>
-						<p>TypeScript autocomplete keeps your state/actions honest, no guessing or `any` soup.</p>
+						<h3>Declarative & Minimal</h3>
+						<p>
+							Define state + actions in ~10 lines per feature. No socket handlers, no RPC wiring, no serialization code.
+							TypeScript autocomplete guides you.
+						</p>
 					</div>
 
 					<div class="feature-card">
 						<div class="feature-icon">
-							<Gamepad2 size={24} />
+							<Users size={24} />
 						</div>
-						<h3>Engine-agnostic</h3>
+						<h3>One Codebase, Zero Servers</h3>
 						<p>
-							Phaser today, Unity tomorrow, Godot next jam—Martini only cares about data, not your
-							rendering stack.
+							Game logic lives alongside your rendering code. P2P by default, swap to WebSocket when you scale.
+							No separate backend repo to maintain.
+						</p>
+					</div>
+
+					<div class="feature-card">
+						<div class="feature-icon">
+							<Zap size={24} />
+						</div>
+						<h3>Battle-Tested & Fast</h3>
+						<p>
+							96%+ test coverage on sync algorithms. Efficient diff/patch minimizes bandwidth—only changed data goes over the wire.
+							Host-authoritative prevents cheating.
 						</p>
 					</div>
 				</div>
 			</div>
 		</section>
 
-		<!-- Approach Section -->
+		<!-- Performance Section -->
+		<section class="performance">
+			<div class="container">
+				<h2 class="section-title">Built for Performance & Reliability</h2>
+				<div class="performance-grid">
+					<div class="performance-card">
+						<div class="performance-value">96%+</div>
+						<div class="performance-label">Test Coverage</div>
+						<p>Core sync algorithms battle-tested</p>
+					</div>
+					<div class="performance-card">
+						<div class="performance-value">20 FPS</div>
+						<div class="performance-label">State Sync</div>
+						<p>Configurable, efficient diff/patch</p>
+					</div>
+					<div class="performance-card">
+						<div class="performance-value">&lt;1KB</div>
+						<div class="performance-label">Patch Size</div>
+						<p>Only changed data over the wire</p>
+					</div>
+					<div class="performance-card">
+						<div class="performance-value">~10</div>
+						<div class="performance-label">Lines of Code</div>
+						<p>Per multiplayer feature</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- How It Works Section -->
 		<section class="approach">
 			<div class="container">
-				<h2 class="section-title">How Martini Works</h2>
+				<h2 class="section-title">How It Works</h2>
 				<p class="section-description">
-					Same mindset as Bun’s “install, import, ship” flow—except we’re syncing multiplayer state.
+					Declarative, automatic, simple. No socket code, no server setup.
 				</p>
 				<div class="approach-grid">
 					<div class="approach-card">
-						<h3>1. Describe your world</h3>
-						<p>Use plain objects for players, bullets, timers. Actions mutate state directly.</p>
+						<h3>1. Define state + actions (10 lines)</h3>
+						<p>Plain objects. No classes, no serialization, no RPC.</p>
 					</div>
 					<div class="approach-card">
-						<h3>2. Drop in your engine</h3>
-						<p>Keep Phaser physics, Unity behaviours, or Godot scenes. Martini only mirrors data.</p>
+						<h3>2. Martini handles the rest</h3>
+						<p>Automatic sync with efficient diff/patch. Host runs logic, clients mirror.</p>
 					</div>
 					<div class="approach-card">
-						<h3>3. Test instantly</h3>
-						<p>Demos open two panes so you can watch host vs. client updates in real time.</p>
+						<h3>3. Test locally, instantly</h3>
+						<p>Open two browser tabs. No server setup, no deployment.</p>
 					</div>
 					<div class="approach-card">
-						<h3>4. Scale on your terms</h3>
-						<p>Switch transports without rewriting logic. Diff streams keep payloads tiny and cheap.</p>
+						<h3>4. Scale when ready</h3>
+						<p>Swap P2P for WebSocket with one line. Code stays identical.</p>
 					</div>
 				</div>
 			</div>
@@ -166,61 +229,103 @@ export const game = defineGame({
 			<div class="container">
 				<h2 class="section-title">How It Compares</h2>
 				<p class="section-description">
-					Think of Martini as the "game-side glue" that sits between your engine and whatever backend or
-					matching service you prefer.
+					Martini vs server-first frameworks (Colyseus), platform lock-in (Rune), and engine-locked solutions (Unity/Godot).
 				</p>
 				<div class="comparison-table-wrapper">
 					<table class="comparison-table">
 						<thead>
 							<tr>
-								<th>Feature</th>
+								<th></th>
 								<th>Martini</th>
-								<th>Photon / Colyseus</th>
-								<th>Rune / Playroom</th>
-								<th>Unity / Godot Netcode</th>
+								<th>Colyseus/Photon</th>
+								<th>Rune/Playroom</th>
+								<th>Unity/Godot</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
-								<td>Where code lives</td>
-								<td>Inside your game files, same repo as art + logic</td>
-								<td>Split between client + bespoke server rooms</td>
-								<td>Uploaded mini-apps inside their walled garden</td>
-								<td>Engine-specific scripts & RPC nodes</td>
+								<td>Declarative API (~10 lines)</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="partial">~</span></td>
+								<td><span class="cross">✗</span></td>
 							</tr>
 							<tr>
-								<td>Setup time</td>
-								<td>`pnpm add`, define a game, press play</td>
-								<td>Provision servers, auth, serialization</td>
-								<td>Follow platform ingestion rules & SDKs</td>
-								<td>Wire RPCs, manage sync manually</td>
+								<td>Code lives with game</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="tick">✓</span></td>
 							</tr>
 							<tr>
-								<td>Engine choice</td>
-								<td>Phaser, Unity, Godot, Three.js, custom engines</td>
-								<td>Engine-agnostic but backend flow dictates APIs</td>
-								<td>Browser-first templates, limited engine hooks</td>
-								<td>Locked to the engine you picked</td>
+								<td>Zero server setup</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="cross">✗</span></td>
 							</tr>
 							<tr>
-								<td>Hosting model</td>
-								<td>P2P by default, swap in WebSocket or custom infra anytime</td>
-								<td>Requires managed or self-hosted fleets</td>
-								<td>Fully managed only</td>
-								<td>You host everything yourself</td>
+								<td>P2P support</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="cross">✗</span></td>
 							</tr>
 							<tr>
-								<td>Cost control</td>
-								<td>MIT OSS; pay only for infra you already use</td>
-								<td>Usage tiers, per-CCU or server bills</td>
-								<td>Revenue share / per-MAU fees</td>
-								<td>Free tooling, high engineering time</td>
+								<td>Automatic state sync</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="partial">~</span></td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+							</tr>
+							<tr>
+								<td>Efficient diff/patch (&lt;1KB)</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+							</tr>
+							<tr>
+								<td>96%+ test coverage</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="partial">~</span></td>
+								<td><span class="cross">✗</span></td>
+							</tr>
+							<tr>
+								<td>Framework agnostic</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+							</tr>
+							<tr>
+								<td>Free tier (P2P)</td>
+								<td><span class="tick">✓</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="cross">✗</span></td>
+								<td><span class="tick">✓</span></td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
 			</div>
 		</section>
+
+	<!-- Minimal API Callout -->
+	<section class="minimal-api">
+		<div class="container">
+			<div class="api-callout">
+				<h3>🎯 The Entire Martini API</h3>
+				<div class="api-list">
+					<code>defineGame(&#123; setup, actions &#125;)</code>
+					<code>runtime.submitAction(name, input)</code>
+					<code>runtime.onChange(callback)</code>
+				</div>
+				<p>That's it. No 50-method SDK to learn.</p>
+			</div>
+		</div>
+	</section>
 
 	<!-- Demos Section -->
 	<section id="demos" class="demos">
@@ -262,13 +367,17 @@ export const game = defineGame({
 	<section class="quick-start">
 		<div class="container">
 			<h2 class="section-title">Quick Start</h2>
+			<p class="section-description">
+				Unlike Colyseus (~100 lines of server + client) or Unity Netcode (manual RPC wiring),
+				Martini gets you running in 15 lines—works everywhere.
+			</p>
 			<div class="install-steps">
 				<div class="install-step">
 					<span class="step-number">1</span>
 					<div class="step-content">
 						<h3>Install</h3>
 						<div class="code-block">
-							<code>npm install @martini/core @martini/phaser @martini/transport-trystero</code>
+							<code>npm install @martini/core @martini/phaser</code>
 						</div>
 					</div>
 				</div>
@@ -276,24 +385,30 @@ export const game = defineGame({
 				<div class="install-step">
 					<span class="step-number">2</span>
 					<div class="step-content">
-						<h3>Define Your Game</h3>
-						<p class="step-description">Create game logic with simple, declarative API</p>
+						<h3>Define Your Game (10 lines)</h3>
+						<p class="step-description">
+							Plain objects for state. Actions mutate directly. No classes, no serialization, no RPC.
+						</p>
 					</div>
 				</div>
 
 				<div class="install-step">
 					<span class="step-number">3</span>
 					<div class="step-content">
-						<h3>Add Rendering</h3>
-						<p class="step-description">Connect to Phaser, PixiJS, or your preferred engine</p>
+						<h3>Connect Your Engine</h3>
+						<p class="step-description">
+							Phaser, PixiJS, Three.js, or vanilla JavaScript. Martini syncs data, not rendering.
+						</p>
 					</div>
 				</div>
 
 				<div class="install-step">
 					<span class="step-number">4</span>
 					<div class="step-content">
-						<h3>Ship It</h3>
-						<p class="step-description">Deploy as static files—no backend needed</p>
+						<h3>Test & Ship</h3>
+						<p class="step-description">
+							Open two browser tabs to test P2P. Deploy as static files—no backend required.
+						</p>
 					</div>
 				</div>
 			</div>
@@ -314,28 +429,97 @@ export const game = defineGame({
 </div>
 
 <style>
+	:root {
+		/* Light mode colors */
+		--bg-primary: #ffffff;
+		--bg-secondary: #fafafa;
+		--bg-tertiary: #f5f5f5;
+		--text-primary: #0b0a08;
+		--text-secondary: #525252;
+		--text-tertiary: #737373;
+		--border-color: #e5e5e5;
+		--border-hover: #171717;
+
+		/* Accent colors */
+		--accent-primary: #171717;
+		--accent-hover: #262626;
+		--code-bg: #282a36;
+		--code-text: #f8f8f2;
+
+		/* Monospace font */
+		--font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+		--font-system: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	}
+
 	:global(body) {
 		margin: 0;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+		font-family: var(--font-system);
 		-webkit-font-smoothing: antialiased;
-		background: #ffffff;
-		color: #171717;
+		-moz-osx-font-smoothing: grayscale;
+		background: var(--bg-primary);
+		color: var(--text-primary);
+		transition: background-color 0.3s ease, color 0.3s ease;
 	}
 
 	.page {
 		min-height: 100vh;
+		position: relative;
+	}
+
+	/* Dark mode */
+	.page.dark {
+		--bg-primary: #14151b;
+		--bg-secondary: #1a1b23;
+		--bg-tertiary: #282a36;
+		--text-primary: #f9fafb;
+		--text-secondary: #d1d5db;
+		--text-tertiary: #9ca3af;
+		--border-color: #3b3f4b;
+		--border-hover: #6b7280;
+		--accent-primary: #f9fafb;
+		--accent-hover: #e5e7eb;
+	}
+
+	/* Theme Toggle */
+	.theme-toggle {
+		position: fixed;
+		top: 1.5rem;
+		right: 1.5rem;
+		z-index: 100;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.625rem;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s;
+		color: var(--text-primary);
+	}
+
+	.theme-toggle:hover {
+		background: var(--bg-secondary);
+		border-color: var(--border-hover);
+		transform: scale(1.05);
 	}
 
 	.container {
-		max-width: 1200px;
+		max-width: 1280px;
 		margin: 0 auto;
-		padding: 0 1.5rem;
+		padding: 0 3rem;
+	}
+
+	@media (max-width: 768px) {
+		.container {
+			padding: 0 1rem;
+		}
 	}
 
 	/* Hero Section */
 	.hero {
-		padding: 6rem 0 4rem;
-		background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
+		padding: 8rem 0 6rem;
+		background: var(--bg-primary);
 	}
 
 	.hero-content {
@@ -344,27 +528,74 @@ export const game = defineGame({
 	}
 
 	.hero-title {
-		font-size: 4rem;
-		font-weight: 800;
-		line-height: 1.1;
+		font-size: 3.5rem;
+		font-weight: 700;
+		line-height: 1.15;
 		letter-spacing: -0.02em;
 		margin: 0 0 1.5rem 0;
-		color: #171717;
-	}
-
-	.gradient-text {
-		background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		color: var(--text-primary);
 	}
 
 	.hero-description {
 		font-size: 1.25rem;
 		line-height: 1.6;
-		color: #525252;
+		color: var(--text-secondary);
+		max-width: 720px;
+		margin: 0 auto 2.5rem;
+	}
+
+	/* Install Command */
+	.install-command {
 		max-width: 640px;
 		margin: 0 auto 2rem;
+	}
+
+	.install-cmd-btn {
+		width: 100%;
+		background: var(--code-bg);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 1rem 1.25rem;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-family: var(--font-mono);
+		font-size: 0.9375rem;
+	}
+
+	.install-cmd-btn:hover {
+		border-color: var(--border-hover);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.cmd-prompt {
+		color: rgba(248, 248, 242, 0.5);
+		font-weight: 500;
+	}
+
+	.install-cmd-btn code {
+		flex: 1;
+		color: var(--code-text);
+		background: transparent;
+		border: none;
+		padding: 0;
+		font-family: inherit;
+		font-size: inherit;
+		text-align: left;
+	}
+
+	.copy-btn {
+		color: rgba(248, 248, 242, 0.6);
+		display: flex;
+		align-items: center;
+		transition: color 0.2s;
+	}
+
+	.install-cmd-btn:hover .copy-btn {
+		color: rgba(248, 248, 242, 0.9);
 	}
 
 	.hero-actions {
@@ -372,37 +603,6 @@ export const game = defineGame({
 		gap: 1rem;
 		justify-content: center;
 		flex-wrap: wrap;
-	}
-
-	.hero-stats {
-		margin-top: 2.5rem;
-		display: flex;
-		justify-content: center;
-		gap: 2rem;
-		flex-wrap: wrap;
-	}
-
-	.stat {
-		background: white;
-		border: 1px solid #e5e5e5;
-		border-radius: 12px;
-		padding: 1rem 1.5rem;
-		min-width: 160px;
-		box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
-	}
-
-	.stat-label {
-		font-size: 0.85rem;
-		color: #6b7280;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		margin-bottom: 0.25rem;
-	}
-
-	.stat-value {
-		font-size: 1.5rem;
-		font-weight: 700;
-		color: #111827;
 	}
 
 	.btn {
@@ -419,24 +619,26 @@ export const game = defineGame({
 	}
 
 	.btn-primary {
-		background: #171717;
-		color: white;
+		background: var(--accent-primary);
+		color: var(--bg-primary);
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 	}
 
 	.btn-primary:hover {
-		background: #262626;
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		background: var(--accent-hover);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		transform: translateY(-1px);
 	}
 
 	.btn-secondary {
-		background: white;
-		color: #171717;
-		border-color: #e5e5e5;
+		background: var(--bg-secondary);
+		color: var(--text-primary);
+		border-color: var(--border-color);
 	}
 
 	.btn-secondary:hover {
-		border-color: #171717;
+		border-color: var(--border-hover);
+		background: var(--bg-tertiary);
 	}
 
 	.icon {
@@ -445,13 +647,13 @@ export const game = defineGame({
 
 	/* Code Preview */
 	.code-preview {
-		max-width: 700px;
+		max-width: 720px;
 		margin: 0 auto;
-		background: #fafafa;
-		border: 1px solid #e5e5e5;
-		border-radius: 12px;
+		background: var(--code-bg);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
 		overflow: hidden;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 	}
 
 	.code-header {
@@ -459,8 +661,8 @@ export const game = defineGame({
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.75rem 1rem;
-		background: #f5f5f5;
-		border-bottom: 1px solid #e5e5e5;
+		background: rgba(0, 0, 0, 0.2);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.code-dots {
@@ -472,32 +674,46 @@ export const game = defineGame({
 		width: 12px;
 		height: 12px;
 		border-radius: 50%;
-		background: #d4d4d4;
+		background: rgba(255, 255, 255, 0.25);
+	}
+
+	.code-dots span:nth-child(1) {
+		background: #ff5f56;
+	}
+
+	.code-dots span:nth-child(2) {
+		background: #ffbd2e;
+	}
+
+	.code-dots span:nth-child(3) {
+		background: #27c93f;
 	}
 
 	.code-title {
 		font-size: 0.875rem;
-		color: #737373;
+		color: rgba(248, 248, 242, 0.6);
 		font-weight: 500;
+		font-family: var(--font-mono);
 	}
 
 	.code-content {
 		margin: 0;
 		padding: 1.5rem;
 		overflow-x: auto;
+		background: var(--code-bg);
 	}
 
 	.code-content code {
-		font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+		font-family: var(--font-mono);
 		font-size: 0.875rem;
 		line-height: 1.7;
-		color: #171717;
+		color: var(--code-text);
 	}
 
 	/* Features Section */
 	.features {
 		padding: 6rem 0;
-		background: white;
+		background: var(--bg-primary);
 	}
 
 	.section-title {
@@ -505,13 +721,13 @@ export const game = defineGame({
 		font-weight: 700;
 		text-align: center;
 		margin: 0 0 1rem 0;
-		color: #171717;
+		color: var(--text-primary);
 	}
 
 	.section-description {
 		font-size: 1.125rem;
 		text-align: center;
-		color: #525252;
+		color: var(--text-secondary);
 		max-width: 640px;
 		margin: 0 auto 3rem;
 	}
@@ -532,32 +748,132 @@ export const game = defineGame({
 		width: 48px;
 		height: 48px;
 		margin: 0 auto 1rem;
-		background: #fafafa;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border-color);
 		border-radius: 12px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: #171717;
+		color: var(--text-primary);
 	}
 
 	.feature-card h3 {
 		font-size: 1.125rem;
 		font-weight: 600;
 		margin: 0 0 0.5rem 0;
-		color: #171717;
+		color: var(--text-primary);
 	}
 
 	.feature-card p {
 		font-size: 0.9375rem;
 		line-height: 1.6;
-		color: #525252;
+		color: var(--text-secondary);
 		margin: 0;
+	}
+
+	/* Performance Section */
+	.performance {
+		padding: 5rem 0;
+		background: var(--bg-primary);
+	}
+
+	.performance-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 2rem;
+		margin-top: 3rem;
+	}
+
+	.performance-card {
+		text-align: center;
+		padding: 2rem 1.5rem;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		transition: all 0.2s;
+	}
+
+	.performance-card:hover {
+		border-color: var(--border-hover);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	}
+
+	.performance-value {
+		font-size: 2.5rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		font-family: var(--font-mono);
+		margin-bottom: 0.5rem;
+	}
+
+	.performance-label {
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-secondary);
+		margin-bottom: 0.75rem;
+	}
+
+	.performance-card p {
+		font-size: 0.9375rem;
+		color: var(--text-tertiary);
+		margin: 0;
+		line-height: 1.5;
+	}
+
+	/* Minimal API Section */
+	.minimal-api {
+		padding: 4rem 0;
+		background: var(--bg-secondary);
+	}
+
+	.api-callout {
+		max-width: 640px;
+		margin: 0 auto;
+		background: var(--bg-primary);
+		border: 2px solid var(--border-hover);
+		border-radius: 12px;
+		padding: 2.5rem;
+		text-align: center;
+	}
+
+	.api-callout h3 {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin: 0 0 1.5rem 0;
+		color: var(--text-primary);
+	}
+
+	.api-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.api-list code {
+		font-family: var(--font-mono);
+		font-size: 0.9375rem;
+		background: var(--code-bg);
+		color: var(--code-text);
+		padding: 0.75rem 1rem;
+		border-radius: 6px;
+		display: block;
+	}
+
+	.api-callout p {
+		font-size: 1.125rem;
+		color: var(--text-secondary);
+		margin: 0;
+		font-weight: 500;
 	}
 
 	/* Approach Section */
 	.approach {
 		padding: 5rem 0;
-		background: #f9fafb;
+		background: var(--bg-primary);
 	}
 
 	.approach-grid {
@@ -568,23 +884,30 @@ export const game = defineGame({
 	}
 
 	.approach-card {
-		background: white;
-		border-radius: 12px;
-		border: 1px solid #e5e5e5;
+		background: var(--bg-primary);
+		border-radius: 8px;
+		border: 1px solid var(--border-color);
 		padding: 1.5rem;
-		min-height: 190px;
-		box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+		min-height: 160px;
+		transition: all 0.2s;
+	}
+
+	.approach-card:hover {
+		border-color: var(--border-hover);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+		transform: translateY(-2px);
 	}
 
 	.approach-card h3 {
 		margin: 0 0 0.75rem 0;
 		font-size: 1.125rem;
-		color: #0f172a;
+		color: var(--text-primary);
+		font-weight: 600;
 	}
 
 	.approach-card p {
 		margin: 0;
-		color: #475569;
+		color: var(--text-secondary);
 		line-height: 1.6;
 		font-size: 0.95rem;
 	}
@@ -592,53 +915,83 @@ export const game = defineGame({
 	/* Comparison Section */
 	.comparison {
 		padding: 5rem 0;
-		background: white;
+		background: var(--bg-primary);
 	}
 
 	.comparison-table-wrapper {
 		margin-top: 3rem;
 		overflow-x: auto;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
 	}
 
 	.comparison-table {
 		width: 100%;
 		border-collapse: collapse;
 		min-width: 720px;
-		font-size: 0.95rem;
+		font-size: 0.9rem;
 	}
 
 	.comparison-table th,
 	.comparison-table td {
-		border: 1px solid #e5e5e5;
-		padding: 0.85rem 1rem;
-		text-align: left;
-		vertical-align: top;
+		border: 1px solid var(--border-color);
+		padding: 1rem;
+		text-align: center;
+		vertical-align: middle;
 		line-height: 1.5;
 	}
 
 	.comparison-table th {
-		background: #0f172a;
-		color: white;
+		background: var(--code-bg);
+		color: var(--code-text);
 		font-weight: 600;
-		font-size: 0.9rem;
+		font-size: 0.875rem;
+		font-family: var(--font-mono);
 	}
 
 	.comparison-table td:first-child,
 	.comparison-table th:first-child {
-		background: #f8fafc;
+		background: var(--bg-tertiary);
 		font-weight: 600;
-		color: #0f172a;
-		width: 180px;
+		color: var(--text-primary);
+		text-align: left;
+		width: 280px;
 	}
 
-	.comparison-table tbody tr:nth-child(odd) {
-		background: #fcfcfc;
+	.comparison-table tbody tr {
+		background: var(--bg-primary);
+	}
+
+	.comparison-table tbody tr:hover {
+		background: var(--bg-secondary);
+	}
+
+	/* Tick/Cross/Partial styling */
+	.comparison-table .tick {
+		color: #22c55e;
+		font-size: 1.5rem;
+		font-weight: 700;
+		display: inline-block;
+	}
+
+	.comparison-table .cross {
+		color: #ef4444;
+		font-size: 1.5rem;
+		font-weight: 700;
+		display: inline-block;
+	}
+
+	.comparison-table .partial {
+		color: #f59e0b;
+		font-size: 1.5rem;
+		font-weight: 700;
+		display: inline-block;
 	}
 
 	/* Demos Section */
 	.demos {
 		padding: 6rem 0;
-		background: #fafafa;
+		background: var(--bg-secondary);
 	}
 
 	.demos-grid {
@@ -649,9 +1002,9 @@ export const game = defineGame({
 	}
 
 	.demo-card {
-		background: white;
-		border: 1px solid #e5e5e5;
-		border-radius: 12px;
+		background: var(--bg-primary);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
 		padding: 1.5rem;
 		text-decoration: none;
 		color: inherit;
@@ -661,8 +1014,9 @@ export const game = defineGame({
 	}
 
 	.demo-card:hover {
-		border-color: #171717;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+		border-color: var(--border-hover);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+		transform: translateY(-2px);
 	}
 
 	.demo-header {
@@ -676,36 +1030,37 @@ export const game = defineGame({
 		font-size: 1.125rem;
 		font-weight: 600;
 		margin: 0;
-		color: #171717;
+		color: var(--text-primary);
 	}
 
 	.demo-badge {
 		font-size: 0.75rem;
 		padding: 0.25rem 0.625rem;
-		border-radius: 9999px;
+		border-radius: 4px;
 		font-weight: 500;
 		text-transform: capitalize;
+		font-family: var(--font-mono);
 	}
 
 	.demo-badge.beginner {
-		background: #dcfce7;
-		color: #166534;
+		background: rgba(34, 197, 94, 0.15);
+		color: rgb(34, 197, 94);
 	}
 
 	.demo-badge.intermediate {
-		background: #fef3c7;
-		color: #92400e;
+		background: rgba(251, 191, 36, 0.15);
+		color: rgb(251, 191, 36);
 	}
 
 	.demo-badge.advanced {
-		background: #fee2e2;
-		color: #991b1b;
+		background: rgba(239, 68, 68, 0.15);
+		color: rgb(239, 68, 68);
 	}
 
 	.demo-description {
 		font-size: 0.9375rem;
 		line-height: 1.6;
-		color: #525252;
+		color: var(--text-secondary);
 		margin: 0 0 1rem 0;
 		flex: 1;
 	}
@@ -715,7 +1070,7 @@ export const game = defineGame({
 		gap: 1rem;
 		margin-bottom: 1rem;
 		padding-top: 1rem;
-		border-top: 1px solid #f5f5f5;
+		border-top: 1px solid var(--border-color);
 	}
 
 	.demo-meta-item {
@@ -723,7 +1078,8 @@ export const game = defineGame({
 		align-items: center;
 		gap: 0.375rem;
 		font-size: 0.875rem;
-		color: #737373;
+		color: var(--text-tertiary);
+		font-family: var(--font-mono);
 	}
 
 	.demo-action {
@@ -731,14 +1087,14 @@ export const game = defineGame({
 		align-items: center;
 		gap: 0.5rem;
 		font-weight: 500;
-		color: #171717;
+		color: var(--text-primary);
 		font-size: 0.9375rem;
 	}
 
 	/* Quick Start Section */
 	.quick-start {
 		padding: 6rem 0;
-		background: white;
+		background: var(--bg-primary);
 	}
 
 	.install-steps {
@@ -757,14 +1113,15 @@ export const game = defineGame({
 	.step-number {
 		width: 40px;
 		height: 40px;
-		background: #171717;
-		color: white;
+		background: var(--accent-primary);
+		color: var(--bg-primary);
 		border-radius: 50%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		font-weight: 600;
 		flex-shrink: 0;
+		font-family: var(--font-mono);
 	}
 
 	.step-content {
@@ -775,42 +1132,42 @@ export const game = defineGame({
 		font-size: 1.125rem;
 		font-weight: 600;
 		margin: 0 0 0.5rem 0;
-		color: #171717;
+		color: var(--text-primary);
 	}
 
 	.step-description {
 		font-size: 0.9375rem;
-		color: #525252;
+		color: var(--text-secondary);
 		margin: 0;
 	}
 
 	.code-block {
-		background: #fafafa;
-		border: 1px solid #e5e5e5;
+		background: var(--code-bg);
+		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		padding: 1rem;
 		margin-top: 0.5rem;
 	}
 
 	.code-block code {
-		font-family: 'SF Mono', Monaco, monospace;
+		font-family: var(--font-mono);
 		font-size: 0.875rem;
-		color: #171717;
+		color: var(--code-text);
 		word-break: break-all;
 	}
 
 	/* Footer */
 	.footer {
 		padding: 3rem 0;
-		background: #fafafa;
-		border-top: 1px solid #e5e5e5;
+		background: var(--bg-secondary);
+		border-top: 1px solid var(--border-color);
 		text-align: center;
 	}
 
 	.footer p {
 		margin: 0.5rem 0;
 		font-size: 0.875rem;
-		color: #737373;
+		color: var(--text-tertiary);
 	}
 
 	.footer-links {
@@ -821,18 +1178,23 @@ export const game = defineGame({
 	}
 
 	.footer a {
-		color: #171717;
+		color: var(--text-secondary);
 		text-decoration: none;
+		transition: color 0.2s;
 	}
 
 	.footer a:hover {
-		text-decoration: underline;
+		color: var(--text-primary);
 	}
 
 	/* Responsive */
 	@media (max-width: 768px) {
+		.hero {
+			padding: 4rem 0 3rem;
+		}
+
 		.hero-title {
-			font-size: 2.5rem;
+			font-size: 2.25rem;
 		}
 
 		.hero-description {
@@ -845,6 +1207,15 @@ export const game = defineGame({
 
 		.demos-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.install-cmd-btn {
+			font-size: 0.8125rem;
+		}
+
+		.theme-toggle {
+			top: 1rem;
+			right: 1rem;
 		}
 	}
 </style>
