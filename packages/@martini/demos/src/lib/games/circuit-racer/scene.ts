@@ -130,6 +130,14 @@ export function createCircuitRacerScene(
 				})
 				.setDepth(100);
 
+			// Color explanation
+			this.add
+				.text(10, 550, 'Your car: Green | Opponent: Red', {
+					fontSize: '12px',
+					color: '#aaaaaa',
+				})
+				.setDepth(100);
+
 			const controls = role === 'host' ? 'W/A/D to Drive' : 'Arrow Keys to Drive';
 			this.add
 				.text(400, 570, controls, {

@@ -23,19 +23,21 @@
 	let error = $state<string | null>(null);
 
 	// Global keyboard state (shared across both Phaser instances)
-	// Host uses WASD, Client uses Arrow Keys
+	// Host uses WASD + Space, Client uses Arrow Keys + Enter
 	const keyState = {
 		host: {
 			left: false,  // A
 			right: false, // D
 			up: false,    // W
 			down: false,  // S
+			shoot: false, // Space
 		},
 		client: {
 			left: false,  // ArrowLeft
 			right: false, // ArrowRight
 			up: false,    // ArrowUp
 			down: false,  // ArrowDown
+			shoot: false, // Enter
 		},
 	};
 
@@ -61,6 +63,10 @@
 				e.preventDefault();
 				keyState.host.down = true;
 			}
+			if (e.key === ' ') { // Space
+				e.preventDefault();
+				keyState.host.shoot = true;
+			}
 
 			// Client controls (Arrow Keys) - Prevent default to stop page scrolling
 			if (e.key === 'ArrowLeft') {
@@ -78,6 +84,10 @@
 			if (e.key === 'ArrowDown') {
 				e.preventDefault();
 				keyState.client.down = true;
+			}
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				keyState.client.shoot = true;
 			}
 		};
 
@@ -99,6 +109,10 @@
 				e.preventDefault();
 				keyState.host.down = false;
 			}
+			if (e.key === ' ') { // Space
+				e.preventDefault();
+				keyState.host.shoot = false;
+			}
 
 			// Client controls (Arrow Keys)
 			if (e.key === 'ArrowLeft') {
@@ -116,6 +130,10 @@
 			if (e.key === 'ArrowDown') {
 				e.preventDefault();
 				keyState.client.down = false;
+			}
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				keyState.client.shoot = false;
 			}
 		};
 
