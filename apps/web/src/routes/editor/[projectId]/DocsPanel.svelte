@@ -18,78 +18,112 @@
 	const docs = {
 		multiplayer: [
 			{
-				title: 'Fire Boy & Water Girl (Co-op)',
-				description: 'Auto-sync players in a platformer',
-				code: `// In create()
-this.myPlayer = scene.physics.add.sprite(100, 100, 'player');
+				title: 'Multiplayer Setup (v2 SDK)',
+				description: 'Define game logic with host-authoritative sync',
+				code: `import { defineGame, GameRuntime } from '@martini/core';
+import { PhaserAdapter } from '@martini/phaser';
+import { TrysteroTransport } from '@martini/transport-trystero';
 
-gameAPI.multiplayer.trackPlayer(this.myPlayer, {
-  role: gameAPI.multiplayer.isHost() ? 'fireboy' : 'watergirl'
+// 1. Define game logic
+const game = defineGame({
+  setup: ({ playerIds }) => ({
+    players: Object.fromEntries(
+      playerIds.map(id => [id, { x: 100, y: 100, score: 0 }])
+    )
+  }),
+
+  actions: {
+    move: {
+      apply(state, playerId, input) {
+        state.players[playerId].x = input.x;
+        state.players[playerId].y = input.y;
+      }
+    }
+  }
 });
 
-if (gameAPI.multiplayer.isHost()) {
-  this.createLevel(scene); // Only host spawns
+// 2. Create transport + runtime
+const transport = new TrysteroTransport({ roomId: 'room-123', isHost: true });
+const runtime = new GameRuntime(game, transport, { isHost: true });
+
+// 3. Use in Phaser scene
+const adapter = new PhaserAdapter(runtime, scene);`
+			},
+			{
+				title: 'Host/Client Pattern',
+				description: 'Host runs physics, clients render',
+				code: `// In Phaser scene create()
+const adapter = new PhaserAdapter(runtime, this);
+
+if (adapter.isHost()) {
+  // Host: Full physics
+  this.player = this.physics.add.sprite(100, 100, 'player');
+  adapter.trackSprite(this.player, \`player-\${adapter.myId}\`);
+
+  // Host spawns level
+  this.createPlatforms();
+} else {
+  // Client: Visual only
+  this.player = this.add.sprite(100, 100, 'player');
+  adapter.registerRemoteSprite(\`player-\${adapter.myId}\`, this.player);
 }
 
-// In update() - just standard Phaser code!
-const cursors = scene.input.keyboard.createCursorKeys();
-if (cursors.left.isDown) this.myPlayer.setVelocityX(-160);`
-			},
-			{
-				title: 'Collect Coins (Events)',
-				description: 'Broadcast game events to all players',
-				code: `// In create()
-gameAPI.multiplayer.on('coin-collected', (peerId, data) => {
-  const coin = this.coins.find(c => c.id === data.coinId);
-  if (coin) coin.destroy();
-  this.updateScore(peerId, data.score);
-});
-
-// When player collects coin
-collectCoin(coinId) {
-  this.score += 10;
-  gameAPI.multiplayer.broadcast('coin-collected', {
-    coinId,
-    score: this.score
-  });
-}`
-			},
-			{
-				title: 'Pokemon Battle (Turn-Based)',
-				description: 'Low update rate for turn-based games',
-				code: `// In create()
-this.myTrainer = scene.add.sprite(100, 100, 'trainer');
-
-gameAPI.multiplayer.trackPlayer(this.myTrainer, {
-  sync: ['x', 'y', 'frame'], // No velocity
-  updateRate: 10 // Slow update for turn-based
-});
-
-gameAPI.multiplayer.on('attack', (peerId, data) => {
-  this.playAnimation(data.move, data.target);
-});
-
-// Execute move
-executeMove() {
-  gameAPI.multiplayer.broadcast('attack', {
-    move: 'fireball',
-    target: this.selectedEnemy
-  });
-}`
-			},
-			{
-				title: 'Spawn Same Level (Deterministic)',
-				description: 'Use gameAPI.random() for synced randomness',
-				code: `// In create()
-if (gameAPI.multiplayer.isHost()) {
-  gameAPI.random.setSeed(12345); // Same seed on all clients
-
-  for (let i = 0; i < 10; i++) {
-    const x = gameAPI.random() * 800; // Same values everywhere
-    const y = gameAPI.random() * 600;
-    scene.add.platform(x, y);
+// In update()
+if (adapter.isHost()) {
+  // Host runs physics
+  if (cursors.left.isDown) {
+    this.player.body.setVelocityX(-200);
   }
+  // Position auto-syncs!
 }`
+			},
+			{
+				title: 'Custom Events',
+				description: 'Broadcast game events to all players',
+				code: `// Broadcast event
+adapter.broadcast('coin-collected', {
+  coinId: 'c1',
+  score: 100
+});
+
+// Listen for events
+adapter.on('coin-collected', (senderId, eventName, payload) => {
+  const coin = this.coins.find(c => c.id === payload.coinId);
+  if (coin) coin.destroy();
+
+  this.sound.play('coin-pickup');
+  this.score += payload.score;
+});`
+			},
+			{
+				title: 'State-Based Collectibles',
+				description: 'Use actions to modify shared state',
+				code: `// Define in defineGame()
+actions: {
+  collectCoin: {
+    apply(state, playerId, input) {
+      const coin = state.coins.find(c => c.id === input.coinId);
+      if (coin && !coin.collected) {
+        coin.collected = true;
+        state.players[playerId].score += 10;
+      }
+    }
+  }
+}
+
+// In Phaser scene
+collectCoin(coinId) {
+  runtime.submitAction('collectCoin', { coinId });
+}
+
+// Listen for state changes
+adapter.onChange((state) => {
+  state.coins.forEach(coinData => {
+    if (coinData.collected && this.coinSprites[coinData.id]) {
+      this.coinSprites[coinData.id].destroy();
+    }
+  });
+});`
 			}
 		],
 		scenes: [
