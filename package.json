@@ -2,7 +2,7 @@
 	"name": "martini",
 	"private": true,
 	"version": "0.0.1",
-	"packageManager": "pnpm@10.19.0",
+	"packageManager": "pnpm@10.22.0",
 	"engines": {
 		"node": ">=18"
 	},
