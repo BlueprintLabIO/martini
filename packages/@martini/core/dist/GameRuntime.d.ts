@@ -37,8 +37,11 @@ export declare class GameRuntime {
     mutateState(mutator: (state: any) => void): void;
     /**
      * Execute an action (validates input, applies to state, broadcasts)
+     * @param actionName - Name of the action to execute
+     * @param input - Action payload/input data
+     * @param targetId - Optional target player ID (defaults to caller's ID)
      */
-    submitAction(actionName: string, input: any): void;
+    submitAction(actionName: string, input: any, targetId?: string): void;
     /**
      * Broadcast a custom event
      */

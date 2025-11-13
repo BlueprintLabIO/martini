@@ -23,3 +23,10 @@ ok great, can you impport it in the sveltekit web app and implement it?  complet
 chat images are stored in a public bucket, probs need to change
 this later for security
 
+
+ok given that the demo architecture in packages/@martini/demos is quite clean, how
+can we use it to inform our general web app. also it uses typescript, can we use tooling
+like vite or typescript compilers or biome/eslint/prettier to help the human and ai
+to achieve things like HMR and compile time safety when they are creating their phaser
+games?
+

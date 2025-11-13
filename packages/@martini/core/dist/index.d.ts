@@ -6,7 +6,7 @@
  * @packageDocumentation
  */
 export { defineGame } from './defineGame';
-export type { GameDefinition, StateSchema, ActionDefinition } from './defineGame';
+export type { GameDefinition, StateSchema, ActionDefinition, ActionContext } from './defineGame';
 export { GameRuntime } from './GameRuntime';
 export type { Transport, WireMessage, RuntimeConfig } from './transport';
 export { generateDiff, applyPatch } from './sync';

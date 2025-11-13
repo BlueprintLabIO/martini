@@ -1,0 +1,27 @@
+{
+  "name": "@martini/transport-local",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Local in-memory transport for same-page multiplayer demos and testing",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@martini/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.9.3"
+  }
+}
