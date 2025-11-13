@@ -33,10 +33,12 @@ class LocalTransportRegistry {
         const room = this.rooms.get(roomId);
         if (!room)
             return;
+        // Check if the leaving peer is the host before removing
+        const isLeavingPeerHost = transport.isHost();
         room.delete(transport);
         // Notify remaining peers about the disconnect
         for (const peer of room) {
-            peer.notifyPeerLeave(transport.playerId);
+            peer.notifyPeerLeave(transport.playerId, isLeavingPeerHost);
         }
         if (room.size === 0) {
             this.rooms.delete(roomId);
@@ -55,17 +57,92 @@ class LocalTransportRegistry {
         }
     }
     static unicast(roomId, message, senderId, targetId) {
-        const peers = this.getPeers(roomId, senderId);
-        const target = peers.find((p) => p.playerId === targetId);
+        const room = this.rooms.get(roomId);
+        if (!room)
+            return;
+        const target = Array.from(room).find((p) => p.playerId === targetId);
         if (target) {
             target.deliver(message, senderId);
         }
+    }
+}
+/**
+ * Metrics implementation for LocalTransport
+ * Tracks connection state, peer count, and message statistics
+ */
+class LocalTransportMetrics {
+    transport;
+    connectionState = 'disconnected';
+    connectionChangeHandlers = [];
+    messagesSent = 0;
+    messagesReceived = 0;
+    messagesErrored = 0;
+    constructor(transport) {
+        this.transport = transport;
+        // LocalTransport is always "connected" since it's in-memory
+        this.connectionState = 'connected';
+    }
+    getConnectionState() {
+        return this.connectionState;
+    }
+    onConnectionChange(callback) {
+        this.connectionChangeHandlers.push(callback);
+        return () => {
+            const idx = this.connectionChangeHandlers.indexOf(callback);
+            if (idx >= 0)
+                this.connectionChangeHandlers.splice(idx, 1);
+        };
+    }
+    getPeerCount() {
+        return this.transport.getPeerIds().length;
+    }
+    getMessageStats() {
+        return {
+            sent: this.messagesSent,
+            received: this.messagesReceived,
+            errors: this.messagesErrored
+        };
+    }
+    resetStats() {
+        this.messagesSent = 0;
+        this.messagesReceived = 0;
+        this.messagesErrored = 0;
+    }
+    /** @internal - Called by LocalTransport when message is sent */
+    trackMessageSent() {
+        this.messagesSent++;
+    }
+    /** @internal - Called by LocalTransport when message is received */
+    trackMessageReceived() {
+        this.messagesReceived++;
+    }
+    /** @internal - Called by LocalTransport when message fails */
+    trackMessageError() {
+        this.messagesErrored++;
+    }
+    /** @internal - Called by LocalTransport when disconnecting */
+    setDisconnected() {
+        if (this.connectionState !== 'disconnected') {
+            this.connectionState = 'disconnected';
+            this.notifyConnectionChange();
+        }
+    }
+    notifyConnectionChange() {
+        this.connectionChangeHandlers.forEach(h => {
+            try {
+                h(this.connectionState);
+            }
+            catch (error) {
+                console.error('Error in connection change handler:', error);
+            }
+        });
     }
 }
 export class LocalTransport {
     playerId;
     roomId;
     _isHost;
+    metrics;
     messageHandlers = [];
     peerJoinHandlers = [];
     peerLeaveHandlers = [];
@@ -74,17 +151,26 @@ export class LocalTransport {
         this.roomId = config.roomId;
         this.playerId = config.playerId || `player-${Math.random().toString(36).substring(2, 9)}`;
         this._isHost = config.isHost;
+        // Initialize metrics
+        this.metrics = new LocalTransportMetrics(this);
         // Register with the global registry
         LocalTransportRegistry.register(this.roomId, this);
     }
     send(message, targetId) {
-        if (targetId) {
-            // Unicast
-            LocalTransportRegistry.unicast(this.roomId, message, this.playerId, targetId);
+        try {
+            if (targetId) {
+                // Unicast
+                LocalTransportRegistry.unicast(this.roomId, message, this.playerId, targetId);
+            }
+            else {
+                // Broadcast
+                LocalTransportRegistry.broadcast(this.roomId, message, this.playerId);
+            }
+            this.metrics.trackMessageSent();
         }
-        else {
-            // Broadcast
-            LocalTransportRegistry.broadcast(this.roomId, message, this.playerId);
+        catch (error) {
+            this.metrics.trackMessageError();
+            throw error;
         }
     }
     onMessage(handler) {
@@ -129,11 +215,13 @@ export class LocalTransport {
         return this._isHost;
     }
     disconnect() {
+        this.metrics.setDisconnected();
         LocalTransportRegistry.unregister(this.roomId, this);
     }
     // Internal methods called by the registry
     /** @internal */
     deliver(message, senderId) {
+        this.metrics.trackMessageReceived();
         this.messageHandlers.forEach((h) => h(message, senderId));
     }
     /** @internal */
@@ -141,12 +229,10 @@ export class LocalTransport {
         this.peerJoinHandlers.forEach((h) => h(peerId));
     }
     /** @internal */
-    notifyPeerLeave(peerId) {
+    notifyPeerLeave(peerId, wasHost) {
         this.peerLeaveHandlers.forEach((h) => h(peerId));
         // If the leaving peer was the host, notify host disconnect handlers
-        const peers = LocalTransportRegistry.getPeers(this.roomId, this.playerId);
-        const leavingPeer = peers.find((p) => p.playerId === peerId);
-        if (leavingPeer && leavingPeer.isHost()) {
+        if (wasHost) {
             this.hostDisconnectHandlers.forEach((h) => h());
         }
     }

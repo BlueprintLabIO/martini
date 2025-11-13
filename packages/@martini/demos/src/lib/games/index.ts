@@ -10,6 +10,7 @@ import { arenaBlasterGame } from './arena-blaster/game';
 import { tileMatcherGame } from './tile-matcher/game';
 import { circuitRacerGame } from './circuit-racer/game';
 import { paddleBattleGame } from './paddle-battle/game';
+import { blobBattleGame } from './blob-battle/game';
 
 export interface DemoGame {
   id: string;
@@ -24,6 +25,16 @@ export interface DemoGame {
 }
 
 export const demoGames: DemoGame[] = [
+  {
+    id: 'blob-battle',
+    name: 'Blob Battle',
+    description: 'Agar.io-style multiplayer game. Eat food to grow, eat smaller players, avoid bigger ones! Showcases WebSocket transport and server-authoritative gameplay.',
+    players: '2-8',
+    type: 'Competitive Arena',
+    difficulty: 'beginner',
+    gameLogic: blobBattleGame,
+    controls: ['Mouse/Touch - Move', 'Arrow Keys/WASD - Move'],
+  },
   {
     id: 'fire-and-ice',
     name: 'Fire & Ice',
@@ -77,6 +88,7 @@ export const demoGames: DemoGame[] = [
 ];
 
 export {
+  blobBattleGame,
   fireAndIceGame,
   arenaBlasterGame,
   tileMatcherGame,

@@ -1,0 +1,38 @@
+{
+  "name": "@martini/devtools",
+  "version": "2.0.0-alpha.1",
+  "description": "Development tools for Martini - state inspector, action history, network monitor",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": [
+    "devtools",
+    "inspector",
+    "debugging",
+    "multiplayer",
+    "state",
+    "martini"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@martini/transport-local": "workspace:*",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@martini/core": "workspace:*"
+  }
+}

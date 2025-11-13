@@ -8,7 +8,7 @@
  *
  * All instances in the same room share messages instantly via an in-memory event bus.
  */
-import type { Transport, WireMessage } from '@martini/core';
+import type { Transport, WireMessage, TransportMetrics } from '@martini/core';
 type MessageHandler = (message: WireMessage, senderId: string) => void;
 type PeerHandler = (peerId: string) => void;
 export interface LocalTransportConfig {
@@ -20,6 +20,7 @@ export declare class LocalTransport implements Transport {
     readonly playerId: string;
     private readonly roomId;
     private readonly _isHost;
+    readonly metrics: TransportMetrics;
     private messageHandlers;
     private peerJoinHandlers;
     private peerLeaveHandlers;
@@ -39,7 +40,7 @@ export declare class LocalTransport implements Transport {
     /** @internal */
     notifyPeerJoin(peerId: string): void;
     /** @internal */
-    notifyPeerLeave(peerId: string): void;
+    notifyPeerLeave(peerId: string, wasHost: boolean): void;
 }
 export {};
 //# sourceMappingURL=LocalTransport.d.ts.map

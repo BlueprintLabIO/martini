@@ -30,8 +30,8 @@ export interface TrysteroTransportOptions {
   /** Custom STUN/TURN servers for NAT traversal */
   rtcConfig?: RTCConfiguration;
 
-  /** Strategy: 'mqtt' | 'supabase' */
-  strategy?: 'mqtt' | 'supabase';
+  /** Custom MQTT relay URLs (e.g., ['wss://broker.hivemq.com:8884/mqtt']) */
+  relayUrls?: string[];
 
   /**
    * Explicitly set this peer as host (industry standard: separate host/join URLs)
@@ -83,6 +83,7 @@ export class TrysteroTransport implements Transport {
       rtcConfig = {
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
       },
+      relayUrls,
       isHost
     } = options;
 
@@ -99,8 +100,15 @@ export class TrysteroTransport implements Transport {
     }
     // else: undefined = automatic election
 
-    // Join room via Trystero (currently only MQTT strategy supported)
-    this.room = joinRoom({ appId, rtcConfig }, roomId);
+    // Join room via Trystero (using MQTT for signaling)
+    const trysteroConfig: any = {
+      appId,
+      rtcConfig,
+      // Default to HiveMQ broker (more reliable than mosquitto/emqx)
+      // Users can override with relayUrls option
+      relayUrls: relayUrls || ['wss://broker.hivemq.com:8884/mqtt']
+    };
+    this.room = joinRoom(trysteroConfig, roomId);
 
     // Setup wire message channel
     const [send, receive] = this.room.makeAction<WireMessage>('wire');

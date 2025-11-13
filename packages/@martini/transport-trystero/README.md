@@ -90,20 +90,21 @@ CLIENT clicks link
 - If host disconnects, game ends
 - Simple, predictable, works like Jackbox
 
-### WebRTC + MQTT Signaling
+### WebRTC + Nostr Signaling
 
 ```
-┌─────────┐         MQTT Broker        ┌─────────┐
-│  HOST   │◄──────(signal only)───────►│ CLIENT  │
-└─────────┘                             └─────────┘
-     │                                       │
-     └───────── WebRTC Direct P2P ──────────┘
-            (game data flows here)
+┌─────────┐         Nostr Relays        ┌─────────┐
+│  HOST   │◄──────(signal only)────────►│ CLIENT  │
+└─────────┘                              └─────────┘
+     │                                        │
+     └────────── WebRTC Direct P2P ──────────┘
+             (game data flows here)
 ```
 
-- MQTT broker only for WebRTC signaling (establishing connection)
+- Nostr relays only for WebRTC signaling (establishing connection)
 - Game data flows directly peer-to-peer (no server)
 - Low latency, zero server costs
+- Decentralized protocol with 18+ relay redundancy
 
 ---
 
@@ -127,9 +128,6 @@ interface TrysteroTransportOptions {
 
   /** Custom STUN/TURN servers for NAT traversal */
   rtcConfig?: RTCConfiguration;
-
-  /** Strategy: 'mqtt' | 'supabase' (default: 'mqtt') */
-  strategy?: 'mqtt' | 'supabase';
 
   /**
    * Explicitly set this peer as host (industry standard: separate host/join URLs)

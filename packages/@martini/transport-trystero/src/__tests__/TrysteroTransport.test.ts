@@ -562,4 +562,86 @@ describe('TrysteroTransport', () => {
       expect(transport.getConnectionState()).toBe('disconnected');
     });
   });
+
+  describe('waitForReady', () => {
+    it('has waitForReady method available', () => {
+      transport = new TrysteroTransport({ roomId: 'test-room' });
+
+      expect(typeof transport.waitForReady).toBe('function');
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('calls error handlers when message handler throws', () => {
+      transport = new TrysteroTransport({ roomId: 'test-room' });
+
+      const errors: Error[] = [];
+      transport.onError((err) => errors.push(err));
+
+      // Register a message handler that throws
+      transport.onMessage(() => {
+        throw new Error('Test error');
+      });
+
+      const room = transport.getRoom() as any;
+
+      // This should trigger the error handler
+      room.__simulateMessage({
+        type: 'action',
+        payload: {}
+      }, 'peer-2');
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toBe('Test error');
+    });
+
+    it('onError returns unsubscribe function', () => {
+      transport = new TrysteroTransport({ roomId: 'test-room' });
+
+      const errors: Error[] = [];
+      const unsubscribe = transport.onError((err) => errors.push(err));
+
+      // Register a message handler that throws
+      transport.onMessage(() => {
+        throw new Error('Test error');
+      });
+
+      unsubscribe();
+
+      const room = transport.getRoom() as any;
+
+      // This should NOT trigger the error handler (we unsubscribed)
+      room.__simulateMessage({
+        type: 'action',
+        payload: {}
+      }, 'peer-2');
+
+      expect(errors).toHaveLength(0);
+    });
+
+    it('supports multiple error handlers', () => {
+      transport = new TrysteroTransport({ roomId: 'test-room' });
+
+      const errors1: Error[] = [];
+      const errors2: Error[] = [];
+
+      transport.onError((err) => errors1.push(err));
+      transport.onError((err) => errors2.push(err));
+
+      // Register a message handler that throws
+      transport.onMessage(() => {
+        throw new Error('Test error');
+      });
+
+      const room = transport.getRoom() as any;
+
+      room.__simulateMessage({
+        type: 'action',
+        payload: {}
+      }, 'peer-2');
+
+      expect(errors1).toHaveLength(1);
+      expect(errors2).toHaveLength(1);
+    });
+  });
 });

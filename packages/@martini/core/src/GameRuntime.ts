@@ -8,31 +8,45 @@
 import type { GameDefinition } from './defineGame';
 import type { Transport, WireMessage, RuntimeConfig } from './transport';
 import { generateDiff, applyPatch, deepClone, type Patch } from './sync';
+import { SeededRandom } from './SeededRandom';
 
-type StateChangeCallback = (state: any) => void;
+type StateChangeCallback<TState> = (state: TState) => void;
 type EventCallback = (senderId: string, eventName: string, payload: any) => void;
 
-export class GameRuntime {
-  private state: any = {};
-  private previousState: any = {};
-  private isHost: boolean;
+/**
+ * Extended runtime configuration with strict mode
+ */
+export interface GameRuntimeConfig extends RuntimeConfig {
+  /** Throw errors instead of warnings (recommended for development) */
+  strict?: boolean;
+}
+
+export class GameRuntime<TState = any> {
+  private state: TState = {} as TState;
+  private previousState: TState = {} as TState;
+  private _isHost: boolean;
   private syncIntervalId: any = null;
   private unsubscribes: Array<() => void> = [];
+  private strict: boolean;
+  private actionCounter: number = 100000; // For seeding action random (start high to avoid LCG collisions)
 
-  private stateChangeCallbacks: StateChangeCallback[] = [];
+  private stateChangeCallbacks: StateChangeCallback<TState>[] = [];
   private eventCallbacks: Map<string, EventCallback[]> = new Map();
 
   constructor(
-    private gameDef: GameDefinition,
+    private gameDef: GameDefinition<TState>,
     private transport: Transport,
-    private config: RuntimeConfig
+    private config: GameRuntimeConfig
   ) {
-    this.isHost = config.isHost;
+    this._isHost = config.isHost;
+    this.strict = config.strict ?? false;
 
     // Initialize state
     const initialPlayerIds = config.playerIds || [];
     if (gameDef.setup) {
-      this.state = gameDef.setup({ playerIds: initialPlayerIds });
+      // Create deterministic random for setup (same seed for all clients)
+      const setupRandom = new SeededRandom(12345);
+      this.state = gameDef.setup({ playerIds: initialPlayerIds, random: setupRandom });
     }
     this.previousState = deepClone(this.state);
 
@@ -40,17 +54,24 @@ export class GameRuntime {
     this.setupTransport();
 
     // Start sync loop if host
-    if (this.isHost) {
+    if (this._isHost) {
       const syncInterval = config.syncInterval || 50; // 20 FPS default
       this.syncIntervalId = setInterval(() => this.syncState(), syncInterval);
     }
   }
 
   /**
-   * Get current state (read-only)
+   * Get current state (read-only, typed)
    */
-  getState(): any {
+  getState(): TState {
     return this.state;
+  }
+
+  /**
+   * Check if this runtime is the host
+   */
+  isHost(): boolean {
+    return this._isHost;
   }
 
   /**
@@ -66,9 +87,9 @@ export class GameRuntime {
    * Only the host should call this
    * @internal
    */
-  mutateState(mutator: (state: any) => void): void {
-    if (!this.isHost) {
-      console.warn('mutateState called on non-host - ignoring');
+  mutateState(mutator: (state: TState) => void): void {
+    if (!this._isHost) {
+      this.handleError('mutateState called on non-host - ignoring');
       return;
     }
     mutator(this.state);
@@ -83,33 +104,53 @@ export class GameRuntime {
    */
   submitAction(actionName: string, input: any, targetId?: string): void {
     if (!this.gameDef.actions) {
-      console.warn('No actions defined in game');
+      this.handleError('No actions defined in game');
       return;
     }
 
     const action = this.gameDef.actions[actionName];
     if (!action) {
-      console.warn(`Action "${actionName}" not found`);
+      const availableActions = Object.keys(this.gameDef.actions);
+      const suggestion = this.findClosestMatch(actionName, availableActions);
+
+      let errorMsg = `Action "${actionName}" not found.`;
+
+      if (availableActions.length > 0) {
+        errorMsg += `\n\nAvailable actions: ${availableActions.join(', ')}`;
+        if (suggestion) {
+          errorMsg += `\n\nDid you mean "${suggestion}"?`;
+        }
+      } else {
+        errorMsg += '\n\nNo actions are defined in your game.';
+      }
+
+      this.handleError(errorMsg);
       return;
     }
 
     const playerId = this.transport.getPlayerId();
+
+    // Create deterministic random for this action
+    const actionSeed = this.actionCounter++;
+    const actionRandom = new SeededRandom(actionSeed);
+
     const context = {
       playerId,                          // Who called submitAction
       targetId: targetId || playerId,    // Who is affected (defaults to caller)
-      isHost: this.isHost
+      isHost: this._isHost,
+      random: actionRandom
     };
 
     // If we're the host, apply immediately
-    if (this.isHost) {
+    if (this._isHost) {
       action.apply(this.state, context, input);
       this.notifyStateChange();
     }
 
-    // Broadcast action to all peers
+    // Broadcast action to all peers (include actionSeed for determinism)
     this.transport.send({
       type: 'action',
-      payload: { actionName, input, context },
+      payload: { actionName, input, context, actionSeed },
       senderId: playerId
     });
   }
@@ -145,9 +186,9 @@ export class GameRuntime {
   }
 
   /**
-   * Listen for state changes
+   * Listen for state changes (typed)
    */
-  onChange(callback: StateChangeCallback): () => void {
+  onChange(callback: StateChangeCallback<TState>): () => void {
     this.stateChangeCallbacks.push(callback);
     return () => {
       const index = this.stateChangeCallbacks.indexOf(callback);
@@ -186,7 +227,7 @@ export class GameRuntime {
         }
 
         // If we're the host, send full state to new peer
-        if (this.isHost) {
+        if (this._isHost) {
           this.transport.send({
             type: 'state_sync',
             payload: { fullState: this.state }
@@ -209,14 +250,14 @@ export class GameRuntime {
     switch (msg.type) {
       case 'state_sync':
         // Only clients should receive state syncs
-        if (!this.isHost) {
+        if (!this._isHost) {
           this.handleStateSync(msg.payload);
         }
         break;
 
       case 'action':
         // Only host processes actions from clients
-        if (this.isHost && senderId !== this.transport.getPlayerId()) {
+        if (this._isHost && senderId !== this.transport.getPlayerId()) {
           this.handleActionFromClient(msg.payload);
         }
         break;
@@ -242,21 +283,30 @@ export class GameRuntime {
   }
 
   private handleActionFromClient(payload: any): void {
-    const { actionName, input, context } = payload;
+    const { actionName, input, context, actionSeed } = payload;
 
     if (!this.gameDef.actions) {
-      console.warn('No actions defined');
+      this.handleError('No actions defined');
       return;
     }
 
     const action = this.gameDef.actions[actionName];
     if (!action) {
-      console.warn(`Unknown action from client: ${actionName}`);
+      const availableActions = Object.keys(this.gameDef.actions);
+      this.handleError(
+        `Unknown action from client: ${actionName}. Available: ${availableActions.join(', ')}`
+      );
       return;
     }
 
+    // Recreate the same random from the actionSeed for determinism
+    const contextWithRandom = {
+      ...context,
+      random: new SeededRandom(actionSeed)
+    };
+
     // Apply action to state with context
-    action.apply(this.state, context, input);
+    action.apply(this.state, contextWithRandom, input);
     this.notifyStateChange();
   }
 
@@ -270,7 +320,7 @@ export class GameRuntime {
   }
 
   private syncState(): void {
-    if (!this.isHost) return;
+    if (!this._isHost) return;
 
     // Generate diff
     const patches = generateDiff(this.previousState, this.state);
@@ -291,5 +341,64 @@ export class GameRuntime {
     for (const callback of this.stateChangeCallbacks) {
       callback(this.state);
     }
+  }
+
+  /**
+   * Handle errors with strict mode support
+   */
+  private handleError(message: string): void {
+    if (this.strict) {
+      throw new Error(`[Martini] ${message}`);
+    } else {
+      console.warn(`[Martini] ${message}`);
+    }
+  }
+
+  /**
+   * Find closest string match (for typo suggestions)
+   */
+  private findClosestMatch(input: string, options: string[]): string | null {
+    if (options.length === 0) return null;
+
+    let minDistance = Infinity;
+    let closest: string | null = null;
+
+    for (const option of options) {
+      const distance = this.levenshteinDistance(input.toLowerCase(), option.toLowerCase());
+      if (distance < minDistance && distance <= 3) { // Max 3 character difference
+        minDistance = distance;
+        closest = option;
+      }
+    }
+
+    return closest;
+  }
+
+  /**
+   * Calculate Levenshtein distance for typo detection
+   */
+  private levenshteinDistance(str1: string, str2: string): number {
+    const m = str1.length;
+    const n = str2.length;
+    const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (str1[i - 1] === str2[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = Math.min(
+            dp[i - 1][j] + 1,    // deletion
+            dp[i][j - 1] + 1,    // insertion
+            dp[i - 1][j - 1] + 1 // substitution
+          );
+        }
+      }
+    }
+
+    return dp[m][n];
   }
 }

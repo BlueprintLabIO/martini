@@ -15,13 +15,15 @@
   "scripts": {
     "build": "tsc && pnpm build:browser",
     "build:browser": "esbuild browser.ts --bundle --format=iife --global-name=MartiniMultiplayer --outfile=dist/martini-multiplayer.browser.js",
-    "postbuild": "cp dist/martini-multiplayer.browser.js ../../apps/web/static/",
+    "postbuild": "cp dist/martini-multiplayer.browser.js ../../apps/vesper/static/ 2>/dev/null || echo 'Skipping copy to vesper (dir may not exist)'",
     "dev": "tsc --watch",
     "test": "vitest",
+    "test:coverage": "vitest --coverage",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@vitest/coverage-v8": "^3.2.4",
     "esbuild": "^0.24.2",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
@@ -32,6 +34,8 @@
   },
   "dependencies": {
     "@martini/core": "workspace:*",
-    "@martini/transport-trystero": "workspace:*"
+    "@martini/transport-trystero": "workspace:*",
+    "@martini/transport-local": "workspace:*",
+    "@martini/transport-iframe-bridge": "workspace:*"
   }
 }

@@ -18,34 +18,67 @@ export interface SpriteTrackingOptions {
   interpolate?: boolean;
 }
 
+export interface PhaserAdapterConfig {
+  /**
+   * State namespace for sprite data (default: '_sprites')
+   * Allows using a custom property name instead of magic _sprites
+   */
+  spriteNamespace?: string;
+
+  /**
+   * Enable automatic interpolation for remote sprites (default: true)
+   * When enabled, remote sprites smoothly lerp to target positions
+   */
+  autoInterpolate?: boolean;
+
+  /**
+   * Interpolation lerp factor (default: 0.3)
+   * Lower = smoother but laggier, Higher = snappier but jerkier
+   * Range: 0.1 (very smooth) to 0.5 (very snappy)
+   */
+  lerpFactor?: number;
+}
+
 /**
  * Phaser Adapter - Auto-syncs sprites via GameRuntime
  *
  * Usage:
  * ```ts
- * const adapter = new PhaserAdapter(runtime, scene);
+ * const adapter = new PhaserAdapter(runtime, scene, {
+ *   spriteNamespace: 'gameSprites', // optional, defaults to '_sprites'
+ *   autoInterpolate: true,           // optional, defaults to true
+ *   lerpFactor: 0.3                  // optional, defaults to 0.3
+ * });
  * adapter.trackSprite(playerSprite, `player-${playerId}`);
  * // That's it! Sprite automatically syncs across network
  * ```
  */
-export class PhaserAdapter {
+export class PhaserAdapter<TState = any> {
   private trackedSprites: Map<string, { sprite: any; options: SpriteTrackingOptions }> = new Map();
   private remoteSprites: Map<string, any> = new Map(); // Sprites created for remote players
   private syncIntervalId: any = null;
+  private readonly spriteNamespace: string;
+  private readonly autoInterpolate: boolean;
+  private readonly lerpFactor: number;
 
   constructor(
-    private runtime: GameRuntime,
-    private scene: any // Phaser.Scene
+    private runtime: GameRuntime<TState>,
+    private scene: any, // Phaser.Scene
+    config: PhaserAdapterConfig = {}
   ) {
+    this.spriteNamespace = config.spriteNamespace || '_sprites';
+    this.autoInterpolate = config.autoInterpolate !== false; // default true
+    this.lerpFactor = config.lerpFactor ?? 0.3;
+
     // Ensure state has sprites object
-    this.runtime.mutateState((state) => {
-      if (!state._sprites) {
-        state._sprites = {};
+    this.runtime.mutateState((state: any) => {
+      if (!state[this.spriteNamespace]) {
+        state[this.spriteNamespace] = {};
       }
     });
 
     // Listen for state changes to update sprites (clients only)
-    this.runtime.onChange((state) => {
+    this.runtime.onChange((state: TState) => {
       if (!this.isHost()) {
         this.updateSpritesFromState(state);
       }
@@ -101,9 +134,10 @@ export class PhaserAdapter {
     this.trackedSprites.delete(key);
 
     // Remove from state
-    this.runtime.mutateState((state) => {
-      if (state._sprites && state._sprites[key]) {
-        delete state._sprites[key];
+    this.runtime.mutateState((state: any) => {
+      const sprites = state[this.spriteNamespace];
+      if (sprites && sprites[key]) {
+        delete sprites[key];
       }
     });
 
@@ -170,11 +204,12 @@ export class PhaserAdapter {
     }
 
     // Directly mutate state (host only)
-    this.runtime.mutateState((state) => {
-      if (!state._sprites) {
-        state._sprites = {};
+    this.runtime.mutateState((state: any) => {
+      if (!state[this.spriteNamespace]) {
+        state[this.spriteNamespace] = {};
       }
-      state._sprites[key] = { ...state._sprites[key], ...updates };
+      const sprites = state[this.spriteNamespace];
+      sprites[key] = { ...sprites[key], ...updates };
     });
   }
 
@@ -182,11 +217,12 @@ export class PhaserAdapter {
    * Update sprites from state (clients only)
    */
   private updateSpritesFromState(state: any): void {
-    if (this.isHost() || !state._sprites) return;
+    const sprites = state[this.spriteNamespace];
+    if (this.isHost() || !sprites) return;
 
     // Update tracked sprites (sprites that exist on this client)
     for (const [key, tracked] of this.trackedSprites.entries()) {
-      const spriteData = state._sprites[key];
+      const spriteData = sprites[key];
       if (spriteData) {
         this.applySpriteData(tracked.sprite, spriteData);
       }
@@ -194,7 +230,7 @@ export class PhaserAdapter {
 
     // Update remote sprites (sprites from other players)
     // Store target positions for interpolation
-    for (const [key, spriteData] of Object.entries(state._sprites)) {
+    for (const [key, spriteData] of Object.entries(sprites)) {
       // Skip if this is our own sprite
       if (this.trackedSprites.has(key)) continue;
 
@@ -232,10 +268,14 @@ export class PhaserAdapter {
   /**
    * Register a remote sprite (for tracking sprites from other players)
    *
+   * @param key - Unique identifier for this sprite
+   * @param sprite - The Phaser sprite to register
+   *
    * @example
    * ```ts
    * adapter.onChange((state) => {
-   *   for (const [key, data] of Object.entries(state._sprites)) {
+   *   const sprites = state._sprites || state.gameSprites; // depends on config
+   *   for (const [key, data] of Object.entries(sprites)) {
    *     if (!this.sprites[key] && key !== `player-${adapter.myId}`) {
    *       const sprite = this.add.sprite(data.x, data.y, 'player');
    *       adapter.registerRemoteSprite(key, sprite);
@@ -251,20 +291,20 @@ export class PhaserAdapter {
   /**
    * Call this in your Phaser update() loop to smoothly interpolate remote sprites
    * This should be called every frame (60 FPS) for smooth movement
+   *
+   * Note: If autoInterpolate is enabled in config, you don't need to call this manually.
    */
   updateInterpolation(): void {
     if (this.isHost()) return; // Only clients interpolate
 
-    const lerpFactor = 0.3; // Adjust for smoothness (0.1 = very smooth, 0.5 = snappy)
-
     for (const [key, sprite] of this.remoteSprites.entries()) {
       if (sprite._targetX !== undefined) {
         // Lerp towards target position
-        sprite.x += (sprite._targetX - sprite.x) * lerpFactor;
-        sprite.y += (sprite._targetY - sprite.y) * lerpFactor;
+        sprite.x += (sprite._targetX - sprite.x) * this.lerpFactor;
+        sprite.y += (sprite._targetY - sprite.y) * this.lerpFactor;
 
         if (sprite._targetRotation !== undefined) {
-          sprite.rotation += (sprite._targetRotation - sprite.rotation) * lerpFactor;
+          sprite.rotation += (sprite._targetRotation - sprite.rotation) * this.lerpFactor;
         }
       }
     }
@@ -284,7 +324,14 @@ export class PhaserAdapter {
   /**
    * Listen for state changes (convenience wrapper)
    */
-  onChange(callback: (state: any) => void): () => void {
+  onChange(callback: (state: TState) => void): () => void {
     return this.runtime.onChange(callback);
+  }
+
+  /**
+   * Get the current game state (typed)
+   */
+  getState(): TState {
+    return this.runtime.getState();
   }
 }

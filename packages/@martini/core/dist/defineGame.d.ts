@@ -3,11 +3,15 @@
  *
  * Host-authoritative: the host runs the game, others mirror the state.
  */
+import type { SeededRandom } from './SeededRandom';
 /**
- * State schema - describes the shape of state
+ * Setup context - provides initial player list and deterministic random
  */
-export interface StateSchema {
-    [key: string]: any;
+export interface SetupContext {
+    /** Initial player IDs */
+    playerIds: string[];
+    /** Deterministic random number generator (seeded, same across all clients) */
+    random: SeededRandom;
 }
 /**
  * Action context - provides information about who submitted the action
@@ -19,40 +23,48 @@ export interface ActionContext {
     targetId: string;
     /** Whether this action is being applied on the host */
     isHost: boolean;
+    /** Deterministic random number generator (seeded per action) */
+    random: SeededRandom;
 }
 /**
- * Action definition
+ * Action definition with typed state and input
  */
-export interface ActionDefinition<TInput = any> {
+export interface ActionDefinition<TState = any, TInput = any> {
     /** Input validation schema (optional) */
     input?: any;
     /** Apply function - modifies state directly */
-    apply: (state: any, context: ActionContext, input: TInput) => void;
+    apply: (state: TState, context: ActionContext, input: TInput) => void;
 }
 /**
- * Game definition (v2 - simplified, host-authoritative)
+ * Game definition with typed state
  */
-export interface GameDefinition {
+export interface GameDefinition<TState = any> {
     /** Initial state factory */
-    setup?: (context: {
-        playerIds: string[];
-    }) => any;
+    setup?: (context: SetupContext) => TState;
     /** Actions - only way to modify state (optional - sprite syncing is automatic) */
-    actions?: Record<string, ActionDefinition>;
+    actions?: Record<string, ActionDefinition<TState, any>>;
     /** Called when a player joins mid-game */
-    onPlayerJoin?: (state: any, playerId: string) => void;
+    onPlayerJoin?: (state: TState, playerId: string) => void;
     /** Called when a player leaves */
-    onPlayerLeave?: (state: any, playerId: string) => void;
+    onPlayerLeave?: (state: TState, playerId: string) => void;
 }
 /**
- * Define a multiplayer game
+ * Define a multiplayer game with full TypeScript type safety
  *
  * @example
  * ```ts
- * const game = defineGame({
- *   setup: ({ playerIds }) => ({
+ * interface GameState {
+ *   players: Record<string, { x: number; y: number; score: number }>;
+ * }
+ *
+ * const game = defineGame<GameState>({
+ *   setup: ({ playerIds, random }) => ({
  *     players: Object.fromEntries(
- *       playerIds.map(id => [id, { x: 100, y: 100, score: 0 }])
+ *       playerIds.map(id => [id, {
+ *         x: random.range(0, 800),  // ✅ Deterministic!
+ *         y: random.range(0, 600),
+ *         score: 0
+ *       }])
  *     )
  *   }),
  *
@@ -60,6 +72,7 @@ export interface GameDefinition {
  *     move: {
  *       input: { x: 'number', y: 'number' },
  *       apply(state, context, input) {
+ *         // ✅ Full type safety - autocomplete works!
  *         state.players[context.targetId].x = input.x;
  *         state.players[context.targetId].y = input.y;
  *       }
@@ -68,5 +81,5 @@ export interface GameDefinition {
  * });
  * ```
  */
-export declare function defineGame(definition: GameDefinition): GameDefinition;
+export declare function defineGame<TState = any>(definition: GameDefinition<TState>): GameDefinition<TState>;
 //# sourceMappingURL=defineGame.d.ts.map

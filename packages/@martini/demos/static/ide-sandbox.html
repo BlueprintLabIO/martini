@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Martini IDE Sandbox</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        #game-container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <!-- Load required libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <script src="/martini-multiplayer.browser.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <script>
+        // Console interception - capture all console methods
+        (function() {
+            const originalConsole = {
+                log: console.log,
+                warn: console.warn,
+                error: console.error
+            };
+
+            function sendConsoleMessage(level, args) {
+                // Keep original console behavior
+                originalConsole[level].apply(console, args);
+
+                // Send to parent window for DevTools
+                try {
+                    const message = args.map(arg => {
+                        if (typeof arg === 'object') {
+                            try {
+                                return JSON.stringify(arg);
+                            } catch (e) {
+                                return String(arg);
+                            }
+                        }
+                        return String(arg);
+                    }).join(' ');
+
+                    // Extract channel from message if present (format: "[ChannelName] message")
+                    let channel = undefined;
+                    let cleanMessage = message;
+                    const channelMatch = message.match(/^\[([^\]]+)\]\s+(.*)$/);
+                    if (channelMatch) {
+                        channel = channelMatch[1];
+                        cleanMessage = channelMatch[2];
+                    }
+
+                    window.parent.postMessage({
+                        type: 'CONSOLE_LOG',
+                        payload: {
+                            level: level,
+                            message: cleanMessage,
+                            timestamp: Date.now(),
+                            ...(channel && { channel })
+                        }
+                    }, '*');
+                } catch (e) {
+                    originalConsole.error('Failed to send console message:', e);
+                }
+            }
+
+            console.log = function(...args) {
+                sendConsoleMessage('log', args);
+            };
+
+            console.warn = function(...args) {
+                sendConsoleMessage('warn', args);
+            };
+
+            console.error = function(...args) {
+                sendConsoleMessage('error', args);
+            };
+
+            // Capture uncaught errors
+            window.addEventListener('error', (event) => {
+                sendConsoleMessage('error', [`Uncaught ${event.error?.name || 'Error'}: ${event.message}`]);
+            });
+
+            // Capture unhandled promise rejections
+            window.addEventListener('unhandledrejection', (event) => {
+                sendConsoleMessage('error', [`Unhandled Promise Rejection: ${event.reason}`]);
+            });
+        })();
+
+        // Sandbox runtime state
+        let gameRuntime = null;
+        let isHost = false;
+        let roomId = null;
+        let transportType = null;
+        let connectionStatusUnsubscribe = null;
+
+        // Message handler from parent window
+        window.addEventListener('message', async (event) => {
+            const { type, payload } = event.data;
+
+            switch (type) {
+                case 'LOAD_CODE':
+                    await loadGameCode(payload);
+                    break;
+            }
+        });
+
+        // Global API for game code to register runtime (for metrics tracking)
+        window.__MARTINI_IDE__ = {
+            registerRuntime: function(runtime) {
+                gameRuntime = runtime;
+
+                // Monitor transport metrics for connection status
+                const transport = runtime.getTransport();
+                if (transport && transport.metrics) {
+                    const metrics = transport.metrics;
+
+                    // Send initial connection state
+                    window.parent.postMessage({
+                        type: 'CONNECTION_STATUS',
+                        payload: { status: metrics.getConnectionState() }
+                    }, '*');
+
+                    // Clean up previous subscription
+                    if (connectionStatusUnsubscribe) {
+                        connectionStatusUnsubscribe();
+                    }
+
+                    // Subscribe to connection state changes
+                    connectionStatusUnsubscribe = metrics.onConnectionChange((state) => {
+                        window.parent.postMessage({
+                            type: 'CONNECTION_STATUS',
+                            payload: { status: state }
+                        }, '*');
+                    });
+                } else {
+                    // Fallback if transport doesn't have metrics
+                    console.warn('[IDE Sandbox] Transport does not expose metrics');
+                    window.parent.postMessage({
+                        type: 'CONNECTION_STATUS',
+                        payload: { status: 'disconnected' }
+                    }, '*');
+                }
+            }
+        };
+
+        async function loadGameCode(payload) {
+            const { code, roomId: newRoomId, isHost: newIsHost, transportType: newTransportType } = payload;
+
+            roomId = newRoomId;
+            isHost = newIsHost;
+            transportType = newTransportType;
+
+            try {
+                // Clear previous game
+                if (gameRuntime) {
+                    // Clean up previous connection status subscription
+                    if (connectionStatusUnsubscribe) {
+                        connectionStatusUnsubscribe();
+                        connectionStatusUnsubscribe = null;
+                    }
+                    gameRuntime = null;
+                }
+
+                // Create a module-like environment
+                const gameContainer = document.getElementById('game-container');
+                gameContainer.innerHTML = ''; // Clear
+
+                // Inject __MARTINI_CONFIG__ for the game code
+                window.__MARTINI_CONFIG__ = {
+                    transport: {
+                        type: newTransportType,
+                        roomId: newRoomId,
+                        isHost: newIsHost
+                    }
+                };
+
+                // Execute the bundled code
+                // The code should export a game definition or auto-start
+                const blob = new Blob([code], { type: 'application/javascript' });
+                const url = URL.createObjectURL(blob);
+
+                // Import and run
+                await import(url);
+
+                URL.revokeObjectURL(url);
+
+                // Notify parent that runtime is ready
+                window.parent.postMessage({
+                    type: 'RUNTIME_READY'
+                }, '*');
+
+                // Send initial ready message
+                window.parent.postMessage({
+                    type: 'READY'
+                }, '*');
+
+            } catch (error) {
+                console.error('Failed to load game:', error);
+
+                window.parent.postMessage({
+                    type: 'ERROR',
+                    payload: {
+                        type: 'runtime',
+                        message: error.message,
+                        stack: error.stack
+                    }
+                }, '*');
+            }
+        }
+
+        // Send heartbeat to parent
+        setInterval(() => {
+            window.parent.postMessage({
+                type: 'HEARTBEAT'
+            }, '*');
+        }, 5000);
+
+        // Initial message to parent
+        window.parent.postMessage({
+            type: 'RUNTIME_READY'
+        }, '*');
+    </script>
+</body>
+</html>

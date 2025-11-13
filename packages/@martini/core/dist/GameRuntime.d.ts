@@ -6,24 +6,37 @@
  */
 import type { GameDefinition } from './defineGame';
 import type { Transport, RuntimeConfig } from './transport';
-type StateChangeCallback = (state: any) => void;
+type StateChangeCallback<TState> = (state: TState) => void;
 type EventCallback = (senderId: string, eventName: string, payload: any) => void;
-export declare class GameRuntime {
+/**
+ * Extended runtime configuration with strict mode
+ */
+export interface GameRuntimeConfig extends RuntimeConfig {
+    /** Throw errors instead of warnings (recommended for development) */
+    strict?: boolean;
+}
+export declare class GameRuntime<TState = any> {
     private gameDef;
     private transport;
     private config;
     private state;
     private previousState;
-    private isHost;
+    private _isHost;
     private syncIntervalId;
     private unsubscribes;
+    private strict;
+    private actionCounter;
     private stateChangeCallbacks;
     private eventCallbacks;
-    constructor(gameDef: GameDefinition, transport: Transport, config: RuntimeConfig);
+    constructor(gameDef: GameDefinition<TState>, transport: Transport, config: GameRuntimeConfig);
     /**
-     * Get current state (read-only)
+     * Get current state (read-only, typed)
      */
-    getState(): any;
+    getState(): TState;
+    /**
+     * Check if this runtime is the host
+     */
+    isHost(): boolean;
     /**
      * Get transport (for adapters to check isHost, getPlayerId, etc)
      * @internal
@@ -34,7 +47,7 @@ export declare class GameRuntime {
      * Only the host should call this
      * @internal
      */
-    mutateState(mutator: (state: any) => void): void;
+    mutateState(mutator: (state: TState) => void): void;
     /**
      * Execute an action (validates input, applies to state, broadcasts)
      * @param actionName - Name of the action to execute
@@ -51,9 +64,9 @@ export declare class GameRuntime {
      */
     onEvent(eventName: string, callback: EventCallback): () => void;
     /**
-     * Listen for state changes
+     * Listen for state changes (typed)
      */
-    onChange(callback: StateChangeCallback): () => void;
+    onChange(callback: StateChangeCallback<TState>): () => void;
     /**
      * Cleanup
      */
@@ -65,6 +78,18 @@ export declare class GameRuntime {
     private handleEvent;
     private syncState;
     private notifyStateChange;
+    /**
+     * Handle errors with strict mode support
+     */
+    private handleError;
+    /**
+     * Find closest string match (for typo suggestions)
+     */
+    private findClosestMatch;
+    /**
+     * Calculate Levenshtein distance for typo detection
+     */
+    private levenshteinDistance;
 }
 export {};
 //# sourceMappingURL=GameRuntime.d.ts.map

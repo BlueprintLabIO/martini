@@ -7,5 +7,7 @@
  */
 export { PhaserAdapter } from './PhaserAdapter';
 export type { SpriteTrackingOptions } from './PhaserAdapter';
+export { initializeGame } from './runtime';
+export type { MartiniConfig, GameConfig } from './runtime';
 export type { GameDefinition, Transport, GameRuntime } from '@martini/core';
 //# sourceMappingURL=index.d.ts.map

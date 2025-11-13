@@ -24,8 +24,8 @@ export interface TrysteroTransportOptions {
     appId?: string;
     /** Custom STUN/TURN servers for NAT traversal */
     rtcConfig?: RTCConfiguration;
-    /** Strategy: 'mqtt' | 'supabase' */
-    strategy?: 'mqtt' | 'supabase';
+    /** Custom MQTT relay URLs (e.g., ['wss://broker.hivemq.com:8884/mqtt']) */
+    relayUrls?: string[];
     /**
      * Explicitly set this peer as host (industry standard: separate host/join URLs)
      * If true, this peer becomes host immediately without election.

@@ -125,9 +125,9 @@ describe('Integration Tests', () => {
 
         actions: {
           move: {
-            apply(state, playerId, input) {
-              state.players[playerId].x = input.x;
-              state.players[playerId].y = input.y;
+            apply(state, context, input) {
+              state.players[context.targetId].x = input.x;
+              state.players[context.targetId].y = input.y;
             }
           }
         }
@@ -177,10 +177,10 @@ describe('Integration Tests', () => {
 
         actions: {
           move: {
-            apply(state, playerId, input) {
-              if (state.players[playerId]) {
-                state.players[playerId].x = input.x;
-                state.players[playerId].y = input.y;
+            apply(state, context, input) {
+              if (state.players[context.targetId]) {
+                state.players[context.targetId].x = input.x;
+                state.players[context.targetId].y = input.y;
               }
             }
           }
@@ -226,9 +226,9 @@ describe('Integration Tests', () => {
 
         actions: {
           score: {
-            apply(state, playerId) {
-              if (state.players[playerId]) {
-                state.players[playerId].score += 1;
+            apply(state, context) {
+              if (state.players[context.targetId]) {
+                state.players[context.targetId].score += 1;
               }
             }
           }
@@ -336,15 +336,15 @@ describe('Integration Tests', () => {
 
         actions: {
           increment: {
-            apply(state, playerId) {
+            apply(state, context) {
               state.counter += 1;
-              state.history.push(`${playerId}:+1`);
+              state.history.push(`${context.playerId}:+1`);
             }
           },
           decrement: {
-            apply(state, playerId) {
+            apply(state, context) {
               state.counter -= 1;
-              state.history.push(`${playerId}:-1`);
+              state.history.push(`${context.playerId}:-1`);
             }
           }
         }
@@ -458,9 +458,9 @@ describe('Integration Tests', () => {
 
         actions: {
           move: {
-            apply(state, playerId, input) {
-              state.players[playerId].x = input.x;
-              state.players[playerId].y = input.y;
+            apply(state, context, input) {
+              state.players[context.targetId].x = input.x;
+              state.players[context.targetId].y = input.y;
             }
           }
         }
@@ -522,18 +522,18 @@ describe('Integration Tests', () => {
 
         actions: {
           spawnEntity: {
-            apply(state, playerId, input) {
+            apply(state, context, input) {
               state.world.entities.push({
                 id: input.id,
                 type: input.type,
                 position: { x: input.x, y: input.y },
-                owner: playerId
+                owner: context.playerId
               });
             }
           },
 
           removeEntity: {
-            apply(state, playerId, input) {
+            apply(state, context, input) {
               const idx = state.world.entities.findIndex((e: any) => e.id === input.id);
               if (idx >= 0) {
                 state.world.entities.splice(idx, 1);

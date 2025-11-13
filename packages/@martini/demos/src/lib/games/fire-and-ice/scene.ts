@@ -1,160 +1,147 @@
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
 import type { GameRuntime } from '@martini/core';
-import type { LocalTransport } from '@martini/transport-local';
 import { PhaserAdapter } from '@martini/phaser';
 
-export function createFireAndIceScene(
-	runtime: GameRuntime,
-	transport: LocalTransport,
-	isHost: boolean,
-	playerId: string,
-	role: 'host' | 'client',
-	keys: { host: { left: boolean; right: boolean; up: boolean }; client: { left: boolean; right: boolean; up: boolean } }
-) {
-	return {
-		create: function (this: Phaser.Scene) {
+/**
+ * Fire & Ice Scene - Web App Architecture Pattern
+ *
+ * Self-contained class-based scene that only needs runtime.
+ * Works in web IDEs and matches AI-generated code structure.
+ */
+export function createFireAndIceScene(runtime: GameRuntime) {
+	return class FireAndIceScene extends Phaser.Scene {
+		adapter!: PhaserAdapter;
+		players: Record<string, Phaser.GameObjects.Arc> = {};
+		sprites: Record<string, Phaser.GameObjects.Arc> = {};
+		platform!: Phaser.GameObjects.Rectangle;
+		isHost = false;
+
+		create() {
+			this.adapter = new PhaserAdapter(runtime, this);
+			this.isHost = this.adapter.isHost();
+
+			// Register runtime with IDE sandbox (for DevTools metrics)
+			if (typeof window !== 'undefined' && (window as any).__MARTINI_IDE__) {
+				(window as any).__MARTINI_IDE__.registerRuntime(runtime);
+			}
+
 			// Background
 			this.add.rectangle(400, 300, 800, 600, 0x87ceeb);
 
-			// Create adapter
-			const adapter = new PhaserAdapter(runtime, this);
-			(this as any).adapter = adapter;
+			// Platform (both host and client see it)
+			this.platform = this.add.rectangle(400, 550, 600, 20, 0x8b4513);
+			this.physics.add.existing(this.platform, true);
 
-			// Platform
-			const platform = this.add.rectangle(400, 550, 600, 20, 0x8b4513);
-			this.physics.add.existing(platform, true);
+			if (this.isHost) {
+				// HOST: Create local player (fire - red) immediately
+				const myCircle = this.add.circle(200, 400, 20, 0xff3300);
+				this.physics.add.existing(myCircle);
+				const body = myCircle.body as Phaser.Physics.Arcade.Body;
+				body.setCollideWorldBounds(true);
+				body.setBounce(0.2);
+				this.physics.add.collider(myCircle, this.platform);
 
-			// Store player sprites
-			(this as any).players = {};
+				this.adapter.trackSprite(myCircle, `player-${this.adapter.myId}`);
+				this.players[this.adapter.myId] = myCircle;
 
-			if (isHost) {
-				// HOST: Create fire player (red) immediately
-				const firePlayer = this.add.circle(200, 400, 20, 0xff3300);
-				this.physics.add.existing(firePlayer);
-				(firePlayer.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
-				(firePlayer.body as Phaser.Physics.Arcade.Body).setBounce(0.2);
-				this.physics.add.collider(firePlayer, platform);
-				(this as any).players[playerId] = firePlayer;
+				// Labels
+				this.add
+					.text(10, 10, 'FIRE PLAYER (Host)', {
+						fontSize: '18px',
+						color: '#000000',
+					})
+					.setDepth(100);
 
-				// Track fire player
-				adapter.trackSprite(firePlayer, `player-${playerId}`);
-
-				// Helper to create ice player
-				const createIcePlayer = (peerId: string) => {
-					if ((this as any).players[peerId]) return; // Already created
-
-					const icePlayer = this.add.circle(600, 400, 20, 0x0033ff);
-					this.physics.add.existing(icePlayer);
-					(icePlayer.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
-					(icePlayer.body as Phaser.Physics.Arcade.Body).setBounce(0.2);
-					this.physics.add.collider(icePlayer, platform);
-					(this as any).players[peerId] = icePlayer;
-					adapter.trackSprite(icePlayer, `player-${peerId}`);
-				};
-
-				// HOST: Check for existing peers (LocalTransport connects instantly!)
-				const existingPeers = transport.getPeerIds();
-				existingPeers.forEach((peerId) => {
-					createIcePlayer(peerId);
-				});
-
-				// HOST: Also listen for future peer joins (in case more join later)
-				transport.onPeerJoin((peerId: string) => {
-					createIcePlayer(peerId);
-				});
+				this.add
+					.text(400, 570, 'Arrow Keys to Move & Jump', {
+						fontSize: '14px',
+						color: '#000000',
+					})
+					.setOrigin(0.5)
+					.setDepth(100);
 			} else {
-				// CLIENT: Render sprites from state
-				adapter.onChange((state: any) => {
+				// CLIENT: Create sprites from state
+				this.adapter.onChange((state: any) => {
 					if (!state._sprites) return;
 
 					for (const [key, data] of Object.entries(state._sprites) as [string, any][]) {
-						if (!(this as any).players[key]) {
+						if (!this.sprites[key]) {
 							// Extract player ID from sprite key
 							const spritePlayerId = key.replace('player-', '');
 
 							// If this sprite belongs to ME (the client), I'm ice (blue)
 							// Otherwise it's the host who is fire (red)
-							const color = spritePlayerId === playerId ? 0x0033ff : 0xff3300;
+							const color = spritePlayerId === this.adapter.myId ? 0x0033ff : 0xff3300;
 
-							const sprite = this.add.circle(data.x || 400, data.y || 400, 20, color);
-							(this as any).players[key] = sprite;
-							adapter.registerRemoteSprite(key, sprite);
+							const circle = this.add.circle(data.x || 400, data.y || 400, 20, color);
+							this.sprites[key] = circle;
+							this.adapter.registerRemoteSprite(key, circle);
 						}
 					}
 				});
+
+				// Labels
+				this.add
+					.text(10, 10, 'ICE PLAYER (Client)', {
+						fontSize: '18px',
+						color: '#000000',
+					})
+					.setDepth(100);
+
+				this.add
+					.text(400, 570, 'Arrow Keys to Move & Jump', {
+						fontSize: '14px',
+						color: '#000000',
+					})
+					.setOrigin(0.5)
+					.setDepth(100);
 			}
+		}
 
-			// Labels
-			this.add
-				.text(10, 10, isHost ? 'FIRE PLAYER (Host)' : 'ICE PLAYER (Client)', {
-					fontSize: '18px',
-					color: '#000000',
-				})
-				.setDepth(100);
-
-			const controls = role === 'host' ? 'WASD to Move & Jump' : 'Arrow Keys to Move & Jump';
-			this.add
-				.text(400, 570, controls, {
-					fontSize: '14px',
-					color: '#000000',
-				})
-				.setOrigin(0.5)
-				.setDepth(100);
-		},
-
-		update: function (this: Phaser.Scene) {
+		update() {
 			const speed = 200;
 			const jumpSpeed = -350;
 
 			// CLIENT: Smooth interpolation
-			if (!isHost) {
-				(this as any).adapter?.updateInterpolation();
+			if (!this.isHost) {
+				this.adapter.updateInterpolation();
+				return;
 			}
 
-			// Capture local input from global keyboard state based on role
-			const playerKeys = role === 'host' ? keys.host : keys.client;
+			// Capture keyboard input
+			const cursors = this.input.keyboard!.createCursorKeys();
 			const input = {
-				left: playerKeys.left,
-				right: playerKeys.right,
-				up: playerKeys.up,
+				left: cursors.left.isDown,
+				right: cursors.right.isDown,
+				up: cursors.up.isDown,
 			};
 
 			// Send input to runtime
 			runtime.submitAction('move', input);
 
-			if (isHost) {
-				// HOST: Apply physics for ALL players
-				const state = runtime.getState();
-				const inputs = state.inputs || {};
+			// HOST: Apply physics for ALL players
+			const state = runtime.getState();
+			const inputs = state.inputs || {};
 
-				for (const [pid, playerInput] of Object.entries(inputs) as [string, any][]) {
-					const sprite = (this as any).players[pid];
-					if (!sprite || !sprite.body) {
-						console.warn(
-							'No sprite or body for player:',
-							pid,
-							'Available players:',
-							Object.keys((this as any).players)
-						);
-						continue;
-					}
+			for (const [playerId, playerInput] of Object.entries(inputs) as [string, any][]) {
+				const circle = this.players[playerId];
+				if (!circle || !circle.body) continue;
 
-					const body = sprite.body as Phaser.Physics.Arcade.Body;
+				const body = circle.body as Phaser.Physics.Arcade.Body;
 
-					// Apply input
-					if (playerInput.left) {
-						body.setVelocityX(-speed);
-					} else if (playerInput.right) {
-						body.setVelocityX(speed);
-					} else {
-						body.setVelocityX(0);
-					}
+				// Apply input
+				if (playerInput.left) {
+					body.setVelocityX(-speed);
+				} else if (playerInput.right) {
+					body.setVelocityX(speed);
+				} else {
+					body.setVelocityX(0);
+				}
 
-					if (playerInput.up && body.touching.down) {
-						body.setVelocityY(jumpSpeed);
-					}
+				if (playerInput.up && body.touching.down) {
+					body.setVelocityY(jumpSpeed);
 				}
 			}
-		},
+		}
 	};
 }

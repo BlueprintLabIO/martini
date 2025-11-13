@@ -223,11 +223,15 @@ describe('GameRuntime', () => {
 
       const actionMessages = transport.sentMessages.filter(m => m.message.type === 'action');
       expect(actionMessages).toHaveLength(1);
-      expect(actionMessages[0].message.payload).toEqual({
-        actionName: 'move',
-        input: { x: 100, y: 200 },
-        playerId: 'p1'
-      });
+
+      const payload = actionMessages[0].message.payload;
+      expect(payload.actionName).toBe('move');
+      expect(payload.input).toEqual({ x: 100, y: 200 });
+      expect(payload.context.playerId).toBe('p1');
+      expect(payload.context.targetId).toBe('p1');
+      expect(payload.context.isHost).toBe(true);
+      expect(payload.context.random).toBeDefined();
+      expect(payload.actionSeed).toBe(100000); // First action uses counter value
     });
 
     it('notifies onChange callbacks after applying action', () => {
@@ -235,7 +239,7 @@ describe('GameRuntime', () => {
         setup: () => ({ x: 0 }),
         actions: {
           update: {
-            apply: (state, playerId, input) => {
+            apply: (state, context, input) => {
               state.x = input.x;
             }
           }
@@ -266,8 +270,8 @@ describe('GameRuntime', () => {
         }),
         actions: {
           score: {
-            apply: (state, playerId) => {
-              state.players[playerId].score += 1;
+            apply: (state, context) => {
+              state.players[context.targetId].score += 1;
             }
           }
         }
@@ -294,7 +298,10 @@ describe('GameRuntime', () => {
 
       runtime.submitAction('nonexistent', {});
 
-      expect(consoleSpy).toHaveBeenCalledWith('Action "nonexistent" not found');
+      expect(consoleSpy).toHaveBeenCalled();
+      const callArg = consoleSpy.mock.calls[0][0];
+      expect(callArg).toContain('[Martini]');
+      expect(callArg).toContain('Action "nonexistent" not found');
 
       consoleSpy.mockRestore();
     });
@@ -349,7 +356,7 @@ describe('GameRuntime', () => {
         setup: () => ({ x: 0 }),
         actions: {
           update: {
-            apply: (state, playerId, input) => {
+            apply: (state, context, input) => {
               state.x = input.x;
             }
           }
@@ -497,7 +504,10 @@ describe('GameRuntime', () => {
         state.x = 100;
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith('mutateState called on non-host - ignoring');
+      expect(consoleSpy).toHaveBeenCalled();
+      const callArg = consoleSpy.mock.calls[0][0];
+      expect(callArg).toContain('[Martini]');
+      expect(callArg).toContain('mutateState called on non-host - ignoring');
       expect(runtime.getState()).not.toHaveProperty('x');
 
       consoleSpy.mockRestore();
@@ -651,7 +661,7 @@ describe('GameRuntime', () => {
         setup: () => ({ x: 0 }),
         actions: {
           update: {
-            apply: (state, playerId, input) => {
+            apply: (state, context, input) => {
               state.x = input.x;
             }
           }
@@ -677,7 +687,7 @@ describe('GameRuntime', () => {
         setup: () => ({ x: 0 }),
         actions: {
           update: {
-            apply: (state, playerId, input) => {
+            apply: (state, context, input) => {
               state.x = input.x;
             }
           }
@@ -746,8 +756,8 @@ describe('GameRuntime', () => {
         }),
         actions: {
           move: {
-            apply: (state, playerId, input) => {
-              state.players[playerId].x = input.x;
+            apply: (state, context, input) => {
+              state.players[context.targetId].x = input.x;
             }
           }
         }
@@ -762,7 +772,11 @@ describe('GameRuntime', () => {
         payload: {
           actionName: 'move',
           input: { x: 100 },
-          playerId: 'p2'
+          context: {
+            playerId: 'p2',
+            targetId: 'p2',
+            isHost: false
+          }
         }
       }, 'p2');
 
@@ -800,6 +814,73 @@ describe('GameRuntime', () => {
 
       // Should not double-apply
       expect(runtime.getState().counter).toBe(1);
+    });
+
+    it('warns when game has no actions defined', () => {
+      // Create game without calling defineGame to avoid auto-initialization
+      const game = {
+        setup: () => ({ counter: 0 })
+      };
+
+      const transport = new MockTransport('p1', true);
+      const runtime = new GameRuntime(game, transport, { isHost: true });
+
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Simulate action from client
+      transport.simulateMessage({
+        type: 'action',
+        payload: {
+          actionName: 'move',
+          input: {},
+          context: {
+            playerId: 'p2',
+            targetId: 'p2',
+            isHost: false
+          }
+        }
+      }, 'p2');
+
+      expect(consoleSpy).toHaveBeenCalled();
+      const callArg = consoleSpy.mock.calls[0][0];
+      expect(callArg).toContain('[Martini]');
+      expect(callArg).toContain('No actions defined');
+      consoleSpy.mockRestore();
+    });
+
+    it('warns when receiving unknown action from client', () => {
+      const game = defineGame({
+        actions: {
+          move: {
+            apply: () => {}
+          }
+        }
+      });
+
+      const transport = new MockTransport('p1', true);
+      const runtime = new GameRuntime(game, transport, { isHost: true });
+
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Simulate unknown action from client
+      transport.simulateMessage({
+        type: 'action',
+        payload: {
+          actionName: 'jump',
+          input: {},
+          context: {
+            playerId: 'p2',
+            targetId: 'p2',
+            isHost: false
+          }
+        }
+      }, 'p2');
+
+      expect(consoleSpy).toHaveBeenCalled();
+      const callArg = consoleSpy.mock.calls[0][0];
+      expect(callArg).toContain('[Martini]');
+      expect(callArg).toContain('Unknown action from client: jump');
+      consoleSpy.mockRestore();
     });
   });
 });

@@ -9,7 +9,8 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^3.0.6",
@@ -22,10 +23,12 @@
 		"svelte-check": "^4.3.3",
 		"tailwindcss": "^4.1.14",
 		"typescript": "^5.9.3",
-		"vite": "^7.1.10"
+		"vite": "^7.1.10",
+		"vitest": "^3.2.4"
 	},
 	"dependencies": {
 		"@martini/core": "workspace:*",
+		"@martini/ide": "workspace:*",
 		"@martini/phaser": "workspace:*",
 		"@martini/transport-local": "workspace:*",
 		"@martini/transport-trystero": "workspace:*",

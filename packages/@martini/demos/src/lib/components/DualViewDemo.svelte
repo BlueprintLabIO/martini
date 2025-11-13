@@ -4,6 +4,7 @@
 	import { GameRuntime } from '@martini/core';
 	import { LocalTransport } from '@martini/transport-local';
 	import type { DemoGame } from '$lib/games';
+	import { createBlobBattleConfig } from '$lib/games/blob-battle';
 	import { createFireAndIceConfig } from '$lib/games/fire-and-ice';
 	import { createPaddleBattleConfig } from '$lib/games/paddle-battle';
 	import { createArenaBlasterConfig } from '$lib/games/arena-blaster';
@@ -219,8 +220,12 @@
 	): Phaser.Types.Core.GameConfig {
 		// Each game provides its own complete config
 		switch (gameId) {
+			case 'blob-battle':
+				// Uses shared keyState for dual-view controls
+				return createBlobBattleConfig(container, runtime, keyState);
 			case 'fire-and-ice':
-				return createFireAndIceConfig(container, runtime, transport, isHost, playerId, role, keyState);
+				// New web app architecture - only needs runtime!
+				return createFireAndIceConfig(container, runtime);
 			case 'paddle-battle':
 				return createPaddleBattleConfig(container, runtime, transport, isHost, playerId, role, keyState);
 			case 'arena-blaster':

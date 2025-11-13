@@ -45,7 +45,7 @@ export class TrysteroTransport {
         this.readyResolve = null;
         const { roomId, appId = 'martini-game', rtcConfig = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        }, isHost } = options;
+        }, relayUrls, isHost } = options;
         // Store explicit host mode
         this.explicitHostMode = isHost;
         // Explicit host mode (industry standard: separate host/join URLs)
@@ -58,8 +58,15 @@ export class TrysteroTransport {
             console.log('[TrysteroTransport] Explicit client mode - will NEVER become host');
         }
         // else: undefined = automatic election
-        // Join room via Trystero (currently only MQTT strategy supported)
-        this.room = joinRoom({ appId, rtcConfig }, roomId);
+        // Join room via Trystero (using MQTT for signaling)
+        const trysteroConfig = {
+            appId,
+            rtcConfig,
+            // Default to HiveMQ broker (more reliable than mosquitto/emqx)
+            // Users can override with relayUrls option
+            relayUrls: relayUrls || ['wss://broker.hivemq.com:8884/mqtt']
+        };
+        this.room = joinRoom(trysteroConfig, roomId);
         // Setup wire message channel
         const [send, receive] = this.room.makeAction('wire');
         this.sendWire = send;

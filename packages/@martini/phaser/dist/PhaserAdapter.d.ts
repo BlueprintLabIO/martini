@@ -13,23 +13,49 @@ export interface SpriteTrackingOptions {
     /** Interpolate movement on clients for smoothness */
     interpolate?: boolean;
 }
+export interface PhaserAdapterConfig {
+    /**
+     * State namespace for sprite data (default: '_sprites')
+     * Allows using a custom property name instead of magic _sprites
+     */
+    spriteNamespace?: string;
+    /**
+     * Enable automatic interpolation for remote sprites (default: true)
+     * When enabled, remote sprites smoothly lerp to target positions
+     */
+    autoInterpolate?: boolean;
+    /**
+     * Interpolation lerp factor (default: 0.3)
+     * Lower = smoother but laggier, Higher = snappier but jerkier
+     * Range: 0.1 (very smooth) to 0.5 (very snappy)
+     */
+    lerpFactor?: number;
+}
 /**
  * Phaser Adapter - Auto-syncs sprites via GameRuntime
  *
  * Usage:
  * ```ts
- * const adapter = new PhaserAdapter(runtime, scene);
+ * const adapter = new PhaserAdapter(runtime, scene, {
+ *   spriteNamespace: 'gameSprites', // optional, defaults to '_sprites'
+ *   autoInterpolate: true,           // optional, defaults to true
+ *   lerpFactor: 0.3                  // optional, defaults to 0.3
+ * });
  * adapter.trackSprite(playerSprite, `player-${playerId}`);
  * // That's it! Sprite automatically syncs across network
  * ```
  */
-export declare class PhaserAdapter {
+export declare class PhaserAdapter<TState = any> {
     private runtime;
     private scene;
     private trackedSprites;
     private remoteSprites;
     private syncIntervalId;
-    constructor(runtime: GameRuntime, scene: any);
+    private readonly spriteNamespace;
+    private readonly autoInterpolate;
+    private readonly lerpFactor;
+    constructor(runtime: GameRuntime<TState>, scene: any, // Phaser.Scene
+    config?: PhaserAdapterConfig);
     /**
      * Get my player ID
      */
@@ -87,10 +113,14 @@ export declare class PhaserAdapter {
     /**
      * Register a remote sprite (for tracking sprites from other players)
      *
+     * @param key - Unique identifier for this sprite
+     * @param sprite - The Phaser sprite to register
+     *
      * @example
      * ```ts
      * adapter.onChange((state) => {
-     *   for (const [key, data] of Object.entries(state._sprites)) {
+     *   const sprites = state._sprites || state.gameSprites; // depends on config
+     *   for (const [key, data] of Object.entries(sprites)) {
      *     if (!this.sprites[key] && key !== `player-${adapter.myId}`) {
      *       const sprite = this.add.sprite(data.x, data.y, 'player');
      *       adapter.registerRemoteSprite(key, sprite);
@@ -103,6 +133,8 @@ export declare class PhaserAdapter {
     /**
      * Call this in your Phaser update() loop to smoothly interpolate remote sprites
      * This should be called every frame (60 FPS) for smooth movement
+     *
+     * Note: If autoInterpolate is enabled in config, you don't need to call this manually.
      */
     updateInterpolation(): void;
     /**
@@ -112,6 +144,10 @@ export declare class PhaserAdapter {
     /**
      * Listen for state changes (convenience wrapper)
      */
-    onChange(callback: (state: any) => void): () => void;
+    onChange(callback: (state: TState) => void): () => void;
+    /**
+     * Get the current game state (typed)
+     */
+    getState(): TState;
 }
 //# sourceMappingURL=PhaserAdapter.d.ts.map

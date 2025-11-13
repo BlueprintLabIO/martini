@@ -446,6 +446,26 @@ describe('PhaserAdapter', () => {
             // Should not throw
             expect(() => adapter.updateInterpolation()).not.toThrow();
         });
+        it('interpolates sprite rotation when target rotation is set', () => {
+            const runtime = new MockGameRuntime(false);
+            const scene = new MockScene();
+            const adapter = new PhaserAdapter(runtime, scene);
+            // Create a sprite with initial rotation and manually set target
+            const sprite = { x: 100, y: 200, rotation: 0 };
+            sprite._targetX = 150;
+            sprite._targetY = 250;
+            sprite._targetRotation = Math.PI / 2;
+            // Register with correct parameter order: key first, then sprite
+            adapter.registerRemoteSprite('remote-player', sprite);
+            // Call updateInterpolation
+            adapter.updateInterpolation();
+            // Rotation should have lerped towards target (not instant)
+            expect(sprite.rotation).toBeGreaterThan(0);
+            expect(sprite.rotation).toBeLessThan(Math.PI / 2);
+            // Position should also have lerped
+            expect(sprite.x).toBeGreaterThan(100);
+            expect(sprite.x).toBeLessThan(150);
+        });
     });
 });
 //# sourceMappingURL=PhaserAdapter.test.js.map

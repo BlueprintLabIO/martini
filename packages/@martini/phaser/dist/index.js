@@ -6,4 +6,6 @@
  * @packageDocumentation
  */
 export { PhaserAdapter } from './PhaserAdapter';
+// Runtime initialization (transport abstraction)
+export { initializeGame } from './runtime';
 //# sourceMappingURL=index.js.map

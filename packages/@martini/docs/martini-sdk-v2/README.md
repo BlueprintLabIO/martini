@@ -133,12 +133,15 @@ Additional adapters (Unity, Godot, Three.js) are on the roadmap once the Phaser 
 
 | Topic | File |
 |-------|------|
-| Core mental model | [01-core-concepts.md](./01-core-concepts.md) |
-| Five-minute tutorial | [quick-start.md](./quick-start.md) |
-| Phaser adapter details | [phaser-adapter.md](./phaser-adapter.md) |
-| Transport options | [transports.md](./transports.md) |
-| Platform comparison | [platform-comparison.md](./platform-comparison.md) |
-| Migrating from `gameAPI.multiplayer` | [migration-from-gameapi.md](./migration-from-gameapi.md) |
+| Five-minute tutorial | [01-quick-start.md](./01-quick-start.md) |
+| Core mental model | [02-core-concepts.md](./02-core-concepts.md) |
+| Phaser adapter details | [03-phaser-adapter.md](./03-phaser-adapter.md) |
+| Transport options | [04-transports.md](./04-transports.md) |
+| Best practices | [05-best-practices.md](./05-best-practices.md) |
+| Troubleshooting | [06-troubleshooting.md](./06-troubleshooting.md) |
+| API reference | [07-api-reference-core.md](./07-api-reference-core.md) |
+| Platform comparison | [08-platform-comparison.md](./08-platform-comparison.md) |
+| **Practical patterns** ⭐ | [**09-practical-patterns.md**](./09-practical-patterns.md) |
 
 ---
 

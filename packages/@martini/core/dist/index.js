@@ -11,4 +11,8 @@ export { defineGame } from './defineGame';
 export { GameRuntime } from './GameRuntime';
 // Utilities (kept from v1 for state sync)
 export { generateDiff, applyPatch } from './sync';
+// Deterministic Random
+export { SeededRandom } from './SeededRandom';
+// Logger
+export { Logger, logger } from './Logger';
 //# sourceMappingURL=index.js.map

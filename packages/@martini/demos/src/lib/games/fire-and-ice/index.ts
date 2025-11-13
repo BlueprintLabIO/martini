@@ -1,21 +1,20 @@
 import type Phaser from 'phaser';
 import type { GameRuntime } from '@martini/core';
-import type { LocalTransport } from '@martini/transport-local';
 import { createFireAndIceScene } from './scene';
 
 export { fireAndIceGame } from './game';
 
 /**
  * Creates a complete Phaser game configuration for Fire & Ice
+ *
+ * Web App Architecture Pattern:
+ * - Only needs runtime (no transport, keys, role, etc.)
+ * - Scene is self-contained class
+ * - Works in web IDEs and matches AI-generated code
  */
 export function createFireAndIceConfig(
 	container: HTMLDivElement,
-	runtime: GameRuntime,
-	transport: LocalTransport,
-	isHost: boolean,
-	playerId: string,
-	role: 'host' | 'client',
-	keys: { host: { left: boolean; right: boolean; up: boolean }; client: { left: boolean; right: boolean; up: boolean } }
+	runtime: GameRuntime
 ): Phaser.Types.Core.GameConfig {
 	return {
 		type: Phaser.AUTO,
@@ -30,6 +29,6 @@ export function createFireAndIceConfig(
 			},
 		},
 		backgroundColor: '#f8f9fa',
-		scene: createFireAndIceScene(runtime, transport, isHost, playerId, role, keys),
+		scene: createFireAndIceScene(runtime),
 	};
 }

@@ -9,10 +9,11 @@
  * All instances in the same room share messages instantly via an in-memory event bus.
  */
 
-import type { Transport, WireMessage } from '@martini/core';
+import type { Transport, WireMessage, TransportMetrics, ConnectionState, MessageStats } from '@martini/core';
 
 type MessageHandler = (message: WireMessage, senderId: string) => void;
 type PeerHandler = (peerId: string) => void;
+type ConnectionChangeHandler = (state: ConnectionState) => void;
 
 /**
  * Static registry of all local transport instances, grouped by room
@@ -42,11 +43,14 @@ class LocalTransportRegistry {
     const room = this.rooms.get(roomId);
     if (!room) return;
 
+    // Check if the leaving peer is the host before removing
+    const isLeavingPeerHost = transport.isHost();
+
     room.delete(transport);
 
     // Notify remaining peers about the disconnect
     for (const peer of room) {
-      peer.notifyPeerLeave(transport.playerId);
+      peer.notifyPeerLeave(transport.playerId, isLeavingPeerHost);
     }
 
     if (room.size === 0) {
@@ -68,11 +72,93 @@ class LocalTransportRegistry {
   }
 
   static unicast(roomId: string, message: WireMessage, senderId: string, targetId: string): void {
-    const peers = this.getPeers(roomId, senderId);
-    const target = peers.find((p) => p.playerId === targetId);
+    const room = this.rooms.get(roomId);
+    if (!room) return;
+
+    const target = Array.from(room).find((p) => p.playerId === targetId);
     if (target) {
       target.deliver(message, senderId);
     }
+  }
+}
+
+/**
+ * Metrics implementation for LocalTransport
+ * Tracks connection state, peer count, and message statistics
+ */
+class LocalTransportMetrics implements TransportMetrics {
+  private connectionState: ConnectionState = 'disconnected';
+  private connectionChangeHandlers: ConnectionChangeHandler[] = [];
+  private messagesSent = 0;
+  private messagesReceived = 0;
+  private messagesErrored = 0;
+
+  constructor(private transport: LocalTransport) {
+    // LocalTransport is always "connected" since it's in-memory
+    this.connectionState = 'connected';
+  }
+
+  getConnectionState(): ConnectionState {
+    return this.connectionState;
+  }
+
+  onConnectionChange(callback: ConnectionChangeHandler): () => void {
+    this.connectionChangeHandlers.push(callback);
+    return () => {
+      const idx = this.connectionChangeHandlers.indexOf(callback);
+      if (idx >= 0) this.connectionChangeHandlers.splice(idx, 1);
+    };
+  }
+
+  getPeerCount(): number {
+    return this.transport.getPeerIds().length;
+  }
+
+  getMessageStats(): MessageStats {
+    return {
+      sent: this.messagesSent,
+      received: this.messagesReceived,
+      errors: this.messagesErrored
+    };
+  }
+
+  resetStats(): void {
+    this.messagesSent = 0;
+    this.messagesReceived = 0;
+    this.messagesErrored = 0;
+  }
+
+  /** @internal - Called by LocalTransport when message is sent */
+  trackMessageSent(): void {
+    this.messagesSent++;
+  }
+
+  /** @internal - Called by LocalTransport when message is received */
+  trackMessageReceived(): void {
+    this.messagesReceived++;
+  }
+
+  /** @internal - Called by LocalTransport when message fails */
+  trackMessageError(): void {
+    this.messagesErrored++;
+  }
+
+  /** @internal - Called by LocalTransport when disconnecting */
+  setDisconnected(): void {
+    if (this.connectionState !== 'disconnected') {
+      this.connectionState = 'disconnected';
+      this.notifyConnectionChange();
+    }
+  }
+
+  private notifyConnectionChange(): void {
+    this.connectionChangeHandlers.forEach(h => {
+      try {
+        h(this.connectionState);
+      } catch (error) {
+        console.error('Error in connection change handler:', error);
+      }
+    });
   }
 }
 
@@ -86,6 +172,7 @@ export class LocalTransport implements Transport {
   public readonly playerId: string;
   private readonly roomId: string;
   private readonly _isHost: boolean;
+  public readonly metrics: TransportMetrics;
 
   private messageHandlers: MessageHandler[] = [];
   private peerJoinHandlers: PeerHandler[] = [];
@@ -97,17 +184,26 @@ export class LocalTransport implements Transport {
     this.playerId = config.playerId || `player-${Math.random().toString(36).substring(2, 9)}`;
     this._isHost = config.isHost;
 
+    // Initialize metrics
+    this.metrics = new LocalTransportMetrics(this);
+
     // Register with the global registry
     LocalTransportRegistry.register(this.roomId, this);
   }
 
   send(message: WireMessage, targetId?: string): void {
-    if (targetId) {
-      // Unicast
-      LocalTransportRegistry.unicast(this.roomId, message, this.playerId, targetId);
-    } else {
-      // Broadcast
-      LocalTransportRegistry.broadcast(this.roomId, message, this.playerId);
+    try {
+      if (targetId) {
+        // Unicast
+        LocalTransportRegistry.unicast(this.roomId, message, this.playerId, targetId);
+      } else {
+        // Broadcast
+        LocalTransportRegistry.broadcast(this.roomId, message, this.playerId);
+      }
+      (this.metrics as LocalTransportMetrics).trackMessageSent();
+    } catch (error) {
+      (this.metrics as LocalTransportMetrics).trackMessageError();
+      throw error;
     }
   }
 
@@ -156,6 +252,7 @@ export class LocalTransport implements Transport {
   }
 
   disconnect(): void {
+    (this.metrics as LocalTransportMetrics).setDisconnected();
     LocalTransportRegistry.unregister(this.roomId, this);
   }
 
@@ -163,6 +260,7 @@ export class LocalTransport implements Transport {
 
   /** @internal */
   deliver(message: WireMessage, senderId: string): void {
+    (this.metrics as LocalTransportMetrics).trackMessageReceived();
     this.messageHandlers.forEach((h) => h(message, senderId));
   }
 
@@ -172,13 +270,11 @@ export class LocalTransport implements Transport {
   }
 
   /** @internal */
-  notifyPeerLeave(peerId: string): void {
+  notifyPeerLeave(peerId: string, wasHost: boolean): void {
     this.peerLeaveHandlers.forEach((h) => h(peerId));
 
     // If the leaving peer was the host, notify host disconnect handlers
-    const peers = LocalTransportRegistry.getPeers(this.roomId, this.playerId);
-    const leavingPeer = peers.find((p) => p.playerId === peerId);
-    if (leavingPeer && leavingPeer.isHost()) {
+    if (wasHost) {
       this.hostDisconnectHandlers.forEach((h) => h());
     }
   }

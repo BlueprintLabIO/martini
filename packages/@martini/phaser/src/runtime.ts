@@ -1,0 +1,135 @@
+/**
+ * @martini/phaser/runtime
+ *
+ * High-level runtime initialization for Phaser games.
+ * Abstracts away transport selection and configuration.
+ */
+
+import { GameRuntime, type GameDefinition } from '@martini/core';
+import { LocalTransport } from '@martini/transport-local';
+import { TrysteroTransport } from '@martini/transport-trystero';
+import { IframeBridgeTransport } from '@martini/transport-iframe-bridge';
+import type { Transport } from '@martini/core';
+import Phaser from 'phaser';
+
+/**
+ * Platform-injected configuration (set by IDE, demos, production runtime)
+ */
+export interface MartiniConfig {
+  transport: {
+    type: 'local' | 'iframe-bridge' | 'trystero';
+    roomId: string;
+    isHost: boolean;
+    appId?: string; // For Trystero
+  };
+}
+
+/**
+ * User-provided game configuration
+ */
+export interface GameConfig<TState = any> {
+  /** Game definition (logic, actions, setup) */
+  game: GameDefinition<TState>;
+
+  /** Scene factory function that receives the runtime */
+  scene: (runtime: GameRuntime<TState>) => typeof Phaser.Scene | Phaser.Types.Scenes.CreateSceneFromObjectConfig;
+
+  /** Phaser engine configuration */
+  phaserConfig?: Partial<Phaser.Types.Core.GameConfig>;
+}
+
+/**
+ * Initialize a multiplayer Phaser game.
+ *
+ * This is the main entry point for user code. It handles:
+ * - Reading platform configuration (transport type, room ID, etc.)
+ * - Creating the appropriate transport
+ * - Setting up the GameRuntime
+ * - Creating the Phaser game instance
+ *
+ * User code never needs to know about transports!
+ *
+ * @example
+ * ```typescript
+ * import { initializeGame } from '@martini/phaser';
+ * import { game } from './game';
+ * import { createScene } from './scene';
+ *
+ * initializeGame({
+ *   game,
+ *   scene: createScene,
+ *   phaserConfig: {
+ *     width: 800,
+ *     height: 600,
+ *     backgroundColor: '#1a1a2e'
+ *   }
+ * });
+ * ```
+ */
+export function initializeGame<TState = any>(
+  config: GameConfig<TState>
+): { runtime: GameRuntime<TState>; phaser: Phaser.Game } {
+  // Read platform-injected config
+  const platformConfig = (window as any).__MARTINI_CONFIG__ as MartiniConfig | undefined;
+
+  if (!platformConfig) {
+    throw new Error(
+      'Missing __MARTINI_CONFIG__. The platform must inject this before running user code.'
+    );
+  }
+
+  // Create transport based on platform config
+  const transport = createTransport(platformConfig.transport);
+
+  // Create runtime with own player ID (peers discovered via onPeerJoin)
+  const runtime = new GameRuntime(
+    config.game,
+    transport,
+    {
+      isHost: platformConfig.transport.isHost,
+      playerIds: [transport.getPlayerId()]
+    }
+  );
+
+  // Create Phaser game with user's scene and config
+  const phaserConfig: Phaser.Types.Core.GameConfig = {
+    type: Phaser.AUTO,
+    parent: 'game',
+    ...config.phaserConfig,
+    scene: config.scene(runtime)
+  };
+
+  const phaserGame = new Phaser.Game(phaserConfig);
+
+  return { runtime, phaser: phaserGame };
+}
+
+/**
+ * Create transport from platform configuration
+ * @internal
+ */
+function createTransport(config: MartiniConfig['transport']): Transport {
+  switch (config.type) {
+    case 'iframe-bridge':
+      return new IframeBridgeTransport({
+        roomId: config.roomId,
+        isHost: config.isHost
+      });
+
+    case 'local':
+      return new LocalTransport({
+        roomId: config.roomId,
+        isHost: config.isHost
+      });
+
+    case 'trystero':
+      return new TrysteroTransport({
+        appId: config.appId || 'martini',
+        roomId: config.roomId,
+        isHost: config.isHost
+      });
+
+    default:
+      throw new Error(`Unknown transport type: ${(config as any).type}`);
+  }
+}
