@@ -29,6 +29,7 @@
 		"@martini/phaser": "workspace:*",
 		"@martini/transport-local": "workspace:*",
 		"@martini/transport-trystero": "workspace:*",
+		"@sveltejs/adapter-cloudflare": "^7.2.4",
 		"phaser": "^3.80.1"
 	}
 }
