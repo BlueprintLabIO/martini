@@ -403,6 +403,87 @@ await transport.waitForReady();
 const runtime = new GameRuntime(game, transport, { isHost: transport.isHost() });
 ```
 
+### 4. Initializing runtimes with incomplete player lists
+
+**This is one of the most common mistakes!**
+
+**Symptoms:**
+- Only one player appears in the game
+- Client actions fail silently
+- Console shows: `mutateState called on non-host - ignoring`
+- Score/UI elements only show for host player
+- State diverges between host and client
+
+**Why this happens:**
+
+Martini SDK uses a **host-authoritative architecture**. This means:
+- Only the HOST can mutate game state
+- Clients send inputs, host applies them
+- Both host AND client runtimes need to know about ALL players from the start
+
+**Common mistake:**
+
+```typescript
+// ❌ WRONG - Each runtime only knows about itself
+const hostTransport = new LocalTransport({ roomId, isHost: true });
+const hostRuntime = new GameRuntime(game, hostTransport, {
+  isHost: true,
+  playerIds: [hostTransport.getPlayerId()], // Only host's ID!
+});
+
+const clientTransport = new LocalTransport({ roomId, isHost: false });
+const clientRuntime = new GameRuntime(game, clientTransport, {
+  isHost: false,
+  playerIds: [clientTransport.getPlayerId()], // Only client's ID!
+});
+```
+
+**What goes wrong:**
+
+1. Host runtime initializes with only host player
+2. Client runtime initializes with only client player
+3. When `onPlayerJoin` fires:
+   - Host successfully adds client (because host can mutate state) ✅
+   - Client tries to add host but fails with "mutateState called on non-host" ❌
+4. Result: Host sees 2 players, client sees 1 player
+
+**The fix:**
+
+```typescript
+// ✅ CORRECT - Both runtimes know about ALL players
+const hostTransport = new LocalTransport({ roomId, isHost: true });
+const clientTransport = new LocalTransport({ roomId, isHost: false });
+
+// Get both player IDs upfront
+const hostPlayerId = hostTransport.getPlayerId();
+const clientPlayerId = clientTransport.getPlayerId();
+
+// Both runtimes initialized with BOTH player IDs
+const hostRuntime = new GameRuntime(game, hostTransport, {
+  isHost: true,
+  playerIds: [hostPlayerId, clientPlayerId], // Both IDs!
+});
+
+const clientRuntime = new GameRuntime(game, clientTransport, {
+  isHost: false,
+  playerIds: [hostPlayerId, clientPlayerId], // Both IDs!
+});
+```
+
+**Key principle:**
+
+> **Both host AND client runtimes must be initialized with the complete list of ALL player IDs in the game.**
+
+This is especially important for:
+- Same-page multiplayer demos (using LocalTransport)
+- Games where you know all players upfront
+- Testing and development scenarios
+
+For dynamic peer joining (using TrysteroTransport), you can start with just the host's ID and rely on `onPlayerJoin` callbacks, but be aware that:
+- Only the host's `onPlayerJoin` can actually add players to state
+- Client `onPlayerJoin` callbacks are informational only
+- Consider pre-initializing known players when possible
+
 ---
 
 ## Getting Help

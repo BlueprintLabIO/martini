@@ -10,13 +10,24 @@ export interface StateSchema {
     [key: string]: any;
 }
 /**
+ * Action context - provides information about who submitted the action
+ */
+export interface ActionContext {
+    /** ID of the player who called submitAction */
+    playerId: string;
+    /** ID of the player being affected (defaults to playerId) */
+    targetId: string;
+    /** Whether this action is being applied on the host */
+    isHost: boolean;
+}
+/**
  * Action definition
  */
 export interface ActionDefinition<TInput = any> {
     /** Input validation schema (optional) */
     input?: any;
     /** Apply function - modifies state directly */
-    apply: (state: any, playerId: string, input: TInput) => void;
+    apply: (state: any, context: ActionContext, input: TInput) => void;
 }
 /**
  * Game definition (v2 - simplified, host-authoritative)
@@ -48,9 +59,9 @@ export interface GameDefinition {
  *   actions: {
  *     move: {
  *       input: { x: 'number', y: 'number' },
- *       apply(state, playerId, input) {
- *         state.players[playerId].x = input.x;
- *         state.players[playerId].y = input.y;
+ *       apply(state, context, input) {
+ *         state.players[context.targetId].x = input.x;
+ *         state.players[context.targetId].y = input.y;
  *       }
  *     }
  *   }

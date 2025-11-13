@@ -18,9 +18,9 @@
  *   actions: {
  *     move: {
  *       input: { x: 'number', y: 'number' },
- *       apply(state, playerId, input) {
- *         state.players[playerId].x = input.x;
- *         state.players[playerId].y = input.y;
+ *       apply(state, context, input) {
+ *         state.players[context.targetId].x = input.x;
+ *         state.players[context.targetId].y = input.y;
  *       }
  *     }
  *   }

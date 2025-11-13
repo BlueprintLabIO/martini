@@ -63,18 +63,18 @@ const game = defineGame({
   actions: {
     move: {
       input: { x: 'number', y: 'number' },
-      apply(state, playerId, input) {
-        if (state.players[playerId]) {
-          state.players[playerId].x = input.x;
-          state.players[playerId].y = input.y;
+      apply(state, context, input) {
+        if (state.players[context.targetId]) {
+          state.players[context.targetId].x = input.x;
+          state.players[context.targetId].y = input.y;
         }
       }
     },
 
     score: {
-      apply(state, playerId) {
-        if (state.players[playerId]) {
-          state.players[playerId].score += 1;
+      apply(state, context) {
+        if (state.players[context.targetId]) {
+          state.players[context.targetId].score += 1;
         }
       }
     }
@@ -114,18 +114,26 @@ Dictionary of actions that can modify the game state.
 
 **Action Definition:**
 ```typescript
+interface ActionContext {
+  playerId: string;   // Who called submitAction
+  targetId: string;   // Who is affected (defaults to playerId)
+  isHost: boolean;    // Whether this is the host
+}
+
 interface ActionDefinition<TInput = any> {
   /** Input validation schema (optional, for documentation) */
   input?: any;
 
   /** Apply function - modifies state directly */
-  apply: (state: any, playerId: string, input: TInput) => void;
+  apply: (state: any, context: ActionContext, input: TInput) => void;
 }
 ```
 
 **Key Points:**
 - Actions are the ONLY way to modify state (besides host using `mutateState`)
-- The `apply` function receives `(state, playerId, input)`
+- The `apply` function receives `(state, context, input)`
+- `context.targetId` is the player being affected (use this for state mutations)
+- `context.playerId` is who submitted the action (use for audit trails)
 - State is mutated directly (no immutability required)
 - Host applies actions immediately, clients send to host
 
@@ -134,9 +142,9 @@ interface ActionDefinition<TInput = any> {
 actions: {
   move: {
     input: { x: 'number', y: 'number' },
-    apply(state, playerId, input) {
-      state.players[playerId].x = input.x;
-      state.players[playerId].y = input.y;
+    apply(state, context, input) {
+      state.players[context.targetId].x = input.x;
+      state.players[context.targetId].y = input.y;
     }
   }
 }
@@ -235,7 +243,7 @@ const state = runtime.getState();
 console.log(state.players.p1.x); // Read state
 ```
 
-#### `submitAction(actionName: string, input: any): void`
+#### `submitAction(actionName: string, input: any, targetId?: string): void`
 
 Execute an action.
 
@@ -245,14 +253,19 @@ Execute an action.
 **Parameters:**
 - `actionName`: Name of the action (defined in `actions`)
 - `input`: Action input data
+- `targetId`: (Optional) Player ID to affect - defaults to caller's ID
 
 **Example:**
 ```typescript
-// Player moves
+// Player moves themselves (targetId defaults to caller)
 runtime.submitAction('move', { x: 150, y: 200 });
 
-// Player scores
-runtime.submitAction('score', {});
+// Host awards point to a specific player
+const winnerId = findWinner();
+runtime.submitAction('score', undefined, winnerId);
+
+// Host spawns item for a specific player
+runtime.submitAction('giveItem', { type: 'sword' }, playerId);
 ```
 
 #### `mutateState(mutator: (state: any) => void): void`

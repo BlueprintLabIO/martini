@@ -8,7 +8,7 @@
 
 // Core API
 export { defineGame } from './defineGame';
-export type { GameDefinition, StateSchema, ActionDefinition } from './defineGame';
+export type { GameDefinition, StateSchema, ActionDefinition, ActionContext } from './defineGame';
 
 // Runtime
 export { GameRuntime } from './GameRuntime';

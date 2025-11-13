@@ -44,9 +44,9 @@ const logic = defineGame({
   actions: {
     move: {
       input: { x: 'number', y: 'number' },
-      apply(state, playerId, input) {
-        state.players[playerId].x = input.x;
-        state.players[playerId].y = input.y;
+      apply(state, context, input) {
+        state.players[context.targetId].x = input.x;
+        state.players[context.targetId].y = input.y;
       }
     }
   }
@@ -59,6 +59,52 @@ const logic = defineGame({
 - ✅ Validation happens automatically
 - ♻️ Easy to replay for QA or tooling
 - 🔒 No race conditions—actions run in order
+
+### Understanding Action Context
+
+Every action receives a `context` object as its second parameter, providing information about who submitted the action and who it affects:
+
+```ts
+interface ActionContext {
+  playerId: string;   // Who called submitAction
+  targetId: string;   // Who is affected (defaults to playerId)
+  isHost: boolean;    // Whether this is the host applying the action
+}
+```
+
+**For player-initiated actions** (move, jump), `targetId` defaults to `playerId`:
+
+```ts
+// Player presses arrow key
+runtime.submitAction('move', { x: 100, y: 200 });
+
+// Action receives:
+// context.playerId = 'player-123' (who pressed the key)
+// context.targetId = 'player-123' (same player moves)
+```
+
+**For host-controlled actions** (scoring, spawning), specify `targetId` explicitly:
+
+```ts
+// Ball goes past left edge, right player scores
+const rightPlayerId = findRightPlayer();
+runtime.submitAction('score', undefined, rightPlayerId);
+
+// Action receives:
+// context.playerId = 'host-id' (who detected the score)
+// context.targetId = 'player-456' (who gets the point)
+
+actions: {
+  score: {
+    apply(state, context) {
+      // Increment score for the target player
+      state.players[context.targetId].score += 1;
+    }
+  }
+}
+```
+
+**Key principle:** Use `context.targetId` for the player being affected, and `context.playerId` for audit trails or permissions.
 
 ---
 

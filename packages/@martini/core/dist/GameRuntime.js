@@ -63,8 +63,11 @@ export class GameRuntime {
     }
     /**
      * Execute an action (validates input, applies to state, broadcasts)
+     * @param actionName - Name of the action to execute
+     * @param input - Action payload/input data
+     * @param targetId - Optional target player ID (defaults to caller's ID)
      */
-    submitAction(actionName, input) {
+    submitAction(actionName, input, targetId) {
         if (!this.gameDef.actions) {
             console.warn('No actions defined in game');
             return;
@@ -75,15 +78,20 @@ export class GameRuntime {
             return;
         }
         const playerId = this.transport.getPlayerId();
+        const context = {
+            playerId, // Who called submitAction
+            targetId: targetId || playerId, // Who is affected (defaults to caller)
+            isHost: this.isHost
+        };
         // If we're the host, apply immediately
         if (this.isHost) {
-            action.apply(this.state, playerId, input);
+            action.apply(this.state, context, input);
             this.notifyStateChange();
         }
         // Broadcast action to all peers
         this.transport.send({
             type: 'action',
-            payload: { actionName, input, playerId },
+            payload: { actionName, input, context },
             senderId: playerId
         });
     }
@@ -198,7 +206,7 @@ export class GameRuntime {
         }
     }
     handleActionFromClient(payload) {
-        const { actionName, input, playerId } = payload;
+        const { actionName, input, context } = payload;
         if (!this.gameDef.actions) {
             console.warn('No actions defined');
             return;
@@ -208,8 +216,8 @@ export class GameRuntime {
             console.warn(`Unknown action from client: ${actionName}`);
             return;
         }
-        // Apply action to state
-        action.apply(this.state, playerId, input);
+        // Apply action to state with context
+        action.apply(this.state, context, input);
         this.notifyStateChange();
     }
     handleEvent(senderId, payload) {
