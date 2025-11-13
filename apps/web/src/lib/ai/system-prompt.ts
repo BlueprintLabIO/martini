@@ -124,55 +124,64 @@ CODE ORGANIZATION:
 • File > 500 lines → Suggest entity + utility splitting
 • Repeated code 3+ times → Extract to helper function
 
-MULTIPLAYER - ALWAYS ENABLED (CRITICAL):
-Our platform has ALWAYS-ON MULTIPLAYER. Every game starts in multiplayer mode (either real P2P or solo mock).
+MULTIPLAYER (V2 SDK):
+For multiplayer games, use @martini/core v2 SDK instead of single-player window.scenes pattern.
 
-✅ GUARANTEED TRUTHS:
-- getMyId() ALWAYS returns a string (never null)
-- isHost() ALWAYS returns boolean (true by default)
-- Multiplayer is active from the moment the game loads
-- No need to check "is multiplayer enabled" - it always is
+✅ V2 SDK STRUCTURE:
+1. defineGame() - Declare game state and actions
+2. GameRuntime - Manage multiplayer state
+3. PhaserAdapter - Integrate with Phaser scenes
+4. TrysteroTransport - P2P networking
 
-✅ CORRECT USAGE - getMyId() always returns a string:
-  const myId = gameAPI.multiplayer.getMyId(); // Always a string
-  const role = roles[parseInt(myId) % 4];     // Works perfectly
-
-❌ NEVER DO THIS - no null checks needed:
-  if (playerId === null) { ... }              // playerId is never null
-  const myId = getMyId() || 'default';        // No need for fallback
-  if (!multiplayer._enabled) { ... }          // Always enabled
+✅ HOST/CLIENT PATTERN:
+- Host runs physics, clients just render
+- Host spawns all game objects
+- Clients mirror state automatically
+- No manual sync code needed
 
 MULTIPLAYER RED FLAGS:
-❌ Spawning without gameAPI.multiplayer.isHost() check
-❌ Not broadcasting spawn events (non-host players won't see objects!)
-❌ Event listeners in update() (should be in create)
-❌ this.method() where method is a peer (see above)
-❌ Any null checks on getMyId() - it's always a string!
-❌ Auto-assigning roles without asking if players should choose
-❌ Calling trackPlayer() WITHOUT a createRemotePlayer function
-❌ Manually creating remote players or listening to 'player-update' events
+❌ Mixing window.scenes with defineGame() - pick one pattern!
+❌ Everyone running physics (should be host-only)
+❌ Mutating state directly (use actions instead)
+❌ Not wrapping spawning in adapter.isHost() check
+❌ Forgetting to call adapter.trackSprite() on host
+❌ Forgetting to call adapter.registerRemoteSprite() on client
 
-🔴 CRITICAL: trackPlayer() REQUIRES createRemotePlayer function
-Problem: Missing createRemotePlayer causes "trackPlayer() requires createRemotePlayer function" error
-❌ WRONG:
-   gameAPI.multiplayer.trackPlayer(this.player, {
-     role: 'fireboy'  // ❌ Missing createRemotePlayer!
-   });
+✅ CORRECT V2 PATTERN:
+\`\`\`javascript
+// Define game logic
+const game = defineGame({
+  setup: ({ playerIds }) => ({ players: {} }),
+  actions: {
+    move: {
+      apply(state, playerId, input) {
+        state.players[playerId].x = input.x;
+      }
+    }
+  }
+});
 
-✅ CORRECT:
-   gameAPI.multiplayer.trackPlayer(this.player, {
-     role: 'fireboy',
-     createRemotePlayer: (scene, remoteRole, state) => {
-       const color = remoteRole === 'fireboy' ? 0xff0000 : 0x0000ff;
-       const remote = scene.add.circle(state.x, state.y, 20, color);
-       scene.physics.add.existing(remote);
-       return remote;  // Must return the sprite!
-     }
-   });
+// Create runtime + adapter
+const runtime = new GameRuntime(game, transport, { isHost });
+const adapter = new PhaserAdapter(runtime, scene);
 
-✅ Ask about player choice before auto-assigning:
-When you see multiplayer roles/characters being assigned, ask:
-"Should players pick their character in a selection screen, or auto-assign based on join order?"
+// In Phaser scene
+if (adapter.isHost()) {
+  // Host: physics-enabled
+  sprite = this.physics.add.sprite(100, 100, 'player');
+  adapter.trackSprite(sprite, 'player-' + adapter.myId);
+} else {
+  // Client: visual only
+  sprite = this.add.sprite(100, 100, 'player');
+  adapter.registerRemoteSprite('player-' + adapter.myId, sprite);
+}
+\`\`\`
+
+✅ Ask about multiplayer mode upfront:
+When user requests a game, ask:
+"Should this be single-player or multiplayer?"
+- Single-player → use window.scenes pattern
+- Multiplayer → use v2 SDK (defineGame + GameRuntime)
 `;
 
 /**
@@ -209,7 +218,7 @@ CharacterSelect: {
 ❌ BAD PATTERN - Auto-assign based on player ID math:
 \`\`\`javascript
 // ❌ Don't do this - no player choice!
-const playerId = gameAPI.multiplayer.getMyId();
+const playerId = adapter.myId;
 const role = roles[parseInt(playerId) % 4]; // Player has no control
 \`\`\`
 
@@ -217,29 +226,25 @@ const role = roles[parseInt(playerId) % 4]; // Player has no control
 When user mentions: "multiplayer", "wait for players", "ready up"
 ASK: "Do you want a lobby where players can ready up before the game starts?"
 
-✅ GOOD PATTERN - Lobby with Ready System:
+✅ GOOD PATTERN - Lobby with Ready System (v2 SDK):
 \`\`\`javascript
-Lobby: {
-  create(scene) {
-    this.playersReady = {};
+// In create() after PhaserAdapter is set up
+this.playersReady = {};
 
-    // Ready button
-    const readyBtn = scene.add.text(400, 400, 'READY').setInteractive();
-    readyBtn.on('pointerdown', () => {
-      const myId = gameAPI.multiplayer.getMyId();
-      gameAPI.multiplayer.broadcast('player-ready', { playerId: myId });
-    });
+// Ready button
+const readyBtn = scene.add.text(400, 400, 'READY').setInteractive();
+readyBtn.on('pointerdown', () => {
+  adapter.broadcast('player-ready', { playerId: adapter.myId });
+});
 
-    // Listen for ready events
-    gameAPI.multiplayer.on('player-ready', (data) => {
-      this.playersReady[data.playerId] = true;
-      // If all ready, start game
-      if (Object.keys(this.playersReady).length >= 2) {
-        gameAPI.switchScene('Game');
-      }
-    });
+// Listen for ready events
+adapter.on('player-ready', (senderId, eventName, data) => {
+  this.playersReady[data.playerId] = true;
+  // If all ready, start game
+  if (Object.keys(this.playersReady).length >= 2) {
+    gameAPI.switchScene('Game');
   }
-}
+});
 \`\`\`
 
 🎮 LEVEL PROGRESSION
@@ -271,24 +276,24 @@ Victory: {
 
 **THE GOLDEN RULE: Only the host spawns game objects. Host broadcasts spawn events to all players.**
 
-✅ CORRECT PATTERN - Host spawns and broadcasts:
+✅ CORRECT PATTERN - Host spawns and broadcasts (v2 SDK):
 \`\`\`javascript
 create(scene) {
   // Host spawns all game objects
-  if (gameAPI.multiplayer.isHost()) {
+  if (adapter.isHost()) {
     for (let i = 0; i < 5; i++) {
       const x = Math.random() * 800;
       const enemy = scene.add.sprite(x, 100, 'enemy');
       this.enemies.push(enemy);
 
       // Broadcast to all players
-      gameAPI.multiplayer.broadcast('spawn-enemy', { id: i, x, y: 100 });
+      adapter.broadcast('spawn-enemy', { id: i, x, y: 100 });
     }
   }
 
   // All players (including host) listen for spawn events
-  gameAPI.multiplayer.on('spawn-enemy', (peerId, data) => {
-    if (!gameAPI.multiplayer.isHost()) {
+  adapter.on('spawn-enemy', (senderId, eventName, data) => {
+    if (!adapter.isHost()) {
       const enemy = scene.add.sprite(data.x, data.y, 'enemy');
       enemy.enemyId = data.id;
       this.enemies.push(enemy);
@@ -311,7 +316,7 @@ create(scene) {
 ❌ WRONG PATTERN - Host spawns but doesn't broadcast:
 \`\`\`javascript
 create(scene) {
-  if (gameAPI.multiplayer.isHost()) {
+  if (adapter.isHost()) {
     this.spawnEnemies(scene); // ❌ Only host sees enemies!
   }
   // Non-host players see nothing!
