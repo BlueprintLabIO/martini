@@ -6,13 +6,13 @@
  * @packageDocumentation
  */
 // Core API
-export { defineGame } from './defineGame';
+export { defineGame } from './defineGame.js';
 // Runtime
-export { GameRuntime } from './GameRuntime';
+export { GameRuntime } from './GameRuntime.js';
 // Utilities (kept from v1 for state sync)
-export { generateDiff, applyPatch } from './sync';
+export { generateDiff, applyPatch } from './sync.js';
 // Deterministic Random
-export { SeededRandom } from './SeededRandom';
+export { SeededRandom } from './SeededRandom.js';
 // Logger
-export { Logger, logger } from './Logger';
+export { Logger, logger } from './Logger.js';
 //# sourceMappingURL=index.js.map

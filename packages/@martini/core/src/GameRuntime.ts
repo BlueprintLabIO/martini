@@ -5,10 +5,10 @@
  * The host runs the game, clients mirror the state.
  */
 
-import type { GameDefinition } from './defineGame';
-import type { Transport, WireMessage, RuntimeConfig } from './transport';
-import { generateDiff, applyPatch, deepClone, type Patch } from './sync';
-import { SeededRandom } from './SeededRandom';
+import type { GameDefinition } from './defineGame.js';
+import type { Transport, WireMessage, RuntimeConfig } from './transport.js';
+import { generateDiff, applyPatch, deepClone, type Patch } from './sync.js';
+import { SeededRandom } from './SeededRandom.js';
 
 type StateChangeCallback<TState> = (state: TState) => void;
 type EventCallback = (senderId: string, eventName: string, payload: any) => void;

@@ -4,6 +4,8 @@
  * v2: Fully automatic sprite syncing. Host runs physics, clients mirror.
  * User never has to think about networking - it just works.
  */
+import { SpriteManager } from './helpers/SpriteManager.js';
+import { InputManager } from './helpers/InputManager.js';
 /**
  * Phaser Adapter - Auto-syncs sprites via GameRuntime
  *
@@ -74,15 +76,14 @@ export class PhaserAdapter {
      */
     trackSprite(sprite, key, options = {}) {
         this.trackedSprites.set(key, { sprite, options });
-        // Initialize sprite state immediately
-        if (this.isHost()) {
-            this.syncSpriteToState(key, sprite, options);
-            // Start sync loop if not already running
-            if (!this.syncIntervalId) {
-                const interval = options.syncInterval || 50;
-                this.syncIntervalId = setInterval(() => this.syncAllSprites(), interval);
-            }
+        // Start sync loop if not already running (host only)
+        if (this.isHost() && !this.syncIntervalId) {
+            const interval = options.syncInterval || 50;
+            this.syncIntervalId = setInterval(() => this.syncAllSprites(), interval);
         }
+        // Note: We do NOT immediately sync here to avoid infinite loops
+        // when trackSprite is called inside onChange callbacks.
+        // The interval-based sync will handle the first sync.
     }
     /**
      * Stop tracking a sprite
@@ -277,6 +278,60 @@ export class PhaserAdapter {
      */
     getState() {
         return this.runtime.getState();
+    }
+    /**
+     * Get the runtime (for advanced usage)
+     */
+    getRuntime() {
+        return this.runtime;
+    }
+    // ============================================================================
+    // Helper Factories
+    // ============================================================================
+    /**
+     * Create a SpriteManager for automatic sprite synchronization
+     *
+     * @example
+     * ```ts
+     * const spriteManager = adapter.createSpriteManager({
+     *   onCreate: (key, data) => {
+     *     const sprite = this.add.sprite(data.x, data.y, 'player');
+     *     if (adapter.isHost()) {
+     *       this.physics.add.existing(sprite);
+     *     }
+     *     return sprite;
+     *   }
+     * });
+     *
+     * // Host: Add sprites
+     * spriteManager.add('player-1', { x: 100, y: 100 });
+     *
+     * // Update loop: Enable interpolation
+     * spriteManager.update();
+     * ```
+     */
+    createSpriteManager(config) {
+        return new SpriteManager(this, config);
+    }
+    /**
+     * Create an InputManager for simplified input handling
+     *
+     * @example
+     * ```ts
+     * const input = adapter.createInputManager();
+     *
+     * input.bindKeys({
+     *   'ArrowLeft': { action: 'move', input: { x: -1 }, mode: 'continuous' },
+     *   'ArrowRight': { action: 'move', input: { x: 1 }, mode: 'continuous' },
+     *   'Space': 'jump'
+     * });
+     *
+     * // In update loop
+     * input.update();
+     * ```
+     */
+    createInputManager() {
+        return new InputManager(this, this.scene);
     }
 }
 //# sourceMappingURL=PhaserAdapter.js.map

@@ -4,8 +4,8 @@
  * v2: Simplified, no determinism, no prediction, no rollback.
  * The host runs the game, clients mirror the state.
  */
-import { generateDiff, applyPatch, deepClone } from './sync';
-import { SeededRandom } from './SeededRandom';
+import { generateDiff, applyPatch, deepClone } from './sync.js';
+import { SeededRandom } from './SeededRandom.js';
 export class GameRuntime {
     gameDef;
     transport;

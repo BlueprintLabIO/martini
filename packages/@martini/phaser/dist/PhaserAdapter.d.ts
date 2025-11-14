@@ -5,6 +5,8 @@
  * User never has to think about networking - it just works.
  */
 import type { GameRuntime } from '@martini/core';
+import { SpriteManager, type SpriteManagerConfig } from './helpers/SpriteManager.js';
+import { InputManager } from './helpers/InputManager.js';
 export interface SpriteTrackingOptions {
     /** Sync interval in ms (default: 50ms / 20 FPS) */
     syncInterval?: number;
@@ -149,5 +151,54 @@ export declare class PhaserAdapter<TState = any> {
      * Get the current game state (typed)
      */
     getState(): TState;
+    /**
+     * Get the runtime (for advanced usage)
+     */
+    getRuntime(): GameRuntime<TState>;
+    /**
+     * Create a SpriteManager for automatic sprite synchronization
+     *
+     * @example
+     * ```ts
+     * const spriteManager = adapter.createSpriteManager({
+     *   onCreate: (key, data) => {
+     *     const sprite = this.add.sprite(data.x, data.y, 'player');
+     *     if (adapter.isHost()) {
+     *       this.physics.add.existing(sprite);
+     *     }
+     *     return sprite;
+     *   }
+     * });
+     *
+     * // Host: Add sprites
+     * spriteManager.add('player-1', { x: 100, y: 100 });
+     *
+     * // Update loop: Enable interpolation
+     * spriteManager.update();
+     * ```
+     */
+    createSpriteManager<TData extends {
+        x: number;
+        y: number;
+        [key: string]: any;
+    }>(config: SpriteManagerConfig<TData>): SpriteManager<TData>;
+    /**
+     * Create an InputManager for simplified input handling
+     *
+     * @example
+     * ```ts
+     * const input = adapter.createInputManager();
+     *
+     * input.bindKeys({
+     *   'ArrowLeft': { action: 'move', input: { x: -1 }, mode: 'continuous' },
+     *   'ArrowRight': { action: 'move', input: { x: 1 }, mode: 'continuous' },
+     *   'Space': 'jump'
+     * });
+     *
+     * // In update loop
+     * input.update();
+     * ```
+     */
+    createInputManager(): InputManager;
 }
 //# sourceMappingURL=PhaserAdapter.d.ts.map

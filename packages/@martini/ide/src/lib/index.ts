@@ -10,9 +10,8 @@ export { default as GamePreview } from './components/GamePreview.svelte';
 
 // Core
 export { VirtualFileSystem } from './core/VirtualFS';
-export { Bundler } from './core/Bundler';
+export { SandpackManager } from './core/SandpackManager';
 export { TypeScriptEnvironment } from './core/TypeScriptEnv';
-export { Sandbox } from './core/Sandbox';
 
 // Adapters
 export { PhaserEngine } from './adapters/PhaserEngine';

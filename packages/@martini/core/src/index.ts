@@ -7,12 +7,12 @@
  */
 
 // Core API
-export { defineGame } from './defineGame';
-export type { GameDefinition, ActionDefinition, ActionContext, SetupContext } from './defineGame';
+export { defineGame } from './defineGame.js';
+export type { GameDefinition, ActionDefinition, ActionContext, SetupContext } from './defineGame.js';
 
 // Runtime
-export { GameRuntime } from './GameRuntime';
-export type { GameRuntimeConfig } from './GameRuntime';
+export { GameRuntime } from './GameRuntime.js';
+export type { GameRuntimeConfig } from './GameRuntime.js';
 export type {
   Transport,
   WireMessage,
@@ -20,15 +20,15 @@ export type {
   TransportMetrics,
   ConnectionState,
   MessageStats
-} from './transport';
+} from './transport.js';
 
 // Utilities (kept from v1 for state sync)
-export { generateDiff, applyPatch } from './sync';
-export type { Patch } from './sync';
+export { generateDiff, applyPatch } from './sync.js';
+export type { Patch } from './sync.js';
 
 // Deterministic Random
-export { SeededRandom } from './SeededRandom';
+export { SeededRandom } from './SeededRandom.js';
 
 // Logger
-export { Logger, logger } from './Logger';
-export type { LogLevel, LogEntry, LogListener } from './Logger';
+export { Logger, logger } from './Logger.js';
+export type { LogLevel, LogEntry, LogListener } from './Logger.js';

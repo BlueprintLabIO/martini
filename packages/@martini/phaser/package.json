@@ -15,7 +15,8 @@
   "scripts": {
     "build": "tsc && pnpm build:browser",
     "build:browser": "esbuild browser.ts --bundle --format=iife --global-name=MartiniMultiplayer --outfile=dist/martini-multiplayer.browser.js",
-    "postbuild": "cp dist/martini-multiplayer.browser.js ../../apps/vesper/static/ 2>/dev/null || echo 'Skipping copy to vesper (dir may not exist)'",
+    "postbuild": "pnpm copy:bundles",
+    "copy:bundles": "cp dist/martini-multiplayer.browser.js ../../apps/vesper/static/ 2>/dev/null || echo 'Skipping vesper' && cp dist/martini-multiplayer.browser.js ../demos/static/ 2>/dev/null || echo 'Skipping demos'",
     "dev": "tsc --watch",
     "test": "vitest",
     "test:coverage": "vitest --coverage",

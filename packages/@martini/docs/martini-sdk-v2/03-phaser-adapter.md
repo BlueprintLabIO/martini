@@ -1,188 +1,344 @@
 # Phaser Adapter Guide
 
-`@martini/phaser` bridges your declarative game logic with Phaser scenes. It injects an `adapter` object into every scene so you can:
+`@martini/phaser` bridges your declarative game logic with Phaser scenes. The `PhaserAdapter` class helps you:
 
-- Track sprites and automatically sync them to Martini state.
-- Broadcast lightweight events.
-- Detect host vs. client roles.
-- Inspect connection info for UI.
+- Track sprites and automatically sync them across the network
+- Broadcast lightweight events
+- Detect host vs. client roles
+- Register remote sprites for smooth interpolation
 
 ---
 
 ## Bootstrapping
 
 ```ts
-import { PhaserAdapter } from '@martini/phaser';
+import { initializeGame } from '@martini/phaser';
 import { defineGame } from '@martini/core';
-import { WebSocketTransport } from '@martini/transport-ws';
-import { GameScene } from './GameScene';
+import { game } from './game';
+import { createScene } from './scene';
 
-const logic = defineGame({ /* ... */ });
-
-PhaserAdapter.start({
-  game: logic,
-  transport: new WebSocketTransport('wss://game.example.com'),
-  scenes: [GameScene],
-  assets: (scene) => {
-    scene.load.image('player', 'player.png');
-  },
-  phaser: {
+initializeGame({
+  game,
+  scene: createScene,
+  phaserConfig: {
     width: 960,
-    height: 540
+    height: 540,
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: { x: 0, y: 800 }
+      }
+    },
+    backgroundColor: '#1a1a2e'
   }
 });
 ```
 
-`start()` handles Phaser lifecycle, transport setup, and runtime wiring.
+`initializeGame()` handles:
+- Reading platform configuration (`__MARTINI_CONFIG__`)
+- Creating the appropriate transport
+- Setting up the GameRuntime
+- Creating the Phaser game instance
+
+---
+
+## Creating the Adapter
+
+Inside your scene's `create()` method, instantiate the `PhaserAdapter`:
+
+```ts
+import type { GameRuntime } from '@martini/core';
+import { PhaserAdapter } from '@martini/phaser';
+import Phaser from 'phaser';
+
+export function createScene(runtime: GameRuntime) {
+  return class GameScene extends Phaser.Scene {
+    adapter!: PhaserAdapter;
+
+    create() {
+      // Create adapter first
+      this.adapter = new PhaserAdapter(runtime, this);
+
+      // Now use adapter methods...
+    }
+  };
+}
+```
 
 ---
 
 ## Adapter API
 
-Inside `GameScene` (and any other scene you list), `this.adapter` exposes:
+The `PhaserAdapter` instance exposes:
 
 | Method / Property | Description |
 |-------------------|-------------|
-| `adapter.isHost()` | `true` only on the peer that owns simulation (runs full physics). |
-| `adapter.myId` | Stable identifier (string) for this peer. |
-| `adapter.trackSprite(sprite, key, options?)` | Syncs a sprite’s position/velocity with state. Use unique keys per entity. |
-| `adapter.stopTracking(key)` | Removes a tracked sprite manually. Usually not required—destroying the sprite will auto-untrack. |
-| `adapter.broadcast(eventName, payload)` | Sends a lightweight event to every peer (implemented via actions). |
-| `adapter.on(eventName, handler)` | Subscribes to events from other peers. Returns an unsubscribe function. |
-| `adapter.clients` | Array of connected peer IDs (including host). |
-| `adapter.transport` | Access to the underlying transport instance in case you need low-level info. |
+| `adapter.isHost()` | Returns `true` only on the host (runs physics simulation) |
+| `adapter.myId` | Stable identifier (string) for this peer |
+| `adapter.trackSprite(sprite, key, options?)` | Syncs a sprite's position/rotation automatically. Host only. |
+| `adapter.untrackSprite(key)` | Stops tracking a sprite manually |
+| `adapter.registerRemoteSprite(key, sprite)` | Registers a sprite created from network state (clients only) |
+| `adapter.unregisterRemoteSprite(key)` | Unregisters and destroys a remote sprite |
+| `adapter.updateInterpolation()` | Call in `update()` on clients for smooth movement |
+| `adapter.broadcast(eventName, payload)` | Broadcasts a custom event to all peers |
+| `adapter.on(eventName, handler)` | Subscribes to custom events. Returns unsubscribe function |
+| `adapter.onChange(callback)` | Listens for state changes. Returns unsubscribe function |
+| `adapter.getState()` | Returns the current game state (typed) |
 
 ### Example
 
 ```ts
 create() {
-  this.player = this.physics.add.sprite(100, 100, 'player');
-  this.adapter.trackSprite(this.player, `player-${this.adapter.myId}`, {
-    metadata: { role: 'fireboy' }
-  });
+  this.adapter = new PhaserAdapter(runtime, this);
 
-  this.adapter.on('coin-picked', (peerId, data) => {
-    this.log(`${peerId} picked coin ${data.id}`);
+  if (this.adapter.isHost()) {
+    // Host creates physics sprites
+    this.player = this.physics.add.sprite(100, 100, 'player');
+    this.adapter.trackSprite(this.player, `player-${this.adapter.myId}`);
+  } else {
+    // Clients create visual sprites from state
+    this.adapter.onChange((state: any) => {
+      if (!state._sprites) return;
+
+      for (const [key, data] of Object.entries(state._sprites)) {
+        if (!this.remoteSprites.has(key)) {
+          const sprite = this.add.sprite(data.x, data.y, 'player');
+          this.remoteSprites.set(key, sprite);
+          this.adapter.registerRemoteSprite(key, sprite);
+        }
+      }
+    });
+  }
+
+  // Listen for custom events
+  this.adapter.on('coin-picked', (senderId, data) => {
+    console.log(`${senderId} picked coin ${data.id}`);
   });
 }
 ```
 
 ---
 
-## Tracking Sprites
+## Tracking Sprites (Host Only)
 
-`trackSprite` watches the following properties:
+`trackSprite()` automatically syncs sprite properties to the network:
 
+**Tracked Properties:**
 - `x`, `y`
-- `velocityX`, `velocityY` (if `sprite.body` exists)
-- `active`, `visible`
-- Any custom metadata you include in `options.metadata`
+- `rotation`
+- `alpha`
+- Additional properties specified in `options.properties`
 
-The host calls the corresponding action (`syncPosition` by default). Clients simply update their local sprites to match the state changes.
+**Usage:**
 
 ```ts
-trackSprite(sprite: Phaser.GameObjects.Sprite, key: string, options?: {
-  metadata?: Record<string, any>;
+trackSprite(sprite: Phaser.GameObjects.GameObject, key: string, options?: {
+  syncInterval?: number;       // Sync frequency in ms (default: 50ms / 20 FPS)
+  properties?: string[];        // Additional properties to sync
+  interpolate?: boolean;        // Enable interpolation (client-side)
 });
 ```
 
-**Tips**
+**Example:**
 
+```ts
+// Basic tracking
+this.adapter.trackSprite(this.player, `player-${this.adapter.myId}`);
+
+// Custom properties and sync rate
+this.adapter.trackSprite(this.enemy, `enemy-1`, {
+  syncInterval: 30,  // 33 FPS
+  properties: ['x', 'y', 'rotation', 'alpha', 'scaleX', 'scaleY']
+});
+```
+
+**Tips:**
 - Use stable keys: `player-${adapter.myId}`, `enemy-${id}`, etc.
-- Destroying a sprite automatically stops tracking.
-- Sprites created on clients but not on host are ignored; host decides which entities exist.
+- Only the **host** should call `trackSprite()`
+- Destroying a sprite automatically stops tracking
+- Host controls physics; clients just mirror positions
 
 ---
 
-## Events
+## Remote Sprites (Clients Only)
 
-Events are lightweight compared to full state changes—perfect for moments that don’t need persisted state (e.g., “door opened” sound effects).
+Clients need to create visual representations of sprites tracked by the host:
 
 ```ts
-// Host
-this.adapter.broadcast('door-opened', { doorId: 3 });
+create() {
+  if (!this.adapter.isHost()) {
+    this.adapter.onChange((state: any) => {
+      const sprites = state._sprites || {}; // Default namespace
 
-// Everyone
-const unsubscribe = this.adapter.on('door-opened', (_peerId, data) => {
-  this.sounds.playDoor(data.doorId);
-});
+      for (const [key, data] of Object.entries(sprites)) {
+        if (!this.remoteSprites.has(key)) {
+          // Create sprite from network data
+          const sprite = this.add.sprite(data.x, data.y, 'player');
+
+          // Register for interpolation
+          this.adapter.registerRemoteSprite(key, sprite);
+
+          this.remoteSprites.set(key, sprite);
+        }
+      }
+    });
+  }
+}
+
+update() {
+  // Smooth interpolation on clients
+  if (!this.adapter.isHost()) {
+    this.adapter.updateInterpolation();
+  }
+}
 ```
 
-Under the hood, broadcast events are converted into Martini actions with simple payloads. They go through the same transport and benefit from schema validation.
+**Interpolation:**
+- Call `adapter.updateInterpolation()` in your `update()` loop (clients only)
+- This smoothly lerps sprites toward their target positions
+- Configure lerp factor in `PhaserAdapter` constructor options
+
+---
+
+## Custom Events
+
+Events are lightweight and perfect for one-time occurrences (sounds, particles, etc.):
+
+**Broadcasting:**
+
+```ts
+// Anyone can broadcast
+this.adapter.broadcast('door-opened', { doorId: 3 });
+this.adapter.broadcast('player-scored', { points: 100 });
+```
+
+**Listening:**
+
+```ts
+const unsubscribe = this.adapter.on('door-opened', (senderId, payload) => {
+  console.log(`Player ${senderId} opened door ${payload.doorId}`);
+  this.sound.play('door-open');
+});
+
+// Cleanup later
+unsubscribe();
+```
+
+**Note:** Events go through the transport layer and are implemented via actions under the hood.
 
 ---
 
 ## Host-Only Logic
 
-Use `adapter.isHost()` to guard code that should only run on the authority. Common examples:
+Use `adapter.isHost()` to guard code that should only run on the authoritative peer:
 
 ```ts
-if (this.adapter.isHost()) {
-  this.spawnCoins();
-  this.time.addEvent({
-    delay: 5000,
-    loop: true,
-    callback: this.spawnEnemy,
-    callbackScope: this
-  });
+create() {
+  if (this.adapter.isHost()) {
+    // Only host spawns entities
+    this.spawnCoins();
+    this.spawnEnemies();
+
+    // Only host sets up timers
+    this.time.addEvent({
+      delay: 5000,
+      loop: true,
+      callback: () => this.spawnPowerUp(),
+      callbackScope: this
+    });
+  }
+}
+
+update() {
+  if (this.adapter.isHost()) {
+    // Only host runs physics
+    this.updateEnemyAI();
+    this.checkCollisions();
+  } else {
+    // Clients just interpolate
+    this.adapter.updateInterpolation();
+  }
 }
 ```
 
-Clients never run this code—they simply mirror whatever the host’s actions produce.
+**Why separate host/client logic?**
+- Host is authoritative - runs real game simulation
+- Clients are presentational - just display what host sends
+- This prevents desyncs and cheating
 
 ---
 
-## UI Helpers
+## Configuration
 
-`adapter.clients` includes host and every connected peer. It’s useful for UI overlays:
+You can configure the adapter behavior:
 
 ```ts
-drawPlayerList() {
-  const players = this.adapter.clients.map((id) => ({
-    id,
-    isHost: id === this.adapter.hostId
-  }));
-  // render your UI here
-}
+this.adapter = new PhaserAdapter(runtime, this, {
+  spriteNamespace: 'gameSprites',  // Custom state property (default: '_sprites')
+  autoInterpolate: true,            // Auto-lerp on clients (default: true)
+  lerpFactor: 0.3                   // Smoothness: 0.1 = smooth, 0.5 = snappy
+});
 ```
 
-`adapter.hostId` returns the id of the authoritative peer (helpful for debugging or migrating host status in the future).
+---
+
+## State Access
+
+Access the game state directly:
+
+```ts
+const state = this.adapter.getState();
+console.log(state.players);
+
+// Or listen for changes
+this.adapter.onChange((newState) => {
+  this.updateUI(newState);
+});
+```
+
+**Note:** State updates are read-only on clients. Only the host mutates state via actions.
 
 ---
 
 ## Cleanup
 
-`PhaserAdapter.start()` returns a handle if you want to stop the runtime manually:
+The adapter automatically cleans up tracked sprites, but you can manually cleanup if needed:
 
 ```ts
-const instance = PhaserAdapter.start({ /* ... */ });
+// Stop tracking a sprite
+this.adapter.untrackSprite(`player-${playerId}`);
 
-// Later (e.g., when leaving a page)
-instance.stop();
+// Remove remote sprite
+this.adapter.unregisterRemoteSprite(`player-${playerId}`);
+
+// Destroy adapter
+this.adapter.destroy();
 ```
-
-Stopping tears down Phaser, unsubscribes from transport events, and clears tracked sprites.
 
 ---
 
 ## FAQ
 
-**Q: Do clients need to call `trackSprite`?**  
-A: Only the host needs to track authoritative sprites. Clients automatically create mirror sprites based on state patches. However, if clients spawn UI-only sprites (particles, HUD), they can skip tracking entirely.
+**Q: Do clients need to call `trackSprite`?**
+A: No. Only the host tracks sprites. Clients create visual sprites via `registerRemoteSprite()`.
 
-**Q: Can I override which action is dispatched when tracking?**  
-A: Yes—`trackSprite` accepts an `options.actionName` if you want to send something other than `syncPosition`.
+**Q: Can I sync custom properties like health or ammo?**
+A: Not directly via `trackSprite`. Store those in your game state and sync via actions instead.
 
-**Q: How do I sync custom data (health, animations)?**  
-A: Either bake it into the main `state.players` schema or broadcast small events (`adapter.broadcast('took-damage', {...})`). Remember: anything you want persisted must live in state/actions.
+**Q: How do I handle sprite destruction?**
+A: Destroying a sprite on the host automatically stops tracking. Clients should listen for state changes and remove sprites that no longer exist.
+
+**Q: What's the sprite namespace for?**
+A: By default, tracked sprites are stored in `state._sprites`. You can customize this with the `spriteNamespace` option.
 
 ---
 
-## What’s Next?
+## What's Next?
 
-- Learn about the transport layer in [transports.md](./transports.md).
-- Need to migrate old sandbox projects? Check [migration-from-gameapi.md](./migration-from-gameapi.md).
+- Learn about the transport layer in [transports.md](./04-transports.md)
+- Read best practices in [best-practices.md](./05-best-practices.md)
+- Check the API reference in [07-api-reference-core.md](./07-api-reference-core.md)
 
-If you run into adapter bugs, open an issue with a minimal Phaser scene and we’ll take a look. 
+If you run into adapter bugs, open an issue with a minimal scene and we'll take a look.
 
 ---

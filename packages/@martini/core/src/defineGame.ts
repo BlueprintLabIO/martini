@@ -4,7 +4,7 @@
  * Host-authoritative: the host runs the game, others mirror the state.
  */
 
-import type { SeededRandom } from './SeededRandom';
+import type { SeededRandom } from './SeededRandom.js';
 
 /**
  * Setup context - provides initial player list and deterministic random

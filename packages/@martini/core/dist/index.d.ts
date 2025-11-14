@@ -5,14 +5,14 @@
  *
  * @packageDocumentation
  */
-export { defineGame } from './defineGame';
-export type { GameDefinition, ActionDefinition, ActionContext, SetupContext } from './defineGame';
-export { GameRuntime } from './GameRuntime';
-export type { GameRuntimeConfig } from './GameRuntime';
-export type { Transport, WireMessage, RuntimeConfig, TransportMetrics, ConnectionState, MessageStats } from './transport';
-export { generateDiff, applyPatch } from './sync';
-export type { Patch } from './sync';
-export { SeededRandom } from './SeededRandom';
-export { Logger, logger } from './Logger';
-export type { LogLevel, LogEntry, LogListener } from './Logger';
+export { defineGame } from './defineGame.js';
+export type { GameDefinition, ActionDefinition, ActionContext, SetupContext } from './defineGame.js';
+export { GameRuntime } from './GameRuntime.js';
+export type { GameRuntimeConfig } from './GameRuntime.js';
+export type { Transport, WireMessage, RuntimeConfig, TransportMetrics, ConnectionState, MessageStats } from './transport.js';
+export { generateDiff, applyPatch } from './sync.js';
+export type { Patch } from './sync.js';
+export { SeededRandom } from './SeededRandom.js';
+export { Logger, logger } from './Logger.js';
+export type { LogLevel, LogEntry, LogListener } from './Logger.js';
 //# sourceMappingURL=index.d.ts.map

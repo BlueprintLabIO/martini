@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Iframe</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        #status {
+            background: #111;
+            border: 2px solid #0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        #key-display {
+            background: #111;
+            border: 2px solid #ff0;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 100px;
+        }
+        .key-event {
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+        h2 {
+            margin-top: 0;
+            color: #0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">
+        <h2>Iframe Status</h2>
+        <div id="status-text">Initializing...</div>
+    </div>
+
+    <div id="key-display">
+        <h2>Keyboard Events Received</h2>
+        <div id="events"></div>
+    </div>
+
+    <script>
+        const statusText = document.getElementById('status-text');
+        const eventsDiv = document.getElementById('events');
+        const events = [];
+
+        function log(message) {
+            console.log('[TEST IFRAME]', message);
+            // Send log to parent
+            window.parent.postMessage({
+                type: 'IFRAME_LOG',
+                message: message
+            }, '*');
+        }
+
+        function addEvent(eventType, key, code) {
+            const eventText = `${eventType}: ${key} (${code})`;
+            events.unshift(eventText);
+            if (events.length > 10) events.pop();
+
+            eventsDiv.innerHTML = events
+                .map(e => `<div class="key-event">${e}</div>`)
+                .join('');
+
+            log(`Event: ${eventText}`);
+        }
+
+        // Test 1: Can we receive postMessage?
+        window.addEventListener('message', (event) => {
+            log(`Received postMessage: ${event.data.type}`);
+
+            if (event.data.type === 'KEYBOARD_EVENT') {
+                const { eventType, key, code, keyCode } = event.data.payload;
+                log(`Keyboard event via postMessage: ${eventType} ${key}`);
+
+                addEvent(eventType, key, code);
+
+                // Test 2: Can we dispatch synthetic events?
+                try {
+                    const keyboardEvent = new KeyboardEvent(eventType, {
+                        key: key,
+                        code: code,
+                        keyCode: keyCode,
+                        bubbles: true,
+                        cancelable: true
+                    });
+
+                    document.dispatchEvent(keyboardEvent);
+                    document.body.dispatchEvent(keyboardEvent);
+
+                    log(`Dispatched synthetic ${eventType}`);
+                } catch (err) {
+                    log(`ERROR dispatching event: ${err.message}`);
+                }
+            }
+        });
+
+        // Test 3: Can we detect native keyboard events?
+        document.addEventListener('keydown', (e) => {
+            log(`Native keydown detected: ${e.key}`);
+            addEvent('native-keydown', e.key, e.code);
+        });
+
+        document.addEventListener('keyup', (e) => {
+            log(`Native keyup detected: ${e.key}`);
+            addEvent('native-keyup', e.key, e.code);
+        });
+
+        // Test 4: Try to make iframe focusable
+        document.body.tabIndex = 1;
+        document.body.focus();
+
+        statusText.textContent = 'Ready! Waiting for keyboard events...';
+        log('Iframe initialized and ready');
+    </script>
+</body>
+</html>

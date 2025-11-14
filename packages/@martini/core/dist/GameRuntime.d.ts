@@ -4,8 +4,8 @@
  * v2: Simplified, no determinism, no prediction, no rollback.
  * The host runs the game, clients mirror the state.
  */
-import type { GameDefinition } from './defineGame';
-import type { Transport, RuntimeConfig } from './transport';
+import type { GameDefinition } from './defineGame.js';
+import type { Transport, RuntimeConfig } from './transport.js';
 type StateChangeCallback<TState> = (state: TState) => void;
 type EventCallback = (senderId: string, eventName: string, payload: any) => void;
 /**

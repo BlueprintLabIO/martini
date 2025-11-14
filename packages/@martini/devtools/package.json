@@ -12,9 +12,11 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && pnpm build:browser",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "build:browser": "esbuild browser.ts --bundle --format=iife --global-name=Martini --outfile=dist/martini-devtools.browser.js",
+    "postbuild": "cp dist/martini-devtools.browser.js ../ide/static/ 2>/dev/null || echo \"Skipping copy to IDE (dir may not exist)\""
   },
   "keywords": [
     "devtools",
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@martini/transport-local": "workspace:*",
     "@types/node": "^22.10.2",
+    "esbuild": "^0.27.0",
     "typescript": "^5.7.2",
     "vitest": "^3.2.4"
   },

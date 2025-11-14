@@ -24,57 +24,59 @@ pnpm add @martini/core @martini/phaser @martini/transport-p2p
 ```
 
 ```ts
-import { defineGame } from '@martini/core';
-import { PhaserAdapter } from '@martini/phaser';
-import { P2PTransport } from '@martini/transport-p2p';
+import { defineGame, GameRuntime } from '@martini/core';
+import { PhaserAdapter, initializeGame } from '@martini/phaser';
+import { TrysteroTransport } from '@martini/transport-trystero';
 
-const logic = defineGame({
-  state: {
-    players: {
-      type: 'map',
-      schema: { x: 'number', y: 'number', role: 'string' }
-    }
-  },
+const game = defineGame({
+  setup: ({ playerIds }) => ({
+    players: Object.fromEntries(
+      playerIds.map(id => [id, { x: 100, y: 100 }])
+    )
+  }),
   actions: {
     move: {
-      input: { x: 'number', y: 'number' },
-      apply(state, playerId, input) {
-        state.players[playerId] = {
-          ...state.players[playerId],
-          x: input.x,
-          y: input.y
-        };
+      apply(state, context, input) {
+        state.players[context.targetId].x = input.x;
+        state.players[context.targetId].y = input.y;
       }
     }
   }
 });
 
-class GameScene extends Phaser.Scene {
-  preload() {
-    this.load.image('player', 'player.png');
-  }
+function createScene(runtime: GameRuntime) {
+  return class GameScene extends Phaser.Scene {
+    adapter!: PhaserAdapter;
+    player!: Phaser.GameObjects.Sprite;
 
-  create() {
-    this.player = this.physics.add.sprite(100, 100, 'player');
-    this.adapter.trackSprite(this.player, `player-${this.adapter.myId}`);
-  }
+    create() {
+      this.adapter = new PhaserAdapter(runtime, this);
 
-  update() {
-    const cursors = this.input.keyboard.createCursorKeys();
-    if (cursors.left.isDown) {
-      this.player.setVelocityX(-160);
-    } else if (cursors.right.isDown) {
-      this.player.setVelocityX(160);
-    } else {
-      this.player.setVelocityX(0);
+      this.player = this.physics.add.sprite(100, 100, 'player');
+      this.adapter.trackSprite(this.player, \`player-\${this.adapter.myId}\`);
     }
-  }
+
+    update() {
+      const cursors = this.input.keyboard!.createCursorKeys();
+      if (cursors.left.isDown) {
+        this.player.setVelocityX(-160);
+      } else if (cursors.right.isDown) {
+        this.player.setVelocityX(160);
+      } else {
+        this.player.setVelocityX(0);
+      }
+    }
+  };
 }
 
-PhaserAdapter.start({
-  game: logic,
-  transport: new P2PTransport('room-123'),
-  scenes: [GameScene]
+initializeGame({
+  game,
+  scene: createScene,
+  phaserConfig: {
+    width: 800,
+    height: 600,
+    backgroundColor: '#1a1a2e'
+  }
 });
 ```
 

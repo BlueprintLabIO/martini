@@ -54,12 +54,12 @@ export function createScene(runtime: GameRuntime) {
 	return class GameScene extends Phaser.Scene {
 		private adapter!: PhaserAdapter;
 		private platforms?: Phaser.Physics.Arcade.StaticGroup;
-		private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
-		private playerSprites = new Map<string, Phaser.GameObjects.Rectangle>();
+		private spriteManager: any;
+		private inputManager: any;
 		private playerLabels = new Map<string, Phaser.GameObjects.Text>();
 
 		create() {
-			// Initialize PhaserAdapter (FIRST - must be before any sprite tracking)
+			// Initialize adapter
 			this.adapter = new PhaserAdapter(runtime, this);
 
 			// Title
@@ -76,167 +76,83 @@ export function createScene(runtime: GameRuntime) {
 
 			// Create platforms
 			this.platforms = this.physics.add.staticGroup();
+			this.platforms.add(this.add.rectangle(400, 580, 800, 40, 0x4a5568));
+			this.platforms.add(this.add.rectangle(200, 450, 200, 20, 0x4a5568));
+			this.platforms.add(this.add.rectangle(600, 350, 200, 20, 0x4a5568));
+			this.platforms.add(this.add.rectangle(400, 250, 150, 20, 0x4a5568));
 
-			// Ground
-			const ground = this.add.rectangle(400, 580, 800, 40, 0x4a5568);
-			this.platforms.add(ground);
+			// ✨ NEW: SpriteManager - handles all host/client sprite logic automatically
+			this.spriteManager = this.adapter.createSpriteManager({
+				onCreate: (key: string, data: any) => {
+					// Create sprite (runs on both host and client)
+					const color = data.role === 'fire' ? 0xff4444 : 0x4488ff;
+					const sprite = this.add.rectangle(data.x, data.y, 32, 32, color);
 
-			// Platforms
-			const plat1 = this.add.rectangle(200, 450, 200, 20, 0x4a5568);
-			const plat2 = this.add.rectangle(600, 350, 200, 20, 0x4a5568);
-			const plat3 = this.add.rectangle(400, 250, 150, 20, 0x4a5568);
-			this.platforms.add(plat1);
-			this.platforms.add(plat2);
-			this.platforms.add(plat3);
+					// Add label (both host + client)
+					const label = this.add.text(0, 0, data.role === 'fire' ? 'Fire' : 'Ice', {
+						fontSize: '10px',
+						color: '#fff'
+					}).setOrigin(0.5);
+					this.playerLabels.set(key, label);
 
-			// Keyboard input
-			this.cursors = this.input.keyboard?.createCursorKeys();
-
-			// HOST: Create physics sprites for each player
-			if (this.adapter.isHost()) {
-				const state = runtime.getState();
-
-				// Create initial players
-				for (const [playerId, playerData] of Object.entries(state.players)) {
-					const color = playerData.role === 'fire' ? 0xff4444 : 0x4488ff;
-					const sprite = this.add.rectangle(
-						playerData.x || 400,
-						playerData.y || 300,
-						32,
-						32,
-						color
-					);
-
-					// Enable physics
+					return sprite;
+				},
+				// ✨ Physics setup (HOST ONLY - automatic!)
+				onCreatePhysics: (sprite: any) => {
 					this.physics.add.existing(sprite);
 					const body = sprite.body as Phaser.Physics.Arcade.Body;
 					body.setCollideWorldBounds(true);
 					body.setBounce(0.2);
-
-					// Add collision with platforms
 					this.physics.add.collider(sprite, this.platforms!);
-
-					// Track sprite for auto-sync
-					this.adapter.trackSprite(sprite, \`player-\${playerId}\`);
-
-					// Add label
-					const label = this.add.text(0, 0, playerData.role === 'fire' ? 'Fire' : 'Ice', {
-						fontSize: '10px',
-						color: '#fff'
-					}).setOrigin(0.5);
-
-					this.playerSprites.set(playerId, sprite);
-					this.playerLabels.set(playerId, label);
 				}
+			});
 
-				// Handle new players joining
-				runtime.onChange((state) => {
-					if (!state?.players) return;
+			// ✨ NEW: InputManager - handles keyboard input automatically
+			this.inputManager = this.adapter.createInputManager();
+			this.inputManager.bindKeys({
+				'ArrowLeft': { action: 'move', input: { x: -1, y: 0 }, mode: 'continuous' },
+				'ArrowRight': { action: 'move', input: { x: 1, y: 0 }, mode: 'continuous' },
+				'ArrowUp': { action: 'move', input: { x: 0, y: -1 }, mode: 'continuous' }
+			});
 
-					for (const [playerId, playerData] of Object.entries(state.players)) {
-						if (!this.playerSprites.has(playerId)) {
-							const color = playerData.role === 'fire' ? 0xff4444 : 0x4488ff;
-							const sprite = this.add.rectangle(
-								playerData.x || 400,
-								playerData.y || 300,
-								32,
-								32,
-								color
-							);
-
-							this.physics.add.existing(sprite);
-							const body = sprite.body as Phaser.Physics.Arcade.Body;
-							body.setCollideWorldBounds(true);
-							body.setBounce(0.2);
-							this.physics.add.collider(sprite, this.platforms!);
-
-							this.adapter.trackSprite(sprite, \`player-\${playerId}\`);
-
-							const label = this.add.text(0, 0, playerData.role === 'fire' ? 'Fire' : 'Ice', {
-								fontSize: '10px',
-								color: '#fff'
-							}).setOrigin(0.5);
-
-							this.playerSprites.set(playerId, sprite);
-							this.playerLabels.set(playerId, label);
-						}
-					}
-				});
-			} else {
-				// CLIENT: Create visual sprites from state
-				this.adapter.onChange((state: any) => {
-					if (!state._sprites) return;
-
-					for (const [key, data] of Object.entries(state._sprites) as [string, any][]) {
-						if (!this.playerSprites.has(key)) {
-							const playerId = key.replace('player-', '');
-							const playerData = state.players[playerId];
-							const color = playerData?.role === 'fire' ? 0xff4444 : 0x4488ff;
-
-							const sprite = this.add.rectangle(
-								data.x || 400,
-								data.y || 300,
-								32,
-								32,
-								color
-							);
-
-							const label = this.add.text(0, 0, playerData?.role === 'fire' ? 'Fire' : 'Ice', {
-								fontSize: '10px',
-								color: '#fff'
-							}).setOrigin(0.5);
-
-							this.playerSprites.set(key, sprite);
-							this.playerLabels.set(key, label);
-							this.adapter.registerRemoteSprite(key, sprite);
-						}
-					}
-				});
+			// HOST: Create initial players
+			if (this.adapter.isHost()) {
+				const state = runtime.getState();
+				for (const [playerId, playerData] of Object.entries(state.players)) {
+					this.spriteManager.add(\`player-\${playerId}\`, playerData);
+				}
 			}
 		}
 
 		update() {
-			if (!this.cursors) return;
-
 			// Update labels to follow sprites
-			for (const [key, sprite] of this.playerSprites.entries()) {
+			for (const [key, sprite] of this.spriteManager.getAll().entries()) {
 				const label = this.playerLabels.get(key);
 				if (label) {
 					label.setPosition(sprite.x, sprite.y - 25);
 				}
 			}
 
-			// CLIENT: Smooth interpolation
-			if (!this.adapter.isHost()) {
-				this.adapter.updateInterpolation();
-				return;
-			}
+			// ✨ SpriteManager handles interpolation automatically
+			this.spriteManager.update();
 
-			// Collect input
-			const input = { x: 0, y: 0 };
-
-			if (this.cursors.left?.isDown) input.x = -1;
-			if (this.cursors.right?.isDown) input.x = 1;
-			if (this.cursors.up?.isDown) input.y = -1;
-
-			// Submit input to runtime
-			if (input.x !== 0 || input.y !== 0) {
-				runtime.submitAction('move', input);
-			}
+			// ✨ InputManager handles keyboard input automatically
+			this.inputManager.update();
 
 			// HOST: Apply physics based on inputs
+			if (!this.adapter.isHost()) return;
+
 			const state = runtime.getState();
 			if (!state?.players || !state?.inputs) return;
 
 			for (const [playerId, inputData] of Object.entries(state.inputs)) {
-				const sprite = this.playerSprites.get(playerId);
+				const sprite = this.spriteManager.get(\`player-\${playerId}\`);
 				if (!sprite || !sprite.body) continue;
 
 				const body = sprite.body as Phaser.Physics.Arcade.Body;
 				const speed = 200;
 				const jumpPower = 330;
 
-				// Horizontal movement
 				body.setVelocityX(inputData.x * speed);
 
 				// Jumping (only if on ground)
@@ -263,7 +179,7 @@ initializeGame({
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { x: 0, y: 0 },
+        gravity: { x: 0, y: 400 },
         debug: false
       }
     },
@@ -273,7 +189,7 @@ initializeGame({
 `
 		},
 		engine: 'phaser',
-		transport: { type: 'iframe-bridge' },
+		transport: { type: 'local' },
 		layout: 'dual'
 	};
 </script>
@@ -281,7 +197,7 @@ initializeGame({
 <div class="demo-page">
 	<header>
 		<h1>@martini/ide Demo</h1>
-		<p>Embeddable multiplayer game IDE with dual-view local testing</p>
+		<p>Embeddable multiplayer game IDE with dual-player testing</p>
 	</header>
 
 	<div class="ide-container">

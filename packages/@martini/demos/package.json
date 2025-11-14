@@ -27,6 +27,7 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@codesandbox/sandpack-client": "^2.19.8",
 		"@martini/core": "workspace:*",
 		"@martini/ide": "workspace:*",
 		"@martini/phaser": "workspace:*",

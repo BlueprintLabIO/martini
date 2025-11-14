@@ -7,7 +7,7 @@ This guide gets you from zero to a working host-authoritative Phaser game in les
 ## 1. Install Dependencies
 
 ```bash
-pnpm add @martini/core @martini/phaser @martini/transport-trystero phaser
+pnpm add @martini/core @martini/phaser phaser
 ```
 
 > Use `npm` or `yarn` if you prefer; the package list is the same.
@@ -16,36 +16,35 @@ pnpm add @martini/core @martini/phaser @martini/transport-trystero phaser
 
 ## 2. Define Game Logic
 
-Create `logic.ts`:
+Create `game.ts`:
 
 ```ts
 import { defineGame } from '@martini/core';
 
-export const gameLogic = defineGame({
-  state: {
-    players: {
-      type: 'map',
-      schema: {
-        x: { type: 'number', min: 0, max: 960 },
-        y: { type: 'number', min: 0, max: 540 },
-        role: 'string'
+export const game = defineGame({
+  setup: ({ playerIds }) => ({
+    players: Object.fromEntries(
+      playerIds.map(id => [id, { x: 100, y: 100, score: 0 }])
+    )
+  }),
+
+  actions: {
+    move: {
+      apply(state, context, input) {
+        if (state.players[context.targetId]) {
+          state.players[context.targetId].x = input.x;
+          state.players[context.targetId].y = input.y;
+        }
       }
     }
   },
-  actions: {
-    syncPosition: {
-      input: { x: 'number', y: 'number' },
-      apply(state, playerId, input) {
-        const previous = state.players[playerId] ?? { role: 'player' };
-        state.players[playerId] = { ...previous, ...input };
-      }
-    },
-    broadcastEvent: {
-      input: { eventName: 'string', payload: 'any' },
-      apply(state, _playerId, input) {
-        state.lastEvent = input;
-      }
-    }
+
+  onPlayerJoin(state, playerId) {
+    state.players[playerId] = { x: 100, y: 100, score: 0 };
+  },
+
+  onPlayerLeave(state, playerId) {
+    delete state.players[playerId];
   }
 });
 ```
@@ -56,26 +55,40 @@ This is the only place you describe state and mutations. No networking code appe
 
 ## 3. Build a Phaser Scene
 
+Create `scene.ts`:
+
 ```ts
-// GameScene.ts
 import Phaser from 'phaser';
+import type { GameRuntime } from '@martini/core';
+import { PhaserAdapter } from '@martini/phaser';
 
-export class GameScene extends Phaser.Scene {
-  create() {
-    this.player = this.physics.add.sprite(100, 100, 'player');
-    this.cursors = this.input.keyboard.createCursorKeys();
-    this.adapter.trackSprite(this.player, `player-${this.adapter.myId}`);
-  }
+export function createScene(runtime: GameRuntime) {
+  return class GameScene extends Phaser.Scene {
+    adapter!: PhaserAdapter;
+    player!: Phaser.GameObjects.Sprite;
+    cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
-  update() {
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-160);
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(160);
-    } else {
-      this.player.setVelocityX(0);
+    create() {
+      this.adapter = new PhaserAdapter(runtime, this);
+
+      this.player = this.physics.add.sprite(100, 100, 'player');
+      this.cursors = this.input.keyboard!.createCursorKeys();
+
+      // Track sprite for automatic syncing across network
+      this.adapter.trackSprite(this.player, `player-${this.adapter.myId}`);
     }
-  }
+
+    update() {
+      // Standard Phaser input handling
+      if (this.cursors.left.isDown) {
+        this.player.setVelocityX(-160);
+      } else if (this.cursors.right.isDown) {
+        this.player.setVelocityX(160);
+      } else {
+        this.player.setVelocityX(0);
+      }
+    }
+  };
 }
 ```
 
@@ -85,54 +98,87 @@ Notice that this is standard Phaser code. The adapter takes care of syncing.
 
 ## 4. Wire Everything Together
 
-```ts
-import { PhaserAdapter } from '@martini/phaser';
-import { P2PTransport } from '@martini/transport-p2p';
-import { gameLogic } from './logic';
-import { GameScene } from './GameScene';
+Create `main.ts`:
 
-PhaserAdapter.start({
-  game: gameLogic,
-  transport: new P2PTransport('room-123'), // or any other transport
-  scenes: [GameScene],
-  assets: (scene) => {
-    scene.load.image('player', 'player.png');
+```ts
+import { initializeGame } from '@martini/phaser';
+import { game } from './game';
+import { createScene } from './scene';
+
+initializeGame({
+  game,
+  scene: createScene,
+  phaserConfig: {
+    width: 800,
+    height: 600,
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: { x: 0, y: 0 }
+      }
+    },
+    backgroundColor: '#1a1a2e'
   }
 });
 ```
 
-This single call:
+This call:
 
-1. Initializes the transport.
-2. Spins up Phaser with your scenes.
-3. Injects `adapter` helpers into each scene instance.
-4. Keeps sprites synced by dispatching actions under the hood.
+1. Reads platform configuration (transport type, room ID, etc.)
+2. Creates the appropriate transport automatically
+3. Sets up the GameRuntime
+4. Creates the Phaser game instance
+5. Keeps sprites synced automatically
 
----
-
-## 5. Run Two Browsers
-
-1. Start your dev server (`vite`, `webpack`, etc.).
-2. Open two browser windows with the same URL.
-3. In one tab, click “Host Game” (your UI can be as simple as a button).
-4. Share the room code with the second tab (P2P transport handles the rest).
-
-You should see both characters move around in sync. The host feels instantaneous; the client follows with minimal latency.
+**Note:** The platform (IDE, production runtime) injects `__MARTINI_CONFIG__` which specifies the transport type and connection details. This is set by:
+- `@martini/ide` for the browser IDE
+- Your own runtime wrapper for production games
 
 ---
 
-## Optional: Switch Transports
+## 5. Platform Configuration
 
-Local testing is easier with P2P, but production games usually prefer a relay:
+For standalone games (outside the IDE), you need to inject the platform config:
 
-```ts
-import { WebSocketTransport } from '@martini/transport-ws';
-
-const transport = new WebSocketTransport('wss://game.example.com');
-PhaserAdapter.start({ game: logic, transport, scenes: [GameScene] });
+```html
+<script>
+  window.__MARTINI_CONFIG__ = {
+    transport: {
+      type: 'iframe-bridge', // or 'trystero' for P2P
+      roomId: 'my-game-room',
+      isHost: true // or false for clients
+    }
+  };
+</script>
+<script type="module" src="/src/main.ts"></script>
 ```
 
-No other code changes required.
+For production, you might use Trystero for P2P:
+
+```html
+<script>
+  window.__MARTINI_CONFIG__ = {
+    transport: {
+      type: 'trystero',
+      roomId: 'game-123',
+      isHost: location.hash === '#host',
+      appId: 'my-game' // Trystero app ID
+    }
+  };
+</script>
+```
+
+---
+
+## 6. Run Two Browsers
+
+1. Start your dev server (`vite`, `webpack`, etc.)
+2. Open two browser windows
+3. In one tab, set `isHost: true` in the config
+4. In the other tab, set `isHost: false`
+5. Both should connect and sync!
+
+You should see both characters move around in sync. The host feels instantaneous; the client follows with minimal latency.
 
 ---
 
@@ -140,10 +186,10 @@ No other code changes required.
 
 | Symptom | Likely Cause | Fix |
 |---------|--------------|-----|
-| Sprites don’t appear on clients | `trackSprite` missing or wrong key | Call `trackSprite(sprite, uniqueKey)` after creating each sprite. |
-| Clients don’t connect | Transport not emitting peer join events | Confirm signalling server / room ID, or use the WebSocket transport instead of P2P. |
-| State shows `undefined` players | Actions ran before player entry existed | Initialize `state.players[playerId]` in the action (see sample above). |
-| Weird bouncing between positions | Host running different scene than clients | Only the host should control physics; clients must treat sprites as read-only mirrors. |
+| `__MARTINI_CONFIG__` is missing | Platform config not injected | Add the `window.__MARTINI_CONFIG__` script before your main script |
+| Sprites don't appear on clients | `trackSprite` missing or wrong key | Call `trackSprite(sprite, uniqueKey)` after creating each sprite |
+| State shows `undefined` players | Actions ran before player entry existed | Initialize `state.players[playerId]` in `onPlayerJoin` |
+| Weird bouncing between positions | Host running different scene than clients | Only the host should control physics; clients mirror state |
 
 Need more help? Join the Discord and share a minimal repro.
 
@@ -151,10 +197,10 @@ Need more help? Join the Discord and share a minimal repro.
 
 ## Next Steps
 
-- Dive into [phaser-adapter.md](./phaser-adapter.md) for advanced tracking and events.
-- Learn about other networking options in [transports.md](./transports.md).
-- Coming from the old sandbox `gameAPI.multiplayer`? Read [migration-from-gameapi.md](./migration-from-gameapi.md).
+- Dive into [phaser-adapter.md](./03-phaser-adapter.md) for advanced tracking and events
+- Learn about the transport system in [transports.md](./04-transports.md)
+- Read about best practices in [best-practices.md](./05-best-practices.md)
 
-Happy building! 
+Happy building!
 
 ---

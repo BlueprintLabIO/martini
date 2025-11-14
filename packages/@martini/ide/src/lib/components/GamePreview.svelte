@@ -1,46 +1,66 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Sandbox, type GameError } from '../core/Sandbox';
-	import DevToolsPanel from './DevToolsPanel.svelte';
-	import type { EngineAdapter } from '../adapters/PhaserEngine';
+	import { SandpackManager } from '../core/SandpackManager';
+	import type { VirtualFileSystem } from '../core/VirtualFS';
 
 	interface Props {
-		engine: EngineAdapter;
-		code: string;
+		vfs: VirtualFileSystem;
+		entryPoint: string;
 		role: 'host' | 'client';
-		transportType: 'local' | 'trystero' | 'iframe-bridge';
-		onError?: (error: GameError) => void;
+		transportType: 'local' | 'iframe-bridge';
+		onError?: (error: { type: 'runtime' | 'syntax'; message: string; stack?: string }) => void;
 		onReady?: () => void;
+		consoleLogs?: Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error' }>;
+		connectionStatus?: 'disconnected' | 'connecting' | 'connected';
+		hideDevTools?: boolean;
+		roomId?: string;
 	}
 
-	let { engine, code, role, transportType, onError, onReady }: Props = $props();
+	let {
+		vfs,
+		entryPoint,
+		role,
+		transportType,
+		onError,
+		onReady,
+		consoleLogs = $bindable([]),
+		connectionStatus = $bindable('disconnected'),
+		hideDevTools = false,
+		roomId
+	}: Props = $props();
 
 	let container: HTMLDivElement;
-	let sandbox: Sandbox | null = null;
-	let sandboxReady = $state(false); // Track when sandbox is fully created
+	let sandpackManager: SandpackManager | null = null;
 	let status = $state<'initializing' | 'ready' | 'running' | 'error'>('initializing');
-	let error = $state<GameError | null>(null);
+	let error = $state<{ type: 'runtime' | 'syntax'; message: string; stack?: string } | null>(null);
 
-	// DevTools state
-	let showDevTools = $state(true); // Open by default
-	let consoleLogs = $state<Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>>([]);
-	let connectionStatus = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
+	function generateRoomId() {
+		if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+			return `ide-room-${crypto.randomUUID()}`;
+		}
+		return `ide-room-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+	}
 
-	// Generate a room ID for this IDE session
-	const roomId = `ide-room-${Date.now()}`;
+	const sessionRoomId = roomId ?? generateRoomId();
 
 	onMount(async () => {
-		// Create sandbox
-		sandbox = new Sandbox({
+		console.log('[GamePreview] Component mounted, container:', container);
+
+		// Create Sandpack manager
+		sandpackManager = new SandpackManager({
 			container,
 			role,
+			roomId: sessionRoomId,
+			transportType,
 			onError: (err) => {
 				status = 'error';
 				error = err;
 				onError?.(err);
 			},
 			onReady: () => {
-				// Don't set status to ready here - wait for code to load
+				status = 'running';
+				error = null;
+				onReady?.();
 			},
 			onConsoleLog: (log) => {
 				consoleLogs = [...consoleLogs, log];
@@ -50,77 +70,63 @@
 			}
 		});
 
-		await sandbox.create();
-		sandboxReady = true;
+		try {
+			// Initialize and run Sandpack once
+			await sandpackManager.initialize();
+			await sandpackManager.run(vfs, entryPoint);
+
+			// Sandpack will handle HMR automatically from here
+		} catch (err) {
+			status = 'error';
+			error = {
+				type: 'runtime',
+				message: err instanceof Error ? err.message : 'Failed to initialize Sandpack',
+				stack: err instanceof Error ? err.stack : undefined
+			};
+		}
 
 		return () => {
-			sandbox?.destroy();
+			sandpackManager?.destroy();
 		};
-	});
-
-	// Run code when it changes (only after sandbox is ready)
-	$effect(() => {
-		if (sandboxReady && sandbox && code) {
-			status = 'running';
-			error = null;
-
-			// Send code to sandbox
-			sandbox.run(code, roomId, transportType).catch((err) => {
-				status = 'error';
-				error = {
-					type: 'runtime',
-					message: err.message,
-					stack: err.stack
-				};
-			});
-		}
 	});
 </script>
 
 <div class="game-preview">
-	<div class="preview-header">
-		<h4>{role === 'host' ? 'Player 1 (Host)' : 'Player 2 (Client)'}</h4>
-		<div class="header-actions">
-			<button class="devtools-toggle" class:active={showDevTools} onclick={() => (showDevTools = !showDevTools)} title="Toggle DevTools">
-				🛠️
-			</button>
-			<span class="status {status}">
-				{#if status === 'initializing'}
-					Initializing...
-				{:else if status === 'ready'}
-					Ready
-				{:else if status === 'running'}
-					Running
-				{:else if status === 'error'}
-					Error
-				{/if}
-			</span>
-		</div>
-	</div>
-
-	<div bind:this={container} class="preview-container">
-		<!-- DevTools Overlay -->
-		{#if showDevTools}
-			<DevToolsPanel {role} logs={consoleLogs} status={connectionStatus} onClose={() => (showDevTools = false)} />
-		{/if}
-	</div>
-
-	{#if error}
-		<div class="error-display">
-			<strong>Error:</strong> {error.message}
-			{#if error.stack}
-				<pre>{error.stack}</pre>
-			{/if}
+	{#if !hideDevTools}
+		<div class="preview-header">
+			<h4>{role === 'host' ? 'Player 1 (Host)' : 'Player 2 (Client)'}</h4>
+			<div class="header-actions">
+				<span class="status {status}">
+					{#if status === 'initializing'}
+						Initializing...
+					{:else if status === 'ready'}
+						Ready
+					{:else if status === 'running'}
+						Running
+					{:else if status === 'error'}
+						Error
+					{/if}
+				</span>
+			</div>
 		</div>
 	{/if}
 
-	<div class="controls-hint">
-		{role === 'host' ? 'Controls: WASD + Space' : 'Controls: Arrow Keys + Enter'}
-	</div>
+	<div
+		bind:this={container}
+		class="preview-container"
+		class:full-height={hideDevTools}
+	></div>
+
+	{#if !hideDevTools}
+		<div class="controls-hint">
+			Click the game canvas first, then use Arrow Keys to move
+		</div>
+	{/if}
 </div>
 
 <style>
 	.game-preview {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		height: 100%;
@@ -150,30 +156,6 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-	}
-
-	.devtools-toggle {
-		padding: 0.25rem 0.5rem;
-		background: #ffffff;
-		border: 1px solid #e5e7eb;
-		border-radius: 4px;
-		cursor: pointer;
-		font-size: 1rem;
-		transition: all 0.15s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.devtools-toggle:hover {
-		background: #f3f4f6;
-		border-color: #d1d5db;
-	}
-
-	.devtools-toggle.active {
-		background: #3b82f6;
-		border-color: #3b82f6;
-		filter: grayscale(0);
 	}
 
 	.status {
@@ -208,25 +190,20 @@
 		position: relative;
 		background: #000;
 		overflow: hidden;
+		cursor: pointer;
 	}
 
-	.error-display {
-		padding: 1rem;
-		background: #fef2f2;
-		color: #991b1b;
-		font-size: 0.75rem;
-		border-top: 1px solid #fecaca;
+	.preview-container :global(iframe) {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		border: none;
 	}
 
-	.error-display pre {
-		margin-top: 0.5rem;
-		padding: 0.5rem;
-		background: #ffffff;
-		border: 1px solid #fecaca;
-		border-radius: 4px;
-		overflow-x: auto;
-		font-size: 0.625rem;
-		color: #7f1d1d;
+	.preview-container.full-height {
+		border-radius: 8px;
 	}
 
 	.controls-hint {

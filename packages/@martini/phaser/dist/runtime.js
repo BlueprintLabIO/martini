@@ -6,7 +6,7 @@
  */
 import { GameRuntime } from '@martini/core';
 import { LocalTransport } from '@martini/transport-local';
-import { TrysteroTransport } from '@martini/transport-trystero';
+// import { TrysteroTransport } from '@martini/transport-trystero'; // Disabled for IDE
 import { IframeBridgeTransport } from '@martini/transport-iframe-bridge';
 import Phaser from 'phaser';
 /**
@@ -58,6 +58,10 @@ export function initializeGame(config) {
         scene: config.scene(runtime)
     };
     const phaserGame = new Phaser.Game(phaserConfig);
+    // Register runtime with IDE sandbox (if present)
+    if (typeof window !== 'undefined' && window.__MARTINI_IDE__) {
+        window.__MARTINI_IDE__.registerRuntime(runtime);
+    }
     return { runtime, phaser: phaserGame };
 }
 /**
@@ -76,14 +80,14 @@ function createTransport(config) {
                 roomId: config.roomId,
                 isHost: config.isHost
             });
-        case 'trystero':
-            return new TrysteroTransport({
-                appId: config.appId || 'martini',
-                roomId: config.roomId,
-                isHost: config.isHost
-            });
+        // case 'trystero':
+        //   return new TrysteroTransport({
+        //     appId: config.appId || 'martini',
+        //     roomId: config.roomId,
+        //     isHost: config.isHost
+        //   });
         default:
-            throw new Error(`Unknown transport type: ${config.type}`);
+            throw new Error(`Unknown transport type: ${config.type}. Only 'local' and 'iframe-bridge' are supported in IDE mode.`);
     }
 }
 //# sourceMappingURL=runtime.js.map
