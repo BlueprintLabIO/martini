@@ -59,6 +59,18 @@ importers:
       '@codemirror/view':
         specifier: ^6.38.6
         version: 6.38.6
+      '@martini/core':
+        specifier: workspace:*
+        version: link:../../packages/@martini/core
+      '@martini/phaser':
+        specifier: workspace:*
+        version: link:../../packages/@martini/phaser
+      '@martini/transport-local':
+        specifier: workspace:*
+        version: link:../../packages/@martini/transport-local
+      '@martini/transport-trystero':
+        specifier: workspace:*
+        version: link:../../packages/@martini/transport-trystero
       '@supabase/ssr':
         specifier: ^0.7.0
         version: 0.7.0(@supabase/supabase-js@2.80.0)
@@ -83,6 +95,9 @@ importers:
       lucide-svelte:
         specifier: ^0.553.0
         version: 0.553.0(svelte@5.43.4)
+      phaser:
+        specifier: ^3.80.1
+        version: 3.90.0
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
