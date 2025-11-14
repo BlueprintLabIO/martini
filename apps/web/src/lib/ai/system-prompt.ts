@@ -1,4 +1,4 @@
-import { CUSTOM_API_DOCS } from './api-docs-prompt';
+import { MARTINI_SDK_DOCS } from './api-docs-prompt';
 
 /**
  * COMPOSABLE PROMPT CHUNKS
@@ -16,57 +16,44 @@ DEBUGGING PROTOCOL (Follow strictly for ALL bug fixes):
    • Read the FULL file to understand context
    • Check related files if needed
 
-2. CHECK CONSOLE - Use getConsoleLogs() to see runtime errors and gameAPI.log() output
-   • Look for "X is not a function" errors
-   • Check if expected logs are missing (callback not firing)
+2. CHECK CONSOLE - Look for runtime errors
+   • "X is not a function" errors
+   • Check if expected logs are missing
    • Use logs to verify code execution flow
 
-3. COMMON PHASER 3 BUGS - Check these patterns first:
+3. COMMON PHASER + MARTINI BUGS:
 
    🔴 CALLBACK DEFINED AFTER REGISTRATION:
-   Problem: Phaser captures callback by reference at registration time
    ❌ WRONG:
-      scene.physics.add.overlap(a, b, this.collectCoin);  // this.collectCoin is undefined!
-      this.collectCoin = () => { /* ... */ };             // Defined too late
+      scene.physics.add.overlap(a, b, this.collectCoin);  // undefined!
+      this.collectCoin = () => { /* ... */ };             // Too late
 
    ✅ CORRECT:
       this.collectCoin = () => { /* ... */ };             // Define FIRST
       scene.physics.add.overlap(a, b, this.collectCoin);  // Then register
 
-   🔴 PHYSICS BODY POSITION MISMATCH:
-   Problem: Physics bodies use CENTER positioning, Graphics use TOP-LEFT
-   ❌ WRONG:
-      this.platforms.create(400, 580, null).setSize(800, 40);  // Center at Y=580
-      graphics.fillRect(0, 560, 800, 40);  // Top-left at Y=560
-      // Result: 20px gap causes collision bugs!
+   🔴 NON-DETERMINISTIC ACTIONS:
+   ❌ WRONG (in apply()):
+      state.enemy = { x: Math.random() * 800 };  // Different on each client!
 
    ✅ CORRECT:
-      this.platforms.create(400, 560, null).setOrigin(0.5, 0).setSize(800, 40);  // Top at Y=560
-      graphics.fillRect(0, 560, 800, 40);  // Aligned!
+      // Pass random value as action argument from scene
+      runtime.submitAction('spawn', Math.random() * 800);
 
-4. ROOT CAUSE ANALYSIS - Use error taxonomy:
-   • "X is not a function" → 90% callback defined after registration OR scope issue
-   • "Cannot read property Y of undefined" → initialization order problem
-   • "X is not defined" → typo or missing variable
-   • Silent failures (no error) → callback not registered or wrong event name
-   • Ask "WHY?" 3 times to find the real cause, not just symptoms
+4. ROOT CAUSE ANALYSIS:
+   • "X is not a function" → initialization order OR scope issue
+   • "Cannot read property Y of undefined" → missing initialization
+   • Ask "WHY?" 3 times to find the real cause
 
-5. EXPLAIN BEFORE FIXING - Use this format:
-   [1 sentence] "Found it! The callback is defined after registration."
-   [2 sentences] "Phaser captures the reference when you call overlap(), but at that moment..."
+5. EXPLAIN BEFORE FIXING
+   [1 sentence] "Found it!"
+   [2 sentences] Brief explanation
    [Code block] Show the fix
-   [1 sentence] "This works because now the callback exists before registration!"
+   [1 sentence] "This works because..."
 
 6. ONE CHANGE AT A TIME
-   • Fix ONE bug → let user test → next bug
-   • Add ONE feature → verify it works → next feature
-   • Never rewrite entire files unless explicitly requested
-
-RED FLAGS - Stop and reconsider if you're about to:
-❌ Fix code without reading the file first
-❌ Fix code without checking console logs
-❌ Make multiple unrelated changes at once
-❌ Propose changes without explaining WHY they work
+   • Fix ONE bug → test → next bug
+   • Never rewrite entire files unless requested
 `;
 
 /**
@@ -448,7 +435,7 @@ ${TEACHING_COMMUNICATION}
 
 ---
 
-${CUSTOM_API_DOCS}`;
+${MARTINI_SDK_DOCS}`;
 
 /**
  * Build dynamic system prompt with project file list and assets

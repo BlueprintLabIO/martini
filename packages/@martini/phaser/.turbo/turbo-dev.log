@@ -1,0 +1,9 @@
+
+> @martini/phaser@2.0.0-alpha.1 dev /Users/yao/blueprint/martini/packages/@martini/phaser
+> tsc --watch
+
+[2J[3J[H[[90m5:01:57 PM[0m] Starting compilation in watch mode...
+
+[[90m5:01:58 PM[0m] Found 0 errors. Watching for file changes.
+
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed.[39m
