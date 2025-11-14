@@ -133,10 +133,6 @@
 		}
 	}
 
-	function handleMultiplayerError(error: Error) {
-		console.error('[Editor] Multiplayer error:', error);
-		// Could show a toast notification here
-	}
 
 	function handleNewFile() {
 		showNewFileDialog = true;
@@ -410,13 +406,7 @@
 				{/if}
 			</span>
 
-			<!-- Multiplayer Controls -->
-			<MultiplayerManager
-				projectId={data.project.id}
-				{iframeEl}
-				onGameReady={() => console.log('✅ [Editor] Multiplayer ready')}
-				onError={handleMultiplayerError}
-			/>
+			<!-- Multiplayer controls removed - now handled by Martini SDK in sandbox -->
 
 			<button
 				onclick={handleRunGame}

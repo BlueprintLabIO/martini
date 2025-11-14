@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { projects, files } from '$lib/server/db/schema';
 import { eq, desc } from 'drizzle-orm';
-import { phaserScaffoldFiles } from '$lib/server/templates/phaser-scaffold-v2';
+import { martiniTypeScriptStarter } from '$lib/server/templates/martini-typescript-starter';
 
 // GET /api/projects - List all projects for authenticated user
 export const GET: RequestHandler = async ({ locals }) => {
@@ -49,7 +49,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	// Create starter files for the project
 	await db.insert(files).values(
-		phaserScaffoldFiles.map((file) => ({
+		martiniTypeScriptStarter.map((file) => ({
 			projectId: project.id,
 			path: file.path,
 			content: file.content
