@@ -79,8 +79,21 @@ export function createScene(runtime: GameRuntime) {
 		private hud: any;
 		private ball?: Phaser.GameObjects.Arc;
 
+		private addHostPaddle(playerId: string, playerData: any) {
+			if (!this.adapter.isHost()) return;
+
+			const spriteKey = 'player-' + playerId;
+			if (!this.spriteManager.get(spriteKey)) {
+				this.spriteManager.add(spriteKey, playerData);
+			}
+		}
+
 		create() {
 			this.adapter = new PhaserAdapter(runtime, this);
+			(this as any).debugLog = (event: string, payload?: any) => {
+				const role = this.adapter.isHost() ? 'HOST' : 'CLIENT';
+				console.log('[PaddleBattle][' + role + '] ' + event, payload ?? '');
+			};
 
 			// Background
 			this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
@@ -113,9 +126,10 @@ export function createScene(runtime: GameRuntime) {
 
 			// SpriteManager for paddles (host-authoritative by default!)
 			this.spriteManager = this.adapter.createSpriteManager({
-				staticProperties: ['side'],
+				staticProperties: ['side', 'y'],
 
 				onCreate: (key: string, data: any) => {
+					(this as any).debugLog?.('spriteManager.onCreate', { key, data });
 					const x = data.side === 'left' ? 30 : 770;
 					return this.add.rectangle(x, data.y, 15, 80, 0xffffff);
 				},
@@ -153,9 +167,8 @@ export function createScene(runtime: GameRuntime) {
 
 				// Create paddles (host-authoritative!)
 				for (const [playerId, playerData] of Object.entries(initialState.players)) {
-					this.spriteManager.add(\`player-\${playerId}\`, playerData);
+					this.addHostPaddle(playerId, playerData);
 				}
-
 				// Create ball - NO world bounds collision (we handle manually)
 				this.ball = this.add.circle(initialState.ball.x, initialState.ball.y, 10, 0xff6b6b);
 				this.physics.add.existing(this.ball);
@@ -164,9 +177,6 @@ export function createScene(runtime: GameRuntime) {
 				ballBody.setCollideWorldBounds(false); // Disable - we check manually
 				ballBody.setVelocity(initialState.ball.velocityX, initialState.ball.velocityY);
 
-				// Track ball for sync
-				this.adapter.trackSprite(this.ball, 'ball');
-
 				// CollisionManager - Declare collision rules ONCE
 				// Automatically handles collisions for ALL paddles (early and late-joining!)
 				this.collisionManager = this.adapter.createCollisionManager();
@@ -174,113 +184,113 @@ export function createScene(runtime: GameRuntime) {
 				this.collisionManager.addCollision('ball', this.spriteManager);
 			}
 
-			// CLIENT: Create ball sprite when it appears in state
+			// CLIENT: Mirror ball using state (no sprite manager entry)
 			this.adapter.onChange((state: any) => {
-				if (!this.adapter.isHost() && !this.ball && state._sprites?.ball) {
-					this.ball = this.add.circle(state._sprites.ball.x, state._sprites.ball.y, 10, 0xff6b6b);
-					this.adapter.registerRemoteSprite('ball', this.ball);
+				if (this.adapter.isHost()) return;
+				if (!state.ball) return;
+
+				if (!this.ball) {
+					this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
+				} else {
+					this.ball.setPosition(state.ball.x, state.ball.y);
 				}
 			});
 		}
 
 		update() {
-			// HOST: Update game logic
-			if (this.adapter.isHost()) {
-				const state = runtime.getState();
-
-				// Check for new players
-				for (const [playerId, playerData] of Object.entries(state.players)) {
-					const spriteKey = \`player-\${playerId}\`;
-					if (!this.spriteManager.get(spriteKey)) {
-						this.spriteManager.add(spriteKey, playerData);
-					}
-				}
-
-				// Update paddle positions based on input
-				const inputs = state.inputs || {};
-				for (const [playerId, input] of Object.entries(inputs) as [string, any][]) {
-					const paddle = this.spriteManager.get(\`player-\${playerId}\`);
-					if (!paddle?.body) continue;
-
-					const body = paddle.body as Phaser.Physics.Arcade.Body;
-					const speed = 300;
-
-					if (input.up) {
-						body.setVelocityY(-speed);
-					} else if (input.down) {
-						body.setVelocityY(speed);
-					} else {
-						body.setVelocityY(0);
-					}
-
-					// Update state with paddle position
-					state.players[playerId].y = paddle.y;
-				}
-
-				// Ball physics and scoring
-				if (this.ball) {
-					const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
-
-					// Update ball state
-					state.ball.x = this.ball.x;
-					state.ball.y = this.ball.y;
-					state.ball.velocityX = ballBody.velocity.x;
-					state.ball.velocityY = ballBody.velocity.y;
-
-					// Manual top/bottom bounce (since we disabled world bounds)
-					if (this.ball.y <= 10) {
-						this.ball.y = 10;
-						ballBody.setVelocityY(Math.abs(ballBody.velocity.y));
-					} else if (this.ball.y >= 590) {
-						this.ball.y = 590;
-						ballBody.setVelocityY(-Math.abs(ballBody.velocity.y));
-					}
-
-					// Check for scoring (ball goes past edges)
-					if (this.ball.x < -10) {
-						// Right player scores
-						const rightPlayer = Object.entries(state.players).find(
-							([, p]: [string, any]) => p.side === 'right'
-						);
-						if (rightPlayer) {
-							runtime.submitAction('score', undefined, rightPlayer[0]);
-							// Immediately reset ball position to prevent multiple score triggers
-							this.ball.setPosition(400, 300);
-							// Wait for state update, then set velocity
-							setTimeout(() => {
-								const newState = runtime.getState();
-								ballBody.setVelocity(newState.ball.velocityX, newState.ball.velocityY);
-							}, 10);
-						}
-					} else if (this.ball.x > 810) {
-						// Left player scores
-						const leftPlayer = Object.entries(state.players).find(
-							([, p]: [string, any]) => p.side === 'left'
-						);
-						if (leftPlayer) {
-							runtime.submitAction('score', undefined, leftPlayer[0]);
-							// Immediately reset ball position to prevent multiple score triggers
-							this.ball.setPosition(400, 300);
-							// Wait for state update, then set velocity
-							setTimeout(() => {
-								const newState = runtime.getState();
-								ballBody.setVelocity(newState.ball.velocityX, newState.ball.velocityY);
-							}, 10);
-						}
-					}
-				}
-			}
-
-			// InputManager captures keyboard
+			// Always poll inputs so both host and clients emit actions
 			this.inputManager.update();
 
-			// SpriteManager handles interpolation
-			this.spriteManager.update();
-
-			// CLIENT: Interpolate ball movement
 			if (!this.adapter.isHost()) {
+				// Clients only need interpolation (SpriteManager update already lerps sprites)
+				this.spriteManager.update();
 				this.adapter.updateInterpolation();
+				return;
 			}
+
+			const state = runtime.getState();
+
+			// Check for new players
+			for (const [playerId, playerData] of Object.entries(state.players)) {
+				this.addHostPaddle(playerId, playerData);
+			}
+
+			// Update paddle positions based on input
+			const inputs = state.inputs || {};
+			for (const [playerId, input] of Object.entries(inputs) as [string, any][]) {
+				const paddle = this.spriteManager.get(\`player-\${playerId}\`);
+				if (!paddle?.body) continue;
+
+				const body = paddle.body as Phaser.Physics.Arcade.Body;
+				const speed = 300;
+
+				if (input.up) {
+					body.setVelocityY(-speed);
+				} else if (input.down) {
+					body.setVelocityY(speed);
+				} else {
+					body.setVelocityY(0);
+				}
+
+				// Update state with paddle position
+				state.players[playerId].y = paddle.y;
+			}
+
+			// Ball physics and scoring
+			if (this.ball) {
+				const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
+
+				// Update ball state
+				state.ball.x = this.ball.x;
+				state.ball.y = this.ball.y;
+				state.ball.velocityX = ballBody.velocity.x;
+				state.ball.velocityY = ballBody.velocity.y;
+
+				// Manual top/bottom bounce (since we disabled world bounds)
+				if (this.ball.y <= 10) {
+					this.ball.y = 10;
+					ballBody.setVelocityY(Math.abs(ballBody.velocity.y));
+				} else if (this.ball.y >= 590) {
+					this.ball.y = 590;
+					ballBody.setVelocityY(-Math.abs(ballBody.velocity.y));
+				}
+
+				// Check for scoring (ball goes past edges)
+				if (this.ball.x < -10) {
+					// Right player scores
+					const rightPlayer = Object.entries(state.players).find(
+						([, p]: [string, any]) => p.side === 'right'
+					);
+					if (rightPlayer) {
+						runtime.submitAction('score', undefined, rightPlayer[0]);
+						// Immediately reset ball position to prevent multiple score triggers
+						this.ball.setPosition(400, 300);
+						// Wait for state update, then set velocity
+						setTimeout(() => {
+							const newState = runtime.getState();
+							ballBody.setVelocity(newState.ball.velocityX, newState.ball.velocityY);
+						}, 10);
+					}
+				} else if (this.ball.x > 810) {
+					// Left player scores
+					const leftPlayer = Object.entries(state.players).find(
+						([, p]: [string, any]) => p.side === 'left'
+					);
+					if (leftPlayer) {
+						runtime.submitAction('score', undefined, leftPlayer[0]);
+						// Immediately reset ball position to prevent multiple score triggers
+						this.ball.setPosition(400, 300);
+						// Wait for state update, then set velocity
+						setTimeout(() => {
+							const newState = runtime.getState();
+							ballBody.setVelocity(newState.ball.velocityX, newState.ball.velocityY);
+						}, 10);
+					}
+				}
+			}
+
+			// Host still updates manager for completeness
+			this.spriteManager.update();
 		}
 	};
 }

@@ -8,6 +8,9 @@
 import type { GameRuntime } from '@martini/core';
 import { SpriteManager, type SpriteManagerConfig } from './helpers/SpriteManager.js';
 import { InputManager } from './helpers/InputManager.js';
+import { PlayerUIManager, type PlayerUIManagerConfig } from './helpers/PlayerUIManager.js';
+import { CollisionManager, type CollisionManagerConfig } from './helpers/CollisionManager.js';
+import { PhysicsManager, type PhysicsManagerConfig } from './helpers/PhysicsManager.js';
 
 export interface SpriteTrackingOptions {
   /** Sync interval in ms (default: 50ms / 20 FPS) */
@@ -92,6 +95,49 @@ export class PhaserAdapter<TState = any> {
    */
   get myId(): string {
     return this.runtime.getTransport().getPlayerId();
+  }
+
+  /**
+   * Backwards-compatible helper - alias for {@link myId}
+   */
+  getMyPlayerId(): string {
+    return this.myId;
+  }
+
+  /**
+   * Get the current player's state object from the runtime
+   *
+   * @param playersKey Key in the state where player records are stored (default: 'players')
+   */
+  getMyPlayer<TPlayer = any>(playersKey: string = 'players'): TPlayer | undefined {
+    const state = this.runtime.getState() as any;
+    const players = state?.[playersKey];
+    if (!players) return undefined;
+    return players[this.getMyPlayerId()];
+  }
+
+  /**
+   * Subscribe to changes in the current player's state
+   *
+   * @param callback Invoked whenever the local player's record changes
+   * @param playersKey Key in the state where player records are stored (default: 'players')
+   */
+  onMyPlayerChange<TPlayer = any>(
+    callback: (player: TPlayer | undefined) => void,
+    playersKey: string = 'players'
+  ): () => void {
+    let lastValue = this.getMyPlayer<TPlayer>(playersKey);
+    callback(lastValue);
+
+    return this.runtime.onChange((state: any) => {
+      const players = state?.[playersKey];
+      const nextValue = players ? players[this.getMyPlayerId()] : undefined;
+      if (nextValue === lastValue) {
+        return;
+      }
+      lastValue = nextValue;
+      callback(nextValue);
+    });
   }
 
   /**
@@ -376,6 +422,20 @@ export class PhaserAdapter<TState = any> {
   }
 
   /**
+   * Create a PlayerUIManager for automatically managed player HUD elements
+   */
+  createPlayerUIManager(config: PlayerUIManagerConfig): PlayerUIManager {
+    return new PlayerUIManager(this, this.scene, config);
+  }
+
+  /**
+   * Create a CollisionManager for declarative collision rules
+   */
+  createCollisionManager(config?: CollisionManagerConfig): CollisionManager {
+    return new CollisionManager(this, this.scene, config);
+  }
+
+  /**
    * Create an InputManager for simplified input handling
    *
    * @example
@@ -394,5 +454,12 @@ export class PhaserAdapter<TState = any> {
    */
   createInputManager(): InputManager {
     return new InputManager(this, this.scene);
+  }
+
+  /**
+   * Create a PhysicsManager for automatic physics behaviors
+   */
+  createPhysicsManager(config: PhysicsManagerConfig): PhysicsManager {
+    return new PhysicsManager(this.runtime, config);
   }
 }

@@ -44,8 +44,6 @@
 	const sessionRoomId = roomId ?? generateRoomId();
 
 	onMount(async () => {
-		console.log('[GamePreview] Component mounted, container:', container);
-
 		// Create Sandpack manager
 		sandpackManager = new SandpackManager({
 			container,

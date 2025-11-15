@@ -6,6 +6,9 @@
  */
 import { SpriteManager } from './helpers/SpriteManager.js';
 import { InputManager } from './helpers/InputManager.js';
+import { PlayerUIManager } from './helpers/PlayerUIManager.js';
+import { CollisionManager } from './helpers/CollisionManager.js';
+import { PhysicsManager } from './helpers/PhysicsManager.js';
 /**
  * Phaser Adapter - Auto-syncs sprites via GameRuntime
  *
@@ -54,6 +57,43 @@ export class PhaserAdapter {
      */
     get myId() {
         return this.runtime.getTransport().getPlayerId();
+    }
+    /**
+     * Backwards-compatible helper - alias for {@link myId}
+     */
+    getMyPlayerId() {
+        return this.myId;
+    }
+    /**
+     * Get the current player's state object from the runtime
+     *
+     * @param playersKey Key in the state where player records are stored (default: 'players')
+     */
+    getMyPlayer(playersKey = 'players') {
+        const state = this.runtime.getState();
+        const players = state?.[playersKey];
+        if (!players)
+            return undefined;
+        return players[this.getMyPlayerId()];
+    }
+    /**
+     * Subscribe to changes in the current player's state
+     *
+     * @param callback Invoked whenever the local player's record changes
+     * @param playersKey Key in the state where player records are stored (default: 'players')
+     */
+    onMyPlayerChange(callback, playersKey = 'players') {
+        let lastValue = this.getMyPlayer(playersKey);
+        callback(lastValue);
+        return this.runtime.onChange((state) => {
+            const players = state?.[playersKey];
+            const nextValue = players ? players[this.getMyPlayerId()] : undefined;
+            if (nextValue === lastValue) {
+                return;
+            }
+            lastValue = nextValue;
+            callback(nextValue);
+        });
     }
     /**
      * Check if this peer is the host
@@ -314,6 +354,18 @@ export class PhaserAdapter {
         return new SpriteManager(this, config);
     }
     /**
+     * Create a PlayerUIManager for automatically managed player HUD elements
+     */
+    createPlayerUIManager(config) {
+        return new PlayerUIManager(this, this.scene, config);
+    }
+    /**
+     * Create a CollisionManager for declarative collision rules
+     */
+    createCollisionManager(config) {
+        return new CollisionManager(this, this.scene, config);
+    }
+    /**
      * Create an InputManager for simplified input handling
      *
      * @example
@@ -332,6 +384,12 @@ export class PhaserAdapter {
      */
     createInputManager() {
         return new InputManager(this, this.scene);
+    }
+    /**
+     * Create a PhysicsManager for automatic physics behaviors
+     */
+    createPhysicsManager(config) {
+        return new PhysicsManager(this.runtime, config);
     }
 }
 //# sourceMappingURL=PhaserAdapter.js.map

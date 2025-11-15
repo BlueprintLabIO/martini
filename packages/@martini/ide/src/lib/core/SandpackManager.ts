@@ -52,12 +52,6 @@ export class SandpackManager {
 	 * Initialize Sandpack - setup iframe
 	 */
 	async initialize(): Promise<void> {
-		console.log('[SandpackManager] Using Martini SDK browser bundles (ESM)');
-		console.log(`  @martini/core: ${(coreBrowserBundle.length / 1024).toFixed(1)}KB`);
-		console.log(`  @martini/phaser: ${(phaserBrowserBundle.length / 1024).toFixed(1)}KB`);
-		console.log(`  @martini/transport-local: ${(localTransportBundle.length / 1024).toFixed(1)}KB`);
-		console.log(`  @martini/transport-iframe-bridge: ${(iframeBridgeBundle.length / 1024).toFixed(1)}KB`);
-
 		// Create iframe
 		this.iframe = document.createElement('iframe');
 		this.iframe.style.width = '100%';
@@ -67,16 +61,12 @@ export class SandpackManager {
 
 		// Append to container
 		this.options.container.appendChild(this.iframe);
-
-		console.log('[SandpackManager] Initialized successfully');
 	}
 
 	/**
 	 * Load and run code in Sandpack
 	 */
 	async run(vfs: VirtualFileSystem, entryPoint: string): Promise<void> {
-		console.log('[SandpackManager] run() called with entryPoint:', entryPoint);
-
 		if (!this.iframe) {
 			throw new Error('SandpackManager not initialized. Call initialize() first.');
 		}
@@ -98,14 +88,11 @@ window.__MARTINI_CONFIG__ = ${JSON.stringify({
 		isHost: this.options.role === 'host'
 	}
 })};
-console.log('[IDE] __MARTINI_CONFIG__ injected:', JSON.stringify(window.__MARTINI_CONFIG__, null, 2));
 
 `;
 					content = configSetup + content;
-					console.log('[SandpackManager] Injected config into entry file:', path);
 				}
 				files[path] = { code: content };
-				console.log('[SandpackManager] Added user file:', path, `(${content.length} chars)`);
 			}
 		}
 
@@ -129,8 +116,6 @@ console.log('[IDE] __MARTINI_CONFIG__ injected:', JSON.stringify(window.__MARTIN
 		files['/node_modules/@martini/transport-iframe-bridge/package.json'] = {
 			code: JSON.stringify({ name: '@martini/transport-iframe-bridge', version: '2.0.0', main: './index.js', type: 'module' })
 		};
-
-		console.log('[SandpackManager] Injected 4 pre-bundled Martini SDK packages');
 
 		// 3. Add Phaser stub module (Phaser loaded globally via script tag in HTML)
 		files['/node_modules/phaser/package.json'] = {
@@ -185,8 +170,6 @@ export default window.Phaser;
 			this.client.listen((message: SandpackMessage) => {
 				this.handleSandpackMessage(message);
 			});
-
-			console.log('[SandpackManager] Sandpack client loaded successfully');
 			this.options.onReady?.();
 
 		} catch (error) {
@@ -224,7 +207,6 @@ window.__MARTINI_CONFIG__ = ${JSON.stringify({
 		isHost: this.options.role === 'host'
 	}
 })};
-console.log('[IDE] __MARTINI_CONFIG__ injected:', JSON.stringify(window.__MARTINI_CONFIG__, null, 2));
 
 `;
 					content = configSetup + content;
@@ -271,8 +253,6 @@ export default window.Phaser;
 			files,
 			entry: entryPoint
 		});
-
-		console.log('[SandpackManager] Code updated with HMR');
 	}
 
 	/**
@@ -297,7 +277,6 @@ export default window.Phaser;
 	private handleSandpackMessage(message: SandpackMessage): void {
 		switch (message.type) {
 			case 'done':
-				console.log('[SandpackManager] Compilation done');
 				break;
 
 			case 'action':

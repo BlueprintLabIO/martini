@@ -100,6 +100,8 @@ export function createPlayerHUD(adapter, scene, config) {
             controlsText.setText(config.controlHints(myPlayer));
         }
     }, playersKey);
+    // Ensure HUD shows correct values immediately
+    update();
     // Return HUD interface
     return {
         update,

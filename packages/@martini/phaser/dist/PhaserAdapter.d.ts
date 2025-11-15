@@ -7,6 +7,9 @@
 import type { GameRuntime } from '@martini/core';
 import { SpriteManager, type SpriteManagerConfig } from './helpers/SpriteManager.js';
 import { InputManager } from './helpers/InputManager.js';
+import { PlayerUIManager, type PlayerUIManagerConfig } from './helpers/PlayerUIManager.js';
+import { CollisionManager, type CollisionManagerConfig } from './helpers/CollisionManager.js';
+import { PhysicsManager, type PhysicsManagerConfig } from './helpers/PhysicsManager.js';
 export interface SpriteTrackingOptions {
     /** Sync interval in ms (default: 50ms / 20 FPS) */
     syncInterval?: number;
@@ -62,6 +65,23 @@ export declare class PhaserAdapter<TState = any> {
      * Get my player ID
      */
     get myId(): string;
+    /**
+     * Backwards-compatible helper - alias for {@link myId}
+     */
+    getMyPlayerId(): string;
+    /**
+     * Get the current player's state object from the runtime
+     *
+     * @param playersKey Key in the state where player records are stored (default: 'players')
+     */
+    getMyPlayer<TPlayer = any>(playersKey?: string): TPlayer | undefined;
+    /**
+     * Subscribe to changes in the current player's state
+     *
+     * @param callback Invoked whenever the local player's record changes
+     * @param playersKey Key in the state where player records are stored (default: 'players')
+     */
+    onMyPlayerChange<TPlayer = any>(callback: (player: TPlayer | undefined) => void, playersKey?: string): () => void;
     /**
      * Check if this peer is the host
      */
@@ -183,6 +203,14 @@ export declare class PhaserAdapter<TState = any> {
         [key: string]: any;
     }>(config: SpriteManagerConfig<TData>): SpriteManager<TData>;
     /**
+     * Create a PlayerUIManager for automatically managed player HUD elements
+     */
+    createPlayerUIManager(config: PlayerUIManagerConfig): PlayerUIManager;
+    /**
+     * Create a CollisionManager for declarative collision rules
+     */
+    createCollisionManager(config?: CollisionManagerConfig): CollisionManager;
+    /**
      * Create an InputManager for simplified input handling
      *
      * @example
@@ -200,5 +228,9 @@ export declare class PhaserAdapter<TState = any> {
      * ```
      */
     createInputManager(): InputManager;
+    /**
+     * Create a PhysicsManager for automatic physics behaviors
+     */
+    createPhysicsManager(config: PhysicsManagerConfig): PhysicsManager;
 }
 //# sourceMappingURL=PhaserAdapter.d.ts.map
