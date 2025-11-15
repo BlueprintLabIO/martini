@@ -6,42 +6,33 @@
  * the other controls ice (blue).
  */
 
-import { defineGame } from '@martini/core';
+import { defineGame, createPlayerManager, createInputAction } from '@martini/core';
+
+// Create a player manager to handle player lifecycle
+const playerManager = createPlayerManager({
+  roles: ['fire', 'ice'],
+  factory: (playerId, index) => ({
+    x: index === 0 ? 200 : 600,
+    y: 400,
+    role: index === 0 ? 'fire' : 'ice',
+  }),
+});
 
 export const fireAndIceGame = defineGame({
   setup: ({ playerIds }) => ({
-    players: Object.fromEntries(
-      playerIds.map((id, index) => [
-        id,
-        {
-          x: index === 0 ? 200 : 600,
-          y: 400,
-          role: index === 0 ? 'fire' : 'ice',
-        },
-      ])
-    ),
+    players: playerManager.initialize(playerIds),
     inputs: {},
   }),
 
   actions: {
-    move: {
-      apply: (state, context, input) => {
-        if (!state.inputs) state.inputs = {};
-        state.inputs[context.targetId] = input;
-      },
-    },
+    move: createInputAction('inputs'),
   },
 
   onPlayerJoin: (state, playerId) => {
-    const existingCount = Object.keys(state.players).length;
-    state.players[playerId] = {
-      x: existingCount === 0 ? 200 : 600,
-      y: 400,
-      role: existingCount === 0 ? 'fire' : 'ice',
-    };
+    playerManager.handleJoin(state.players, playerId);
   },
 
   onPlayerLeave: (state, playerId) => {
-    delete state.players[playerId];
+    playerManager.handleLeave(state.players, playerId);
   },
 });

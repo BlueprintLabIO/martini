@@ -15,11 +15,77 @@ export interface SetupContext {
 }
 /**
  * Action context - provides information about who submitted the action
+ *
+ * ⚠️ **IMPORTANT:** Use `targetId` (not `playerId`) for state mutations!
+ *
+ * @example Correct usage:
+ * ```ts
+ * actions: {
+ *   move: {
+ *     apply: (state, context, input) => {
+ *       // ✅ CORRECT: Use targetId to identify which player to affect
+ *       state.players[context.targetId].x += input.dx;
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * @example Incorrect usage:
+ * ```ts
+ * actions: {
+ *   move: {
+ *     apply: (state, context, input) => {
+ *       // ❌ WRONG: playerId is who pressed the key, not who to affect
+ *       state.players[context.playerId].x += input.dx;
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * @example When they differ:
+ * ```ts
+ * // Player A controls Player B's character:
+ * runtime.submitAction('move', { dx: 10 }, 'player-B'); // targetId = 'player-B'
+ *
+ * // In the action:
+ * apply: (state, context, input) => {
+ *   console.log(context.playerId);  // 'player-A' (who submitted)
+ *   console.log(context.targetId);  // 'player-B' (who to affect)
+ * }
+ * ```
  */
 export interface ActionContext {
-    /** ID of the player who called submitAction */
+    /**
+     * ID of the player who called submitAction()
+     *
+     * ⚠️ **Rarely needed in actions!** Most actions should use `targetId` instead.
+     *
+     * Use this for:
+     * - Logging who triggered an action
+     * - Checking permissions (e.g., "can this player do this action?")
+     * - Recording action history
+     *
+     * Do NOT use this for:
+     * - Modifying player state (use `targetId` instead)
+     * - Storing input data (use `targetId` instead)
+     */
     playerId: string;
-    /** ID of the player being affected (defaults to playerId) */
+    /**
+     * ID of the player who should be affected by this action
+     *
+     * ✅ **Use this for state mutations!**
+     *
+     * Defaults to `playerId` when no targetId is specified in submitAction().
+     *
+     * @example
+     * ```ts
+     * // Store input for the affected player
+     * state.inputs[context.targetId] = input;
+     *
+     * // Update the affected player's position
+     * state.players[context.targetId].x = input.x;
+     * ```
+     */
     targetId: string;
     /** Whether this action is being applied on the host */
     isHost: boolean;

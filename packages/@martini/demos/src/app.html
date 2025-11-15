@@ -3,6 +3,15 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!-- Prevent FOUC (Flash of Unstyled Content) for dark mode -->
+		<script>
+			(function () {
+				const theme = localStorage.getItem('theme');
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const isDark = theme === 'dark' || (!theme && prefersDark);
+				document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

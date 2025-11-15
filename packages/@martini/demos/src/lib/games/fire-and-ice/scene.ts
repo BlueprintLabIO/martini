@@ -81,7 +81,7 @@ export function createFireAndIceScene(
 
 							// If this sprite belongs to ME (the client), I'm ice (blue)
 							// Otherwise it's the host who is fire (red)
-							const color = spritePlayerId === this.adapter.myId ? 0x0033ff : 0xff3300;
+							const color = spritePlayerId === this.adapter.getMyPlayerId() ? 0x0033ff : 0xff3300;
 
 							const circle = this.add.circle(data.x || 400, data.y || 400, 20, color);
 							this.sprites[key] = circle;

@@ -117,7 +117,7 @@ export function createGameScene(runtime: GameRuntime) {
         for (const [playerId, player] of Object.entries(state.players)) {
           if (!this.sprites.has(playerId)) {
             // Create sprite
-            const color = playerId === this.adapter.myId ? 0x00ff00 : 0xff0000;
+            const color = playerId === this.adapter.getMyPlayerId() ? 0x00ff00 : 0xff0000;
             const sprite = this.add.circle(player.x, player.y, 20, color);
             this.physics.add.existing(sprite);
             (sprite.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
@@ -126,7 +126,7 @@ export function createGameScene(runtime: GameRuntime) {
             this.sprites.set(playerId, sprite);
 
             // Track my sprite for auto-sync
-            if (playerId === this.adapter.myId) {
+            if (playerId === this.adapter.getMyPlayerId()) {
               this.adapter.trackSprite(sprite, \`player-\${playerId}\`);
             } else {
               // Register remote sprite for interpolation
@@ -143,7 +143,7 @@ export function createGameScene(runtime: GameRuntime) {
 
       // Input handling
       const cursors = this.input.keyboard!.createCursorKeys();
-      const mySprite = this.sprites.get(this.adapter.myId);
+      const mySprite = this.sprites.get(this.adapter.getMyPlayerId());
 
       if (mySprite) {
         // Apply physics

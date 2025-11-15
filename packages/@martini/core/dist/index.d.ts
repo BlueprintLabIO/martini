@@ -15,4 +15,7 @@ export type { Patch } from './sync.js';
 export { SeededRandom } from './SeededRandom.js';
 export { Logger, logger } from './Logger.js';
 export type { LogLevel, LogEntry, LogListener } from './Logger.js';
+export { createPlayerManager } from './PlayerManager.js';
+export type { PlayerManager, PlayerManagerConfig, PlayerFactory } from './PlayerManager.js';
+export { createPlayers, createInputAction, createTickAction } from './helpers.js';
 //# sourceMappingURL=index.d.ts.map

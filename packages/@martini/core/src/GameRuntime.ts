@@ -19,6 +19,19 @@ type EventCallback = (senderId: string, eventName: string, payload: any) => void
 export interface GameRuntimeConfig extends RuntimeConfig {
   /** Throw errors instead of warnings (recommended for development) */
   strict?: boolean;
+
+  /**
+   * Validate that all playerIds are initialized in setup()
+   * Throws an error if strictPlayerInit is true, warns otherwise
+   * @default false
+   */
+  strictPlayerInit?: boolean;
+
+  /**
+   * Key in state where players are stored (for validation)
+   * @default 'players'
+   */
+  playersKey?: string;
 }
 
 export class GameRuntime<TState = any> {
@@ -50,6 +63,11 @@ export class GameRuntime<TState = any> {
     }
     this.previousState = deepClone(this.state);
 
+    // Validate player initialization (dev mode)
+    if (process.env.NODE_ENV !== 'production' && initialPlayerIds.length > 0) {
+      this.validatePlayerInitialization(initialPlayerIds);
+    }
+
     // Setup transport listeners
     this.setupTransport();
 
@@ -72,6 +90,21 @@ export class GameRuntime<TState = any> {
    */
   isHost(): boolean {
     return this._isHost;
+  }
+
+  /**
+   * Get the current player's ID
+   *
+   * @returns The unique player ID for this client
+   *
+   * @example
+   * ```ts
+   * const myId = runtime.getMyPlayerId();
+   * console.log('My player ID:', myId);
+   * ```
+   */
+  getMyPlayerId(): string {
+    return this.transport.getPlayerId();
   }
 
   /**
@@ -400,5 +433,75 @@ export class GameRuntime<TState = any> {
     }
 
     return dp[m][n];
+  }
+
+  /**
+   * Validate that all playerIds are initialized in state.players
+   * Emits warning or throws error based on configuration
+   */
+  private validatePlayerInitialization(playerIds: string[]): void {
+    const playersKey = this.config.playersKey || 'players';
+    const players = (this.state as any)[playersKey];
+
+    // Check if players key exists
+    if (!players || typeof players !== 'object') {
+      const message = [
+        `⚠️  Player initialization issue detected:`,
+        ``,
+        `Expected state.${playersKey} to be an object, but got: ${typeof players}`,
+        ``,
+        `Fix: Initialize players in setup():`,
+        `  setup: ({ playerIds }) => ({`,
+        `    ${playersKey}: Object.fromEntries(`,
+        `      playerIds.map(id => [id, { x: 100, y: 100 }])`,
+        `    )`,
+        `  })`
+      ].join('\n');
+
+      if (this.config.strictPlayerInit) {
+        throw new Error(message);
+      } else {
+        console.warn(message);
+      }
+      return;
+    }
+
+    // Check if all playerIds are initialized
+    const missingPlayers = playerIds.filter(id => !(id in players));
+
+    if (missingPlayers.length > 0) {
+      const message = [
+        `⚠️  Player initialization issue detected:`,
+        ``,
+        `Expected ${playerIds.length} players, but ${missingPlayers.length} missing from state.${playersKey}`,
+        `Missing player IDs: ${missingPlayers.join(', ')}`,
+        ``,
+        `Fix: Initialize all players in setup():`,
+        `  setup: ({ playerIds }) => ({`,
+        `    ${playersKey}: Object.fromEntries(`,
+        `      playerIds.map((id, index) => [id, {`,
+        `        x: index * 100,`,
+        `        y: 100,`,
+        `        score: 0`,
+        `      }])`,
+        `    )`,
+        `  })`,
+        ``,
+        `Or use the createPlayers helper:`,
+        `  import { createPlayers } from '@martini/core';`,
+        ``,
+        `  setup: ({ playerIds }) => ({`,
+        `    ${playersKey}: createPlayers(playerIds, (id, index) => ({`,
+        `      x: index * 100, y: 100, score: 0`,
+        `    }))`,
+        `  })`
+      ].join('\n');
+
+      if (this.config.strictPlayerInit) {
+        throw new Error(message);
+      } else {
+        console.warn(message);
+      }
+    }
   }
 }

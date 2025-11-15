@@ -15,8 +15,7 @@
     "build": "tsc && pnpm build:browser",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "build:browser": "esbuild browser.ts --bundle --format=iife --global-name=Martini --outfile=dist/martini-devtools.browser.js",
-    "postbuild": "cp dist/martini-devtools.browser.js ../ide/static/ 2>/dev/null || echo \"Skipping copy to IDE (dir may not exist)\""
+    "build:browser": "esbuild browser.ts --bundle --format=iife --global-name=Martini --outfile=dist/martini-devtools.browser.js"
   },
   "keywords": [
     "devtools",

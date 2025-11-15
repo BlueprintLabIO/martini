@@ -246,6 +246,9 @@ var GameRuntime = class {
       this.state = gameDef.setup({ playerIds: initialPlayerIds, random: setupRandom });
     }
     this.previousState = deepClone(this.state);
+    if (initialPlayerIds.length > 0) {
+      this.validatePlayerInitialization(initialPlayerIds);
+    }
     this.setupTransport();
     if (this._isHost) {
       const syncInterval = config.syncInterval || 50;
@@ -263,6 +266,20 @@ var GameRuntime = class {
    */
   isHost() {
     return this._isHost;
+  }
+  /**
+   * Get the current player's ID
+   *
+   * @returns The unique player ID for this client
+   *
+   * @example
+   * ```ts
+   * const myId = runtime.getMyPlayerId();
+   * console.log('My player ID:', myId);
+   * ```
+   */
+  getMyPlayerId() {
+    return this.transport.getPlayerId();
   }
   /**
    * Get transport (for adapters to check isHost, getPlayerId, etc)
@@ -538,6 +555,68 @@ Did you mean "${suggestion}"?`;
     }
     return dp[m][n];
   }
+  /**
+   * Validate that all playerIds are initialized in state.players
+   * Emits warning or throws error based on configuration
+   */
+  validatePlayerInitialization(playerIds) {
+    const playersKey = this.config.playersKey || "players";
+    const players = this.state[playersKey];
+    if (!players || typeof players !== "object") {
+      const message = [
+        `\u26A0\uFE0F  Player initialization issue detected:`,
+        ``,
+        `Expected state.${playersKey} to be an object, but got: ${typeof players}`,
+        ``,
+        `Fix: Initialize players in setup():`,
+        `  setup: ({ playerIds }) => ({`,
+        `    ${playersKey}: Object.fromEntries(`,
+        `      playerIds.map(id => [id, { x: 100, y: 100 }])`,
+        `    )`,
+        `  })`
+      ].join("\n");
+      if (this.config.strictPlayerInit) {
+        throw new Error(message);
+      } else {
+        console.warn(message);
+      }
+      return;
+    }
+    const missingPlayers = playerIds.filter((id) => !(id in players));
+    if (missingPlayers.length > 0) {
+      const message = [
+        `\u26A0\uFE0F  Player initialization issue detected:`,
+        ``,
+        `Expected ${playerIds.length} players, but ${missingPlayers.length} missing from state.${playersKey}`,
+        `Missing player IDs: ${missingPlayers.join(", ")}`,
+        ``,
+        `Fix: Initialize all players in setup():`,
+        `  setup: ({ playerIds }) => ({`,
+        `    ${playersKey}: Object.fromEntries(`,
+        `      playerIds.map((id, index) => [id, {`,
+        `        x: index * 100,`,
+        `        y: 100,`,
+        `        score: 0`,
+        `      }])`,
+        `    )`,
+        `  })`,
+        ``,
+        `Or use the createPlayers helper:`,
+        `  import { createPlayers } from '@martini/core';`,
+        ``,
+        `  setup: ({ playerIds }) => ({`,
+        `    ${playersKey}: createPlayers(playerIds, (id, index) => ({`,
+        `      x: index * 100, y: 100, score: 0`,
+        `    }))`,
+        `  })`
+      ].join("\n");
+      if (this.config.strictPlayerInit) {
+        throw new Error(message);
+      } else {
+        console.warn(message);
+      }
+    }
+  }
 };
 
 // src/Logger.ts
@@ -769,11 +848,101 @@ __publicField(_Logger, "LEVEL_PRIORITY", {
 });
 var Logger = _Logger;
 var logger = new Logger("Martini");
+
+// src/PlayerManager.ts
+function createPlayerManager(config) {
+  const { factory, roles, spawnPoints } = config;
+  let playerCount = 0;
+  const createPlayer = (playerId, index) => {
+    let player = factory(playerId, index);
+    if (spawnPoints && spawnPoints[index]) {
+      player = { ...player, ...spawnPoints[index] };
+    }
+    if (roles && roles[index]) {
+      player = { ...player, role: roles[index] };
+    }
+    return player;
+  };
+  return {
+    initialize(playerIds) {
+      playerCount = playerIds.length;
+      return Object.fromEntries(
+        playerIds.map((id, index) => [id, createPlayer(id, index)])
+      );
+    },
+    handleJoin(players, playerId) {
+      const currentCount = Object.keys(players).length;
+      players[playerId] = createPlayer(playerId, currentCount);
+      playerCount = currentCount + 1;
+    },
+    handleLeave(players, playerId) {
+      delete players[playerId];
+      playerCount = Object.keys(players).length;
+    },
+    getConfig(index) {
+      return {
+        role: roles?.[index],
+        spawn: spawnPoints?.[index]
+      };
+    },
+    createHandlers() {
+      const manager = this;
+      return {
+        setup: ({ playerIds }) => {
+          return {
+            players: manager.initialize(playerIds)
+          };
+        },
+        onPlayerJoin: (state, playerId) => {
+          manager.handleJoin(state.players, playerId);
+        },
+        onPlayerLeave: (state, playerId) => {
+          manager.handleLeave(state.players, playerId);
+        }
+      };
+    }
+  };
+}
+
+// src/helpers.ts
+function createPlayers(playerIds, factory) {
+  return Object.fromEntries(playerIds.map((id, index) => [id, factory(id, index)]));
+}
+function createInputAction(stateKey = "inputs", options) {
+  return {
+    apply: (state, context, input) => {
+      if (options?.validate && !options.validate(input)) {
+        if (true) {
+          console.warn(`[${stateKey}] Invalid input rejected:`, input);
+        }
+        return;
+      }
+      if (!state[stateKey]) {
+        state[stateKey] = {};
+      }
+      state[stateKey][context.targetId] = input;
+      options?.onApply?.(state, context, input);
+    }
+  };
+}
+function createTickAction(tickFn) {
+  return {
+    apply: (state, context, input) => {
+      if (!context.isHost) return;
+      const delta = input.delta || 0;
+      tickFn(state, delta, context);
+    }
+  };
+}
 export {
   GameRuntime,
   Logger,
   SeededRandom,
   applyPatch,
+  createInputAction,
+  createPlayerManager,
+  createPlayers,
+  createTickAction,
   defineGame,
   generateDiff,
   logger

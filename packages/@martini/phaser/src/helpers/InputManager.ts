@@ -29,6 +29,7 @@
 
 import type { PhaserAdapter } from '../PhaserAdapter.js';
 import type { GameRuntime } from '@martini/core';
+import { getProfile, applyProfileOptions, mergeProfiles as mergeProfileBindings, type ProfileOptions } from './InputProfiles.js';
 
 export interface ActionBinding {
   /** Action name to submit */
@@ -59,6 +60,13 @@ export interface CursorBindings {
   shift?: KeyBinding;
 }
 
+export interface AggregatedBinding {
+  keyMap: Record<string, string>;
+  state: Record<string, any>;
+  mode: 'continuous' | 'oneshot';
+  targetId?: string;
+}
+
 export class InputManager {
   private runtime: GameRuntime;
   private scene: any; // Phaser.Scene
@@ -66,6 +74,7 @@ export class InputManager {
   private cursorBindings?: CursorBindings;
   private cursors?: any; // Phaser.Types.Input.Keyboard.CursorKeys
   private pressedKeys = new Set<string>(); // Track one-shot keys
+  private aggregatedBindings = new Map<string, AggregatedBinding>(); // NEW: Track aggregated state
 
   constructor(adapter: PhaserAdapter, scene: any) {
     this.runtime = adapter.getRuntime();
@@ -86,12 +95,60 @@ export class InputManager {
    * ```
    */
   bindKeys(bindings: KeyBindings): void {
-    console.log('[InputManager] bindKeys called with:', bindings);
     for (const [key, binding] of Object.entries(bindings)) {
       const normalized = this.normalizeBinding(binding);
       this.keyBindings.set(key.toUpperCase(), normalized);
-      console.log(`[InputManager] Registered key: ${key.toUpperCase()}`, normalized);
     }
+  }
+
+  /**
+   * Bind multiple keys that aggregate into a single input state
+   * Perfect for platformers, twin-stick shooters, fighting games
+   *
+   * Key codes: Use standard DOM key names (ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Space).
+   * Letter keys (A-Z) are automatically uppercased. Arrow keys and Space are automatically
+   * converted to Phaser's internal format (LEFT, RIGHT, UP, DOWN, SPACE).
+   *
+   * @example
+   * ```ts
+   * // Platformer controls - use ArrowLeft/ArrowRight/Space
+   * inputManager.bindKeysAggregated('move', {
+   *   left: 'ArrowLeft',
+   *   right: 'ArrowRight',
+   *   up: 'Space'
+   * });
+   * // Automatically tracks: { left: true/false, right: true/false, up: true/false }
+   *
+   * // Top-down movement - letter keys work as-is
+   * inputManager.bindKeysAggregated('move', {
+   *   left: 'A',
+   *   right: 'D',
+   *   up: 'W',
+   *   down: 'S'
+   * });
+   * ```
+   */
+  bindKeysAggregated(
+    action: string,
+    keyMap: Record<string, string>,
+    options?: {
+      initialState?: Record<string, any>;
+      mode?: 'continuous' | 'oneshot';
+      targetId?: string;
+    }
+  ): void {
+    // Build initial state (default to false for each field)
+    const state = options?.initialState ||
+      Object.fromEntries(
+        Object.keys(keyMap).map(field => [field, false])
+      );
+
+    this.aggregatedBindings.set(action, {
+      keyMap,
+      state,
+      mode: options?.mode || 'continuous',
+      targetId: options?.targetId
+    });
   }
 
   /**
@@ -133,7 +190,6 @@ export class InputManager {
       if (binding.mode === 'oneshot') {
         // One-shot: fire once when pressed
         if (keyObj.isDown && !this.pressedKeys.has(key)) {
-          console.log(`[InputManager] Key pressed (oneshot): ${key}`, binding);
           this.submitBinding(binding);
           this.pressedKeys.add(key);
         } else if (keyObj.isUp) {
@@ -142,7 +198,6 @@ export class InputManager {
       } else {
         // Continuous: fire every frame while held
         if (keyObj.isDown) {
-          console.log(`[InputManager] Key held (continuous): ${key}`, binding);
           this.submitBinding(binding);
         }
       }
@@ -167,7 +222,6 @@ export class InputManager {
 
         if (normalized.mode === 'oneshot') {
           if (keyObj.isDown && !this.pressedKeys.has(keyName)) {
-            console.log(`[InputManager] Cursor pressed (oneshot):`, normalized);
             this.submitBinding(normalized);
             this.pressedKeys.add(keyName);
           } else if (keyObj.isUp) {
@@ -175,10 +229,65 @@ export class InputManager {
           }
         } else {
           if (keyObj.isDown) {
-            console.log(`[InputManager] Cursor held (continuous):`, normalized);
             this.submitBinding(normalized);
           }
         }
+      }
+    }
+
+    // Handle aggregated bindings (multi-key state tracking)
+    for (const [action, binding] of this.aggregatedBindings.entries()) {
+      let stateChanged = false;
+
+      // Check each key in the map and update state
+      for (const [field, keyCode] of Object.entries(binding.keyMap)) {
+        // IMPORTANT: Convert user-friendly key names to Phaser's internal key codes
+        // Phaser uses uppercase constants (e.g., 'LEFT' not 'ArrowLeft')
+        // This mapping allows users to use standard DOM key names while Phaser expects its own format
+        // See: https://photonstorm.github.io/phaser3-docs/Phaser.Input.Keyboard.KeyCodes.html
+        let phaserKeyCode = keyCode;
+        const keyCodeMap: Record<string, string> = {
+          'ArrowLeft': 'LEFT',
+          'ArrowRight': 'RIGHT',
+          'ArrowUp': 'UP',
+          'ArrowDown': 'DOWN',
+          'Space': 'SPACE'
+        };
+
+        if (keyCodeMap[keyCode]) {
+          phaserKeyCode = keyCodeMap[keyCode];
+        }
+
+        const keyObj = this.scene.input.keyboard?.addKey(phaserKeyCode, false);
+        if (!keyObj) {
+          console.warn(`[InputManager] Failed to create key object for: ${keyCode} (mapped to ${phaserKeyCode})`);
+          continue;
+        }
+
+        const pressed = keyObj.isDown;
+
+        // Update state if changed
+        if (binding.state[field] !== pressed) {
+          binding.state[field] = pressed;
+          stateChanged = true;
+        }
+      }
+
+      // Submit aggregated state
+      if (binding.mode === 'continuous') {
+        // Submit every frame (spread to avoid mutation)
+        this.runtime.submitAction(
+          action,
+          { ...binding.state },
+          binding.targetId
+        );
+      } else if (binding.mode === 'oneshot' && stateChanged) {
+        // Submit only when state changes
+        this.runtime.submitAction(
+          action,
+          { ...binding.state },
+          binding.targetId
+        );
       }
     }
   }
@@ -188,6 +297,70 @@ export class InputManager {
    */
   submitAction(action: string, input?: any, targetId?: string): void {
     this.runtime.submitAction(action, input, targetId);
+  }
+
+  /**
+   * Use a pre-defined input profile
+   *
+   * @param profileName - Name of the profile ('platformer', 'topDown', 'shooter', etc.)
+   * @param options - Optional customization
+   *
+   * @example
+   * ```ts
+   * // Simple usage
+   * inputManager.useProfile('platformer');
+   *
+   * // With player 2 (uses WASD instead of arrows)
+   * inputManager.useProfile('platformer', { player: 2 });
+   *
+   * // With custom action name
+   * inputManager.useProfile('platformer', { action: 'move' });
+   *
+   * // With key overrides
+   * inputManager.useProfile('platformer', {
+   *   overrides: {
+   *     'Space': { action: 'jump', mode: 'oneshot' }
+   *   }
+   * });
+   * ```
+   */
+  useProfile(profileName: string, options?: ProfileOptions): void {
+    const profile = getProfile(profileName);
+
+    if (!profile) {
+      console.warn(`[InputManager] Profile "${profileName}" not found. Available profiles:`, [
+        'platformer', 'platformerWASD', 'topDown', 'topDownWASD', 'shooter', 'twinStick'
+      ]);
+      return;
+    }
+
+    const config = applyProfileOptions(profile, options);
+
+    if (config.type === 'aggregated') {
+      // Use aggregated binding for multi-key state tracking
+      this.bindKeysAggregated(config.action, config.keys, {
+        mode: config.mode
+      });
+    } else {
+      // Use per-key binding for separate actions
+      this.bindKeys(config.bindings);
+    }
+  }
+
+  /**
+   * Merge multiple profiles into one
+   *
+   * @param profileNames - Array of profile names
+   *
+   * @example
+   * ```ts
+   * // Combine platformer movement with shooter actions
+   * inputManager.mergeProfiles(['platformer', 'shooter']);
+   * ```
+   */
+  mergeProfiles(profileNames: string[]): void {
+    const merged = mergeProfileBindings(profileNames);
+    this.bindKeys(merged);
   }
 
   /**
@@ -220,7 +393,6 @@ export class InputManager {
   }
 
   private submitBinding(binding: ActionBinding): void {
-    console.log(`[InputManager] submitAction('${binding.action}', ${JSON.stringify(binding.input)}, ${binding.targetId || 'self'})`);
     this.runtime.submitAction(binding.action, binding.input, binding.targetId);
   }
 }

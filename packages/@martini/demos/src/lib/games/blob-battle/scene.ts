@@ -54,7 +54,7 @@ export function createBlobBattleScene(runtime: GameRuntime, keyState?: any) {
       const now = this.time.now;
       if (now - this.lastMoveTime < 50) return; // 20 updates per second max
 
-      const player = runtime.getState().players[this.adapter.myId];
+      const player = runtime.getState().players[this.adapter.getMyPlayerId()];
       if (!player) return;
 
       let moveX = 0;
@@ -107,7 +107,7 @@ export function createBlobBattleScene(runtime: GameRuntime, keyState?: any) {
 
         if (!sprite) {
           // Create new player sprite
-          const isLocal = playerId === this.adapter.myId;
+          const isLocal = playerId === this.adapter.getMyPlayerId();
           const color = isLocal ? 0x00ff00 : this.getPlayerColor(playerId);
 
           sprite = this.add.circle(player.x, player.y, player.size / 2, color, 0.8);
@@ -163,7 +163,7 @@ export function createBlobBattleScene(runtime: GameRuntime, keyState?: any) {
       }
 
       // Follow local player with camera
-      const localPlayer = players[this.adapter.myId];
+      const localPlayer = players[this.adapter.getMyPlayerId()];
       if (localPlayer) {
         this.cameras.main.scrollX = localPlayer.x - WORLD_WIDTH / 2;
         this.cameras.main.scrollY = localPlayer.y - WORLD_HEIGHT / 2;

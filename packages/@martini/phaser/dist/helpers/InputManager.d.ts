@@ -28,6 +28,7 @@
  */
 import type { PhaserAdapter } from '../PhaserAdapter.js';
 import type { GameRuntime } from '@martini/core';
+import { type ProfileOptions } from './InputProfiles.js';
 export interface ActionBinding {
     /** Action name to submit */
     action: string;
@@ -50,6 +51,12 @@ export interface CursorBindings {
     space?: KeyBinding;
     shift?: KeyBinding;
 }
+export interface AggregatedBinding {
+    keyMap: Record<string, string>;
+    state: Record<string, any>;
+    mode: 'continuous' | 'oneshot';
+    targetId?: string;
+}
 export declare class InputManager {
     private runtime;
     private scene;
@@ -57,6 +64,7 @@ export declare class InputManager {
     private cursorBindings?;
     private cursors?;
     private pressedKeys;
+    private aggregatedBindings;
     constructor(adapter: PhaserAdapter, scene: any);
     /**
      * Bind keyboard keys to actions
@@ -72,6 +80,38 @@ export declare class InputManager {
      * ```
      */
     bindKeys(bindings: KeyBindings): void;
+    /**
+     * Bind multiple keys that aggregate into a single input state
+     * Perfect for platformers, twin-stick shooters, fighting games
+     *
+     * Key codes: Use standard DOM key names (ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Space).
+     * Letter keys (A-Z) are automatically uppercased. Arrow keys and Space are automatically
+     * converted to Phaser's internal format (LEFT, RIGHT, UP, DOWN, SPACE).
+     *
+     * @example
+     * ```ts
+     * // Platformer controls - use ArrowLeft/ArrowRight/Space
+     * inputManager.bindKeysAggregated('move', {
+     *   left: 'ArrowLeft',
+     *   right: 'ArrowRight',
+     *   up: 'Space'
+     * });
+     * // Automatically tracks: { left: true/false, right: true/false, up: true/false }
+     *
+     * // Top-down movement - letter keys work as-is
+     * inputManager.bindKeysAggregated('move', {
+     *   left: 'A',
+     *   right: 'D',
+     *   up: 'W',
+     *   down: 'S'
+     * });
+     * ```
+     */
+    bindKeysAggregated(action: string, keyMap: Record<string, string>, options?: {
+        initialState?: Record<string, any>;
+        mode?: 'continuous' | 'oneshot';
+        targetId?: string;
+    }): void;
     /**
      * Bind Phaser cursor keys to actions
      *
@@ -94,6 +134,44 @@ export declare class InputManager {
      * Manually submit an action (useful for pointer/touch input)
      */
     submitAction(action: string, input?: any, targetId?: string): void;
+    /**
+     * Use a pre-defined input profile
+     *
+     * @param profileName - Name of the profile ('platformer', 'topDown', 'shooter', etc.)
+     * @param options - Optional customization
+     *
+     * @example
+     * ```ts
+     * // Simple usage
+     * inputManager.useProfile('platformer');
+     *
+     * // With player 2 (uses WASD instead of arrows)
+     * inputManager.useProfile('platformer', { player: 2 });
+     *
+     * // With custom action name
+     * inputManager.useProfile('platformer', { action: 'move' });
+     *
+     * // With key overrides
+     * inputManager.useProfile('platformer', {
+     *   overrides: {
+     *     'Space': { action: 'jump', mode: 'oneshot' }
+     *   }
+     * });
+     * ```
+     */
+    useProfile(profileName: string, options?: ProfileOptions): void;
+    /**
+     * Merge multiple profiles into one
+     *
+     * @param profileNames - Array of profile names
+     *
+     * @example
+     * ```ts
+     * // Combine platformer movement with shooter actions
+     * inputManager.mergeProfiles(['platformer', 'shooter']);
+     * ```
+     */
+    mergeProfiles(profileNames: string[]): void;
     /**
      * Clear all bindings
      */

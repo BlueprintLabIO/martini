@@ -112,7 +112,7 @@
 	{:else}
 		<PaneGroup direction="horizontal" class="ide-pane-group">
 			<!-- Sidebar -->
-			<Pane defaultSize={15} minSize={10} class="sidebar-pane">
+			<Pane defaultSize={10} minSize={10} class="sidebar-pane">
 				<div class="sidebar">
 					<h3>Files</h3>
 					<ul class="file-list">
@@ -134,7 +134,7 @@
 			<PaneResizer class="resizer" />
 
 			<!-- Editor -->
-			<Pane defaultSize={35} minSize={20} class="editor-pane">
+			<Pane defaultSize={25} minSize={20} class="editor-pane">
 				<div class="editor-panel">
 					<div class="editor-header">
 						<span>{activeFile}</span>
@@ -146,7 +146,7 @@
 			<PaneResizer class="resizer" />
 
 			<!-- Game Previews + DevTools -->
-			<Pane defaultSize={50} minSize={30} class="preview-pane">
+			<Pane defaultSize={65} minSize={30} class="preview-pane">
 				<PaneGroup direction="vertical" class="preview-group">
 					<!-- Game Canvases -->
 					<Pane defaultSize={75} minSize={40} class="games-pane">

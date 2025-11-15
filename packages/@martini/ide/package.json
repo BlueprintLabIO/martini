@@ -7,8 +7,6 @@
 		"dev": "vite dev",
 		"dev:build": "svelte-package --watch",
 		"build": "vite build && npm run prepack",
-		"postbuild": "pnpm copy:static",
-		"copy:static": "cp static/ide-sandbox.html ../demos/static/ 2>/dev/null || echo 'Skipping demos copy'",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"prepack": "svelte-kit sync && svelte-package && publint",

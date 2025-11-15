@@ -32,3 +32,8 @@ export { SeededRandom } from './SeededRandom.js';
 // Logger
 export { Logger, logger } from './Logger.js';
 export type { LogLevel, LogEntry, LogListener } from './Logger.js';
+
+// Helpers (Phase 1 - Bug Prevention)
+export { createPlayerManager } from './PlayerManager.js';
+export type { PlayerManager, PlayerManagerConfig, PlayerFactory } from './PlayerManager.js';
+export { createPlayers, createInputAction, createTickAction } from './helpers.js';
