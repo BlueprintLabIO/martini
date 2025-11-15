@@ -1,69 +1,15 @@
 <script lang="ts">
 	import MartiniIDE from '@martini/ide';
 	import type { MartiniIDEConfig } from '@martini/ide';
+	import mainTemplate from './main.ts.template?raw';
 
 	// Same game as /ide but simplified for testing
 	const config: MartiniIDEConfig = {
 		files: {
-			'/src/main.ts': `import Phaser from 'phaser';
-
-const config = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  parent: 'game',
-  backgroundColor: '#1a1a2e',
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 800,
-    height: 600
-  },
-  scene: {
-    create: create,
-    update: update
-  }
-};
-
-const game = new Phaser.Game(config);
-let cursors;
-let keyPressCount = 0;
-
-function create() {
-  console.log('[Game] Created');
-
-  this.add.text(400, 50, 'Dual Layout Test', {
-    fontSize: '24px',
-    color: '#fff'
-  }).setOrigin(0.5);
-
-  this.add.text(400, 100, 'Press Arrow Keys', {
-    fontSize: '16px',
-    color: '#aaa'
-  }).setOrigin(0.5);
-
-  this.add.text(400, 300, 'Count: 0', {
-    fontSize: '48px',
-    color: '#0ff'
-  }).setOrigin(0.5).setName('counter');
-
-  cursors = this.input.keyboard.createCursorKeys();
-}
-
-function update() {
-  if (cursors.left.isDown || cursors.right.isDown || cursors.up.isDown || cursors.down.isDown) {
-    keyPressCount++;
-    const counter = this.children.getByName('counter');
-    if (counter) {
-      counter.setText('Count: ' + keyPressCount);
-      console.log('[Game] Key pressed, count:', keyPressCount);
-    }
-  }
-}
-`
+			'/src/main.ts': mainTemplate
 		},
 		engine: 'phaser',
-		transport: { type: 'local' },
+		transport: { type: 'iframe-bridge' },
 		layout: 'dual' // KEY DIFFERENCE: dual layout like /ide
 	};
 </script>

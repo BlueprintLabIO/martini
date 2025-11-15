@@ -10,7 +10,7 @@ import { getProjectByShareCode } from '$lib/server/multiplayer/shareCode';
 import { db } from '$lib/server/db';
 import { assets, projects } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { SUPABASE_URL } from '$env/static/private';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const { shareCode } = params;
@@ -59,7 +59,7 @@ export const GET: RequestHandler = async ({ params }) => {
 			id: asset.id,
 			filename: asset.filename,
 			fileType: asset.fileType,
-			url: `${SUPABASE_URL}/storage/v1/object/public/game-assets/${asset.storagePath}`
+			url: `${PUBLIC_SUPABASE_URL}/storage/v1/object/public/game-assets/${asset.storagePath}`
 		}))
 	});
 };

@@ -4,9 +4,9 @@
 	"private": true,
 	"description": "Embeddable multiplayer game IDE with dual-view local testing",
 	"scripts": {
-		"dev": "tsx scripts/watch-sdk-source.ts & vite dev",
+		"dev": "vite dev",
+		"dev:build": "svelte-package --watch",
 		"build": "vite build && npm run prepack",
-		"prebuild": "tsx scripts/bundle-sdk-source.ts",
 		"postbuild": "pnpm copy:static",
 		"copy:static": "cp static/ide-sandbox.html ../demos/static/ 2>/dev/null || echo 'Skipping demos copy'",
 		"preview": "vite preview",

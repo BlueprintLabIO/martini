@@ -6,9 +6,9 @@ export interface MartiniIDEConfig {
     files: Record<string, string>;
     /** Game engine (Phase 1: Phaser only) */
     engine: 'phaser';
-    /** Multiplayer transport (Phase 1: Local only) */
+    /** Multiplayer transport */
     transport: {
-        type: 'local';
+        type: 'local' | 'iframe-bridge';
     };
     /** Layout mode */
     layout?: 'dual' | 'code-only';

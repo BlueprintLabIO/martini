@@ -6,7 +6,12 @@
 
 import { loadSandpackClient, type SandpackClient, type SandpackMessage } from '@codesandbox/sandpack-client';
 import type { VirtualFileSystem } from './VirtualFS';
-import sdkBundle from './sdk-bundle.json';
+
+// Import pre-bundled ESM modules (single file per package)
+import coreBrowserBundle from '@martini/core/dist/browser.js?raw';
+import phaserBrowserBundle from '@martini/phaser/dist/browser.js?raw';
+import localTransportBundle from '@martini/transport-local/dist/browser.js?raw';
+import iframeBridgeBundle from '@martini/transport-iframe-bridge/dist/browser.js?raw';
 
 export interface SandpackManagerOptions {
 	/** Container element for the Sandpack iframe */
@@ -44,9 +49,15 @@ export class SandpackManager {
 	}
 
 	/**
-	 * Initialize Sandpack - setup iframe (no need to fetch bundle anymore!)
+	 * Initialize Sandpack - setup iframe
 	 */
 	async initialize(): Promise<void> {
+		console.log('[SandpackManager] Using Martini SDK browser bundles (ESM)');
+		console.log(`  @martini/core: ${(coreBrowserBundle.length / 1024).toFixed(1)}KB`);
+		console.log(`  @martini/phaser: ${(phaserBrowserBundle.length / 1024).toFixed(1)}KB`);
+		console.log(`  @martini/transport-local: ${(localTransportBundle.length / 1024).toFixed(1)}KB`);
+		console.log(`  @martini/transport-iframe-bridge: ${(iframeBridgeBundle.length / 1024).toFixed(1)}KB`);
+
 		// Create iframe
 		this.iframe = document.createElement('iframe');
 		this.iframe.style.width = '100%';
@@ -98,16 +109,28 @@ console.log('[IDE] __MARTINI_CONFIG__ injected:', JSON.stringify(window.__MARTIN
 			}
 		}
 
-		// 2. Inject Martini SDK source files from bundle
-		let sdkFileCount = 0;
-		const sdkPaths: string[] = [];
-		for (const [path, code] of Object.entries(sdkBundle)) {
-			files[path] = { code };
-			sdkPaths.push(path);
-			sdkFileCount++;
-		}
-		console.log(`[SandpackManager] Injected ${sdkFileCount} SDK source files`);
-		console.log('[SandpackManager] SDK files:', sdkPaths);
+		// 2. Inject pre-bundled Martini SDK packages as single ESM files
+		files['/node_modules/@martini/core/index.js'] = { code: coreBrowserBundle };
+		files['/node_modules/@martini/core/package.json'] = {
+			code: JSON.stringify({ name: '@martini/core', version: '2.0.0', main: './index.js', type: 'module' })
+		};
+
+		files['/node_modules/@martini/phaser/index.js'] = { code: phaserBrowserBundle };
+		files['/node_modules/@martini/phaser/package.json'] = {
+			code: JSON.stringify({ name: '@martini/phaser', version: '2.0.0', main: './index.js', type: 'module' })
+		};
+
+		files['/node_modules/@martini/transport-local/index.js'] = { code: localTransportBundle };
+		files['/node_modules/@martini/transport-local/package.json'] = {
+			code: JSON.stringify({ name: '@martini/transport-local', version: '1.0.0', main: './index.js', type: 'module' })
+		};
+
+		files['/node_modules/@martini/transport-iframe-bridge/index.js'] = { code: iframeBridgeBundle };
+		files['/node_modules/@martini/transport-iframe-bridge/package.json'] = {
+			code: JSON.stringify({ name: '@martini/transport-iframe-bridge', version: '2.0.0', main: './index.js', type: 'module' })
+		};
+
+		console.log('[SandpackManager] Injected 4 pre-bundled Martini SDK packages');
 
 		// 3. Add Phaser stub module (Phaser loaded globally via script tag in HTML)
 		files['/node_modules/phaser/package.json'] = {
@@ -210,10 +233,11 @@ console.log('[IDE] __MARTINI_CONFIG__ injected:', JSON.stringify(window.__MARTIN
 			}
 		}
 
-		// Re-inject SDK source files (in case they changed via watch mode)
-		for (const [path, code] of Object.entries(sdkBundle)) {
-			files[path] = { code };
-		}
+		// Re-inject pre-bundled Martini SDK packages
+		files['/node_modules/@martini/core/index.js'] = { code: coreBrowserBundle };
+		files['/node_modules/@martini/phaser/index.js'] = { code: phaserBrowserBundle };
+		files['/node_modules/@martini/transport-local/index.js'] = { code: localTransportBundle };
+		files['/node_modules/@martini/transport-iframe-bridge/index.js'] = { code: iframeBridgeBundle };
 
 		// Add Phaser stub module
 		files['/node_modules/phaser/package.json'] = {

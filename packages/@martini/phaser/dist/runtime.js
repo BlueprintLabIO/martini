@@ -51,9 +51,17 @@ export function initializeGame(config) {
         playerIds: [transport.getPlayerId()]
     });
     // Create Phaser game with user's scene and config
+    // Default scale configuration ensures canvas fits container properly
+    const defaultScale = {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: config.phaserConfig?.width || 800,
+        height: config.phaserConfig?.height || 600
+    };
     const phaserConfig = {
         type: Phaser.AUTO,
         parent: 'game',
+        scale: defaultScale,
         ...config.phaserConfig,
         scene: config.scene(runtime)
     };

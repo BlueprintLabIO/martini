@@ -13,9 +13,5 @@ export { VirtualFileSystem } from './core/VirtualFS';
 export { SandpackManager } from './core/SandpackManager';
 export { TypeScriptEnvironment } from './core/TypeScriptEnv';
 
-// Adapters
-export { PhaserEngine } from './adapters/PhaserEngine';
-export type { EngineAdapter } from './adapters/PhaserEngine';
-
 // Types
 export type { MartiniIDEConfig, GameError, TypeDiagnostic } from './types';

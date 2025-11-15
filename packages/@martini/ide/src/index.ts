@@ -14,9 +14,5 @@ export { Bundler } from './core/Bundler';
 export { TypeScriptEnvironment } from './core/TypeScriptEnv';
 export { Sandbox } from './core/Sandbox';
 
-// Adapters
-export { PhaserEngine } from './adapters/PhaserEngine';
-export type { EngineAdapter } from './adapters/PhaserEngine';
-
 // Types
 export type { MartiniIDEConfig, GameError, TypeDiagnostic } from './types';

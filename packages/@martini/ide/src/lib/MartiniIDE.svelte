@@ -461,6 +461,7 @@
 
 	.dual-preview > :global(*) {
 		flex: 1;
+		min-width: 0;
 	}
 
 	/* DevTools Container */

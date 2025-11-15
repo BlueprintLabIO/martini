@@ -9,6 +9,7 @@
 	"scripts": {
 		"dev": "turbo run dev --filter=@martini/web",
 		"dev:all": "turbo run dev",
+		"dev:demos": "turbo watch dev --filter=demos",
 		"build": "turbo run build",
 		"test": "turbo run test",
 		"clean": "turbo run clean && rm -rf node_modules",

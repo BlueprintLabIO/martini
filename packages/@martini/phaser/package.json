@@ -10,13 +10,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./sdk-bundle": "./dist/sdk-bundle.json",
+    "./dist/browser.js": "./dist/browser.js"
   },
   "scripts": {
-    "build": "tsc && pnpm build:browser",
-    "build:browser": "esbuild browser.ts --bundle --format=iife --global-name=MartiniMultiplayer --outfile=dist/martini-multiplayer.browser.js",
-    "postbuild": "pnpm copy:bundles",
-    "copy:bundles": "cp dist/martini-multiplayer.browser.js ../../apps/vesper/static/ 2>/dev/null || echo 'Skipping vesper' && cp dist/martini-multiplayer.browser.js ../demos/static/ 2>/dev/null || echo 'Skipping demos'",
+    "build": "tsc && tsx scripts/build-browser-bundle.ts",
+    "build:types": "tsc",
+    "build:browser": "tsx scripts/build-browser-bundle.ts",
     "dev": "tsc --watch",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
@@ -26,6 +27,7 @@
     "@types/node": "^22",
     "@vitest/coverage-v8": "^3.2.4",
     "esbuild": "^0.24.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

@@ -4,9 +4,11 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".svelte-kit/**", "dist/**"]
+      "inputs": ["src/**", "package.json", "tsconfig.json", "scripts/**"],
+      "outputs": [".svelte-kit/**", "dist/**", "dist/sdk-bundle.json"]
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },

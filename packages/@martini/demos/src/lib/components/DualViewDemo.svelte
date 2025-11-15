@@ -224,8 +224,7 @@
 				// Uses shared keyState for dual-view controls
 				return createBlobBattleConfig(container, runtime, keyState);
 			case 'fire-and-ice':
-				// New web app architecture - only needs runtime!
-				return createFireAndIceConfig(container, runtime);
+				return createFireAndIceConfig(container, runtime, transport, isHost, playerId, role, keyState);
 			case 'paddle-battle':
 				return createPaddleBattleConfig(container, runtime, transport, isHost, playerId, role, keyState);
 			case 'arena-blaster':

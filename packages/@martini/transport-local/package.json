@@ -10,16 +10,20 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./sdk-bundle": "./dist/sdk-bundle.json",
+    "./dist/browser.js": "./dist/browser.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsx scripts/build-browser-bundle.ts",
     "dev": "tsc --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "build:types": "tsc",
+    "build:browser": "tsx scripts/build-browser-bundle.ts"
   },
   "dependencies": {
     "@martini/core": "workspace:*"
@@ -28,6 +32,8 @@
     "@types/node": "^22",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }
