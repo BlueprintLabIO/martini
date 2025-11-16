@@ -148,6 +148,13 @@ export class PhaserAdapter<TState = any> {
   }
 
   /**
+   * Expose the underlying Phaser scene
+   */
+  getScene(): any {
+    return this.scene;
+  }
+
+  /**
    * Track a sprite - automatically syncs position/rotation/etc
    *
    * @param sprite Phaser sprite to track
@@ -257,6 +264,21 @@ export class PhaserAdapter<TState = any> {
       }
       const sprites = state[this.spriteNamespace];
       sprites[key] = { ...sprites[key], ...updates };
+    });
+  }
+
+  /**
+   * Set static metadata for a tracked sprite (host only)
+   */
+  setSpriteStaticData(key: string, data: Record<string, any>): void {
+    if (!this.isHost()) return;
+
+    this.runtime.mutateState((state: any) => {
+      if (!state[this.spriteNamespace]) {
+        state[this.spriteNamespace] = {};
+      }
+      const sprites = state[this.spriteNamespace];
+      sprites[key] = { ...data, ...sprites[key] };
     });
   }
 

@@ -87,6 +87,10 @@ export declare class PhaserAdapter<TState = any> {
      */
     isHost(): boolean;
     /**
+     * Expose the underlying Phaser scene
+     */
+    getScene(): any;
+    /**
      * Track a sprite - automatically syncs position/rotation/etc
      *
      * @param sprite Phaser sprite to track
@@ -124,6 +128,10 @@ export declare class PhaserAdapter<TState = any> {
      * Sync a single sprite to state
      */
     private syncSpriteToState;
+    /**
+     * Set static metadata for a tracked sprite (host only)
+     */
+    setSpriteStaticData(key: string, data: Record<string, any>): void;
     /**
      * Update sprites from state (clients only)
      */

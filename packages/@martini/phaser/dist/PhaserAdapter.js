@@ -102,6 +102,12 @@ export class PhaserAdapter {
         return this.runtime.getTransport().isHost();
     }
     /**
+     * Expose the underlying Phaser scene
+     */
+    getScene() {
+        return this.scene;
+    }
+    /**
      * Track a sprite - automatically syncs position/rotation/etc
      *
      * @param sprite Phaser sprite to track
@@ -198,6 +204,20 @@ export class PhaserAdapter {
             }
             const sprites = state[this.spriteNamespace];
             sprites[key] = { ...sprites[key], ...updates };
+        });
+    }
+    /**
+     * Set static metadata for a tracked sprite (host only)
+     */
+    setSpriteStaticData(key, data) {
+        if (!this.isHost())
+            return;
+        this.runtime.mutateState((state) => {
+            if (!state[this.spriteNamespace]) {
+                state[this.spriteNamespace] = {};
+            }
+            const sprites = state[this.spriteNamespace];
+            sprites[key] = { ...data, ...sprites[key] };
         });
     }
     /**

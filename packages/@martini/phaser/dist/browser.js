@@ -6,6 +6,8 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
 var SpriteManager = class {
   constructor(adapter, config) {
     __publicField(this, "sprites", /* @__PURE__ */ new Map());
+    __publicField(this, "spriteData", /* @__PURE__ */ new Map());
+    __publicField(this, "labels", /* @__PURE__ */ new Map());
     __publicField(this, "config");
     __publicField(this, "adapter");
     __publicField(this, "unsubscribe");
@@ -31,8 +33,21 @@ var SpriteManager = class {
     }
     const sprite = this.config.onCreate(key, data);
     this.sprites.set(key, sprite);
+    this.spriteData.set(key, data);
+    this.createLabel(key, data, sprite);
     if (this.config.onCreatePhysics) {
       this.config.onCreatePhysics(sprite, key, data);
+    }
+    if (this.config.staticProperties?.length) {
+      const staticData = {};
+      for (const prop of this.config.staticProperties) {
+        if (prop in data) {
+          staticData[prop] = data[prop];
+        }
+      }
+      if (Object.keys(staticData).length > 0) {
+        this.adapter.setSpriteStaticData(key, staticData);
+      }
     }
     this.adapter.trackSprite(sprite, key, {
       properties: this.config.syncProperties || ["x", "y", "rotation", "alpha"],
@@ -50,6 +65,12 @@ var SpriteManager = class {
     if (sprite.destroy) {
       sprite.destroy();
     }
+    const label = this.labels.get(key);
+    if (label) {
+      label.text.destroy();
+      this.labels.delete(key);
+    }
+    this.spriteData.delete(key);
     if (this.adapter.isHost()) {
       this.adapter.untrackSprite(key);
     } else {
@@ -76,6 +97,7 @@ var SpriteManager = class {
     if (!this.adapter.isHost()) {
       this.adapter.updateInterpolation();
     }
+    this.updateLabels();
   }
   /**
    * Cleanup
@@ -97,19 +119,61 @@ var SpriteManager = class {
       if (!this.sprites.has(key)) {
         const sprite = this.config.onCreate(key, data);
         this.sprites.set(key, sprite);
+        this.spriteData.set(key, data);
         this.adapter.registerRemoteSprite(key, sprite);
+        this.createLabel(key, data, sprite);
       } else {
         if (this.config.onUpdate) {
           const sprite = this.sprites.get(key);
           this.config.onUpdate(sprite, data);
         }
+        this.spriteData.set(key, data);
       }
+      this.updateLabelText(key);
+      this.updateLabelPosition(key);
     }
     for (const key of this.sprites.keys()) {
       if (!(key in spriteData)) {
         this.remove(key);
       }
     }
+  }
+  createLabel(key, data, sprite) {
+    const labelConfig = this.config.label;
+    if (!labelConfig) return;
+    const scene = this.adapter.getScene();
+    if (!scene?.add?.text) return;
+    const textValue = labelConfig.getText(data);
+    const style = labelConfig.style || { fontSize: "12px", color: "#ffffff" };
+    const label = scene.add.text(sprite.x, sprite.y, textValue, style).setOrigin(0.5);
+    this.labels.set(key, { text: label, offset: labelConfig.offset });
+  }
+  updateLabels() {
+    for (const key of this.labels.keys()) {
+      this.updateLabelText(key);
+      this.updateLabelPosition(key);
+    }
+  }
+  updateLabelText(key) {
+    const labelConfig = this.config.label;
+    if (!labelConfig) return;
+    const labelEntry = this.labels.get(key);
+    if (!labelEntry) return;
+    const data = this.spriteData.get(key);
+    if (!data) return;
+    const next = labelConfig.getText(data);
+    if (labelEntry.text.text !== next) {
+      labelEntry.text.setText(next);
+    }
+  }
+  updateLabelPosition(key) {
+    const labelEntry = this.labels.get(key);
+    if (!labelEntry) return;
+    const sprite = this.sprites.get(key);
+    if (!sprite) return;
+    const offsetX = labelEntry.offset?.x ?? 0;
+    const offsetY = labelEntry.offset?.y ?? -20;
+    labelEntry.text.setPosition(sprite.x + offsetX, sprite.y + offsetY);
   }
 };
 
@@ -1093,6 +1157,12 @@ var PhaserAdapter = class {
     return this.runtime.getTransport().isHost();
   }
   /**
+   * Expose the underlying Phaser scene
+   */
+  getScene() {
+    return this.scene;
+  }
+  /**
    * Track a sprite - automatically syncs position/rotation/etc
    *
    * @param sprite Phaser sprite to track
@@ -1181,6 +1251,19 @@ var PhaserAdapter = class {
       }
       const sprites = state[this.spriteNamespace];
       sprites[key] = { ...sprites[key], ...updates };
+    });
+  }
+  /**
+   * Set static metadata for a tracked sprite (host only)
+   */
+  setSpriteStaticData(key, data) {
+    if (!this.isHost()) return;
+    this.runtime.mutateState((state) => {
+      if (!state[this.spriteNamespace]) {
+        state[this.spriteNamespace] = {};
+      }
+      const sprites = state[this.spriteNamespace];
+      sprites[key] = { ...data, ...sprites[key] };
     });
   }
   /**

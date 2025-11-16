@@ -24,6 +24,7 @@
  */
 
 import type { PhaserAdapter } from '../PhaserAdapter.js';
+import type Phaser from 'phaser';
 
 export interface SpriteData {
   x: number;
@@ -74,6 +75,12 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
   onDestroy?: (sprite: any, key: string) => void;
 
   /**
+   * Optional: Keys from the initial data object to sync exactly once
+   * Useful for metadata like player roles that should be available on clients.
+   */
+  staticProperties?: (keyof TData & string)[];
+
+  /**
    * Properties to sync (default: x, y, rotation, alpha)
    */
   syncProperties?: string[];
@@ -82,10 +89,24 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
    * Sync interval in ms (default: 50ms / 20 FPS)
    */
   syncInterval?: number;
+
+  /**
+   * Optional label configuration. When provided, SpriteManager renders labels above sprites.
+   */
+  label?: {
+    getText: (data: TData) => string;
+    offset?: { x?: number; y?: number };
+    style?: Phaser.Types.GameObjects.Text.TextStyle;
+  };
 }
 
 export class SpriteManager<TData extends SpriteData = SpriteData> {
   private sprites = new Map<string, any>();
+  private spriteData = new Map<string, TData>();
+  private labels = new Map<
+    string,
+    { text: Phaser.GameObjects.Text; offset?: { x?: number; y?: number } }
+  >();
   private config: SpriteManagerConfig<TData>;
   private adapter: PhaserAdapter;
   private unsubscribe?: () => void;
@@ -120,10 +141,24 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
     // Create sprite
     const sprite = this.config.onCreate(key, data);
     this.sprites.set(key, sprite);
+    this.spriteData.set(key, data);
+    this.createLabel(key, data, sprite);
 
     // Setup physics (HOST ONLY - automatic)
     if (this.config.onCreatePhysics) {
       this.config.onCreatePhysics(sprite, key, data);
+    }
+
+    if (this.config.staticProperties?.length) {
+      const staticData: Partial<TData> = {};
+      for (const prop of this.config.staticProperties) {
+        if (prop in data) {
+          staticData[prop] = data[prop];
+        }
+      }
+      if (Object.keys(staticData).length > 0) {
+        this.adapter.setSpriteStaticData(key, staticData);
+      }
     }
 
     // Track for automatic sync (host only)
@@ -149,6 +184,12 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
     if (sprite.destroy) {
       sprite.destroy();
     }
+    const label = this.labels.get(key);
+    if (label) {
+      label.text.destroy();
+      this.labels.delete(key);
+    }
+    this.spriteData.delete(key);
 
     // Stop tracking
     if (this.adapter.isHost()) {
@@ -181,6 +222,7 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
     if (!this.adapter.isHost()) {
       this.adapter.updateInterpolation();
     }
+    this.updateLabels();
   }
 
   /**
@@ -209,16 +251,22 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
     for (const [key, data] of Object.entries(spriteData) as [string, any][]) {
       if (!this.sprites.has(key)) {
         // Create new sprite
-        const sprite = this.config.onCreate(key, data);
+        const sprite = this.config.onCreate(key, data as TData);
         this.sprites.set(key, sprite);
+        this.spriteData.set(key, data as TData);
         this.adapter.registerRemoteSprite(key, sprite);
+        this.createLabel(key, data as TData, sprite);
       } else {
         // Update existing sprite (optional)
         if (this.config.onUpdate) {
           const sprite = this.sprites.get(key);
-          this.config.onUpdate(sprite, data);
+          this.config.onUpdate(sprite, data as TData);
         }
+        this.spriteData.set(key, data as TData);
       }
+
+      this.updateLabelText(key);
+      this.updateLabelPosition(key);
     }
 
     // Remove sprites that no longer exist in state
@@ -227,5 +275,50 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
         this.remove(key);
       }
     }
+  }
+
+  private createLabel(key: string, data: TData, sprite: any): void {
+    const labelConfig = this.config.label;
+    if (!labelConfig) return;
+
+    const scene = this.adapter.getScene();
+    if (!scene?.add?.text) return;
+
+    const textValue = labelConfig.getText(data);
+    const style = labelConfig.style || { fontSize: '12px', color: '#ffffff' };
+    const label = scene.add.text(sprite.x, sprite.y, textValue, style).setOrigin(0.5);
+    this.labels.set(key, { text: label, offset: labelConfig.offset });
+  }
+
+  private updateLabels(): void {
+    for (const key of this.labels.keys()) {
+      this.updateLabelText(key);
+      this.updateLabelPosition(key);
+    }
+  }
+
+  private updateLabelText(key: string): void {
+    const labelConfig = this.config.label;
+    if (!labelConfig) return;
+    const labelEntry = this.labels.get(key);
+    if (!labelEntry) return;
+    const data = this.spriteData.get(key);
+    if (!data) return;
+
+    const next = labelConfig.getText(data);
+    if (labelEntry.text.text !== next) {
+      labelEntry.text.setText(next);
+    }
+  }
+
+  private updateLabelPosition(key: string): void {
+    const labelEntry = this.labels.get(key);
+    if (!labelEntry) return;
+    const sprite = this.sprites.get(key);
+    if (!sprite) return;
+
+    const offsetX = labelEntry.offset?.x ?? 0;
+    const offsetY = labelEntry.offset?.y ?? -20;
+    labelEntry.text.setPosition(sprite.x + offsetX, sprite.y + offsetY);
   }
 }

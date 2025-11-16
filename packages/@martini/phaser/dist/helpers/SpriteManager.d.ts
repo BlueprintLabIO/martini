@@ -23,6 +23,7 @@
  * ```
  */
 import type { PhaserAdapter } from '../PhaserAdapter.js';
+import type Phaser from 'phaser';
 export interface SpriteData {
     x: number;
     y: number;
@@ -67,6 +68,11 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
      */
     onDestroy?: (sprite: any, key: string) => void;
     /**
+     * Optional: Keys from the initial data object to sync exactly once
+     * Useful for metadata like player roles that should be available on clients.
+     */
+    staticProperties?: (keyof TData & string)[];
+    /**
      * Properties to sync (default: x, y, rotation, alpha)
      */
     syncProperties?: string[];
@@ -74,9 +80,22 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
      * Sync interval in ms (default: 50ms / 20 FPS)
      */
     syncInterval?: number;
+    /**
+     * Optional label configuration. When provided, SpriteManager renders labels above sprites.
+     */
+    label?: {
+        getText: (data: TData) => string;
+        offset?: {
+            x?: number;
+            y?: number;
+        };
+        style?: Phaser.Types.GameObjects.Text.TextStyle;
+    };
 }
 export declare class SpriteManager<TData extends SpriteData = SpriteData> {
     private sprites;
+    private spriteData;
+    private labels;
     private config;
     private adapter;
     private unsubscribe?;
@@ -110,5 +129,9 @@ export declare class SpriteManager<TData extends SpriteData = SpriteData> {
      * CLIENT ONLY: Sync sprites from state
      */
     private syncFromState;
+    private createLabel;
+    private updateLabels;
+    private updateLabelText;
+    private updateLabelPosition;
 }
 //# sourceMappingURL=SpriteManager.d.ts.map
