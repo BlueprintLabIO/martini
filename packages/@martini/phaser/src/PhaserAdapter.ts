@@ -101,7 +101,16 @@ export class PhaserAdapter<TState = any> {
   }
 
   /**
+   * Get the local player's ID
+   * More discoverable alias for {@link myId}
+   */
+  getLocalPlayerId(): string {
+    return this.myId;
+  }
+
+  /**
    * Backwards-compatible helper - alias for {@link myId}
+   * @deprecated Use {@link getLocalPlayerId} instead for better discoverability
    */
   getMyPlayerId(): string {
     return this.myId;

@@ -75,6 +75,35 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
   onDestroy?: (sprite: any, key: string) => void;
 
   /**
+   * Optional: Called after sprite is fully created and ready (onCreate + onCreatePhysics done)
+   * Fires for BOTH initial sprites and late-joining sprites
+   * Use this for inter-sprite setup (collisions, custom logic, event wiring, etc.)
+   *
+   * @example
+   * ```ts
+   * onAdd: (sprite, key, data, context) => {
+   *   // Attach particle emitter
+   *   const trail = this.add.particles(sprite.x, sprite.y, 'particle');
+   *   trail.startFollow(sprite);
+   *
+   *   // Per-sprite collision with unique object
+   *   if (this.boss) {
+   *     this.physics.add.collider(sprite, this.boss);
+   *   }
+   * }
+   * ```
+   */
+  onAdd?: (
+    sprite: any,
+    key: string,
+    data: TData,
+    context: {
+      manager: SpriteManager<TData>;
+      allSprites: Map<string, any>;
+    }
+  ) => void;
+
+  /**
    * Optional: Keys from the initial data object to sync exactly once
    * Useful for metadata like player roles that should be available on clients.
    */
@@ -132,6 +161,12 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
   private namespace: string;
 
   /**
+   * Track sprites created locally via add() method
+   * This eliminates the need to know player IDs for filtering
+   */
+  private localSprites = new Set<string>();
+
+  /**
    * Phaser Group containing all sprites managed by this SpriteManager.
    * Use this for collision detection:
    * @example
@@ -177,6 +212,9 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
       return this.sprites.get(key);
     }
 
+    // Track that we created this sprite locally
+    this.localSprites.add(key);
+
     // Create sprite
     const sprite = this.config.onCreate(key, data);
     this.sprites.set(key, sprite);
@@ -209,6 +247,14 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
       syncInterval: this.config.syncInterval,
       namespace: this.namespace
     });
+
+    // Call onAdd hook (if provided)
+    if (this.config.onAdd) {
+      this.config.onAdd(sprite, key, data, {
+        manager: this,
+        allSprites: this.sprites
+      });
+    }
 
     return sprite;
   }
@@ -291,6 +337,11 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
 
     // Create/update sprites based on state
     for (const [key, data] of Object.entries(spriteData) as [string, any][]) {
+      // Skip sprites we created locally (pit of success: no player ID needed!)
+      if (this.localSprites.has(key)) {
+        continue;
+      }
+
       if (!this.sprites.has(key)) {
         // Create new sprite
         const sprite = this.config.onCreate(key, data as TData);
@@ -299,6 +350,14 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
         this.group.add(sprite); // Add to group on client side too
         this.adapter.registerRemoteSprite(key, sprite);
         this.createLabel(key, data as TData, sprite);
+
+        // Call onAdd hook (if provided) - runs for late-joining sprites on clients
+        if (this.config.onAdd) {
+          this.config.onAdd(sprite, key, data as TData, {
+            manager: this,
+            allSprites: this.sprites
+          });
+        }
       } else {
         // Update existing sprite (optional)
         if (this.config.onUpdate) {

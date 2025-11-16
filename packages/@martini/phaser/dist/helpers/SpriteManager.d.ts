@@ -68,6 +68,29 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
      */
     onDestroy?: (sprite: any, key: string) => void;
     /**
+     * Optional: Called after sprite is fully created and ready (onCreate + onCreatePhysics done)
+     * Fires for BOTH initial sprites and late-joining sprites
+     * Use this for inter-sprite setup (collisions, custom logic, event wiring, etc.)
+     *
+     * @example
+     * ```ts
+     * onAdd: (sprite, key, data, context) => {
+     *   // Attach particle emitter
+     *   const trail = this.add.particles(sprite.x, sprite.y, 'particle');
+     *   trail.startFollow(sprite);
+     *
+     *   // Per-sprite collision with unique object
+     *   if (this.boss) {
+     *     this.physics.add.collider(sprite, this.boss);
+     *   }
+     * }
+     * ```
+     */
+    onAdd?: (sprite: any, key: string, data: TData, context: {
+        manager: SpriteManager<TData>;
+        allSprites: Map<string, any>;
+    }) => void;
+    /**
      * Optional: Keys from the initial data object to sync exactly once
      * Useful for metadata like player roles that should be available on clients.
      */
@@ -118,6 +141,11 @@ export declare class SpriteManager<TData extends SpriteData = SpriteData> {
     private adapter;
     private unsubscribe?;
     private namespace;
+    /**
+     * Track sprites created locally via add() method
+     * This eliminates the need to know player IDs for filtering
+     */
+    private localSprites;
     /**
      * Phaser Group containing all sprites managed by this SpriteManager.
      * Use this for collision detection:

@@ -31,6 +31,11 @@ export class SpriteManager {
     unsubscribe;
     namespace;
     /**
+     * Track sprites created locally via add() method
+     * This eliminates the need to know player IDs for filtering
+     */
+    localSprites = new Set();
+    /**
      * Phaser Group containing all sprites managed by this SpriteManager.
      * Use this for collision detection:
      * @example
@@ -70,6 +75,8 @@ export class SpriteManager {
         if (this.sprites.has(key)) {
             return this.sprites.get(key);
         }
+        // Track that we created this sprite locally
+        this.localSprites.add(key);
         // Create sprite
         const sprite = this.config.onCreate(key, data);
         this.sprites.set(key, sprite);
@@ -98,6 +105,13 @@ export class SpriteManager {
             syncInterval: this.config.syncInterval,
             namespace: this.namespace
         });
+        // Call onAdd hook (if provided)
+        if (this.config.onAdd) {
+            this.config.onAdd(sprite, key, data, {
+                manager: this,
+                allSprites: this.sprites
+            });
+        }
         return sprite;
     }
     /**
@@ -169,6 +183,10 @@ export class SpriteManager {
             return;
         // Create/update sprites based on state
         for (const [key, data] of Object.entries(spriteData)) {
+            // Skip sprites we created locally (pit of success: no player ID needed!)
+            if (this.localSprites.has(key)) {
+                continue;
+            }
             if (!this.sprites.has(key)) {
                 // Create new sprite
                 const sprite = this.config.onCreate(key, data);
@@ -177,6 +195,13 @@ export class SpriteManager {
                 this.group.add(sprite); // Add to group on client side too
                 this.adapter.registerRemoteSprite(key, sprite);
                 this.createLabel(key, data, sprite);
+                // Call onAdd hook (if provided) - runs for late-joining sprites on clients
+                if (this.config.onAdd) {
+                    this.config.onAdd(sprite, key, data, {
+                        manager: this,
+                        allSprites: this.sprites
+                    });
+                }
             }
             else {
                 // Update existing sprite (optional)

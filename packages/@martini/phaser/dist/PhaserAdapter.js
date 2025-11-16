@@ -59,7 +59,15 @@ export class PhaserAdapter {
         return this.runtime.getTransport().getPlayerId();
     }
     /**
+     * Get the local player's ID
+     * More discoverable alias for {@link myId}
+     */
+    getLocalPlayerId() {
+        return this.myId;
+    }
+    /**
      * Backwards-compatible helper - alias for {@link myId}
+     * @deprecated Use {@link getLocalPlayerId} instead for better discoverability
      */
     getMyPlayerId() {
         return this.myId;

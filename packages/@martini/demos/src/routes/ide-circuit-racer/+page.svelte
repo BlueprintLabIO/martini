@@ -40,15 +40,16 @@ export const game = defineGame({
 `,
 
 			'/src/scene.ts': `import type { GameRuntime } from '@martini/core';
-import { PhaserAdapter, createPlayerHUD } from '@martini/phaser';
+import { PhaserAdapter, createSpeedDisplay, attachDirectionalIndicator } from '@martini/phaser';
 import Phaser from 'phaser';
 
 export function createScene(runtime: GameRuntime) {
 	return class CircuitRacerScene extends Phaser.Scene {
 		private adapter!: PhaserAdapter;
 		private spriteManager: any;
+		private physicsManager: any;
 		private inputManager: any;
-		private hud: any;
+		private speedDisplay: any;
 
 		create() {
 			this.adapter = new PhaserAdapter(runtime, this);
@@ -57,39 +58,72 @@ export function createScene(runtime: GameRuntime) {
 			this.add.rectangle(400, 300, 800, 600, 0x228b22);
 			this.add.rectangle(400, 300, 600, 400, 0x808080);
 
-			// HUD Helper
-			this.hud = createPlayerHUD(this.adapter, this, {
-				title: 'Circuit Racer',
-				titleStyle: { fontSize: '32px', color: '#fff', fontStyle: 'bold' },
+			// Title
+			this.add.text(400, 20, 'Circuit Racer - Pit of Success Demo!', {
+				fontSize: '28px',
+				color: '#fff',
+				fontStyle: 'bold'
+			}).setOrigin(0.5);
 
-				roleText: (myPlayer: any) => {
-					if (!myPlayer) return 'Spectator';
-					return \`Speed: \${Math.round(myPlayer.speed || 0)}\`;
-				},
-				roleStyle: { fontSize: '18px', color: '#fff' },
-
-				controlHints: () => 'Arrow Keys: Steer & Accelerate',
-				controlsStyle: { fontSize: '14px', color: '#aaa' }
-			});
-
-			// SpriteManager for cars
+			// SpriteManager for cars with directional indicator!
 			this.spriteManager = this.adapter.createSpriteManager({
 				staticProperties: ['color'],
 
 				onCreate: (key: string, data: any) => {
-					return this.add.rectangle(data.x, data.y, 30, 20, data.color);
+					// Create car body
+					const car = this.add.rectangle(data.x, data.y, 30, 20, data.color);
+					return car;
 				},
 
 				onCreatePhysics: (sprite: any) => {
 					this.physics.add.existing(sprite);
 					const body = sprite.body as Phaser.Physics.Arcade.Body;
 					body.setCollideWorldBounds(true);
+				},
+
+				// NEW: onAdd hook - uses attachDirectionalIndicator helper!
+				onAdd: (sprite: any, key: string) => {
+					// One-liner! No rotation offset math needed!
+					sprite.directionArrow = attachDirectionalIndicator(this, sprite, {
+						shape: 'triangle',
+						offset: 20,
+						color: 0xffffff
+					});
+
+					// Store update function on sprite
+					(sprite as any)._updateArrow = () => sprite.directionArrow?.update();
 				}
 			});
 
 			// InputManager with top-down profile
 			this.inputManager = this.adapter.createInputManager();
 			this.inputManager.useProfile('topDown');
+
+			// NEW: Racing PhysicsManager - replaces 35 lines of manual physics!
+			this.physicsManager = this.adapter.createPhysicsManager({
+				spriteManager: this.spriteManager,
+				inputKey: 'inputs'
+			});
+			this.physicsManager.addBehavior('racing', {
+				acceleration: 5,
+				maxSpeed: 300,
+				turnSpeed: 0.05,
+				friction: 0.98
+			});
+
+			// NEW: Reactive speed display - auto-updates when velocity changes!
+			// No manual update() needed - it subscribes to PhysicsManager events!
+			this.speedDisplay = createSpeedDisplay(this.physicsManager, this.adapter, this, {
+				position: { x: 400, y: 55 },
+				format: (velocity) => \`Speed: \${Math.round(velocity)} mph\`,
+				style: { fontSize: '20px', color: '#4a9eff' }
+			});
+
+			// Controls hint
+			this.add.text(400, 85, 'Arrow Keys: Steer & Accelerate', {
+				fontSize: '14px',
+				color: '#aaa'
+			}).setOrigin(0.5);
 
 			// HOST: Create initial players
 			if (this.adapter.isHost()) {
@@ -101,52 +135,21 @@ export function createScene(runtime: GameRuntime) {
 		}
 
 		update() {
-			// HOST: Apply physics
+			// HOST: Check for new players
 			if (this.adapter.isHost()) {
 				const state = runtime.getState();
-
-				// Check for new players
 				for (const [playerId, playerData] of Object.entries(state.players)) {
 					const spriteKey = \`player-\${playerId}\`;
 					if (!this.spriteManager.get(spriteKey)) {
 						this.spriteManager.add(spriteKey, playerData);
 					}
 				}
+			}
 
-				// Apply car physics based on input
-				const inputs = state.inputs || {};
-				for (const [playerId, input] of Object.entries(inputs) as [string, any][]) {
-					const car = this.spriteManager.get(\`player-\${playerId}\`);
-					const player = state.players[playerId];
-					if (!car?.body || !player) continue;
-
-					const body = car.body as Phaser.Physics.Arcade.Body;
-					const maxSpeed = 300;
-					const acceleration = 5;
-					const turnSpeed = 3;
-
-					// Accelerate/brake
-					if (input.up) {
-						player.speed = Math.min(player.speed + acceleration, maxSpeed);
-					} else if (input.down) {
-						player.speed = Math.max(player.speed - acceleration, -maxSpeed / 2);
-					} else {
-						player.speed *= 0.98; // Friction
-					}
-
-					// Turn
-					if (input.left) {
-						player.rotation -= turnSpeed * (Math.PI / 180);
-					} else if (input.right) {
-						player.rotation += turnSpeed * (Math.PI / 180);
-					}
-
-					// Apply movement
-					body.setVelocity(
-						Math.cos(player.rotation - Math.PI / 2) * player.speed,
-						Math.sin(player.rotation - Math.PI / 2) * player.speed
-					);
-					car.rotation = player.rotation;
+			// Update directional arrows
+			for (const sprite of this.spriteManager.getAll().values()) {
+				if ((sprite as any)._updateArrow) {
+					(sprite as any)._updateArrow();
 				}
 			}
 
@@ -155,6 +158,11 @@ export function createScene(runtime: GameRuntime) {
 
 			// SpriteManager handles interpolation
 			this.spriteManager.update();
+
+			// NEW: PhysicsManager handles ALL racing physics automatically!
+			this.physicsManager.update();
+
+			// No speedDisplay.update() needed - it's reactive!
 		}
 	};
 }
@@ -190,8 +198,11 @@ initializeGame({
 
 <div class="demo-page">
 	<header>
-		<h1>Circuit Racer - Multiplayer Racing</h1>
-		<p>Race against your friends on the circuit! Use arrow keys to drive.</p>
+		<h1>Circuit Racer - Pit of Success Demo</h1>
+		<p>
+			Showcasing <strong>event-driven architecture</strong>: <code>createSpeedDisplay</code> auto-updates via <code>PhysicsManager.onVelocityChange</code>,
+			and <code>attachDirectionalIndicator</code> handles Phaser rotation conventions automatically. No manual update() calls, no rotation offset bugs!
+		</p>
 	</header>
 
 	<div class="ide-container">
@@ -226,6 +237,10 @@ initializeGame({
 		margin: 0;
 		color: #888;
 		font-size: 1.125rem;
+	}
+
+	header strong {
+		color: #4a9eff;
 	}
 
 	.ide-container {

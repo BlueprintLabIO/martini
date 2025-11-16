@@ -12,7 +12,7 @@ export type { SpriteManagerConfig, SpriteData } from './helpers/SpriteManager.js
 export { InputManager } from './helpers/InputManager.js';
 export type { ActionBinding, KeyBinding, KeyBindings, CursorBindings } from './helpers/InputManager.js';
 export { PhysicsManager } from './helpers/PhysicsManager.js';
-export type { PhysicsManagerConfig, PlatformerBehaviorConfig, TopDownBehaviorConfig, CustomBehaviorConfig } from './helpers/PhysicsManager.js';
+export type { PhysicsManagerConfig, PlatformerBehaviorConfig, TopDownBehaviorConfig, RacingBehaviorConfig, CustomBehaviorConfig } from './helpers/PhysicsManager.js';
 export { CollisionManager } from './helpers/CollisionManager.js';
 export type { CollisionManagerConfig, CollisionRule } from './helpers/CollisionManager.js';
 export { PlayerUIManager } from './helpers/PlayerUIManager.js';
@@ -21,6 +21,10 @@ export { registerProfile, getProfile, listProfiles, BUILT_IN_PROFILES } from './
 export type { InputProfile, ProfileOptions } from './helpers/InputProfiles.js';
 export { createPlayerHUD } from './helpers/HUDHelper.js';
 export type { PlayerHUD, PlayerHUDConfig, HUDLayout, HUDTextStyle } from './helpers/HUDHelper.js';
+export { createSpeedDisplay } from './helpers/SpeedDisplay.js';
+export type { SpeedDisplay, SpeedDisplayConfig } from './helpers/SpeedDisplay.js';
+export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';
+export type { DirectionalIndicator, DirectionalIndicatorConfig } from './helpers/DirectionalIndicator.js';
 export { initializeGame } from './runtime.js';
 export type { MartiniConfig, GameConfig } from './runtime.js';
 export type { GameDefinition, Transport, GameRuntime } from '@martini/core';

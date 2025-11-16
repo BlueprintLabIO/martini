@@ -13,6 +13,11 @@ var SpriteManager = class {
     __publicField(this, "unsubscribe");
     __publicField(this, "namespace");
     /**
+     * Track sprites created locally via add() method
+     * This eliminates the need to know player IDs for filtering
+     */
+    __publicField(this, "localSprites", /* @__PURE__ */ new Set());
+    /**
      * Phaser Group containing all sprites managed by this SpriteManager.
      * Use this for collision detection:
      * @example
@@ -48,6 +53,7 @@ var SpriteManager = class {
     if (this.sprites.has(key)) {
       return this.sprites.get(key);
     }
+    this.localSprites.add(key);
     const sprite = this.config.onCreate(key, data);
     this.sprites.set(key, sprite);
     this.spriteData.set(key, data);
@@ -72,6 +78,12 @@ var SpriteManager = class {
       syncInterval: this.config.syncInterval,
       namespace: this.namespace
     });
+    if (this.config.onAdd) {
+      this.config.onAdd(sprite, key, data, {
+        manager: this,
+        allSprites: this.sprites
+      });
+    }
     return sprite;
   }
   /**
@@ -134,6 +146,9 @@ var SpriteManager = class {
     const spriteData = state[this.namespace];
     if (!spriteData) return;
     for (const [key, data] of Object.entries(spriteData)) {
+      if (this.localSprites.has(key)) {
+        continue;
+      }
       if (!this.sprites.has(key)) {
         const sprite = this.config.onCreate(key, data);
         this.sprites.set(key, sprite);
@@ -141,6 +156,12 @@ var SpriteManager = class {
         this.group.add(sprite);
         this.adapter.registerRemoteSprite(key, sprite);
         this.createLabel(key, data, sprite);
+        if (this.config.onAdd) {
+          this.config.onAdd(sprite, key, data, {
+            manager: this,
+            allSprites: this.sprites
+          });
+        }
       } else {
         if (this.config.onUpdate) {
           const sprite = this.sprites.get(key);
@@ -1002,7 +1023,27 @@ var CollisionManager = class {
 };
 
 // src/helpers/PhysicsManager.ts
+var VelocityEmitter = class {
+  constructor() {
+    __publicField(this, "listeners", []);
+  }
+  on(callback) {
+    this.listeners.push(callback);
+    return () => {
+      const index = this.listeners.indexOf(callback);
+      if (index > -1) {
+        this.listeners.splice(index, 1);
+      }
+    };
+  }
+  emit(playerId, velocity) {
+    for (const listener of this.listeners) {
+      listener(playerId, velocity);
+    }
+  }
+};
 var PhysicsManager = class {
+  // Event emitter for velocity changes
   constructor(runtime, config) {
     __publicField(this, "runtime");
     __publicField(this, "spriteManager");
@@ -1010,10 +1051,71 @@ var PhysicsManager = class {
     __publicField(this, "spriteKeyPrefix");
     __publicField(this, "behaviorType", null);
     __publicField(this, "behaviorConfig", null);
+    __publicField(this, "velocities", /* @__PURE__ */ new Map());
+    // Track velocity for racing behavior
+    __publicField(this, "velocityEmitter", new VelocityEmitter());
     this.runtime = runtime;
     this.spriteManager = config.spriteManager;
     this.inputKey = config.inputKey || "inputs";
     this.spriteKeyPrefix = config.spriteKeyPrefix || "player-";
+  }
+  /**
+   * Get velocity for a specific player (racing behavior only)
+   * Useful for displaying speed in HUD
+   *
+   * @param playerId - The player ID to get velocity for
+   * @returns Current velocity, or 0 if not found
+   *
+   * @example
+   * ```ts
+   * const speed = physicsManager.getVelocity(adapter.getLocalPlayerId());
+   * ```
+   */
+  getVelocity(playerId) {
+    return this.velocities.get(playerId) || 0;
+  }
+  /**
+   * Get readonly access to all velocities (for debugging/UI)
+   * Returns a readonly map of player IDs to their current velocities
+   */
+  getVelocities() {
+    return this.velocities;
+  }
+  /**
+   * Subscribe to velocity changes (racing behavior only)
+   *
+   * **Important:** This is a LOCAL event that only fires on the HOST.
+   * Events do NOT cross the network boundary.
+   *
+   * Use cases:
+   * - Host-only displays (debug overlays, dev tools)
+   * - Performance-critical updates (no network overhead)
+   * - Analytics/telemetry (host-side tracking)
+   *
+   * For client displays, use `createSpeedDisplay()` helper which automatically
+   * handles both events (host) and state sync (clients).
+   *
+   * Alternatively, read `state.players[playerId].velocity` which is automatically
+   * synced across the network by PhysicsManager.
+   *
+   * @param callback - Called whenever a player's velocity changes (host only)
+   * @returns Unsubscribe function
+   *
+   * @example
+   * ```ts
+   * // Host-only analytics
+   * const unsubscribe = physicsManager.onVelocityChange((playerId, velocity) => {
+   *   if (velocity > 250) {
+   *     trackAchievement('speed_demon', playerId);
+   *   }
+   * });
+   *
+   * // Later, cleanup
+   * unsubscribe();
+   * ```
+   */
+  onVelocityChange(callback) {
+    return this.velocityEmitter.on(callback);
   }
   addBehavior(type, config) {
     this.behaviorType = type;
@@ -1037,6 +1139,8 @@ var PhysicsManager = class {
         this.applyPlatformerBehavior(body, playerInput, this.behaviorConfig);
       } else if (this.behaviorType === "topDown") {
         this.applyTopDownBehavior(body, playerInput, this.behaviorConfig);
+      } else if (this.behaviorType === "racing") {
+        this.applyRacingBehavior(sprite, body, playerInput, playerId, this.behaviorConfig);
       } else if (this.behaviorType === "custom" && this.behaviorConfig) {
         const customConfig = this.behaviorConfig;
         customConfig.apply(sprite, playerInput, body);
@@ -1067,6 +1171,39 @@ var PhysicsManager = class {
     if (input[keys.right]) vx = speed;
     if (input[keys.up]) vy = -speed;
     if (input[keys.down]) vy = speed;
+    body.setVelocity(vx, vy);
+  }
+  applyRacingBehavior(sprite, body, input, playerId, config) {
+    const acceleration = config.acceleration ?? 5;
+    const maxSpeed = config.maxSpeed ?? 200;
+    const turnSpeed = config.turnSpeed ?? 0.05;
+    const friction = config.friction ?? 0.98;
+    const keys = config.keys || { left: "left", right: "right", accelerate: "up" };
+    const prevVelocity = this.velocities.get(playerId) || 0;
+    let velocity = prevVelocity;
+    if (input[keys.left]) {
+      sprite.rotation -= turnSpeed;
+    }
+    if (input[keys.right]) {
+      sprite.rotation += turnSpeed;
+    }
+    if (input[keys.accelerate]) {
+      velocity = Math.min(velocity + acceleration, maxSpeed);
+    } else {
+      velocity *= friction;
+      if (velocity < 0.5) {
+        velocity = 0;
+      }
+    }
+    this.velocities.set(playerId, velocity);
+    this.runtime.mutateState((state) => {
+      if (state.players && state.players[playerId]) {
+        state.players[playerId].velocity = velocity;
+      }
+    });
+    this.velocityEmitter.emit(playerId, velocity);
+    const vx = Math.cos(sprite.rotation) * velocity;
+    const vy = Math.sin(sprite.rotation) * velocity;
     body.setVelocity(vx, vy);
   }
 };
@@ -1104,7 +1241,15 @@ var PhaserAdapter = class {
     return this.runtime.getTransport().getPlayerId();
   }
   /**
+   * Get the local player's ID
+   * More discoverable alias for {@link myId}
+   */
+  getLocalPlayerId() {
+    return this.myId;
+  }
+  /**
    * Backwards-compatible helper - alias for {@link myId}
+   * @deprecated Use {@link getLocalPlayerId} instead for better discoverability
    */
   getMyPlayerId() {
     return this.myId;
@@ -1561,6 +1706,140 @@ function createPlayerHUD(adapter, scene, config) {
   };
 }
 
+// src/helpers/SpeedDisplay.ts
+function createSpeedDisplay(physicsManager, adapter, scene, config = {}) {
+  const position = config.position ?? { x: 400, y: 50 };
+  const format = config.format ?? ((v) => `Speed: ${Math.round(v)}`);
+  const style = config.style ?? { fontSize: "20px", color: "#fff" };
+  const text = scene.add.text(position.x, position.y, format(0), style);
+  if (config.origin !== void 0) {
+    if (typeof config.origin === "number") {
+      text.setOrigin(config.origin);
+    } else {
+      text.setOrigin(config.origin.x, config.origin.y);
+    }
+  } else {
+    text.setOrigin(0.5);
+  }
+  if (config.depth !== void 0) {
+    text.setDepth(config.depth);
+  }
+  const unsubscribeVelocity = physicsManager.onVelocityChange((playerId, velocity) => {
+    if (playerId === adapter.getLocalPlayerId()) {
+      text.setText(format(velocity));
+    }
+  });
+  const unsubscribeState = adapter.onChange((state) => {
+    const localPlayerId = adapter.getLocalPlayerId();
+    const player = state.players?.[localPlayerId];
+    if (player && player.velocity !== void 0) {
+      text.setText(format(player.velocity));
+    }
+  });
+  const update = () => {
+    const velocity = physicsManager.getVelocity(adapter.getLocalPlayerId());
+    text.setText(format(velocity));
+  };
+  update();
+  return {
+    update,
+    destroy: () => {
+      unsubscribeVelocity();
+      unsubscribeState();
+      text.destroy();
+    },
+    getText: () => text
+  };
+}
+
+// src/helpers/DirectionalIndicator.ts
+function attachDirectionalIndicator(scene, sprite, config = {}) {
+  const shape = config.shape ?? "triangle";
+  const offset = config.offset ?? 20;
+  const color = config.color ?? 16777215;
+  const size = config.size ?? 1;
+  let indicator;
+  switch (shape) {
+    case "triangle": {
+      const triangle = scene.add.triangle(
+        sprite.x,
+        sprite.y,
+        0,
+        -5,
+        // Top point (tip)
+        -4,
+        5,
+        // Bottom left
+        4,
+        5,
+        // Bottom right
+        color
+      );
+      triangle.setOrigin(0.5);
+      if (config.depth !== void 0) {
+        triangle.setDepth(config.depth);
+      }
+      indicator = triangle;
+      break;
+    }
+    case "arrow": {
+      const container = scene.add.container(sprite.x, sprite.y);
+      const shaft = scene.add.rectangle(-3 * size, 0, 10 * size, 2 * size, color);
+      shaft.setOrigin(0.5);
+      const head = scene.add.triangle(
+        5 * size,
+        0,
+        0,
+        0,
+        // Point
+        -3 * size,
+        -3 * size,
+        // Top
+        -3 * size,
+        3 * size,
+        // Bottom
+        color
+      );
+      head.setOrigin(0.5);
+      container.add([shaft, head]);
+      if (config.depth !== void 0) {
+        container.setDepth(config.depth);
+      }
+      indicator = container;
+      break;
+    }
+    case "chevron": {
+      const graphics = scene.add.graphics();
+      graphics.lineStyle(2 * size, color);
+      graphics.beginPath();
+      graphics.moveTo(-4 * size, -4 * size);
+      graphics.lineTo(4 * size, 0);
+      graphics.lineTo(-4 * size, 4 * size);
+      graphics.strokePath();
+      graphics.setPosition(sprite.x, sprite.y);
+      if (config.depth !== void 0) {
+        graphics.setDepth(config.depth);
+      }
+      indicator = graphics;
+      break;
+    }
+  }
+  const update = () => {
+    const indicatorX = sprite.x + Math.cos(sprite.rotation) * offset;
+    const indicatorY = sprite.y + Math.sin(sprite.rotation) * offset;
+    indicator.setPosition?.(indicatorX, indicatorY);
+    indicator.setRotation?.(sprite.rotation + Math.PI / 2);
+  };
+  update();
+  return {
+    update,
+    destroy: () => {
+      indicator.destroy();
+    },
+    getGameObject: () => indicator
+  };
+}
+
 // src/runtime.ts
 import { GameRuntime } from "@martini/core";
 import { LocalTransport } from "@martini/transport-local";
@@ -1631,7 +1910,9 @@ export {
   PhysicsManager,
   PlayerUIManager,
   SpriteManager,
+  attachDirectionalIndicator,
   createPlayerHUD,
+  createSpeedDisplay,
   getProfile,
   initializeGame,
   listProfiles,

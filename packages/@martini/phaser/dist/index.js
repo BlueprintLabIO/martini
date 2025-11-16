@@ -16,6 +16,10 @@ export { PlayerUIManager } from './helpers/PlayerUIManager.js';
 export { registerProfile, getProfile, listProfiles, BUILT_IN_PROFILES } from './helpers/InputProfiles.js';
 // HUD Helper
 export { createPlayerHUD } from './helpers/HUDHelper.js';
+// Speed Display Helper
+export { createSpeedDisplay } from './helpers/SpeedDisplay.js';
+// Directional Indicator Helper
+export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';
 // Runtime initialization (transport abstraction)
 export { initializeGame } from './runtime.js';
 //# sourceMappingURL=index.js.map
