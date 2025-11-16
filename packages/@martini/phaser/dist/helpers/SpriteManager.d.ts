@@ -91,6 +91,24 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
         };
         style?: Phaser.Types.GameObjects.Text.TextStyle;
     };
+    /**
+     * Optional: Namespace for sprite data in state (default: '_sprites')
+     * Use different namespaces to prevent collisions between multiple managers
+     *
+     * @example
+     * ```ts
+     * const playerMgr = adapter.createSpriteManager({
+     *   namespace: 'players',  // → state.players.*
+     *   onCreate: ...
+     * });
+     *
+     * const enemyMgr = adapter.createSpriteManager({
+     *   namespace: 'enemies',  // → state.enemies.*
+     *   onCreate: ...
+     * });
+     * ```
+     */
+    namespace?: string;
 }
 export declare class SpriteManager<TData extends SpriteData = SpriteData> {
     private sprites;
@@ -99,6 +117,20 @@ export declare class SpriteManager<TData extends SpriteData = SpriteData> {
     private config;
     private adapter;
     private unsubscribe?;
+    private namespace;
+    /**
+     * Phaser Group containing all sprites managed by this SpriteManager.
+     * Use this for collision detection:
+     * @example
+     * ```ts
+     * this.physics.add.collider(ball, playerManager.group);
+     * ```
+     *
+     * The group automatically includes all sprites added to this manager,
+     * both early-joining and late-joining, solving the "forgot to add collider
+     * for new player" bug.
+     */
+    readonly group: Phaser.GameObjects.Group;
     constructor(adapter: PhaserAdapter, config: SpriteManagerConfig<TData>);
     /**
      * Add a sprite (call this on HOST only)

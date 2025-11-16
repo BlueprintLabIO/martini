@@ -11,8 +11,25 @@ var SpriteManager = class {
     __publicField(this, "config");
     __publicField(this, "adapter");
     __publicField(this, "unsubscribe");
+    __publicField(this, "namespace");
+    /**
+     * Phaser Group containing all sprites managed by this SpriteManager.
+     * Use this for collision detection:
+     * @example
+     * ```ts
+     * this.physics.add.collider(ball, playerManager.group);
+     * ```
+     *
+     * The group automatically includes all sprites added to this manager,
+     * both early-joining and late-joining, solving the "forgot to add collider
+     * for new player" bug.
+     */
+    __publicField(this, "group");
     this.adapter = adapter;
     this.config = config;
+    this.namespace = config.namespace || "_sprites";
+    const scene = adapter.getScene();
+    this.group = scene.add.group();
     if (!adapter.isHost()) {
       this.unsubscribe = adapter.onChange((state) => {
         this.syncFromState(state);
@@ -35,6 +52,7 @@ var SpriteManager = class {
     this.sprites.set(key, sprite);
     this.spriteData.set(key, data);
     this.createLabel(key, data, sprite);
+    this.group.add(sprite);
     if (this.config.onCreatePhysics) {
       this.config.onCreatePhysics(sprite, key, data);
     }
@@ -46,12 +64,13 @@ var SpriteManager = class {
         }
       }
       if (Object.keys(staticData).length > 0) {
-        this.adapter.setSpriteStaticData(key, staticData);
+        this.adapter.setSpriteStaticData(key, staticData, this.namespace);
       }
     }
     this.adapter.trackSprite(sprite, key, {
       properties: this.config.syncProperties || ["x", "y", "rotation", "alpha"],
-      syncInterval: this.config.syncInterval
+      syncInterval: this.config.syncInterval,
+      namespace: this.namespace
     });
     return sprite;
   }
@@ -72,7 +91,7 @@ var SpriteManager = class {
     }
     this.spriteData.delete(key);
     if (this.adapter.isHost()) {
-      this.adapter.untrackSprite(key);
+      this.adapter.untrackSprite(key, this.namespace);
     } else {
       this.adapter.unregisterRemoteSprite(key);
     }
@@ -112,14 +131,14 @@ var SpriteManager = class {
    * CLIENT ONLY: Sync sprites from state
    */
   syncFromState(state) {
-    const spriteNamespace = this.adapter.spriteNamespace || "_sprites";
-    const spriteData = state[spriteNamespace];
+    const spriteData = state[this.namespace];
     if (!spriteData) return;
     for (const [key, data] of Object.entries(spriteData)) {
       if (!this.sprites.has(key)) {
         const sprite = this.config.onCreate(key, data);
         this.sprites.set(key, sprite);
         this.spriteData.set(key, data);
+        this.group.add(sprite);
         this.adapter.registerRemoteSprite(key, sprite);
         this.createLabel(key, data, sprite);
       } else {
@@ -840,7 +859,9 @@ var CollisionManager = class {
    */
   registerSprite(key, sprite) {
     this.namedSprites.set(key, sprite);
-    this.reapplyRules();
+    for (const rule of this.rules) {
+      this.applyRule(rule);
+    }
   }
   /**
    * Unregister a sprite by name
@@ -867,12 +888,6 @@ var CollisionManager = class {
       handler: options?.onCollide
     };
     this.rules.push(rule);
-    if (this.isSpriteManager(a)) {
-      this.hookSpriteManager(a);
-    }
-    if (this.isSpriteManager(b)) {
-      this.hookSpriteManager(b);
-    }
     this.applyRule(rule);
   }
   /**
@@ -900,23 +915,6 @@ var CollisionManager = class {
     this.namedSprites.clear();
   }
   /**
-   * Install onAdd hook on a SpriteManager to re-apply rules when sprites are added
-   */
-  hookSpriteManager(manager) {
-    if (manager._collisionManagerHooked) {
-      return;
-    }
-    manager._collisionManagerHooked = true;
-    const originalConfig = manager.config;
-    const originalOnAdd = originalConfig.onAdd;
-    originalConfig.onAdd = (sprite, key, data, context) => {
-      if (originalOnAdd) {
-        originalOnAdd(sprite, key, data, context);
-      }
-      this.reapplyRules();
-    };
-  }
-  /**
    * Apply a single collision rule (create colliders)
    */
   applyRule(rule) {
@@ -939,14 +937,6 @@ var CollisionManager = class {
     }
   }
   /**
-   * Re-apply all collision rules (called when sprites are added)
-   */
-  reapplyRules() {
-    for (const rule of this.rules) {
-      this.applyRule(rule);
-    }
-  }
-  /**
    * Resolve a rule target to an array of Phaser objects
    */
   resolveToObjects(target) {
@@ -955,8 +945,7 @@ var CollisionManager = class {
       return sprite ? [sprite] : [];
     }
     if (this.isSpriteManager(target)) {
-      const sprites = Array.from(target.getAll().values());
-      return sprites;
+      return [target.group];
     }
     return [target];
   }
@@ -1184,11 +1173,16 @@ var PhaserAdapter = class {
   }
   /**
    * Stop tracking a sprite
+   *
+   * @param key - Sprite key
+   * @param namespace - Optional namespace (defaults to spriteNamespace from config)
    */
-  untrackSprite(key) {
+  untrackSprite(key, namespace) {
+    const tracked = this.trackedSprites.get(key);
     this.trackedSprites.delete(key);
+    const ns = namespace || tracked?.options.namespace || this.spriteNamespace;
     this.runtime.mutateState((state) => {
-      const sprites = state[this.spriteNamespace];
+      const sprites = state[ns];
       if (sprites && sprites[key]) {
         delete sprites[key];
       }
@@ -1245,24 +1239,30 @@ var PhaserAdapter = class {
         updates[prop] = sprite[prop];
       }
     }
+    const namespace = options.namespace || this.spriteNamespace;
     this.runtime.mutateState((state) => {
-      if (!state[this.spriteNamespace]) {
-        state[this.spriteNamespace] = {};
+      if (!state[namespace]) {
+        state[namespace] = {};
       }
-      const sprites = state[this.spriteNamespace];
+      const sprites = state[namespace];
       sprites[key] = { ...sprites[key], ...updates };
     });
   }
   /**
    * Set static metadata for a tracked sprite (host only)
+   *
+   * @param key - Sprite key
+   * @param data - Static data to set
+   * @param namespace - Optional namespace (defaults to spriteNamespace from config)
    */
-  setSpriteStaticData(key, data) {
+  setSpriteStaticData(key, data, namespace) {
     if (!this.isHost()) return;
+    const ns = namespace || this.spriteNamespace;
     this.runtime.mutateState((state) => {
-      if (!state[this.spriteNamespace]) {
-        state[this.spriteNamespace] = {};
+      if (!state[ns]) {
+        state[ns] = {};
       }
-      const sprites = state[this.spriteNamespace];
+      const sprites = state[ns];
       sprites[key] = { ...data, ...sprites[key] };
     });
   }
@@ -1382,6 +1382,7 @@ var PhaserAdapter = class {
    * @example
    * ```ts
    * const spriteManager = adapter.createSpriteManager({
+   *   namespace: 'players',  // optional, defaults to '_sprites'
    *   onCreate: (key, data) => {
    *     const sprite = this.add.sprite(data.x, data.y, 'player');
    *     if (adapter.isHost()) {
@@ -1400,6 +1401,49 @@ var PhaserAdapter = class {
    */
   createSpriteManager(config) {
     return new SpriteManager(this, config);
+  }
+  /**
+   * Create a typed registry of sprite managers
+   *
+   * This provides type-safe collections of sprites with automatic namespacing.
+   * Each sprite type gets its own isolated namespace in the state tree.
+   *
+   * @example
+   * ```ts
+   * const sprites = adapter.createSpriteRegistry({
+   *   players: {
+   *     onCreate: (key, data: { x: number, y: number, role: string }) => {
+   *       const color = data.role === 'fire' ? 0xff3300 : 0x0033ff;
+   *       return this.add.circle(data.x, data.y, 20, color);
+   *     },
+   *     staticProperties: ['role'],
+   *     label: { getText: (d) => d.role.toUpperCase() }
+   *   },
+   *   enemies: {
+   *     onCreate: (key, data: { x: number, y: number, type: string }) => {
+   *       return this.add.sprite(data.x, data.y, data.type);
+   *     }
+   *   }
+   * });
+   *
+   * // Type-safe sprite creation
+   * sprites.players.add('p1', { x: 100, y: 100, role: 'fire' });
+   * sprites.enemies.add('e1', { x: 200, y: 200, type: 'goblin' });
+   *
+   * // Each collection has its own namespace:
+   * // state.__sprites__.players = { p1: { x: 100, y: 100, role: 'fire' } }
+   * // state.__sprites__.enemies = { e1: { x: 200, y: 200, type: 'goblin' } }
+   * ```
+   */
+  createSpriteRegistry(config) {
+    const registry = {};
+    for (const [name, managerConfig] of Object.entries(config)) {
+      registry[name] = new SpriteManager(this, {
+        ...managerConfig,
+        namespace: `__sprites__.${name}`
+      });
+    }
+    return registry;
   }
   /**
    * Create a PlayerUIManager for automatically managed player HUD elements

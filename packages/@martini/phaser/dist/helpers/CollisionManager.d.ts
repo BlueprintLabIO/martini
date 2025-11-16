@@ -83,17 +83,9 @@ export declare class CollisionManager {
      */
     destroy(): void;
     /**
-     * Install onAdd hook on a SpriteManager to re-apply rules when sprites are added
-     */
-    private hookSpriteManager;
-    /**
      * Apply a single collision rule (create colliders)
      */
     private applyRule;
-    /**
-     * Re-apply all collision rules (called when sprites are added)
-     */
-    private reapplyRules;
     /**
      * Resolve a rule target to an array of Phaser objects
      */

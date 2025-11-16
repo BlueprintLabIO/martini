@@ -111,9 +111,16 @@ export function createScene(runtime: GameRuntime) {
 					const body = sprite.body as Phaser.Physics.Arcade.Body;
 					body.setCollideWorldBounds(true);
 					body.setBounce(0.2);
-					this.physics.add.collider(sprite, this.platform!);
+					// Note: Platform collisions are set up below using the group
 				}
 			});
+
+			// NEW: Group-first collision approach!
+			// Single collider handles ALL players (early and late-joining)
+			// No need to add colliders in onCreatePhysics - the group handles it
+			if (this.adapter.isHost()) {
+				this.physics.add.collider(this.spriteManager.group, this.platform!);
+			}
 
 			// Phase 2: Use Input Profile - 1 line instead of 5!
 			this.inputManager = this.adapter.createInputManager();

@@ -21,6 +21,9 @@ export interface SpriteTrackingOptions {
 
   /** Interpolate movement on clients for smoothness */
   interpolate?: boolean;
+
+  /** Namespace to write sprite data to (default: uses adapter's spriteNamespace) */
+  namespace?: string;
 }
 
 export interface PhaserAdapterConfig {
@@ -183,13 +186,20 @@ export class PhaserAdapter<TState = any> {
 
   /**
    * Stop tracking a sprite
+   *
+   * @param key - Sprite key
+   * @param namespace - Optional namespace (defaults to spriteNamespace from config)
    */
-  untrackSprite(key: string): void {
+  untrackSprite(key: string, namespace?: string): void {
+    const tracked = this.trackedSprites.get(key);
     this.trackedSprites.delete(key);
+
+    // Use namespace from tracked options, parameter, or default
+    const ns = namespace || tracked?.options.namespace || this.spriteNamespace;
 
     // Remove from state
     this.runtime.mutateState((state: any) => {
-      const sprites = state[this.spriteNamespace];
+      const sprites = state[ns];
       if (sprites && sprites[key]) {
         delete sprites[key];
       }
@@ -257,27 +267,35 @@ export class PhaserAdapter<TState = any> {
       }
     }
 
+    // Use namespace from options or default
+    const namespace = options.namespace || this.spriteNamespace;
+
     // Directly mutate state (host only)
     this.runtime.mutateState((state: any) => {
-      if (!state[this.spriteNamespace]) {
-        state[this.spriteNamespace] = {};
+      if (!state[namespace]) {
+        state[namespace] = {};
       }
-      const sprites = state[this.spriteNamespace];
+      const sprites = state[namespace];
       sprites[key] = { ...sprites[key], ...updates };
     });
   }
 
   /**
    * Set static metadata for a tracked sprite (host only)
+   *
+   * @param key - Sprite key
+   * @param data - Static data to set
+   * @param namespace - Optional namespace (defaults to spriteNamespace from config)
    */
-  setSpriteStaticData(key: string, data: Record<string, any>): void {
+  setSpriteStaticData(key: string, data: Record<string, any>, namespace?: string): void {
     if (!this.isHost()) return;
 
+    const ns = namespace || this.spriteNamespace;
     this.runtime.mutateState((state: any) => {
-      if (!state[this.spriteNamespace]) {
-        state[this.spriteNamespace] = {};
+      if (!state[ns]) {
+        state[ns] = {};
       }
-      const sprites = state[this.spriteNamespace];
+      const sprites = state[ns];
       sprites[key] = { ...data, ...sprites[key] };
     });
   }
@@ -421,6 +439,7 @@ export class PhaserAdapter<TState = any> {
    * @example
    * ```ts
    * const spriteManager = adapter.createSpriteManager({
+   *   namespace: 'players',  // optional, defaults to '_sprites'
    *   onCreate: (key, data) => {
    *     const sprite = this.add.sprite(data.x, data.y, 'player');
    *     if (adapter.isHost()) {
@@ -441,6 +460,58 @@ export class PhaserAdapter<TState = any> {
     config: SpriteManagerConfig<TData>
   ): SpriteManager<TData> {
     return new SpriteManager(this, config);
+  }
+
+  /**
+   * Create a typed registry of sprite managers
+   *
+   * This provides type-safe collections of sprites with automatic namespacing.
+   * Each sprite type gets its own isolated namespace in the state tree.
+   *
+   * @example
+   * ```ts
+   * const sprites = adapter.createSpriteRegistry({
+   *   players: {
+   *     onCreate: (key, data: { x: number, y: number, role: string }) => {
+   *       const color = data.role === 'fire' ? 0xff3300 : 0x0033ff;
+   *       return this.add.circle(data.x, data.y, 20, color);
+   *     },
+   *     staticProperties: ['role'],
+   *     label: { getText: (d) => d.role.toUpperCase() }
+   *   },
+   *   enemies: {
+   *     onCreate: (key, data: { x: number, y: number, type: string }) => {
+   *       return this.add.sprite(data.x, data.y, data.type);
+   *     }
+   *   }
+   * });
+   *
+   * // Type-safe sprite creation
+   * sprites.players.add('p1', { x: 100, y: 100, role: 'fire' });
+   * sprites.enemies.add('e1', { x: 200, y: 200, type: 'goblin' });
+   *
+   * // Each collection has its own namespace:
+   * // state.__sprites__.players = { p1: { x: 100, y: 100, role: 'fire' } }
+   * // state.__sprites__.enemies = { e1: { x: 200, y: 200, type: 'goblin' } }
+   * ```
+   */
+  createSpriteRegistry<TRegistry extends Record<string, SpriteManagerConfig<any>>>(
+    config: TRegistry
+  ): {
+    [K in keyof TRegistry]: SpriteManager<
+      TRegistry[K] extends SpriteManagerConfig<infer TData> ? TData : never
+    >;
+  } {
+    const registry: any = {};
+
+    for (const [name, managerConfig] of Object.entries(config)) {
+      registry[name] = new SpriteManager(this, {
+        ...managerConfig,
+        namespace: `__sprites__.${name}`
+      });
+    }
+
+    return registry;
   }
 
   /**

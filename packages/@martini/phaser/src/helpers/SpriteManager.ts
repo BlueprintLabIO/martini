@@ -98,6 +98,25 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
     offset?: { x?: number; y?: number };
     style?: Phaser.Types.GameObjects.Text.TextStyle;
   };
+
+  /**
+   * Optional: Namespace for sprite data in state (default: '_sprites')
+   * Use different namespaces to prevent collisions between multiple managers
+   *
+   * @example
+   * ```ts
+   * const playerMgr = adapter.createSpriteManager({
+   *   namespace: 'players',  // → state.players.*
+   *   onCreate: ...
+   * });
+   *
+   * const enemyMgr = adapter.createSpriteManager({
+   *   namespace: 'enemies',  // → state.enemies.*
+   *   onCreate: ...
+   * });
+   * ```
+   */
+  namespace?: string;
 }
 
 export class SpriteManager<TData extends SpriteData = SpriteData> {
@@ -110,10 +129,30 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
   private config: SpriteManagerConfig<TData>;
   private adapter: PhaserAdapter;
   private unsubscribe?: () => void;
+  private namespace: string;
+
+  /**
+   * Phaser Group containing all sprites managed by this SpriteManager.
+   * Use this for collision detection:
+   * @example
+   * ```ts
+   * this.physics.add.collider(ball, playerManager.group);
+   * ```
+   *
+   * The group automatically includes all sprites added to this manager,
+   * both early-joining and late-joining, solving the "forgot to add collider
+   * for new player" bug.
+   */
+  public readonly group: Phaser.GameObjects.Group;
 
   constructor(adapter: PhaserAdapter, config: SpriteManagerConfig<TData>) {
     this.adapter = adapter;
     this.config = config;
+    this.namespace = config.namespace || '_sprites';
+
+    // Create Phaser group for collision management
+    const scene = adapter.getScene();
+    this.group = scene.add.group();
 
     // If client, listen for sprite data from state
     if (!adapter.isHost()) {
@@ -144,6 +183,9 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
     this.spriteData.set(key, data);
     this.createLabel(key, data, sprite);
 
+    // Add to group for collision management
+    this.group.add(sprite);
+
     // Setup physics (HOST ONLY - automatic)
     if (this.config.onCreatePhysics) {
       this.config.onCreatePhysics(sprite, key, data);
@@ -157,14 +199,15 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
         }
       }
       if (Object.keys(staticData).length > 0) {
-        this.adapter.setSpriteStaticData(key, staticData);
+        this.adapter.setSpriteStaticData(key, staticData, this.namespace);
       }
     }
 
     // Track for automatic sync (host only)
     this.adapter.trackSprite(sprite, key, {
       properties: this.config.syncProperties || ['x', 'y', 'rotation', 'alpha'],
-      syncInterval: this.config.syncInterval
+      syncInterval: this.config.syncInterval,
+      namespace: this.namespace
     });
 
     return sprite;
@@ -193,7 +236,7 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
 
     // Stop tracking
     if (this.adapter.isHost()) {
-      this.adapter.untrackSprite(key);
+      this.adapter.untrackSprite(key, this.namespace);
     } else {
       this.adapter.unregisterRemoteSprite(key);
     }
@@ -242,8 +285,7 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
    * CLIENT ONLY: Sync sprites from state
    */
   private syncFromState(state: any): void {
-    const spriteNamespace = (this.adapter as any).spriteNamespace || '_sprites';
-    const spriteData = state[spriteNamespace];
+    const spriteData = state[this.namespace];
 
     if (!spriteData) return;
 
@@ -254,6 +296,7 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
         const sprite = this.config.onCreate(key, data as TData);
         this.sprites.set(key, sprite);
         this.spriteData.set(key, data as TData);
+        this.group.add(sprite); // Add to group on client side too
         this.adapter.registerRemoteSprite(key, sprite);
         this.createLabel(key, data as TData, sprite);
       } else {

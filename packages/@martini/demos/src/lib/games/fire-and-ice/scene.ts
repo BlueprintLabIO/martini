@@ -16,8 +16,7 @@ export function createFireAndIceScene(
 ) {
 	return class FireAndIceScene extends Phaser.Scene {
 		adapter!: PhaserAdapter;
-		players: Record<string, Phaser.GameObjects.Arc> = {};
-		sprites: Record<string, Phaser.GameObjects.Arc> = {};
+		sprites: any;
 		platform!: Phaser.GameObjects.Rectangle;
 		isHost = isHost;
 
@@ -37,21 +36,39 @@ export function createFireAndIceScene(
 			this.platform = this.add.rectangle(400, 550, 600, 20, 0x8b4513);
 			this.physics.add.existing(this.platform, true);
 
+			// Create sprite registry with type-safe player management
+			this.sprites = this.adapter.createSpriteRegistry({
+				players: {
+					onCreate: (key: string, data: { x: number; y: number; role: string }) => {
+						const color = data.role === 'fire' ? 0xff3300 : 0x0033ff;
+						return this.add.circle(data.x, data.y, 20, color);
+					},
+					onCreatePhysics: (sprite: any) => {
+						this.physics.add.existing(sprite);
+						const body = sprite.body as Phaser.Physics.Arcade.Body;
+						body.setCollideWorldBounds(true);
+						body.setBounce(0.2);
+						this.physics.add.collider(sprite, this.platform);
+					},
+					staticProperties: ['role'],
+					label: {
+						getText: (data: any) => data.role.toUpperCase() + ' PLAYER',
+						offset: { y: -30 },
+						style: { fontSize: '12px', color: '#ffffff', stroke: '#000000', strokeThickness: 2 }
+					}
+				}
+			});
+
 			if (this.isHost) {
-				// HOST: Create ALL players with physics
+				// HOST: Create ALL players using registry
 				const state = runtime.getState();
 
 				for (const [playerId, playerData] of Object.entries(state.players) as [string, any][]) {
-					const color = playerData.role === 'fire' ? 0xff3300 : 0x0033ff;
-					const circle = this.add.circle(playerData.x, playerData.y, 20, color);
-					this.physics.add.existing(circle);
-					const body = circle.body as Phaser.Physics.Arcade.Body;
-					body.setCollideWorldBounds(true);
-					body.setBounce(0.2);
-					this.physics.add.collider(circle, this.platform);
-
-					this.adapter.trackSprite(circle, `player-${playerId}`);
-					this.players[playerId] = circle;
+					this.sprites.players.add(playerId, {
+						x: playerData.x,
+						y: playerData.y,
+						role: playerData.role
+					});
 				}
 
 				// Labels
@@ -70,25 +87,7 @@ export function createFireAndIceScene(
 					.setOrigin(0.5)
 					.setDepth(100);
 			} else {
-				// CLIENT: Create sprites from state
-				this.adapter.onChange((state: any) => {
-					if (!state._sprites) return;
-
-					for (const [key, data] of Object.entries(state._sprites) as [string, any][]) {
-						if (!this.sprites[key]) {
-							// Extract player ID from sprite key
-							const spritePlayerId = key.replace('player-', '');
-
-							// If this sprite belongs to ME (the client), I'm ice (blue)
-							// Otherwise it's the host who is fire (red)
-							const color = spritePlayerId === this.adapter.getMyPlayerId() ? 0x0033ff : 0xff3300;
-
-							const circle = this.add.circle(data.x || 400, data.y || 400, 20, color);
-							this.sprites[key] = circle;
-							this.adapter.registerRemoteSprite(key, circle);
-						}
-					}
-				});
+				// CLIENT: Auto-syncs via registry (no manual onChange needed!)
 
 				// Labels
 				this.add
@@ -112,10 +111,8 @@ export function createFireAndIceScene(
 			const speed = 200;
 			const jumpSpeed = -350;
 
-			// CLIENT: Smooth interpolation
-			if (!this.isHost) {
-				this.adapter.updateInterpolation();
-			}
+			// Update sprite registry (handles interpolation on clients)
+			this.sprites.players.update();
 
 			// Capture local input based on role
 			const playerKeys = role === 'host' ? keys.host : keys.client;
@@ -134,7 +131,7 @@ export function createFireAndIceScene(
 				const inputs = state.inputs || {};
 
 				for (const [playerId, playerInput] of Object.entries(inputs) as [string, any][]) {
-					const circle = this.players[playerId];
+					const circle = this.sprites.players.get(playerId);
 					if (!circle || !circle.body) continue;
 
 					const body = circle.body as Phaser.Physics.Arcade.Body;

@@ -29,9 +29,27 @@ export class SpriteManager {
     config;
     adapter;
     unsubscribe;
+    namespace;
+    /**
+     * Phaser Group containing all sprites managed by this SpriteManager.
+     * Use this for collision detection:
+     * @example
+     * ```ts
+     * this.physics.add.collider(ball, playerManager.group);
+     * ```
+     *
+     * The group automatically includes all sprites added to this manager,
+     * both early-joining and late-joining, solving the "forgot to add collider
+     * for new player" bug.
+     */
+    group;
     constructor(adapter, config) {
         this.adapter = adapter;
         this.config = config;
+        this.namespace = config.namespace || '_sprites';
+        // Create Phaser group for collision management
+        const scene = adapter.getScene();
+        this.group = scene.add.group();
         // If client, listen for sprite data from state
         if (!adapter.isHost()) {
             this.unsubscribe = adapter.onChange((state) => {
@@ -57,6 +75,8 @@ export class SpriteManager {
         this.sprites.set(key, sprite);
         this.spriteData.set(key, data);
         this.createLabel(key, data, sprite);
+        // Add to group for collision management
+        this.group.add(sprite);
         // Setup physics (HOST ONLY - automatic)
         if (this.config.onCreatePhysics) {
             this.config.onCreatePhysics(sprite, key, data);
@@ -69,13 +89,14 @@ export class SpriteManager {
                 }
             }
             if (Object.keys(staticData).length > 0) {
-                this.adapter.setSpriteStaticData(key, staticData);
+                this.adapter.setSpriteStaticData(key, staticData, this.namespace);
             }
         }
         // Track for automatic sync (host only)
         this.adapter.trackSprite(sprite, key, {
             properties: this.config.syncProperties || ['x', 'y', 'rotation', 'alpha'],
-            syncInterval: this.config.syncInterval
+            syncInterval: this.config.syncInterval,
+            namespace: this.namespace
         });
         return sprite;
     }
@@ -100,7 +121,7 @@ export class SpriteManager {
         this.spriteData.delete(key);
         // Stop tracking
         if (this.adapter.isHost()) {
-            this.adapter.untrackSprite(key);
+            this.adapter.untrackSprite(key, this.namespace);
         }
         else {
             this.adapter.unregisterRemoteSprite(key);
@@ -143,8 +164,7 @@ export class SpriteManager {
      * CLIENT ONLY: Sync sprites from state
      */
     syncFromState(state) {
-        const spriteNamespace = this.adapter.spriteNamespace || '_sprites';
-        const spriteData = state[spriteNamespace];
+        const spriteData = state[this.namespace];
         if (!spriteData)
             return;
         // Create/update sprites based on state
@@ -154,6 +174,7 @@ export class SpriteManager {
                 const sprite = this.config.onCreate(key, data);
                 this.sprites.set(key, sprite);
                 this.spriteData.set(key, data);
+                this.group.add(sprite); // Add to group on client side too
                 this.adapter.registerRemoteSprite(key, sprite);
                 this.createLabel(key, data, sprite);
             }

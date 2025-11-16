@@ -50,7 +50,10 @@ export class CollisionManager {
      */
     registerSprite(key, sprite) {
         this.namedSprites.set(key, sprite);
-        this.reapplyRules();
+        // Re-apply all rules to create colliders for this newly registered sprite
+        for (const rule of this.rules) {
+            this.applyRule(rule);
+        }
     }
     /**
      * Unregister a sprite by name
@@ -77,14 +80,10 @@ export class CollisionManager {
             handler: options?.onCollide
         };
         this.rules.push(rule);
-        // If either side is a SpriteManager, install onAdd hooks
-        if (this.isSpriteManager(a)) {
-            this.hookSpriteManager(a);
-        }
-        if (this.isSpriteManager(b)) {
-            this.hookSpriteManager(b);
-        }
-        // Apply rule immediately for existing sprites
+        // Apply rule immediately
+        // Note: If either side is a SpriteManager, resolveToObjects() will return
+        // the manager's Phaser Group, which automatically handles all sprites
+        // (both current and future) without needing lifecycle hooks
         this.applyRule(rule);
     }
     /**
@@ -109,28 +108,6 @@ export class CollisionManager {
         this.colliders.length = 0;
         this.rules.length = 0;
         this.namedSprites.clear();
-    }
-    /**
-     * Install onAdd hook on a SpriteManager to re-apply rules when sprites are added
-     */
-    hookSpriteManager(manager) {
-        // Check if already hooked
-        if (manager._collisionManagerHooked) {
-            return;
-        }
-        manager._collisionManagerHooked = true;
-        // Store original config
-        const originalConfig = manager.config;
-        const originalOnAdd = originalConfig.onAdd;
-        // Wrap onAdd to re-apply collision rules
-        originalConfig.onAdd = (sprite, key, data, context) => {
-            // Call original onAdd if it exists
-            if (originalOnAdd) {
-                originalOnAdd(sprite, key, data, context);
-            }
-            // Re-apply all collision rules involving this manager
-            this.reapplyRules();
-        };
     }
     /**
      * Apply a single collision rule (create colliders)
@@ -160,14 +137,6 @@ export class CollisionManager {
         }
     }
     /**
-     * Re-apply all collision rules (called when sprites are added)
-     */
-    reapplyRules() {
-        for (const rule of this.rules) {
-            this.applyRule(rule);
-        }
-    }
-    /**
      * Resolve a rule target to an array of Phaser objects
      */
     resolveToObjects(target) {
@@ -177,9 +146,9 @@ export class CollisionManager {
             return sprite ? [sprite] : [];
         }
         if (this.isSpriteManager(target)) {
-            // It's a SpriteManager - get all sprites
-            const sprites = Array.from(target.getAll().values());
-            return sprites;
+            // It's a SpriteManager - return its Phaser Group
+            // The group automatically handles all sprites (early and late-joining)
+            return [target.group];
         }
         // It's a raw Phaser object (sprite or group)
         return [target];

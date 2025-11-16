@@ -17,6 +17,8 @@ export interface SpriteTrackingOptions {
     properties?: string[];
     /** Interpolate movement on clients for smoothness */
     interpolate?: boolean;
+    /** Namespace to write sprite data to (default: uses adapter's spriteNamespace) */
+    namespace?: string;
 }
 export interface PhaserAdapterConfig {
     /**
@@ -106,8 +108,11 @@ export declare class PhaserAdapter<TState = any> {
     trackSprite(sprite: any, key: string, options?: SpriteTrackingOptions): void;
     /**
      * Stop tracking a sprite
+     *
+     * @param key - Sprite key
+     * @param namespace - Optional namespace (defaults to spriteNamespace from config)
      */
-    untrackSprite(key: string): void;
+    untrackSprite(key: string, namespace?: string): void;
     /**
      * Broadcast a custom event
      */
@@ -130,8 +135,12 @@ export declare class PhaserAdapter<TState = any> {
     private syncSpriteToState;
     /**
      * Set static metadata for a tracked sprite (host only)
+     *
+     * @param key - Sprite key
+     * @param data - Static data to set
+     * @param namespace - Optional namespace (defaults to spriteNamespace from config)
      */
-    setSpriteStaticData(key: string, data: Record<string, any>): void;
+    setSpriteStaticData(key: string, data: Record<string, any>, namespace?: string): void;
     /**
      * Update sprites from state (clients only)
      */
@@ -189,6 +198,7 @@ export declare class PhaserAdapter<TState = any> {
      * @example
      * ```ts
      * const spriteManager = adapter.createSpriteManager({
+     *   namespace: 'players',  // optional, defaults to '_sprites'
      *   onCreate: (key, data) => {
      *     const sprite = this.add.sprite(data.x, data.y, 'player');
      *     if (adapter.isHost()) {
@@ -210,6 +220,42 @@ export declare class PhaserAdapter<TState = any> {
         y: number;
         [key: string]: any;
     }>(config: SpriteManagerConfig<TData>): SpriteManager<TData>;
+    /**
+     * Create a typed registry of sprite managers
+     *
+     * This provides type-safe collections of sprites with automatic namespacing.
+     * Each sprite type gets its own isolated namespace in the state tree.
+     *
+     * @example
+     * ```ts
+     * const sprites = adapter.createSpriteRegistry({
+     *   players: {
+     *     onCreate: (key, data: { x: number, y: number, role: string }) => {
+     *       const color = data.role === 'fire' ? 0xff3300 : 0x0033ff;
+     *       return this.add.circle(data.x, data.y, 20, color);
+     *     },
+     *     staticProperties: ['role'],
+     *     label: { getText: (d) => d.role.toUpperCase() }
+     *   },
+     *   enemies: {
+     *     onCreate: (key, data: { x: number, y: number, type: string }) => {
+     *       return this.add.sprite(data.x, data.y, data.type);
+     *     }
+     *   }
+     * });
+     *
+     * // Type-safe sprite creation
+     * sprites.players.add('p1', { x: 100, y: 100, role: 'fire' });
+     * sprites.enemies.add('e1', { x: 200, y: 200, type: 'goblin' });
+     *
+     * // Each collection has its own namespace:
+     * // state.__sprites__.players = { p1: { x: 100, y: 100, role: 'fire' } }
+     * // state.__sprites__.enemies = { e1: { x: 200, y: 200, type: 'goblin' } }
+     * ```
+     */
+    createSpriteRegistry<TRegistry extends Record<string, SpriteManagerConfig<any>>>(config: TRegistry): {
+        [K in keyof TRegistry]: SpriteManager<TRegistry[K] extends SpriteManagerConfig<infer TData> ? TData : never>;
+    };
     /**
      * Create a PlayerUIManager for automatically managed player HUD elements
      */
