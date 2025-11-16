@@ -158,7 +158,7 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
   private config: SpriteManagerConfig<TData>;
   private adapter: PhaserAdapter;
   private unsubscribe?: () => void;
-  private namespace: string;
+  public readonly namespace: string;
 
   /**
    * Track sprites created locally via add() method
@@ -348,7 +348,7 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
         this.sprites.set(key, sprite);
         this.spriteData.set(key, data as TData);
         this.group.add(sprite); // Add to group on client side too
-        this.adapter.registerRemoteSprite(key, sprite);
+        this.adapter.registerRemoteSprite(key, sprite, this.namespace);
         this.createLabel(key, data as TData, sprite);
 
         // Call onAdd hook (if provided) - runs for late-joining sprites on clients

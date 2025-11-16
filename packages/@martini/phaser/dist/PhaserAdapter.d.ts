@@ -10,6 +10,8 @@ import { InputManager } from './helpers/InputManager.js';
 import { PlayerUIManager, type PlayerUIManagerConfig } from './helpers/PlayerUIManager.js';
 import { CollisionManager, type CollisionManagerConfig } from './helpers/CollisionManager.js';
 import { PhysicsManager, type PhysicsManagerConfig } from './helpers/PhysicsManager.js';
+import { StateDrivenSpawner, type StateDrivenSpawnerConfig } from './helpers/StateDrivenSpawner.js';
+import { HealthBarManager, type HealthBarConfig } from './helpers/HealthBarManager.js';
 export interface SpriteTrackingOptions {
     /** Sync interval in ms (default: 50ms / 20 FPS) */
     syncInterval?: number;
@@ -61,6 +63,7 @@ export declare class PhaserAdapter<TState = any> {
     private readonly spriteNamespace;
     private readonly autoInterpolate;
     private readonly lerpFactor;
+    private spriteManagers;
     constructor(runtime: GameRuntime<TState>, scene: any, // Phaser.Scene
     config?: PhaserAdapterConfig);
     /**
@@ -149,6 +152,11 @@ export declare class PhaserAdapter<TState = any> {
     setSpriteStaticData(key: string, data: Record<string, any>, namespace?: string): void;
     /**
      * Update sprites from state (clients only)
+     *
+     * MULTI-NAMESPACE SUPPORT: This method now handles sprites from all registered
+     * namespaces, including both the default namespace and custom namespaces from
+     * createSpriteRegistry(). This fixes the bug where sprites in custom namespaces
+     * (like __sprites__.players) weren't getting interpolation targets on clients.
      */
     private updateSpritesFromState;
     /**
@@ -160,6 +168,7 @@ export declare class PhaserAdapter<TState = any> {
      *
      * @param key - Unique identifier for this sprite
      * @param sprite - The Phaser sprite to register
+     * @param namespace - Optional namespace (defaults to spriteNamespace config)
      *
      * @example
      * ```ts
@@ -174,7 +183,7 @@ export declare class PhaserAdapter<TState = any> {
      * });
      * ```
      */
-    registerRemoteSprite(key: string, sprite: any): void;
+    registerRemoteSprite(key: string, sprite: any, namespace?: string): void;
     /**
      * Call this in your Phaser update() loop to smoothly interpolate remote sprites
      * This should be called every frame (60 FPS) for smooth movement
@@ -226,6 +235,13 @@ export declare class PhaserAdapter<TState = any> {
         y: number;
         [key: string]: any;
     }>(config: SpriteManagerConfig<TData>): SpriteManager<TData>;
+    /**
+     * Register a SpriteManager with this adapter for multi-namespace support
+     * Internal method - automatically called by createSpriteManager
+     */
+    registerSpriteManager(manager: {
+        namespace: string;
+    }): void;
     /**
      * Create a typed registry of sprite managers
      *
@@ -292,5 +308,54 @@ export declare class PhaserAdapter<TState = any> {
      * Create a PhysicsManager for automatic physics behaviors
      */
     createPhysicsManager(config: PhysicsManagerConfig): PhysicsManager;
+    /**
+     * Create a StateDrivenSpawner for automatic sprite spawning from state collections
+     *
+     * Eliminates the manual "check for new players/bullets" loop.
+     * Watches a state collection and automatically creates/removes sprites.
+     *
+     * @example
+     * ```ts
+     * // Players (uses object keys)
+     * const playerSpawner = adapter.createStateDrivenSpawner({
+     *   stateKey: 'players',
+     *   spriteManager: this.spriteManager,
+     *   keyPrefix: 'player-'
+     * });
+     *
+     * // Bullets (uses array with id field)
+     * const bulletSpawner = adapter.createStateDrivenSpawner({
+     *   stateKey: 'bullets',
+     *   spriteManager: this.bulletManager,
+     *   keyPrefix: 'bullet-',
+     *   keyField: 'id'
+     * });
+     *
+     * // In update():
+     * playerSpawner.update(); // HOST only
+     * ```
+     */
+    createStateDrivenSpawner(config: StateDrivenSpawnerConfig): StateDrivenSpawner;
+    /**
+     * Create a HealthBarManager for automatic health bar management
+     *
+     * Auto-creates, positions, scales, and colors health bars for all sprites.
+     *
+     * @example
+     * ```ts
+     * const healthBars = adapter.createHealthBarManager({
+     *   spriteManager: this.spriteManager,
+     *   healthKey: 'health',
+     *   maxHealth: 100,
+     *   offset: { x: 0, y: -30 },
+     *   width: 50,
+     *   height: 5
+     * });
+     *
+     * // In update():
+     * healthBars.update();
+     * ```
+     */
+    createHealthBarManager(config: HealthBarConfig): HealthBarManager;
 }
 //# sourceMappingURL=PhaserAdapter.d.ts.map

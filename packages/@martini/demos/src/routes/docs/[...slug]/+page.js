@@ -8,9 +8,9 @@ export async function load({ params, url }) {
 	const path = slug ? `/${slug}` : '/index';
 
 	try {
-		// Import all markdown files from content/docs
-		const modules = import.meta.glob('/src/content/docs/**/*.md', { eager: true });
-		const rawModules = import.meta.glob('/src/content/docs/**/*.md', { eager: true, query: '?raw' });
+		// Import all markdown files from content/docs (dynamic imports for proper client-side navigation)
+		const modules = import.meta.glob('/src/content/docs/**/*.md');
+		const rawModules = import.meta.glob('/src/content/docs/**/*.md', { query: '?raw' });
 
 		// Find the matching module
 		const matchingPath = Object.keys(modules).find(key => {
@@ -25,8 +25,9 @@ export async function load({ params, url }) {
 			throw error(404, `Documentation page not found: ${path}`);
 		}
 
-		const module = modules[matchingPath];
-		const rawModule = rawModules[matchingPath];
+		// Await the dynamic imports
+		const module = await modules[matchingPath]();
+		const rawModule = await rawModules[matchingPath]();
 		const rawMarkdown = rawModule?.default || '';
 
 		// Calculate prev/next navigation

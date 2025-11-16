@@ -20,6 +20,10 @@ export { CollisionManager } from './helpers/CollisionManager.js';
 export type { CollisionManagerConfig, CollisionRule } from './helpers/CollisionManager.js';
 export { PlayerUIManager } from './helpers/PlayerUIManager.js';
 export type { PlayerUIManagerConfig, TextUIConfig, BarUIConfig } from './helpers/PlayerUIManager.js';
+export { StateDrivenSpawner } from './helpers/StateDrivenSpawner.js';
+export type { StateDrivenSpawnerConfig } from './helpers/StateDrivenSpawner.js';
+export { HealthBarManager } from './helpers/HealthBarManager.js';
+export type { HealthBarConfig } from './helpers/HealthBarManager.js';
 
 // Input Profiles
 export { registerProfile, getProfile, listProfiles, BUILT_IN_PROFILES } from './helpers/InputProfiles.js';
@@ -36,6 +40,10 @@ export type { SpeedDisplay, SpeedDisplayConfig } from './helpers/SpeedDisplay.js
 // Directional Indicator Helper
 export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';
 export type { DirectionalIndicator, DirectionalIndicatorConfig } from './helpers/DirectionalIndicator.js';
+
+// Dual Runtime Factory
+export { createDualRuntimePreview } from './helpers/DualRuntimeFactory.js';
+export type { DualRuntimePreview, DualRuntimePreviewConfig } from './helpers/DualRuntimeFactory.js';
 
 // Runtime initialization (transport abstraction)
 export { initializeGame } from './runtime.js';

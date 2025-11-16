@@ -4,6 +4,7 @@
 	import TableOfContents from '$lib/components/docs/TableOfContents.svelte';
 	import { Menu, X } from '@lucide/svelte';
 
+	let { children } = $props();
 	let mobileMenuOpen = $state(false);
 
 	function closeMobileMenu() {
@@ -46,7 +47,7 @@
 	<main id="main-content" class="content">
 		<Breadcrumbs />
 		<article class="prose">
-			<slot />
+			{@render children?.()}
 		</article>
 	</main>
 

@@ -140,7 +140,7 @@ export declare class SpriteManager<TData extends SpriteData = SpriteData> {
     private config;
     private adapter;
     private unsubscribe?;
-    private namespace;
+    readonly namespace: string;
     /**
      * Track sprites created locally via add() method
      * This eliminates the need to know player IDs for filtering

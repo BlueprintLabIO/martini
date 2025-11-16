@@ -287,6 +287,46 @@ export class InputManager {
         this.bindKeys(merged);
     }
     /**
+     * Bind edge-triggered actions (fire once on press, not every frame)
+     * Perfect for shoot, jump, interact, etc.
+     *
+     * @example
+     * ```ts
+     * // Shoot on space press
+     * inputManager.bindEdgeTrigger('Space', 'shoot');
+     *
+     * // Jump on up arrow press
+     * inputManager.bindEdgeTrigger('ArrowUp', 'jump');
+     *
+     * // Multiple edge triggers
+     * inputManager.bindEdgeTriggers({
+     *   'Space': 'shoot',
+     *   'E': 'interact',
+     *   'R': 'reload'
+     * });
+     * ```
+     */
+    bindEdgeTrigger(key, action, input) {
+        this.keyBindings.set(key.toUpperCase(), {
+            action,
+            input,
+            mode: 'oneshot'
+        });
+    }
+    /**
+     * Bind multiple edge-triggered actions at once
+     */
+    bindEdgeTriggers(bindings) {
+        for (const [key, binding] of Object.entries(bindings)) {
+            if (typeof binding === 'string') {
+                this.bindEdgeTrigger(key, binding);
+            }
+            else {
+                this.bindEdgeTrigger(key, binding.action, binding.input);
+            }
+        }
+    }
+    /**
      * Clear all bindings
      */
     clear() {

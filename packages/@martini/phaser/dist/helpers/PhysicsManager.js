@@ -4,6 +4,22 @@
  * Eliminates manual physics loops by automatically reading inputs from state
  * and applying pre-defined or custom physics behaviors.
  *
+ * ## Position Syncing (PIT OF SUCCESS!)
+ *
+ * **NEW:** PhysicsManager now automatically syncs sprite positions BACK to state
+ * (enabled by default). This prevents the "bullets spawn from starting position" bug
+ * where actions reading `state.players[id].x/y` get stale data.
+ *
+ * **How it works:**
+ * 1. PhysicsManager moves sprites via Phaser physics bodies
+ * 2. After each physics update, sprite.x/y/rotation → state.players[id].x/y/rotation
+ * 3. Actions can now read current positions from state reliably
+ *
+ * **When to disable:**
+ * - Performance optimization for 100+ entities
+ * - You're manually syncing positions elsewhere
+ * - Set `syncPositionToState: false` in config
+ *
  * ## Velocity Updates (Racing Behavior)
  *
  * PhysicsManager provides velocity data through TWO channels:
@@ -27,21 +43,17 @@
  * // In scene.create()
  * this.physicsManager = this.adapter.createPhysicsManager({
  *   spriteManager: this.spriteManager,
- *   inputKey: 'inputs'
+ *   inputKey: 'inputs',
+ *   stateKey: 'players', // optional, defaults to 'players'
+ *   syncPositionToState: true // optional, defaults to true (PIT OF SUCCESS!)
  * });
  *
- * this.physicsManager.addBehavior('platformer', {
- *   speed: 200,
- *   jumpPower: 350
+ * this.physicsManager.addBehavior('topDown', {
+ *   speed: 200
  * });
  *
- * // Option 1: Use helper (handles both events + state sync)
- * this.speedDisplay = createSpeedDisplay(this.physicsManager, this.adapter, this);
- *
- * // Option 2: Subscribe to events manually (host-only)
- * this.physicsManager.onVelocityChange((playerId, velocity) => {
- *   console.log(`Player ${playerId} speed: ${velocity}`);
- * });
+ * // Now actions can read current positions from state!
+ * // shoot action: bullet.x = state.players[id].x ✅ (always up to date)
  *
  * // In scene.update()
  * this.physicsManager.update();
@@ -73,6 +85,8 @@ export class PhysicsManager {
     spriteManager;
     inputKey;
     spriteKeyPrefix;
+    syncPositionToState;
+    stateKey;
     behaviorType = null;
     behaviorConfig = null;
     velocities = new Map(); // Track velocity for racing behavior
@@ -82,6 +96,8 @@ export class PhysicsManager {
         this.spriteManager = config.spriteManager;
         this.inputKey = config.inputKey || 'inputs';
         this.spriteKeyPrefix = config.spriteKeyPrefix || 'player-';
+        this.syncPositionToState = config.syncPositionToState !== false; // default true
+        this.stateKey = config.stateKey || 'players';
     }
     /**
      * Get velocity for a specific player (racing behavior only)
@@ -177,6 +193,11 @@ export class PhysicsManager {
                 const customConfig = this.behaviorConfig;
                 customConfig.apply(sprite, playerInput, body);
             }
+            // Sync sprite position back to state (PIT OF SUCCESS!)
+            // This ensures actions reading from state (e.g., shoot) get current positions
+            if (this.syncPositionToState) {
+                this.syncPositionToStateForPlayer(playerId, sprite);
+            }
         }
     }
     applyPlatformerBehavior(body, input, config) {
@@ -255,6 +276,25 @@ export class PhysicsManager {
         const vx = Math.cos(sprite.rotation) * velocity;
         const vy = Math.sin(sprite.rotation) * velocity;
         body.setVelocity(vx, vy);
+    }
+    /**
+     * Sync sprite position and rotation back to state
+     * Called automatically after physics updates when syncPositionToState is enabled
+     */
+    syncPositionToStateForPlayer(playerId, sprite) {
+        this.runtime.mutateState((state) => {
+            const entities = state[this.stateKey];
+            if (entities && entities[playerId]) {
+                // Always sync position (this is what PhysicsManager controls)
+                entities[playerId].x = sprite.x;
+                entities[playerId].y = sprite.y;
+                // Only sync rotation for racing behavior, where sprite.rotation is modified by physics
+                // For topDown/platformer, rotation is typically managed by actions/game logic
+                if (this.behaviorType === 'racing' && sprite.rotation !== undefined) {
+                    entities[playerId].rotation = sprite.rotation;
+                }
+            }
+        });
     }
 }
 //# sourceMappingURL=PhysicsManager.js.map

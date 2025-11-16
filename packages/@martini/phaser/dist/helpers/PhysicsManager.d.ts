@@ -4,6 +4,22 @@
  * Eliminates manual physics loops by automatically reading inputs from state
  * and applying pre-defined or custom physics behaviors.
  *
+ * ## Position Syncing (PIT OF SUCCESS!)
+ *
+ * **NEW:** PhysicsManager now automatically syncs sprite positions BACK to state
+ * (enabled by default). This prevents the "bullets spawn from starting position" bug
+ * where actions reading `state.players[id].x/y` get stale data.
+ *
+ * **How it works:**
+ * 1. PhysicsManager moves sprites via Phaser physics bodies
+ * 2. After each physics update, sprite.x/y/rotation → state.players[id].x/y/rotation
+ * 3. Actions can now read current positions from state reliably
+ *
+ * **When to disable:**
+ * - Performance optimization for 100+ entities
+ * - You're manually syncing positions elsewhere
+ * - Set `syncPositionToState: false` in config
+ *
  * ## Velocity Updates (Racing Behavior)
  *
  * PhysicsManager provides velocity data through TWO channels:
@@ -27,21 +43,17 @@
  * // In scene.create()
  * this.physicsManager = this.adapter.createPhysicsManager({
  *   spriteManager: this.spriteManager,
- *   inputKey: 'inputs'
+ *   inputKey: 'inputs',
+ *   stateKey: 'players', // optional, defaults to 'players'
+ *   syncPositionToState: true // optional, defaults to true (PIT OF SUCCESS!)
  * });
  *
- * this.physicsManager.addBehavior('platformer', {
- *   speed: 200,
- *   jumpPower: 350
+ * this.physicsManager.addBehavior('topDown', {
+ *   speed: 200
  * });
  *
- * // Option 1: Use helper (handles both events + state sync)
- * this.speedDisplay = createSpeedDisplay(this.physicsManager, this.adapter, this);
- *
- * // Option 2: Subscribe to events manually (host-only)
- * this.physicsManager.onVelocityChange((playerId, velocity) => {
- *   console.log(`Player ${playerId} speed: ${velocity}`);
- * });
+ * // Now actions can read current positions from state!
+ * // shoot action: bullet.x = state.players[id].x ✅ (always up to date)
  *
  * // In scene.update()
  * this.physicsManager.update();
@@ -94,12 +106,33 @@ export interface PhysicsManagerConfig {
     inputKey?: string;
     /** Key prefix for sprite keys (defaults to 'player-') */
     spriteKeyPrefix?: string;
+    /**
+     * Automatically sync sprite positions back to state (default: true)
+     *
+     * **PIT OF SUCCESS:** Enabled by default to prevent the "bullets spawn from
+     * player's starting position" bug. When PhysicsManager moves sprites via
+     * physics bodies, those positions need to be written back to state so that
+     * actions (like 'shoot') can read the current position.
+     *
+     * Disable only if you have a specific reason (e.g., performance optimization
+     * for 100+ entities, or you're manually syncing positions elsewhere).
+     *
+     * @default true
+     */
+    syncPositionToState?: boolean;
+    /**
+     * State key where player/entity data is stored (default: 'players')
+     * Used for syncing positions back to state when syncPositionToState is enabled
+     */
+    stateKey?: string;
 }
 export declare class PhysicsManager {
     private runtime;
     private spriteManager;
     private inputKey;
     private spriteKeyPrefix;
+    private syncPositionToState;
+    private stateKey;
     private behaviorType;
     private behaviorConfig;
     private velocities;
@@ -175,5 +208,10 @@ export declare class PhysicsManager {
     private applyPlatformerBehavior;
     private applyTopDownBehavior;
     private applyRacingBehavior;
+    /**
+     * Sync sprite position and rotation back to state
+     * Called automatically after physics updates when syncPositionToState is enabled
+     */
+    private syncPositionToStateForPlayer;
 }
 //# sourceMappingURL=PhysicsManager.d.ts.map

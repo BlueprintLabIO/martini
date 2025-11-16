@@ -12,6 +12,8 @@ export { InputManager } from './helpers/InputManager.js';
 export { PhysicsManager } from './helpers/PhysicsManager.js';
 export { CollisionManager } from './helpers/CollisionManager.js';
 export { PlayerUIManager } from './helpers/PlayerUIManager.js';
+export { StateDrivenSpawner } from './helpers/StateDrivenSpawner.js';
+export { HealthBarManager } from './helpers/HealthBarManager.js';
 // Input Profiles
 export { registerProfile, getProfile, listProfiles, BUILT_IN_PROFILES } from './helpers/InputProfiles.js';
 // HUD Helper
@@ -20,6 +22,8 @@ export { createPlayerHUD } from './helpers/HUDHelper.js';
 export { createSpeedDisplay } from './helpers/SpeedDisplay.js';
 // Directional Indicator Helper
 export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';
+// Dual Runtime Factory
+export { createDualRuntimePreview } from './helpers/DualRuntimeFactory.js';
 // Runtime initialization (transport abstraction)
 export { initializeGame } from './runtime.js';
 //# sourceMappingURL=index.js.map

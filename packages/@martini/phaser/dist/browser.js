@@ -154,7 +154,7 @@ var SpriteManager = class {
         this.sprites.set(key, sprite);
         this.spriteData.set(key, data);
         this.group.add(sprite);
-        this.adapter.registerRemoteSprite(key, sprite);
+        this.adapter.registerRemoteSprite(key, sprite, this.namespace);
         this.createLabel(key, data, sprite);
         if (this.config.onAdd) {
           this.config.onAdd(sprite, key, data, {
@@ -649,6 +649,45 @@ var InputManager = class {
     this.bindKeys(merged);
   }
   /**
+   * Bind edge-triggered actions (fire once on press, not every frame)
+   * Perfect for shoot, jump, interact, etc.
+   *
+   * @example
+   * ```ts
+   * // Shoot on space press
+   * inputManager.bindEdgeTrigger('Space', 'shoot');
+   *
+   * // Jump on up arrow press
+   * inputManager.bindEdgeTrigger('ArrowUp', 'jump');
+   *
+   * // Multiple edge triggers
+   * inputManager.bindEdgeTriggers({
+   *   'Space': 'shoot',
+   *   'E': 'interact',
+   *   'R': 'reload'
+   * });
+   * ```
+   */
+  bindEdgeTrigger(key, action, input) {
+    this.keyBindings.set(key.toUpperCase(), {
+      action,
+      input,
+      mode: "oneshot"
+    });
+  }
+  /**
+   * Bind multiple edge-triggered actions at once
+   */
+  bindEdgeTriggers(bindings) {
+    for (const [key, binding] of Object.entries(bindings)) {
+      if (typeof binding === "string") {
+        this.bindEdgeTrigger(key, binding);
+      } else {
+        this.bindEdgeTrigger(key, binding.action, binding.input);
+      }
+    }
+  }
+  /**
    * Clear all bindings
    */
   clear() {
@@ -1049,6 +1088,8 @@ var PhysicsManager = class {
     __publicField(this, "spriteManager");
     __publicField(this, "inputKey");
     __publicField(this, "spriteKeyPrefix");
+    __publicField(this, "syncPositionToState");
+    __publicField(this, "stateKey");
     __publicField(this, "behaviorType", null);
     __publicField(this, "behaviorConfig", null);
     __publicField(this, "velocities", /* @__PURE__ */ new Map());
@@ -1058,6 +1099,8 @@ var PhysicsManager = class {
     this.spriteManager = config.spriteManager;
     this.inputKey = config.inputKey || "inputs";
     this.spriteKeyPrefix = config.spriteKeyPrefix || "player-";
+    this.syncPositionToState = config.syncPositionToState !== false;
+    this.stateKey = config.stateKey || "players";
   }
   /**
    * Get velocity for a specific player (racing behavior only)
@@ -1145,6 +1188,9 @@ var PhysicsManager = class {
         const customConfig = this.behaviorConfig;
         customConfig.apply(sprite, playerInput, body);
       }
+      if (this.syncPositionToState) {
+        this.syncPositionToStateForPlayer(playerId, sprite);
+      }
     }
   }
   applyPlatformerBehavior(body, input, config) {
@@ -1206,20 +1252,294 @@ var PhysicsManager = class {
     const vy = Math.sin(sprite.rotation) * velocity;
     body.setVelocity(vx, vy);
   }
+  /**
+   * Sync sprite position and rotation back to state
+   * Called automatically after physics updates when syncPositionToState is enabled
+   */
+  syncPositionToStateForPlayer(playerId, sprite) {
+    this.runtime.mutateState((state) => {
+      const entities = state[this.stateKey];
+      if (entities && entities[playerId]) {
+        entities[playerId].x = sprite.x;
+        entities[playerId].y = sprite.y;
+        if (this.behaviorType === "racing" && sprite.rotation !== void 0) {
+          entities[playerId].rotation = sprite.rotation;
+        }
+      }
+    });
+  }
+};
+
+// src/helpers/StateDrivenSpawner.ts
+var StateDrivenSpawner = class {
+  constructor(adapter, config) {
+    __publicField(this, "config");
+    __publicField(this, "adapter");
+    __publicField(this, "trackedKeys", /* @__PURE__ */ new Set());
+    __publicField(this, "unsubscribe");
+    this.adapter = adapter;
+    this.config = config;
+    if (adapter.isHost()) {
+    } else {
+      this.unsubscribe = adapter.onChange((state) => {
+        this.syncFromState(state);
+      });
+    }
+  }
+  /**
+   * Call this in scene.update() (HOST ONLY)
+   * Checks for new entries in the state collection and spawns sprites
+   */
+  update() {
+    if (!this.adapter.isHost()) {
+      return;
+    }
+    const state = this.adapter.getState();
+    this.syncFromState(state);
+  }
+  /**
+   * Manually trigger a sync (useful for initial spawn in create())
+   */
+  sync() {
+    const state = this.adapter.getState();
+    this.syncFromState(state);
+  }
+  /**
+   * Core sync logic - creates/removes sprites based on state
+   */
+  syncFromState(state) {
+    const collection = state[this.config.stateKey];
+    if (!collection) return;
+    const currentKeys = /* @__PURE__ */ new Set();
+    const isArray = Array.isArray(collection);
+    const entries = isArray ? collection.map((item) => {
+      const key = this.config.keyField ? item[this.config.keyField] : item.id;
+      return [String(key), item];
+    }) : Object.entries(collection);
+    for (const [rawKey, data] of entries) {
+      if (this.config.filter && !this.config.filter(data)) {
+        continue;
+      }
+      const spriteKey = this.config.keyPrefix ? `${this.config.keyPrefix}${rawKey}` : rawKey;
+      currentKeys.add(spriteKey);
+      if (this.trackedKeys.has(spriteKey)) {
+        this.updateSpriteFromState(spriteKey, data);
+        continue;
+      }
+      if (this.adapter.isHost()) {
+        this.config.spriteManager.add(spriteKey, data);
+        this.trackedKeys.add(spriteKey);
+      } else {
+        this.trackedKeys.add(spriteKey);
+      }
+    }
+    for (const spriteKey of this.trackedKeys) {
+      if (!currentKeys.has(spriteKey)) {
+        this.config.spriteManager.remove(spriteKey);
+        this.trackedKeys.delete(spriteKey);
+      }
+    }
+  }
+  /**
+   * Update sprite properties from state data
+   * Only runs on HOST (clients get updates via SpriteManager sync)
+   */
+  updateSpriteFromState(spriteKey, data) {
+    if (!this.adapter.isHost()) {
+      return;
+    }
+    const sprite = this.config.spriteManager.get(spriteKey);
+    if (!sprite) return;
+    if (this.config.onUpdateSprite) {
+      this.config.onUpdateSprite(sprite, data);
+      return;
+    }
+    if (this.config.syncProperties) {
+      for (const prop of this.config.syncProperties) {
+        if (prop in data && sprite[prop] !== void 0) {
+          sprite[prop] = data[prop];
+        }
+      }
+    }
+  }
+  /**
+   * Cleanup
+   */
+  destroy() {
+    this.unsubscribe?.();
+  }
+};
+
+// src/helpers/HealthBarManager.ts
+var HealthBarManager = class {
+  constructor(adapter, config) {
+    __publicField(this, "adapter");
+    __publicField(this, "scene");
+    // Phaser.Scene
+    __publicField(this, "config");
+    __publicField(this, "healthBars", /* @__PURE__ */ new Map());
+    this.adapter = adapter;
+    this.scene = adapter.getScene();
+    this.config = {
+      offset: { x: 0, y: -30 },
+      width: 50,
+      height: 5,
+      colorThresholds: {
+        high: { value: 50, color: 4766584 },
+        // Green
+        medium: { value: 25, color: 15381256 },
+        // Yellow
+        low: { value: 0, color: 15680580 }
+        // Red
+      },
+      depth: 100,
+      showBackground: true,
+      backgroundColor: 3355443,
+      ...config
+    };
+  }
+  /**
+   * Update all health bars
+   * Call this in your scene's update() loop
+   */
+  update() {
+    const state = this.adapter.getState();
+    const sprites = this.config.spriteManager.getAll();
+    for (const [key, sprite] of sprites) {
+      if (!this.healthBars.has(key)) {
+        this.createHealthBar(key, sprite);
+      }
+    }
+    for (const [key, healthBarObj] of this.healthBars.entries()) {
+      const sprite = sprites.get(key);
+      if (!sprite) {
+        this.removeHealthBar(key);
+        continue;
+      }
+      const entityId = this.extractEntityId(key);
+      const entityState = this.getEntityState(state, entityId);
+      if (!entityState) {
+        continue;
+      }
+      const health = entityState[this.config.healthKey];
+      if (health === void 0) {
+        continue;
+      }
+      const offsetX = this.config.offset?.x ?? 0;
+      const offsetY = this.config.offset?.y ?? -30;
+      healthBarObj.bar.setPosition(sprite.x + offsetX, sprite.y + offsetY);
+      if (healthBarObj.background) {
+        healthBarObj.background.setPosition(sprite.x + offsetX, sprite.y + offsetY);
+      }
+      const healthPercent = health / this.config.maxHealth;
+      healthBarObj.bar.setScale(Math.max(0, healthPercent), 1);
+      const color = this.getColorForHealth(healthPercent * 100);
+      healthBarObj.bar.setFillStyle(color);
+    }
+  }
+  /**
+   * Manually create a health bar for a sprite
+   */
+  createHealthBar(key, sprite) {
+    const width = this.config.width ?? 50;
+    const height = this.config.height ?? 5;
+    const offsetX = this.config.offset?.x ?? 0;
+    const offsetY = this.config.offset?.y ?? -30;
+    let background;
+    if (this.config.showBackground) {
+      background = this.scene.add.rectangle(
+        sprite.x + offsetX,
+        sprite.y + offsetY,
+        width,
+        height,
+        this.config.backgroundColor
+      );
+      background?.setDepth(this.config.depth ?? 100);
+    }
+    const bar = this.scene.add.rectangle(
+      sprite.x + offsetX,
+      sprite.y + offsetY,
+      width,
+      height,
+      this.config.colorThresholds?.high?.color ?? 4766584
+    );
+    bar.setDepth((this.config.depth ?? 100) + 1);
+    bar.setOrigin(0, 0.5);
+    background?.setOrigin(0, 0.5);
+    this.healthBars.set(key, { bar, background });
+  }
+  /**
+   * Remove a health bar
+   */
+  removeHealthBar(key) {
+    const healthBarObj = this.healthBars.get(key);
+    if (healthBarObj) {
+      healthBarObj.bar.destroy();
+      healthBarObj.background?.destroy();
+      this.healthBars.delete(key);
+    }
+  }
+  /**
+   * Extract entity ID from sprite key
+   * Assumes format like "player-abc123" or "enemy-xyz789"
+   */
+  extractEntityId(key) {
+    const parts = key.split("-");
+    return parts.length > 1 ? parts.slice(1).join("-") : key;
+  }
+  /**
+   * Get entity state from game state
+   * Tries common state keys: players, enemies, entities
+   */
+  getEntityState(state, entityId) {
+    if (state.players?.[entityId]) {
+      return state.players[entityId];
+    }
+    if (state.enemies?.[entityId]) {
+      return state.enemies[entityId];
+    }
+    if (state.entities?.[entityId]) {
+      return state.entities[entityId];
+    }
+    return null;
+  }
+  /**
+   * Get color based on health percentage
+   */
+  getColorForHealth(healthPercent) {
+    const thresholds = this.config.colorThresholds;
+    if (healthPercent > (thresholds.high?.value ?? 50)) {
+      return thresholds.high?.color ?? 4766584;
+    } else if (healthPercent > (thresholds.medium?.value ?? 25)) {
+      return thresholds.medium?.color ?? 15381256;
+    } else {
+      return thresholds.low?.color ?? 15680580;
+    }
+  }
+  /**
+   * Cleanup all health bars
+   */
+  destroy() {
+    for (const key of this.healthBars.keys()) {
+      this.removeHealthBar(key);
+    }
+  }
 };
 
 // src/PhaserAdapter.ts
 var PhaserAdapter = class {
+  // Track all registered SpriteManagers
   constructor(runtime, scene, config = {}) {
     this.runtime = runtime;
     this.scene = scene;
     __publicField(this, "trackedSprites", /* @__PURE__ */ new Map());
     __publicField(this, "remoteSprites", /* @__PURE__ */ new Map());
-    // Sprites created for remote players
+    // Sprites created for remote players with their namespace
     __publicField(this, "syncIntervalId", null);
     __publicField(this, "spriteNamespace");
     __publicField(this, "autoInterpolate");
     __publicField(this, "lerpFactor");
+    __publicField(this, "spriteManagers", /* @__PURE__ */ new Set());
     this.spriteNamespace = config.spriteNamespace || "_sprites";
     this.autoInterpolate = config.autoInterpolate !== false;
     this.lerpFactor = config.lerpFactor ?? 0.3;
@@ -1413,27 +1733,41 @@ var PhaserAdapter = class {
   }
   /**
    * Update sprites from state (clients only)
+   *
+   * MULTI-NAMESPACE SUPPORT: This method now handles sprites from all registered
+   * namespaces, including both the default namespace and custom namespaces from
+   * createSpriteRegistry(). This fixes the bug where sprites in custom namespaces
+   * (like __sprites__.players) weren't getting interpolation targets on clients.
    */
   updateSpritesFromState(state) {
-    const sprites = state[this.spriteNamespace];
-    if (this.isHost() || !sprites) return;
-    for (const [key, tracked] of this.trackedSprites.entries()) {
-      const spriteData = sprites[key];
-      if (spriteData) {
-        this.applySpriteData(tracked.sprite, spriteData);
-      }
+    if (this.isHost()) return;
+    const namespacesToCheck = /* @__PURE__ */ new Set();
+    namespacesToCheck.add(this.spriteNamespace);
+    for (const manager of this.spriteManagers) {
+      namespacesToCheck.add(manager.namespace);
     }
-    for (const [key, spriteData] of Object.entries(sprites)) {
-      if (this.trackedSprites.has(key)) continue;
-      const remoteSprite = this.remoteSprites.get(key);
-      if (remoteSprite) {
-        remoteSprite._targetX = spriteData.x;
-        remoteSprite._targetY = spriteData.y;
-        remoteSprite._targetRotation = spriteData.rotation;
-        if (remoteSprite._targetX !== void 0 && remoteSprite.x === void 0) {
-          remoteSprite.x = remoteSprite._targetX;
-          remoteSprite.y = remoteSprite._targetY;
-          remoteSprite.rotation = remoteSprite._targetRotation || 0;
+    for (const namespace of namespacesToCheck) {
+      const sprites = state[namespace];
+      if (!sprites) continue;
+      for (const [key, tracked] of this.trackedSprites.entries()) {
+        const spriteData = sprites[key];
+        if (spriteData) {
+          this.applySpriteData(tracked.sprite, spriteData);
+        }
+      }
+      for (const [key, spriteData] of Object.entries(sprites)) {
+        if (this.trackedSprites.has(key)) continue;
+        const remoteSpriteData = this.remoteSprites.get(key);
+        if (remoteSpriteData && remoteSpriteData.namespace === namespace) {
+          const sprite = remoteSpriteData.sprite;
+          sprite._targetX = spriteData.x;
+          sprite._targetY = spriteData.y;
+          sprite._targetRotation = spriteData.rotation;
+          if (sprite._targetX !== void 0 && sprite.x === void 0) {
+            sprite.x = sprite._targetX;
+            sprite.y = sprite._targetY;
+            sprite.rotation = sprite._targetRotation || 0;
+          }
         }
       }
     }
@@ -1455,6 +1789,7 @@ var PhaserAdapter = class {
    *
    * @param key - Unique identifier for this sprite
    * @param sprite - The Phaser sprite to register
+   * @param namespace - Optional namespace (defaults to spriteNamespace config)
    *
    * @example
    * ```ts
@@ -1469,8 +1804,11 @@ var PhaserAdapter = class {
    * });
    * ```
    */
-  registerRemoteSprite(key, sprite) {
-    this.remoteSprites.set(key, sprite);
+  registerRemoteSprite(key, sprite, namespace) {
+    this.remoteSprites.set(key, {
+      sprite,
+      namespace: namespace || this.spriteNamespace
+    });
   }
   /**
    * Call this in your Phaser update() loop to smoothly interpolate remote sprites
@@ -1480,7 +1818,8 @@ var PhaserAdapter = class {
    */
   updateInterpolation() {
     if (this.isHost()) return;
-    for (const [key, sprite] of this.remoteSprites.entries()) {
+    for (const [key, remoteSpriteData] of this.remoteSprites.entries()) {
+      const sprite = remoteSpriteData.sprite;
       if (sprite._targetX !== void 0) {
         sprite.x += (sprite._targetX - sprite.x) * this.lerpFactor;
         sprite.y += (sprite._targetY - sprite.y) * this.lerpFactor;
@@ -1494,9 +1833,9 @@ var PhaserAdapter = class {
    * Unregister a remote sprite
    */
   unregisterRemoteSprite(key) {
-    const sprite = this.remoteSprites.get(key);
-    if (sprite && sprite.destroy) {
-      sprite.destroy();
+    const remoteSpriteData = this.remoteSprites.get(key);
+    if (remoteSpriteData?.sprite && remoteSpriteData.sprite.destroy) {
+      remoteSpriteData.sprite.destroy();
     }
     this.remoteSprites.delete(key);
   }
@@ -1545,7 +1884,16 @@ var PhaserAdapter = class {
    * ```
    */
   createSpriteManager(config) {
-    return new SpriteManager(this, config);
+    const manager = new SpriteManager(this, config);
+    this.registerSpriteManager(manager);
+    return manager;
+  }
+  /**
+   * Register a SpriteManager with this adapter for multi-namespace support
+   * Internal method - automatically called by createSpriteManager
+   */
+  registerSpriteManager(manager) {
+    this.spriteManagers.add(manager);
   }
   /**
    * Create a typed registry of sprite managers
@@ -1583,10 +1931,12 @@ var PhaserAdapter = class {
   createSpriteRegistry(config) {
     const registry = {};
     for (const [name, managerConfig] of Object.entries(config)) {
-      registry[name] = new SpriteManager(this, {
+      const manager = new SpriteManager(this, {
         ...managerConfig,
         namespace: `__sprites__.${name}`
       });
+      this.registerSpriteManager(manager);
+      registry[name] = manager;
     }
     return registry;
   }
@@ -1627,6 +1977,59 @@ var PhaserAdapter = class {
    */
   createPhysicsManager(config) {
     return new PhysicsManager(this.runtime, config);
+  }
+  /**
+   * Create a StateDrivenSpawner for automatic sprite spawning from state collections
+   *
+   * Eliminates the manual "check for new players/bullets" loop.
+   * Watches a state collection and automatically creates/removes sprites.
+   *
+   * @example
+   * ```ts
+   * // Players (uses object keys)
+   * const playerSpawner = adapter.createStateDrivenSpawner({
+   *   stateKey: 'players',
+   *   spriteManager: this.spriteManager,
+   *   keyPrefix: 'player-'
+   * });
+   *
+   * // Bullets (uses array with id field)
+   * const bulletSpawner = adapter.createStateDrivenSpawner({
+   *   stateKey: 'bullets',
+   *   spriteManager: this.bulletManager,
+   *   keyPrefix: 'bullet-',
+   *   keyField: 'id'
+   * });
+   *
+   * // In update():
+   * playerSpawner.update(); // HOST only
+   * ```
+   */
+  createStateDrivenSpawner(config) {
+    return new StateDrivenSpawner(this, config);
+  }
+  /**
+   * Create a HealthBarManager for automatic health bar management
+   *
+   * Auto-creates, positions, scales, and colors health bars for all sprites.
+   *
+   * @example
+   * ```ts
+   * const healthBars = adapter.createHealthBarManager({
+   *   spriteManager: this.spriteManager,
+   *   healthKey: 'health',
+   *   maxHealth: 100,
+   *   offset: { x: 0, y: -30 },
+   *   width: 50,
+   *   height: 5
+   * });
+   *
+   * // In update():
+   * healthBars.update();
+   * ```
+   */
+  createHealthBarManager(config) {
+    return new HealthBarManager(this, config);
   }
 };
 
@@ -1840,9 +2243,54 @@ function attachDirectionalIndicator(scene, sprite, config = {}) {
   };
 }
 
-// src/runtime.ts
+// src/helpers/DualRuntimeFactory.ts
 import { GameRuntime } from "@martini/core";
 import { LocalTransport } from "@martini/transport-local";
+function createDualRuntimePreview(config) {
+  try {
+    const roomId = config.roomId || `dual-preview-${Math.random().toString(36).substring(2, 8)}`;
+    const hostTransport = new LocalTransport({
+      roomId,
+      isHost: true
+    });
+    const clientTransport = new LocalTransport({
+      roomId,
+      isHost: false
+    });
+    const hostPlayerId = hostTransport.getPlayerId();
+    const clientPlayerId = clientTransport.getPlayerId();
+    const hostRuntime = new GameRuntime(config.game, hostTransport, {
+      isHost: true,
+      playerIds: [hostPlayerId, clientPlayerId]
+    });
+    config.onHostReady?.();
+    const clientRuntime = new GameRuntime(config.game, clientTransport, {
+      isHost: false,
+      playerIds: [hostPlayerId, clientPlayerId]
+    });
+    config.onClientReady?.();
+    const cleanup = () => {
+    };
+    return {
+      hostRuntime,
+      clientRuntime,
+      hostTransport,
+      clientTransport,
+      hostPlayerId,
+      clientPlayerId,
+      roomId,
+      cleanup
+    };
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error("Failed to create dual runtime preview");
+    config.onError?.(error);
+    throw error;
+  }
+}
+
+// src/runtime.ts
+import { GameRuntime as GameRuntime2 } from "@martini/core";
+import { LocalTransport as LocalTransport2 } from "@martini/transport-local";
 import { IframeBridgeTransport } from "@martini/transport-iframe-bridge";
 import Phaser from "phaser";
 function initializeGame(config) {
@@ -1853,7 +2301,7 @@ function initializeGame(config) {
     );
   }
   const transport = createTransport(platformConfig.transport);
-  const runtime = new GameRuntime(
+  const runtime = new GameRuntime2(
     config.game,
     transport,
     {
@@ -1888,7 +2336,7 @@ function createTransport(config) {
         isHost: config.isHost
       });
     case "local":
-      return new LocalTransport({
+      return new LocalTransport2({
         roomId: config.roomId,
         isHost: config.isHost
       });
@@ -1905,12 +2353,15 @@ function createTransport(config) {
 export {
   BUILT_IN_PROFILES,
   CollisionManager,
+  HealthBarManager,
   InputManager,
   PhaserAdapter,
   PhysicsManager,
   PlayerUIManager,
   SpriteManager,
+  StateDrivenSpawner,
   attachDirectionalIndicator,
+  createDualRuntimePreview,
   createPlayerHUD,
   createSpeedDisplay,
   getProfile,

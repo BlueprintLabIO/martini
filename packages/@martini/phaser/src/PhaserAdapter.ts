@@ -11,6 +11,8 @@ import { InputManager } from './helpers/InputManager.js';
 import { PlayerUIManager, type PlayerUIManagerConfig } from './helpers/PlayerUIManager.js';
 import { CollisionManager, type CollisionManagerConfig } from './helpers/CollisionManager.js';
 import { PhysicsManager, type PhysicsManagerConfig } from './helpers/PhysicsManager.js';
+import { StateDrivenSpawner, type StateDrivenSpawnerConfig } from './helpers/StateDrivenSpawner.js';
+import { HealthBarManager, type HealthBarConfig } from './helpers/HealthBarManager.js';
 
 export interface SpriteTrackingOptions {
   /** Sync interval in ms (default: 50ms / 20 FPS) */
@@ -63,11 +65,12 @@ export interface PhaserAdapterConfig {
  */
 export class PhaserAdapter<TState = any> {
   private trackedSprites: Map<string, { sprite: any; options: SpriteTrackingOptions }> = new Map();
-  private remoteSprites: Map<string, any> = new Map(); // Sprites created for remote players
+  private remoteSprites: Map<string, { sprite: any; namespace: string }> = new Map(); // Sprites created for remote players with their namespace
   private syncIntervalId: any = null;
   private readonly spriteNamespace: string;
   private readonly autoInterpolate: boolean;
   private readonly lerpFactor: number;
+  private spriteManagers: Set<{ namespace: string }> = new Set(); // Track all registered SpriteManagers
 
   constructor(
     private runtime: GameRuntime<TState>,
@@ -311,38 +314,61 @@ export class PhaserAdapter<TState = any> {
 
   /**
    * Update sprites from state (clients only)
+   *
+   * MULTI-NAMESPACE SUPPORT: This method now handles sprites from all registered
+   * namespaces, including both the default namespace and custom namespaces from
+   * createSpriteRegistry(). This fixes the bug where sprites in custom namespaces
+   * (like __sprites__.players) weren't getting interpolation targets on clients.
    */
   private updateSpritesFromState(state: any): void {
-    const sprites = state[this.spriteNamespace];
-    if (this.isHost() || !sprites) return;
+    if (this.isHost()) return;
 
-    // Update tracked sprites (sprites that exist on this client)
-    for (const [key, tracked] of this.trackedSprites.entries()) {
-      const spriteData = sprites[key];
-      if (spriteData) {
-        this.applySpriteData(tracked.sprite, spriteData);
-      }
+    // Collect all namespaces to check
+    const namespacesToCheck = new Set<string>();
+
+    // Add default namespace
+    namespacesToCheck.add(this.spriteNamespace);
+
+    // Add all registered SpriteManager namespaces
+    for (const manager of this.spriteManagers) {
+      namespacesToCheck.add(manager.namespace);
     }
 
-    // Update remote sprites (sprites from other players)
-    // Store target positions for interpolation
-    for (const [key, spriteData] of Object.entries(sprites)) {
-      // Skip if this is our own sprite
-      if (this.trackedSprites.has(key)) continue;
+    // Update sprites in each namespace
+    for (const namespace of namespacesToCheck) {
+      const sprites = state[namespace];
+      if (!sprites) continue; // Skip if this namespace doesn't exist in state
 
-      // If we have a remote sprite for this key, store target position
-      const remoteSprite = this.remoteSprites.get(key);
-      if (remoteSprite) {
-        // Store target position for smooth interpolation
-        remoteSprite._targetX = (spriteData as any).x;
-        remoteSprite._targetY = (spriteData as any).y;
-        remoteSprite._targetRotation = (spriteData as any).rotation;
+      // Update tracked sprites (sprites that exist on this client)
+      for (const [key, tracked] of this.trackedSprites.entries()) {
+        const spriteData = sprites[key];
+        if (spriteData) {
+          this.applySpriteData(tracked.sprite, spriteData);
+        }
+      }
 
-        // First update - snap to position immediately
-        if (remoteSprite._targetX !== undefined && remoteSprite.x === undefined) {
-          remoteSprite.x = remoteSprite._targetX;
-          remoteSprite.y = remoteSprite._targetY;
-          remoteSprite.rotation = remoteSprite._targetRotation || 0;
+      // Update remote sprites (sprites from other players)
+      // Store target positions for interpolation
+      for (const [key, spriteData] of Object.entries(sprites)) {
+        // Skip if this is our own sprite
+        if (this.trackedSprites.has(key)) continue;
+
+        // If we have a remote sprite for this key, store target position
+        const remoteSpriteData = this.remoteSprites.get(key);
+        if (remoteSpriteData && remoteSpriteData.namespace === namespace) {
+          const sprite = remoteSpriteData.sprite;
+
+          // Store target position for smooth interpolation
+          sprite._targetX = (spriteData as any).x;
+          sprite._targetY = (spriteData as any).y;
+          sprite._targetRotation = (spriteData as any).rotation;
+
+          // First update - snap to position immediately
+          if (sprite._targetX !== undefined && sprite.x === undefined) {
+            sprite.x = sprite._targetX;
+            sprite.y = sprite._targetY;
+            sprite.rotation = sprite._targetRotation || 0;
+          }
         }
       }
     }
@@ -366,6 +392,7 @@ export class PhaserAdapter<TState = any> {
    *
    * @param key - Unique identifier for this sprite
    * @param sprite - The Phaser sprite to register
+   * @param namespace - Optional namespace (defaults to spriteNamespace config)
    *
    * @example
    * ```ts
@@ -380,8 +407,11 @@ export class PhaserAdapter<TState = any> {
    * });
    * ```
    */
-  registerRemoteSprite(key: string, sprite: any): void {
-    this.remoteSprites.set(key, sprite);
+  registerRemoteSprite(key: string, sprite: any, namespace?: string): void {
+    this.remoteSprites.set(key, {
+      sprite,
+      namespace: namespace || this.spriteNamespace
+    });
   }
 
   /**
@@ -393,7 +423,8 @@ export class PhaserAdapter<TState = any> {
   updateInterpolation(): void {
     if (this.isHost()) return; // Only clients interpolate
 
-    for (const [key, sprite] of this.remoteSprites.entries()) {
+    for (const [key, remoteSpriteData] of this.remoteSprites.entries()) {
+      const sprite = remoteSpriteData.sprite;
       if (sprite._targetX !== undefined) {
         // Lerp towards target position
         sprite.x += (sprite._targetX - sprite.x) * this.lerpFactor;
@@ -410,9 +441,9 @@ export class PhaserAdapter<TState = any> {
    * Unregister a remote sprite
    */
   unregisterRemoteSprite(key: string): void {
-    const sprite = this.remoteSprites.get(key);
-    if (sprite && sprite.destroy) {
-      sprite.destroy();
+    const remoteSpriteData = this.remoteSprites.get(key);
+    if (remoteSpriteData?.sprite && remoteSpriteData.sprite.destroy) {
+      remoteSpriteData.sprite.destroy();
     }
     this.remoteSprites.delete(key);
   }
@@ -468,7 +499,18 @@ export class PhaserAdapter<TState = any> {
   createSpriteManager<TData extends { x: number; y: number; [key: string]: any }>(
     config: SpriteManagerConfig<TData>
   ): SpriteManager<TData> {
-    return new SpriteManager(this, config);
+    const manager = new SpriteManager(this, config);
+    // Register the namespace for multi-namespace interpolation support
+    this.registerSpriteManager(manager);
+    return manager;
+  }
+
+  /**
+   * Register a SpriteManager with this adapter for multi-namespace support
+   * Internal method - automatically called by createSpriteManager
+   */
+  registerSpriteManager(manager: { namespace: string }): void {
+    this.spriteManagers.add(manager);
   }
 
   /**
@@ -514,10 +556,13 @@ export class PhaserAdapter<TState = any> {
     const registry: any = {};
 
     for (const [name, managerConfig] of Object.entries(config)) {
-      registry[name] = new SpriteManager(this, {
+      const manager = new SpriteManager(this, {
         ...managerConfig,
         namespace: `__sprites__.${name}`
       });
+      // Register the namespace for multi-namespace interpolation support
+      this.registerSpriteManager(manager);
+      registry[name] = manager;
     }
 
     return registry;
@@ -563,5 +608,60 @@ export class PhaserAdapter<TState = any> {
    */
   createPhysicsManager(config: PhysicsManagerConfig): PhysicsManager {
     return new PhysicsManager(this.runtime, config);
+  }
+
+  /**
+   * Create a StateDrivenSpawner for automatic sprite spawning from state collections
+   *
+   * Eliminates the manual "check for new players/bullets" loop.
+   * Watches a state collection and automatically creates/removes sprites.
+   *
+   * @example
+   * ```ts
+   * // Players (uses object keys)
+   * const playerSpawner = adapter.createStateDrivenSpawner({
+   *   stateKey: 'players',
+   *   spriteManager: this.spriteManager,
+   *   keyPrefix: 'player-'
+   * });
+   *
+   * // Bullets (uses array with id field)
+   * const bulletSpawner = adapter.createStateDrivenSpawner({
+   *   stateKey: 'bullets',
+   *   spriteManager: this.bulletManager,
+   *   keyPrefix: 'bullet-',
+   *   keyField: 'id'
+   * });
+   *
+   * // In update():
+   * playerSpawner.update(); // HOST only
+   * ```
+   */
+  createStateDrivenSpawner(config: StateDrivenSpawnerConfig): StateDrivenSpawner {
+    return new StateDrivenSpawner(this, config);
+  }
+
+  /**
+   * Create a HealthBarManager for automatic health bar management
+   *
+   * Auto-creates, positions, scales, and colors health bars for all sprites.
+   *
+   * @example
+   * ```ts
+   * const healthBars = adapter.createHealthBarManager({
+   *   spriteManager: this.spriteManager,
+   *   healthKey: 'health',
+   *   maxHealth: 100,
+   *   offset: { x: 0, y: -30 },
+   *   width: 50,
+   *   height: 5
+   * });
+   *
+   * // In update():
+   * healthBars.update();
+   * ```
+   */
+  createHealthBarManager(config: HealthBarConfig): HealthBarManager {
+    return new HealthBarManager(this, config);
   }
 }

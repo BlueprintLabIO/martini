@@ -173,6 +173,34 @@ export declare class InputManager {
      */
     mergeProfiles(profileNames: string[]): void;
     /**
+     * Bind edge-triggered actions (fire once on press, not every frame)
+     * Perfect for shoot, jump, interact, etc.
+     *
+     * @example
+     * ```ts
+     * // Shoot on space press
+     * inputManager.bindEdgeTrigger('Space', 'shoot');
+     *
+     * // Jump on up arrow press
+     * inputManager.bindEdgeTrigger('ArrowUp', 'jump');
+     *
+     * // Multiple edge triggers
+     * inputManager.bindEdgeTriggers({
+     *   'Space': 'shoot',
+     *   'E': 'interact',
+     *   'R': 'reload'
+     * });
+     * ```
+     */
+    bindEdgeTrigger(key: string, action: string, input?: any): void;
+    /**
+     * Bind multiple edge-triggered actions at once
+     */
+    bindEdgeTriggers(bindings: Record<string, string | {
+        action: string;
+        input?: any;
+    }>): void;
+    /**
      * Clear all bindings
      */
     clear(): void;

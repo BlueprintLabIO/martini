@@ -193,7 +193,7 @@ export class SpriteManager {
                 this.sprites.set(key, sprite);
                 this.spriteData.set(key, data);
                 this.group.add(sprite); // Add to group on client side too
-                this.adapter.registerRemoteSprite(key, sprite);
+                this.adapter.registerRemoteSprite(key, sprite, this.namespace);
                 this.createLabel(key, data, sprite);
                 // Call onAdd hook (if provided) - runs for late-joining sprites on clients
                 if (this.config.onAdd) {
