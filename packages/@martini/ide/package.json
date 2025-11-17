@@ -67,6 +67,7 @@
 		"@codemirror/view": "^6.38.6",
 		"@codesandbox/sandpack-client": "^2.19.8",
 		"@martini/core": "workspace:*",
+		"@martini/devtools": "workspace:*",
 		"@martini/phaser": "workspace:*",
 		"@martini/transport-iframe-bridge": "workspace:*",
 		"@martini/transport-local": "workspace:*",

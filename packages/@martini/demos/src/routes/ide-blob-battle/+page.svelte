@@ -247,7 +247,7 @@ export function createScene(runtime: GameRuntime) {
 				spriteManager: this.foodManager,
 				keyPrefix: 'food-',
 				keyField: 'id', // Use food.id as the key
-				syncProperties: ['x', 'y'] // Auto-sync positions from state
+				sync: { properties: ['x', 'y'] } // Auto-sync positions from state
 			});
 
 			// Mouse input for blob movement

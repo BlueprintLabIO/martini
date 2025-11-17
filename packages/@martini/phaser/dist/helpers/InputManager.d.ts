@@ -205,6 +205,33 @@ export declare class InputManager {
      */
     clear(): void;
     /**
+     * **NEW: Bridge input to actions automatically**
+     *
+     * Eliminates manual edge detection and action submission boilerplate.
+     * Integrates with input profiles for complete automation.
+     *
+     * @example
+     * ```ts
+     * // Simple: Use existing profile bindings
+     * inputManager.useProfile('topDown');
+     * inputManager.bridgeToActions({
+     *   move: 'continuous',  // submits every frame from profile
+     *   shoot: 'edge'        // submits once on press from profile
+     * });
+     *
+     * // Advanced: Custom key mapping
+     * inputManager.bridgeToActions({
+     *   move: { type: 'continuous', keys: { left: 'A', right: 'D', up: 'W', down: 'S' } },
+     *   shoot: { type: 'edge', key: 'SPACE' }
+     * });
+     * ```
+     */
+    bridgeToActions(config: Record<string, 'continuous' | 'edge' | {
+        type: 'continuous' | 'edge';
+        key?: string;
+        keys?: Record<string, string>;
+    }>): void;
+    /**
      * Get runtime for advanced usage
      */
     getRuntime(): GameRuntime;

@@ -377,6 +377,9 @@ importers:
       '@martini/core':
         specifier: workspace:*
         version: link:../core
+      '@martini/devtools':
+        specifier: workspace:*
+        version: link:../devtools
       '@martini/phaser':
         specifier: workspace:*
         version: link:../phaser

@@ -96,13 +96,41 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
      */
     staticProperties?: (keyof TData & string)[];
     /**
-     * Properties to sync (default: x, y, rotation, alpha)
+     * **Unified Sync Configuration**
+     *
+     * Controls automatic property synchronization between sprites and state.
+     *
+     * @example
+     * ```ts
+     * // Default: Sync sprite → state (physics-driven, host only)
+     * sync: {
+     *   properties: ['x', 'y', 'rotation', 'alpha'],  // default
+     *   interval: 50  // ms, default
+     * }
+     *
+     * // State-driven: Sync state → sprite (rare, use StateDrivenSpawner instead)
+     * sync: {
+     *   properties: ['x', 'y'],
+     *   direction: 'toSprite'
+     * }
+     * ```
      */
-    syncProperties?: string[];
-    /**
-     * Sync interval in ms (default: 50ms / 20 FPS)
-     */
-    syncInterval?: number;
+    sync?: {
+        /**
+         * Properties to sync (default: ['x', 'y', 'rotation', 'alpha'])
+         */
+        properties?: string[];
+        /**
+         * Sync direction (default: 'toState' for SpriteManager)
+         * - 'toState': Sprite properties → State (physics-driven, host only)
+         * - 'toSprite': State properties → Sprite (state-driven, rare)
+         */
+        direction?: 'toState' | 'toSprite';
+        /**
+         * Sync interval in milliseconds (default: 50ms / 20 FPS)
+         */
+        interval?: number;
+    };
     /**
      * Optional label configuration. When provided, SpriteManager renders labels above sprites.
      */

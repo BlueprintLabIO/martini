@@ -8,6 +8,9 @@
  * **PIT OF SUCCESS: Positions sync from state by default!**
  * Sprites automatically follow state.x/y changes unless you opt-out.
  *
+ * **NEW: Automatic physics integration!**
+ * Projectiles/moving entities automatically update from velocity - no manual position updates needed!
+ *
  * Usage:
  * ```ts
  * // State-driven entities (default - positions sync automatically!)
@@ -17,6 +20,19 @@
  *   keyPrefix: 'player-'
  *   // syncProperties: ['x', 'y'] is automatic! Just mutate state and sprites follow.
  * });
+ *
+ * // NEW: Velocity-based movement (projectiles, moving entities)
+ * const bulletSpawner = adapter.createStateDrivenSpawner({
+ *   stateKey: 'bullets',
+ *   spriteManager: this.bulletManager,
+ *   keyField: 'id',
+ *   physics: {
+ *     velocityFromState: { x: 'velocityX', y: 'velocityY' }
+ *   }
+ * });
+ *
+ * // In scene.update():
+ * bulletSpawner.update(delta); // Automatically updates positions from velocity!
  *
  * // Physics-driven entities (opt-out of position sync)
  * const paddleSpawner = adapter.createStateDrivenSpawner({
@@ -37,6 +53,7 @@
  * This automatically:
  * - Creates sprites when new entries appear in state
  * - **Syncs x,y from state to sprites by default (opt-out with syncProperties: [])**
+ * - **NEW: Updates positions from velocity automatically (opt-in with physics config)**
  * - Removes sprites when entries are deleted
  * - Works on both HOST (initial + late joins) and CLIENT (state sync)
  * - Handles arrays (bullets) and objects (players)
@@ -44,6 +61,30 @@
 
 import type { PhaserAdapter } from '../PhaserAdapter.js';
 import type { SpriteManager } from './SpriteManager.js';
+
+export interface PhysicsConfig {
+  /**
+   * Automatically update position from velocity in state
+   *
+   * @example
+   * ```ts
+   * velocityFromState: { x: 'velocityX', y: 'velocityY' }
+   * ```
+   *
+   * This will automatically apply:
+   * ```ts
+   * data.x += data.velocityX * deltaSeconds;
+   * data.y += data.velocityY * deltaSeconds;
+   * ```
+   */
+  velocityFromState?: { x: string; y: string };
+
+  /**
+   * Future: Acceleration support
+   * acceleration?: { x: string; y: string };
+   * friction?: number;
+   */
+}
 
 export interface StateDrivenSpawnerConfig {
   /**
@@ -78,30 +119,35 @@ export interface StateDrivenSpawnerConfig {
   filter?: (data: any) => boolean;
 
   /**
-   * Properties to sync from state to sprites on every update
-   * **DEFAULT: ['x', 'y']** - Positions sync automatically (PIT OF SUCCESS!)
+   * **Unified Sync Configuration**
    *
-   * Most state-driven entities want state-driven movement, so we default to syncing
-   * positions. This eliminates the "forgot to sync positions" bug.
-   *
-   * **When to override:**
-   * - ✅ **Omit for default** → Positions sync automatically
-   * - ✅ **Custom props:** `['x', 'y', 'rotation', 'alpha']` → Sync more properties
-   * - ✅ **Opt-out:** `[]` → Physics-driven (physics body controls position)
+   * Controls automatic property synchronization from state to sprites.
+   * **DEFAULT: Syncs ['x', 'y'] from state to sprites** (PIT OF SUCCESS!)
    *
    * @example
    * ```ts
-   * // State-driven entities (default)
-   * // syncProperties: ['x', 'y'] is automatic!
+   * // Default: State → Sprite position sync (automatic!)
+   * // sync: { properties: ['x', 'y'], direction: 'toSprite' }
    *
-   * // Physics-driven entities (opt-out)
-   * syncProperties: [] // Physics body controls position
+   * // Physics-driven: No sync (physics body controls position)
+   * sync: { properties: [] }
    *
    * // Custom properties
-   * syncProperties: ['x', 'y', 'rotation', 'alpha']
+   * sync: { properties: ['x', 'y', 'rotation', 'alpha'] }
    * ```
    */
-  syncProperties?: string[];
+  sync?: {
+    /**
+     * Properties to sync (default: ['x', 'y'])
+     */
+    properties?: string[];
+
+    /**
+     * Sync direction (always 'toSprite' for StateDrivenSpawner)
+     */
+    direction?: 'toSprite';
+  };
+
 
   /**
    * Custom update function for more complex sprite syncing
@@ -117,6 +163,35 @@ export interface StateDrivenSpawnerConfig {
    * ```
    */
   onUpdateSprite?: (sprite: any, data: any) => void;
+
+  /**
+   * **NEW: Automatic physics integration**
+   *
+   * Automatically update entity positions from velocity in state.
+   * Eliminates manual `entity.x += entity.velocityX * deltaSeconds` boilerplate.
+   *
+   * **Benefits:**
+   * - 80% less code for projectiles/moving entities
+   * - "Pit of success" - velocity-based movement just works
+   * - Consistent with PhysicsManager mental model
+   *
+   * @example
+   * ```ts
+   * // Simple projectiles
+   * const bulletSpawner = adapter.createStateDrivenSpawner({
+   *   stateKey: 'bullets',
+   *   spriteManager: bulletManager,
+   *   keyField: 'id',
+   *   physics: {
+   *     velocityFromState: { x: 'velocityX', y: 'velocityY' }
+   *   }
+   * });
+   *
+   * // In update loop:
+   * bulletSpawner.updatePhysics(delta); // Automatically updates positions!
+   * ```
+   */
+  physics?: PhysicsConfig;
 }
 
 export class StateDrivenSpawner {
@@ -129,12 +204,9 @@ export class StateDrivenSpawner {
     this.adapter = adapter;
 
     // PIT OF SUCCESS: Default to syncing positions from state
-    // This eliminates the "forgot to sync positions" bug that affects state-driven entities.
-    // Most games using StateDrivenSpawner want state-driven movement (not physics-driven).
-    // Physics-based games typically don't mutate state.x/y, so this default is safe.
-    // Users can opt-out with syncProperties: [] for manual control.
-    if (!config.syncProperties && !config.onUpdateSprite) {
-      config.syncProperties = ['x', 'y'];
+    if (!config.sync?.properties && !config.onUpdateSprite) {
+      // Default: sync x,y from state to sprites
+      config.sync = { properties: ['x', 'y'], direction: 'toSprite' };
     }
 
     this.config = config;
@@ -155,14 +227,97 @@ export class StateDrivenSpawner {
   /**
    * Call this in scene.update() (HOST ONLY)
    * Checks for new entries in the state collection and spawns sprites
+   *
+   * @param delta - Optional delta time in milliseconds for physics updates
+   *
+   * @example
+   * ```ts
+   * update(time: number, delta: number) {
+   *   // Without physics: just sync spawning/despawning
+   *   spawner.update();
+   *
+   *   // With physics: update positions from velocity
+   *   spawner.update(delta);
+   * }
+   * ```
    */
-  update(): void {
+  update(delta?: number): void {
     if (!this.adapter.isHost()) {
       return; // Client uses onChange subscription instead
     }
 
+    // Update physics before syncing (so new positions are synced)
+    if (delta !== undefined && this.config.physics) {
+      this.updatePhysics(delta);
+    }
+
     const state = this.adapter.getState();
     this.syncFromState(state);
+  }
+
+  /**
+   * **NEW: Automatic physics updates**
+   *
+   * Updates entity positions from velocity in state.
+   * Call this in your scene.update() with delta time.
+   *
+   * **Only runs on HOST** - clients receive position updates via state sync.
+   *
+   * @param delta - Delta time in milliseconds
+   *
+   * @example
+   * ```ts
+   * update(time: number, delta: number) {
+   *   bulletSpawner.updatePhysics(delta);
+   *   bulletSpawner.update(); // Sync sprites to new positions
+   * }
+   * ```
+   */
+  updatePhysics(delta: number): void {
+    if (!this.adapter.isHost()) {
+      return; // Only host updates physics - clients get state sync
+    }
+
+    if (!this.config.physics?.velocityFromState) {
+      return; // No physics config
+    }
+
+    const state = this.adapter.getState();
+    const collection = state[this.config.stateKey];
+    if (!collection) return;
+
+    const deltaSeconds = delta / 1000;
+    const { x: velXKey, y: velYKey } = this.config.physics.velocityFromState;
+
+    // Determine if collection is array or object
+    const isArray = Array.isArray(collection);
+
+    // Extract entries
+    const entries: Array<[string, any]> = isArray
+      ? collection.map((item: any) => {
+          const key = this.config.keyField ? item[this.config.keyField] : item.id;
+          return [String(key), item];
+        })
+      : Object.entries(collection);
+
+    // Update positions from velocity
+    for (const [_, data] of entries) {
+      // Apply filter if provided
+      if (this.config.filter && !this.config.filter(data)) {
+        continue;
+      }
+
+      // Check if velocity properties exist in state
+      if (velXKey in data && velYKey in data) {
+        // Update position from velocity
+        // Initialize position if missing
+        if (!('x' in data)) data.x = 0;
+        if (!('y' in data)) data.y = 0;
+
+        data.x += data[velXKey] * deltaSeconds;
+        data.y += data[velYKey] * deltaSeconds;
+      }
+    }
   }
 
   /**
@@ -247,9 +402,10 @@ export class StateDrivenSpawner {
       return;
     }
 
-    // Sync properties (opt-in only - no default!)
-    if (this.config.syncProperties) {
-      for (const prop of this.config.syncProperties) {
+    // Sync properties using unified API
+    const syncProperties = this.config.sync?.properties;
+    if (syncProperties) {
+      for (const prop of syncProperties) {
         if (prop in data && sprite[prop] !== undefined) {
           sprite[prop] = data[prop];
         }

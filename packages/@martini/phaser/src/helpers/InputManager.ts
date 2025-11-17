@@ -415,6 +415,59 @@ export class InputManager {
   }
 
   /**
+   * **NEW: Bridge input to actions automatically**
+   *
+   * Eliminates manual edge detection and action submission boilerplate.
+   * Integrates with input profiles for complete automation.
+   *
+   * @example
+   * ```ts
+   * // Simple: Use existing profile bindings
+   * inputManager.useProfile('topDown');
+   * inputManager.bridgeToActions({
+   *   move: 'continuous',  // submits every frame from profile
+   *   shoot: 'edge'        // submits once on press from profile
+   * });
+   *
+   * // Advanced: Custom key mapping
+   * inputManager.bridgeToActions({
+   *   move: { type: 'continuous', keys: { left: 'A', right: 'D', up: 'W', down: 'S' } },
+   *   shoot: { type: 'edge', key: 'SPACE' }
+   * });
+   * ```
+   */
+  bridgeToActions(config: Record<string, 'continuous' | 'edge' | {
+    type: 'continuous' | 'edge';
+    key?: string;
+    keys?: Record<string, string>;
+  }>): void {
+    for (const [action, actionConfig] of Object.entries(config)) {
+      const normalized = typeof actionConfig === 'string'
+        ? { type: actionConfig }
+        : actionConfig;
+
+      if (normalized.type === 'continuous') {
+        // For continuous actions, check if we have aggregated bindings
+        const aggregated = this.aggregatedBindings.get(action);
+        if (aggregated) {
+          // Already configured via useProfile/bindKeysAggregated
+          continue;
+        }
+
+        // Set up new aggregated binding if keys provided
+        if (normalized.keys) {
+          this.bindKeysAggregated(action, normalized.keys, { mode: 'continuous' });
+        }
+      } else if (normalized.type === 'edge') {
+        // For edge triggers, set up binding if key provided
+        if (normalized.key) {
+          this.bindEdgeTrigger(normalized.key, action);
+        }
+      }
+    }
+  }
+
+  /**
    * Get runtime for advanced usage
    */
   getRuntime(): GameRuntime {

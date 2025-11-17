@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import type { StateSnapshot, ActionRecord } from '@martini/devtools';
 
 	interface Props {
 		role: 'host' | 'client';
 		logs?: Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>;
 		status?: 'disconnected' | 'connecting' | 'connected';
+		stateSnapshots?: StateSnapshot[];
+		actionHistory?: ActionRecord[];
 		onClose?: () => void;
 	}
 
-	let { role, logs = [], status = 'disconnected', onClose }: Props = $props();
+	let { role, logs = [], status = 'disconnected', stateSnapshots = [], actionHistory = [], onClose }: Props = $props();
 
 	let activeTab = $state<'console' | 'state' | 'actions'>('console');
 	let isMinimized = $state(false);
@@ -143,15 +146,53 @@
 				</div>
 			{:else if activeTab === 'state'}
 				<div class="state-panel">
-					<div class="empty-state">
-						<p>State inspector coming soon</p>
-					</div>
+					{#if stateSnapshots.length === 0}
+						<div class="empty-state">
+							<p>No state snapshots yet</p>
+						</div>
+					{:else}
+						{@const latestSnapshot = stateSnapshots[stateSnapshots.length - 1]}
+						<div class="state-viewer">
+							<div class="state-header">
+								<span class="state-label">Current State</span>
+								<span class="state-timestamp">{formatTimestamp(latestSnapshot.timestamp)}</span>
+							</div>
+							<div class="state-content">
+								<pre class="state-json">{JSON.stringify(latestSnapshot.state, null, 2)}</pre>
+							</div>
+							<div class="state-footer">
+								<span class="state-count">{stateSnapshots.length} snapshot{stateSnapshots.length === 1 ? '' : 's'}</span>
+							</div>
+						</div>
+					{/if}
 				</div>
 			{:else if activeTab === 'actions'}
 				<div class="actions-panel">
-					<div class="empty-state">
-						<p>Action history coming soon</p>
-					</div>
+					{#if actionHistory.length === 0}
+						<div class="empty-state">
+							<p>No actions recorded yet</p>
+						</div>
+					{:else}
+						<div class="actions-list">
+							{#each actionHistory.slice().reverse() as action, index (`${action.timestamp}-${index}`)}
+								<div class="action-entry">
+									<span class="action-timestamp">{formatTimestamp(action.timestamp)}</span>
+									<span class="action-name">{action.actionName}</span>
+									{#if action.playerId}
+										<span class="action-player" title="Player ID">{action.playerId.substring(0, 8)}</span>
+									{/if}
+									{#if action.targetId}
+										<span class="action-target" title="Target ID">→ {action.targetId.substring(0, 8)}</span>
+									{/if}
+									{#if action.input && Object.keys(action.input).length > 0}
+										<div class="action-input">
+											<pre>{JSON.stringify(action.input, null, 2)}</pre>
+										</div>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -388,5 +429,145 @@
 
 	.log-level-log .log-message {
 		color: #d4d4d4;
+	}
+
+	/* State Panel Styles */
+	.state-viewer {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		height: 100%;
+	}
+
+	.state-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.5rem;
+		background: rgba(37, 37, 38, 0.5);
+		border-radius: 4px;
+		border: 1px solid rgba(62, 62, 66, 0.5);
+	}
+
+	.state-label {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		color: #4ec9b0;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.state-timestamp {
+		font-size: 0.625rem;
+		color: #6e6e6e;
+	}
+
+	.state-content {
+		flex: 1;
+		overflow: auto;
+		background: rgba(20, 20, 20, 0.5);
+		border-radius: 4px;
+		border: 1px solid rgba(62, 62, 66, 0.3);
+		padding: 0.5rem;
+		min-height: 0;
+	}
+
+	.state-json {
+		margin: 0;
+		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+		font-size: 0.6875rem;
+		line-height: 1.5;
+		color: #d4d4d4;
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	.state-footer {
+		display: flex;
+		justify-content: flex-end;
+		padding: 0.25rem 0.5rem;
+	}
+
+	.state-count {
+		font-size: 0.625rem;
+		color: #6e6e6e;
+	}
+
+	/* Actions Panel Styles */
+	.actions-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+
+	.action-entry {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.5rem;
+		background: rgba(37, 37, 38, 0.5);
+		border-radius: 4px;
+		border: 1px solid rgba(62, 62, 66, 0.3);
+		transition: background 0.15s;
+	}
+
+	.action-entry:hover {
+		background: rgba(42, 42, 42, 0.8);
+	}
+
+	.action-entry > :first-child {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.action-timestamp {
+		color: #6e6e6e;
+		font-size: 0.625rem;
+	}
+
+	.action-name {
+		color: #dcdcaa;
+		font-weight: 600;
+		font-size: 0.6875rem;
+	}
+
+	.action-player {
+		padding: 0.0625rem 0.375rem;
+		border-radius: 3px;
+		font-size: 0.625rem;
+		background: rgba(78, 201, 176, 0.15);
+		color: #4ec9b0;
+		border: 1px solid rgba(78, 201, 176, 0.25);
+		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+	}
+
+	.action-target {
+		padding: 0.0625rem 0.375rem;
+		border-radius: 3px;
+		font-size: 0.625rem;
+		background: rgba(206, 145, 120, 0.15);
+		color: #ce9178;
+		border: 1px solid rgba(206, 145, 120, 0.25);
+		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+	}
+
+	.action-input {
+		margin-top: 0.25rem;
+		padding: 0.375rem;
+		background: rgba(20, 20, 20, 0.5);
+		border-radius: 3px;
+		border: 1px solid rgba(62, 62, 66, 0.3);
+	}
+
+	.action-input pre {
+		margin: 0;
+		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+		font-size: 0.625rem;
+		line-height: 1.4;
+		color: #d4d4d4;
+		white-space: pre-wrap;
+		word-break: break-word;
 	}
 </style>

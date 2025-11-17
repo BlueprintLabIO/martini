@@ -73,9 +73,11 @@ var SpriteManager = class {
         this.adapter.setSpriteStaticData(key, staticData, this.namespace);
       }
     }
+    const syncProperties = this.config.sync?.properties || ["x", "y", "rotation", "alpha"];
+    const syncInterval = this.config.sync?.interval;
     this.adapter.trackSprite(sprite, key, {
-      properties: this.config.syncProperties || ["x", "y", "rotation", "alpha"],
-      syncInterval: this.config.syncInterval,
+      properties: syncProperties,
+      syncInterval,
       namespace: this.namespace
     });
     if (this.config.onAdd) {
@@ -697,6 +699,46 @@ var InputManager = class {
     this.pressedKeys.clear();
   }
   /**
+   * **NEW: Bridge input to actions automatically**
+   *
+   * Eliminates manual edge detection and action submission boilerplate.
+   * Integrates with input profiles for complete automation.
+   *
+   * @example
+   * ```ts
+   * // Simple: Use existing profile bindings
+   * inputManager.useProfile('topDown');
+   * inputManager.bridgeToActions({
+   *   move: 'continuous',  // submits every frame from profile
+   *   shoot: 'edge'        // submits once on press from profile
+   * });
+   *
+   * // Advanced: Custom key mapping
+   * inputManager.bridgeToActions({
+   *   move: { type: 'continuous', keys: { left: 'A', right: 'D', up: 'W', down: 'S' } },
+   *   shoot: { type: 'edge', key: 'SPACE' }
+   * });
+   * ```
+   */
+  bridgeToActions(config) {
+    for (const [action, actionConfig] of Object.entries(config)) {
+      const normalized = typeof actionConfig === "string" ? { type: actionConfig } : actionConfig;
+      if (normalized.type === "continuous") {
+        const aggregated = this.aggregatedBindings.get(action);
+        if (aggregated) {
+          continue;
+        }
+        if (normalized.keys) {
+          this.bindKeysAggregated(action, normalized.keys, { mode: "continuous" });
+        }
+      } else if (normalized.type === "edge") {
+        if (normalized.key) {
+          this.bindEdgeTrigger(normalized.key, action);
+        }
+      }
+    }
+  }
+  /**
    * Get runtime for advanced usage
    */
   getRuntime() {
@@ -1278,8 +1320,8 @@ var StateDrivenSpawner = class {
     __publicField(this, "trackedKeys", /* @__PURE__ */ new Set());
     __publicField(this, "unsubscribe");
     this.adapter = adapter;
-    if (!config.syncProperties && !config.onUpdateSprite) {
-      config.syncProperties = ["x", "y"];
+    if (!config.sync?.properties && !config.onUpdateSprite) {
+      config.sync = { properties: ["x", "y"], direction: "toSprite" };
     }
     this.config = config;
     if (adapter.isHost()) {
@@ -1292,13 +1334,76 @@ var StateDrivenSpawner = class {
   /**
    * Call this in scene.update() (HOST ONLY)
    * Checks for new entries in the state collection and spawns sprites
+   *
+   * @param delta - Optional delta time in milliseconds for physics updates
+   *
+   * @example
+   * ```ts
+   * update(time: number, delta: number) {
+   *   // Without physics: just sync spawning/despawning
+   *   spawner.update();
+   *
+   *   // With physics: update positions from velocity
+   *   spawner.update(delta);
+   * }
+   * ```
    */
-  update() {
+  update(delta) {
     if (!this.adapter.isHost()) {
       return;
     }
+    if (delta !== void 0 && this.config.physics) {
+      this.updatePhysics(delta);
+    }
     const state = this.adapter.getState();
     this.syncFromState(state);
+  }
+  /**
+   * **NEW: Automatic physics updates**
+   *
+   * Updates entity positions from velocity in state.
+   * Call this in your scene.update() with delta time.
+   *
+   * **Only runs on HOST** - clients receive position updates via state sync.
+   *
+   * @param delta - Delta time in milliseconds
+   *
+   * @example
+   * ```ts
+   * update(time: number, delta: number) {
+   *   bulletSpawner.updatePhysics(delta);
+   *   bulletSpawner.update(); // Sync sprites to new positions
+   * }
+   * ```
+   */
+  updatePhysics(delta) {
+    if (!this.adapter.isHost()) {
+      return;
+    }
+    if (!this.config.physics?.velocityFromState) {
+      return;
+    }
+    const state = this.adapter.getState();
+    const collection = state[this.config.stateKey];
+    if (!collection) return;
+    const deltaSeconds = delta / 1e3;
+    const { x: velXKey, y: velYKey } = this.config.physics.velocityFromState;
+    const isArray = Array.isArray(collection);
+    const entries = isArray ? collection.map((item) => {
+      const key = this.config.keyField ? item[this.config.keyField] : item.id;
+      return [String(key), item];
+    }) : Object.entries(collection);
+    for (const [_, data] of entries) {
+      if (this.config.filter && !this.config.filter(data)) {
+        continue;
+      }
+      if (velXKey in data && velYKey in data) {
+        if (!("x" in data)) data.x = 0;
+        if (!("y" in data)) data.y = 0;
+        data.x += data[velXKey] * deltaSeconds;
+        data.y += data[velYKey] * deltaSeconds;
+      }
+    }
   }
   /**
    * Manually trigger a sync (useful for initial spawn in create())
@@ -1357,8 +1462,9 @@ var StateDrivenSpawner = class {
       this.config.onUpdateSprite(sprite, data);
       return;
     }
-    if (this.config.syncProperties) {
-      for (const prop of this.config.syncProperties) {
+    const syncProperties = this.config.sync?.properties;
+    if (syncProperties) {
+      for (const prop of syncProperties) {
         if (prop in data && sprite[prop] !== void 0) {
           sprite[prop] = data[prop];
         }

@@ -297,7 +297,7 @@ export function createScene(runtime: GameRuntime) {
 				spriteManager: this.bulletManager,
 				keyPrefix: 'bullet-',
 				keyField: 'id', // Use bullet.id as the key
-				syncProperties: ['x', 'y'] // Auto-sync positions from state!
+				sync: { properties: ['x', 'y'] } // Auto-sync positions from state!
 			});
 
 			// NEW: HealthBarManager - auto-creates, positions, scales, colors!
