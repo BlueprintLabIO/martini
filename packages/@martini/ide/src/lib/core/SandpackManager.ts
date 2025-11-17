@@ -67,7 +67,7 @@ export class SandpackManager {
 
 	constructor(options: SandpackManagerOptions) {
 		this.options = options;
-		this.devToolsEnabled = options.enableDevTools !== false;
+		this.devToolsEnabled = options.enableDevTools === true; // Off by default
 		// Always setup DevTools listener (lightweight)
 		this.setupDevToolsListener();
 	}

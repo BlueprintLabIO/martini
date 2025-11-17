@@ -99,7 +99,7 @@
 			role,
 			roomId: sessionRoomId,
 			transportType,
-			enableDevTools: !hideDevTools, // Start with DevTools enabled if not hidden
+			// DevTools off by default - can be enabled via setDevToolsEnabled()
 			onError: (err) => {
 				status = 'error';
 				error = err;
