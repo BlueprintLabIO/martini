@@ -21,6 +21,7 @@ export class StateInspector {
         this.totalStateChanges = 0;
         this.actionsByName = {};
         this.excludedActions = 0;
+        this.checkpointInterval = 50; // Full state every 50 snapshots
         this.lastSnapshotState = null;
         this.lastSnapshotTimestamp = 0;
         this.snapshotIdCounter = 0;
@@ -38,6 +39,7 @@ export class StateInspector {
         this.snapshotIntervalMs = options.snapshotIntervalMs ?? 250;
         this.actionAggregationWindowMs = options.actionAggregationWindowMs ?? 200;
         this.ignoreActions = new Set(options.ignoreActions ?? []);
+        this.maxMemoryBytes = options.maxMemoryBytes ?? 50 * 1024 * 1024; // 50MB default
     }
     /**
      * Attach inspector to a GameRuntime instance
@@ -141,14 +143,38 @@ export class StateInspector {
         }));
     }
     /**
-     * Get statistics
+     * Get statistics including memory usage estimates
      */
     getStats() {
+        // Count checkpoints (snapshots with full state)
+        const checkpointCount = this.snapshots.filter(s => s.state).length;
+        // Estimate memory usage (rough approximation)
+        let estimatedMemoryBytes = 0;
+        for (const snapshot of this.snapshots) {
+            if (snapshot.state) {
+                // Checkpoint: rough estimate based on JSON serialization
+                try {
+                    estimatedMemoryBytes += JSON.stringify(snapshot.state).length * 2; // UTF-16
+                }
+                catch (e) {
+                    estimatedMemoryBytes += 1000; // Fallback estimate
+                }
+            }
+            if (snapshot.diff) {
+                // Diff snapshot: much smaller
+                estimatedMemoryBytes += snapshot.diff.length * 100; // ~100 bytes per patch
+            }
+        }
+        // Add action history memory
+        estimatedMemoryBytes += this.actionHistory.length * 200; // ~200 bytes per action
         return {
             totalActions: this.totalActions,
             totalStateChanges: this.totalStateChanges,
             actionsByName: { ...this.actionsByName },
             excludedActions: this.excludedActions,
+            snapshotCount: this.snapshots.length,
+            checkpointCount,
+            estimatedMemoryBytes,
         };
     }
     /**
@@ -308,13 +334,30 @@ export class StateInspector {
             return;
         const timestamp = Date.now();
         const snapshotId = ++this.snapshotIdCounter;
-        // Use patches directly from runtime - no cloning or diffing needed!
-        const snapshot = {
-            id: snapshotId,
-            timestamp,
-            diff: patches.map(p => ({ ...p, path: [...p.path] })), // Shallow copy patches
-            lastActionId: linkedActionId ?? undefined,
-        };
+        // Determine if this should be a checkpoint (stores full state for faster rehydration)
+        const isCheckpoint = (snapshotId % this.checkpointInterval) === 0;
+        let snapshot;
+        if (isCheckpoint) {
+            // Store full state at checkpoint intervals to prevent O(n) rehydration
+            const fullState = this.runtime.getState();
+            snapshot = {
+                id: snapshotId,
+                timestamp,
+                state: this.deepClone(fullState),
+                lastActionId: linkedActionId,
+            };
+            console.log(`[Inspector] Checkpoint #${snapshotId}: Stored full state (every ${this.checkpointInterval} snapshots)`);
+        }
+        else {
+            // Store diff for non-checkpoint snapshots (memory efficient)
+            snapshot = {
+                id: snapshotId,
+                timestamp,
+                diff: patches.map(p => ({ ...p, path: [...p.path] })), // Shallow copy patches
+                lastActionId: linkedActionId,
+            };
+            console.log(`[Inspector] Snapshot #${snapshotId} from patches: patches=${patches.length}, overhead=~0ms`);
+        }
         this.lastSnapshotTimestamp = timestamp;
         this.snapshots.push(snapshot);
         this.trimSnapshots();
@@ -326,19 +369,41 @@ export class StateInspector {
             }
         }
         this.notifyStateChangeListeners(snapshot);
-        // Log performance (no clone/diff overhead!)
-        console.log(`[Inspector] Snapshot #${snapshotId} from patches: patches=${patches.length}, overhead=~0ms (reused runtime patches)`);
     }
     trimSnapshots() {
+        // First, enforce max snapshots limit
         while (this.snapshots.length > this.maxSnapshots) {
             const removed = this.snapshots.shift();
-            if (removed?.state && this.snapshots[0]) {
-                const baseState = this.deepClone(removed.state);
-                const next = this.snapshots[0];
-                if (!next.state) {
+            const next = this.snapshots[0];
+            // If we removed a checkpoint, convert the next snapshot to a checkpoint
+            if (removed?.state && next && !next.state) {
+                // Only rehydrate if next is a checkpoint slot
+                const isNextCheckpointSlot = (next.id % this.checkpointInterval) === 0;
+                if (isNextCheckpointSlot) {
+                    // Rehydrate: apply diffs to get full state
+                    const baseState = removed.state; // Already cloned when stored
                     const derivedState = this.applyDiffs(baseState, next.diff);
                     next.state = derivedState;
+                    delete next.diff; // Convert to full checkpoint
+                    console.log(`[Inspector] Converted snapshot #${next.id} to checkpoint during trim`);
                 }
+            }
+        }
+        // Second, enforce memory limit (aggressive trimming if needed)
+        const stats = this.getStats();
+        if (stats.estimatedMemoryBytes > this.maxMemoryBytes) {
+            const overage = stats.estimatedMemoryBytes - this.maxMemoryBytes;
+            const percentOver = (overage / this.maxMemoryBytes * 100).toFixed(1);
+            console.warn(`[Inspector] Memory limit exceeded by ${percentOver}% (${(overage / 1024 / 1024).toFixed(2)}MB over ${(this.maxMemoryBytes / 1024 / 1024).toFixed(0)}MB limit)`);
+            // Aggressively trim: remove 25% of oldest snapshots
+            const toRemove = Math.max(1, Math.floor(this.snapshots.length * 0.25));
+            console.warn(`[Inspector] Aggressively trimming ${toRemove} snapshots to prevent tab freeze`);
+            this.snapshots.splice(0, toRemove);
+            // Also trim actions if needed
+            if (this.actionHistory.length > this.maxActions / 2) {
+                const actionsToRemove = Math.floor(this.actionHistory.length * 0.25);
+                console.warn(`[Inspector] Trimming ${actionsToRemove} old actions`);
+                this.actionHistory.splice(0, actionsToRemove);
             }
         }
     }

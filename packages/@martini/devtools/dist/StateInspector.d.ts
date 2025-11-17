@@ -32,6 +32,9 @@ export interface InspectorStats {
     totalStateChanges: number;
     actionsByName: Record<string, number>;
     excludedActions: number;
+    snapshotCount: number;
+    checkpointCount: number;
+    estimatedMemoryBytes: number;
 }
 export interface StateInspectorOptions {
     maxSnapshots?: number;
@@ -39,6 +42,8 @@ export interface StateInspectorOptions {
     snapshotIntervalMs?: number;
     actionAggregationWindowMs?: number;
     ignoreActions?: string[];
+    /** Maximum memory usage in bytes before aggressive trimming (default: 50MB) */
+    maxMemoryBytes?: number;
 }
 type StateChangeListener = (snapshot: StateSnapshot) => void;
 type ActionListener = (action: ActionRecord) => void;
@@ -59,6 +64,8 @@ export declare class StateInspector {
     private readonly snapshotIntervalMs;
     private readonly actionAggregationWindowMs;
     private readonly ignoreActions;
+    private readonly checkpointInterval;
+    private readonly maxMemoryBytes;
     private lastSnapshotState;
     private lastSnapshotTimestamp;
     private snapshotIdCounter;
@@ -101,7 +108,7 @@ export declare class StateInspector {
      */
     getActionHistory(): ActionRecord[];
     /**
-     * Get statistics
+     * Get statistics including memory usage estimates
      */
     getStats(): InspectorStats;
     /**

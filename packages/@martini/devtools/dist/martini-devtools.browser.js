@@ -314,6 +314,7 @@ var StateInspector = class {
     this.totalStateChanges = 0;
     this.actionsByName = {};
     this.excludedActions = 0;
+    this.checkpointInterval = 50;
     this.lastSnapshotState = null;
     this.lastSnapshotTimestamp = 0;
     this.snapshotIdCounter = 0;
@@ -331,6 +332,7 @@ var StateInspector = class {
     this.snapshotIntervalMs = options.snapshotIntervalMs ?? 250;
     this.actionAggregationWindowMs = options.actionAggregationWindowMs ?? 200;
     this.ignoreActions = new Set(options.ignoreActions ?? []);
+    this.maxMemoryBytes = options.maxMemoryBytes ?? 50 * 1024 * 1024;
   }
   /**
    * Attach inspector to a GameRuntime instance
@@ -425,14 +427,32 @@ var StateInspector = class {
     }));
   }
   /**
-   * Get statistics
+   * Get statistics including memory usage estimates
    */
   getStats() {
+    const checkpointCount = this.snapshots.filter((s) => s.state).length;
+    let estimatedMemoryBytes = 0;
+    for (const snapshot of this.snapshots) {
+      if (snapshot.state) {
+        try {
+          estimatedMemoryBytes += JSON.stringify(snapshot.state).length * 2;
+        } catch (e) {
+          estimatedMemoryBytes += 1e3;
+        }
+      }
+      if (snapshot.diff) {
+        estimatedMemoryBytes += snapshot.diff.length * 100;
+      }
+    }
+    estimatedMemoryBytes += this.actionHistory.length * 200;
     return {
       totalActions: this.totalActions,
       totalStateChanges: this.totalStateChanges,
       actionsByName: { ...this.actionsByName },
-      excludedActions: this.excludedActions
+      excludedActions: this.excludedActions,
+      snapshotCount: this.snapshots.length,
+      checkpointCount,
+      estimatedMemoryBytes
     };
   }
   /**
@@ -580,13 +600,27 @@ var StateInspector = class {
     if (patches.length === 0) return;
     const timestamp = Date.now();
     const snapshotId = ++this.snapshotIdCounter;
-    const snapshot = {
-      id: snapshotId,
-      timestamp,
-      diff: patches.map((p) => ({ ...p, path: [...p.path] })),
-      // Shallow copy patches
-      lastActionId: linkedActionId ?? void 0
-    };
+    const isCheckpoint = snapshotId % this.checkpointInterval === 0;
+    let snapshot;
+    if (isCheckpoint) {
+      const fullState = this.runtime.getState();
+      snapshot = {
+        id: snapshotId,
+        timestamp,
+        state: this.deepClone(fullState),
+        lastActionId: linkedActionId
+      };
+      console.log(`[Inspector] Checkpoint #${snapshotId}: Stored full state (every ${this.checkpointInterval} snapshots)`);
+    } else {
+      snapshot = {
+        id: snapshotId,
+        timestamp,
+        diff: patches.map((p) => ({ ...p, path: [...p.path] })),
+        // Shallow copy patches
+        lastActionId: linkedActionId
+      };
+      console.log(`[Inspector] Snapshot #${snapshotId} from patches: patches=${patches.length}, overhead=~0ms`);
+    }
     this.lastSnapshotTimestamp = timestamp;
     this.snapshots.push(snapshot);
     this.trimSnapshots();
@@ -598,18 +632,34 @@ var StateInspector = class {
       }
     }
     this.notifyStateChangeListeners(snapshot);
-    console.log(`[Inspector] Snapshot #${snapshotId} from patches: patches=${patches.length}, overhead=~0ms (reused runtime patches)`);
   }
   trimSnapshots() {
     while (this.snapshots.length > this.maxSnapshots) {
       const removed = this.snapshots.shift();
-      if (removed?.state && this.snapshots[0]) {
-        const baseState = this.deepClone(removed.state);
-        const next = this.snapshots[0];
-        if (!next.state) {
+      const next = this.snapshots[0];
+      if (removed?.state && next && !next.state) {
+        const isNextCheckpointSlot = next.id % this.checkpointInterval === 0;
+        if (isNextCheckpointSlot) {
+          const baseState = removed.state;
           const derivedState = this.applyDiffs(baseState, next.diff);
           next.state = derivedState;
+          delete next.diff;
+          console.log(`[Inspector] Converted snapshot #${next.id} to checkpoint during trim`);
         }
+      }
+    }
+    const stats = this.getStats();
+    if (stats.estimatedMemoryBytes > this.maxMemoryBytes) {
+      const overage = stats.estimatedMemoryBytes - this.maxMemoryBytes;
+      const percentOver = (overage / this.maxMemoryBytes * 100).toFixed(1);
+      console.warn(`[Inspector] Memory limit exceeded by ${percentOver}% (${(overage / 1024 / 1024).toFixed(2)}MB over ${(this.maxMemoryBytes / 1024 / 1024).toFixed(0)}MB limit)`);
+      const toRemove = Math.max(1, Math.floor(this.snapshots.length * 0.25));
+      console.warn(`[Inspector] Aggressively trimming ${toRemove} snapshots to prevent tab freeze`);
+      this.snapshots.splice(0, toRemove);
+      if (this.actionHistory.length > this.maxActions / 2) {
+        const actionsToRemove = Math.floor(this.actionHistory.length * 0.25);
+        console.warn(`[Inspector] Trimming ${actionsToRemove} old actions`);
+        this.actionHistory.splice(0, actionsToRemove);
       }
     }
   }

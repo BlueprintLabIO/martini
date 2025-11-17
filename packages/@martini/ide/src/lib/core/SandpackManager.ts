@@ -429,12 +429,14 @@ let devToolsEnabled = ${initiallyEnabled};
 let capturedRuntime = null;
 
 // Create global inspector (accessible from game code)
+// Reduced limits for memory safety: prevents tab freezing with long-running games
 window.__MARTINI_INSPECTOR__ = new StateInspector({
-  maxSnapshots: 500,
-  maxActions: 2000,
-  snapshotIntervalMs: 250,
+  maxSnapshots: 200,        // Down from 500: ~3-5 min history at 250ms interval
+  maxActions: 1000,          // Down from 2000: reasonable action history
+  snapshotIntervalMs: 250,   // Keep at 250ms (4 snapshots/sec)
   actionAggregationWindowMs: 200,
-  ignoreActions: ['tick']
+  ignoreActions: ['tick'],
+  maxMemoryBytes: 30 * 1024 * 1024  // 30MB hard limit to prevent tab freeze
 });
 
 // Listen for enable/disable commands from parent
