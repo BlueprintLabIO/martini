@@ -6,6 +6,7 @@
  */
 import type { GameDefinition } from './defineGame.js';
 import type { Transport, RuntimeConfig } from './transport.js';
+import { type Patch } from './sync.js';
 type StateChangeCallback<TState> = (state: TState) => void;
 type EventCallback = (senderId: string, eventName: string, payload: any) => void;
 /**
@@ -39,6 +40,7 @@ export declare class GameRuntime<TState = any> {
     private actionCounter;
     private stateChangeCallbacks;
     private eventCallbacks;
+    private patchListeners;
     constructor(gameDef: GameDefinition<TState>, transport: Transport, config: GameRuntimeConfig);
     /**
      * Get current state (read-only, typed)
@@ -90,6 +92,12 @@ export declare class GameRuntime<TState = any> {
      * Listen for state changes (typed)
      */
     onChange(callback: StateChangeCallback<TState>): () => void;
+    /**
+     * Subscribe to state patches as they're generated
+     * This allows DevTools to reuse the patches that GameRuntime already computed
+     * instead of re-cloning and re-diffing the state
+     */
+    onPatch(listener: (patches: Patch[]) => void): () => void;
     /**
      * Cleanup
      */

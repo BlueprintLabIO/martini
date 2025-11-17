@@ -10,7 +10,7 @@ import { toHtml } from 'hast-util-to-html';
 // Create highlighter for syntax highlighting
 const highlighter = await createHighlighter({
 	themes: ['github-dark', 'github-light'],
-	langs: ['javascript', 'typescript', 'bash', 'json', 'svelte', 'html', 'css', 'diff', 'markdown']
+	langs: ['javascript', 'typescript', 'bash', 'json', 'svelte', 'html', 'css', 'diff', 'markdown', 'toml']
 });
 
 /** @type {import('@sveltejs/kit').Config} */

@@ -19,6 +19,7 @@ export class GameRuntime {
     actionCounter = 100000; // For seeding action random (start high to avoid LCG collisions)
     stateChangeCallbacks = [];
     eventCallbacks = new Map();
+    patchListeners = [];
     constructor(gameDef, transport, config) {
         this.gameDef = gameDef;
         this.transport = transport;
@@ -181,6 +182,20 @@ export class GameRuntime {
         };
     }
     /**
+     * Subscribe to state patches as they're generated
+     * This allows DevTools to reuse the patches that GameRuntime already computed
+     * instead of re-cloning and re-diffing the state
+     */
+    onPatch(listener) {
+        this.patchListeners.push(listener);
+        return () => {
+            const index = this.patchListeners.indexOf(listener);
+            if (index !== -1) {
+                this.patchListeners.splice(index, 1);
+            }
+        };
+    }
+    /**
      * Cleanup
      */
     destroy() {
@@ -285,6 +300,17 @@ export class GameRuntime {
         // Generate diff
         const patches = generateDiff(this.previousState, this.state);
         if (patches.length > 0) {
+            // Notify patch listeners FIRST (DevTools can reuse these patches)
+            if (this.patchListeners.length > 0) {
+                this.patchListeners.forEach(listener => {
+                    try {
+                        listener(patches);
+                    }
+                    catch (error) {
+                        console.error('Error in patch listener:', error);
+                    }
+                });
+            }
             // Broadcast patches to all clients
             this.transport.send({
                 type: 'state_sync',

@@ -45,6 +45,7 @@ export class GameRuntime<TState = any> {
 
   private stateChangeCallbacks: StateChangeCallback<TState>[] = [];
   private eventCallbacks: Map<string, EventCallback[]> = new Map();
+  private patchListeners: Array<(patches: Patch[]) => void> = [];
 
   constructor(
     private gameDef: GameDefinition<TState>,
@@ -230,6 +231,22 @@ export class GameRuntime<TState = any> {
   }
 
   /**
+   * Subscribe to state patches as they're generated
+   * This allows DevTools to reuse the patches that GameRuntime already computed
+   * instead of re-cloning and re-diffing the state
+   */
+  onPatch(listener: (patches: Patch[]) => void): () => void {
+    this.patchListeners.push(listener);
+
+    return () => {
+      const index = this.patchListeners.indexOf(listener);
+      if (index !== -1) {
+        this.patchListeners.splice(index, 1);
+      }
+    };
+  }
+
+  /**
    * Cleanup
    */
   destroy(): void {
@@ -359,6 +376,17 @@ export class GameRuntime<TState = any> {
     const patches = generateDiff(this.previousState, this.state);
 
     if (patches.length > 0) {
+      // Notify patch listeners FIRST (DevTools can reuse these patches)
+      if (this.patchListeners.length > 0) {
+        this.patchListeners.forEach(listener => {
+          try {
+            listener(patches);
+          } catch (error) {
+            console.error('Error in patch listener:', error);
+          }
+        });
+      }
+
       // Broadcast patches to all clients
       this.transport.send({
         type: 'state_sync',

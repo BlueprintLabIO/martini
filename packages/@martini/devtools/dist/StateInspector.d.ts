@@ -65,6 +65,7 @@ export declare class StateInspector {
     private actionIdCounter;
     private awaitingSnapshotActionId;
     private deferredSnapshotActionId;
+    private deferredPatches;
     private snapshotTimer;
     private paused;
     private pendingStateChanges;
@@ -117,6 +118,8 @@ export declare class StateInspector {
     clear(): void;
     private scheduleSnapshot;
     private captureSnapshot;
+    private scheduleSnapshotWithPatches;
+    private captureSnapshotFromPatches;
     private trimSnapshots;
     private trackAction;
     private scheduleNotify;

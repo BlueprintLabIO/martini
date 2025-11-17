@@ -238,6 +238,7 @@ var GameRuntime = class {
     // For seeding action random (start high to avoid LCG collisions)
     __publicField(this, "stateChangeCallbacks", []);
     __publicField(this, "eventCallbacks", /* @__PURE__ */ new Map());
+    __publicField(this, "patchListeners", []);
     this._isHost = config.isHost;
     this.strict = config.strict ?? false;
     const initialPlayerIds = config.playerIds || [];
@@ -391,6 +392,20 @@ Did you mean "${suggestion}"?`;
     };
   }
   /**
+   * Subscribe to state patches as they're generated
+   * This allows DevTools to reuse the patches that GameRuntime already computed
+   * instead of re-cloning and re-diffing the state
+   */
+  onPatch(listener) {
+    this.patchListeners.push(listener);
+    return () => {
+      const index = this.patchListeners.indexOf(listener);
+      if (index !== -1) {
+        this.patchListeners.splice(index, 1);
+      }
+    };
+  }
+  /**
    * Cleanup
    */
   destroy() {
@@ -490,6 +505,15 @@ Did you mean "${suggestion}"?`;
     if (!this._isHost) return;
     const patches = generateDiff(this.previousState, this.state);
     if (patches.length > 0) {
+      if (this.patchListeners.length > 0) {
+        this.patchListeners.forEach((listener) => {
+          try {
+            listener(patches);
+          } catch (error) {
+            console.error("Error in patch listener:", error);
+          }
+        });
+      }
       this.transport.send({
         type: "state_sync",
         payload: { patches }

@@ -76,6 +76,7 @@ export class StateInspector {
   private actionIdCounter = 0;
   private awaitingSnapshotActionId: number | null = null;
   private deferredSnapshotActionId: number | null = null;
+  private deferredPatches: Patch[] | null = null;
   private snapshotTimer: ReturnType<typeof setTimeout> | null = null;
   private paused = false;
   private pendingStateChanges: StateSnapshot[] = [];
@@ -100,17 +101,17 @@ export class StateInspector {
 
     this.runtime = runtime;
 
-    // Capture initial state immediately
+    // Capture initial state immediately (still need one clone for first snapshot)
     this.scheduleSnapshot(undefined, true);
 
-    // Listen for state changes
-    const unsubState = runtime.onChange(() => {
+    // Subscribe to patches instead of onChange - this reuses patches already computed by GameRuntime
+    const unsubPatch = runtime.onPatch((patches) => {
       this.totalStateChanges++;
       const actionId = this.awaitingSnapshotActionId;
       this.awaitingSnapshotActionId = null;
-      this.scheduleSnapshot(actionId ?? undefined);
+      this.scheduleSnapshotWithPatches(patches, actionId ?? undefined);
     });
-    this.unsubscribes.push(unsubState);
+    this.unsubscribes.push(unsubPatch);
 
     // Intercept submitAction to track actions
     this.originalSubmitAction = runtime.submitAction;
@@ -359,6 +360,69 @@ export class StateInspector {
     }
 
     this.notifyStateChangeListeners(snapshot);
+  }
+
+  private scheduleSnapshotWithPatches(patches: Patch[], linkedActionId?: number): void {
+    if (!this.runtime) return;
+    if (this.paused) return;
+
+    const now = Date.now();
+    const elapsed = now - this.lastSnapshotTimestamp;
+
+    if (elapsed >= this.snapshotIntervalMs) {
+      this.captureSnapshotFromPatches(patches, linkedActionId);
+    } else {
+      // Defer snapshot but save patches
+      this.deferredPatches = patches;
+      this.deferredSnapshotActionId = linkedActionId ?? this.deferredSnapshotActionId ?? null;
+
+      if (!this.snapshotTimer) {
+        const delay = Math.max(0, this.snapshotIntervalMs - elapsed);
+        this.snapshotTimer = setTimeout(() => {
+          this.snapshotTimer = null;
+          const actionId = this.deferredSnapshotActionId ?? undefined;
+          this.deferredSnapshotActionId = null;
+          if (this.deferredPatches) {
+            this.captureSnapshotFromPatches(this.deferredPatches, actionId);
+            this.deferredPatches = null;
+          }
+        }, delay);
+      }
+    }
+  }
+
+  private captureSnapshotFromPatches(patches: Patch[], linkedActionId?: number): void {
+    if (!this.runtime) return;
+    if (patches.length === 0) return;
+
+    const timestamp = Date.now();
+    const snapshotId = ++this.snapshotIdCounter;
+
+    // Use patches directly from runtime - no cloning or diffing needed!
+    const snapshot: StateSnapshot = {
+      id: snapshotId,
+      timestamp,
+      diff: patches.map(p => ({ ...p, path: [...p.path] })), // Shallow copy patches
+      lastActionId: linkedActionId ?? undefined,
+    };
+
+    this.lastSnapshotTimestamp = timestamp;
+
+    this.snapshots.push(snapshot);
+    this.trimSnapshots();
+
+    if (snapshot.lastActionId) {
+      const action = this.actionHistory.find(record => record.id === snapshot.lastActionId);
+      if (action) {
+        action.snapshotId = snapshot.id;
+        this.notifyActionListeners(action);
+      }
+    }
+
+    this.notifyStateChangeListeners(snapshot);
+
+    // Log performance (no clone/diff overhead!)
+    console.log(`[Inspector] Snapshot #${snapshotId} from patches: patches=${patches.length}, overhead=~0ms (reused runtime patches)`);
   }
 
   private trimSnapshots(): void {
