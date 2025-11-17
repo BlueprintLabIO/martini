@@ -321,6 +321,10 @@ var StateInspector = class {
     this.awaitingSnapshotActionId = null;
     this.deferredSnapshotActionId = null;
     this.snapshotTimer = null;
+    this.paused = false;
+    this.pendingStateChanges = [];
+    this.pendingActions = [];
+    this.notifyScheduled = false;
     this.maxSnapshots = options.maxSnapshots ?? 100;
     this.maxActions = options.maxActions ?? 1e3;
     this.snapshotIntervalMs = options.snapshotIntervalMs ?? 250;
@@ -368,6 +372,25 @@ var StateInspector = class {
     this.lastSnapshotState = null;
     this.awaitingSnapshotActionId = null;
     this.deferredSnapshotActionId = null;
+  }
+  /**
+   * Pause/resume snapshot capturing
+   */
+  setPaused(paused) {
+    if (this.paused === paused) return;
+    this.paused = paused;
+    if (paused) {
+      if (this.snapshotTimer) {
+        clearTimeout(this.snapshotTimer);
+        this.snapshotTimer = null;
+      }
+      console.log("[Inspector] Paused - stopping captures");
+    } else {
+      console.log("[Inspector] Resumed - capturing snapshots");
+      if (this.runtime) {
+        this.scheduleSnapshot(void 0, true);
+      }
+    }
   }
   /**
    * Check if inspector is attached
@@ -455,6 +478,7 @@ var StateInspector = class {
   // Private methods
   scheduleSnapshot(linkedActionId, force = false) {
     if (!this.runtime) return;
+    if (this.paused && !force) return;
     if (force || this.snapshotIntervalMs <= 0) {
       this.captureSnapshot(linkedActionId);
       return;
@@ -481,7 +505,9 @@ var StateInspector = class {
       clearTimeout(this.snapshotTimer);
       this.snapshotTimer = null;
     }
+    const t0 = performance.now();
     const stateClone = this.deepClone(this.runtime.getState());
+    const t1 = performance.now();
     const timestamp = Date.now();
     const snapshotId = ++this.snapshotIdCounter;
     let snapshot;
@@ -492,9 +518,13 @@ var StateInspector = class {
         state: stateClone,
         lastActionId: linkedActionId ?? void 0
       };
+      const t2 = performance.now();
+      console.log(`[Inspector] Initial snapshot: clone=${(t1 - t0).toFixed(2)}ms, total=${(t2 - t0).toFixed(2)}ms`);
     } else {
       const diff = generateDiff(this.lastSnapshotState, stateClone);
+      const t2 = performance.now();
       if (diff.length === 0) {
+        console.log(`[Inspector] No changes: clone=${(t1 - t0).toFixed(2)}ms, diff=${(t2 - t1).toFixed(2)}ms (skipped)`);
         this.lastSnapshotState = stateClone;
         return;
       }
@@ -504,6 +534,8 @@ var StateInspector = class {
         diff,
         lastActionId: linkedActionId ?? void 0
       };
+      const t3 = performance.now();
+      console.log(`[Inspector] Snapshot #${snapshotId}: clone=${(t1 - t0).toFixed(2)}ms, diff=${(t2 - t1).toFixed(2)}ms, patches=${diff.length}, total=${(t3 - t0).toFixed(2)}ms`);
     }
     this.lastSnapshotState = stateClone;
     this.lastSnapshotTimestamp = timestamp;
@@ -574,23 +606,44 @@ var StateInspector = class {
     }
     this.notifyActionListeners({ ...record });
   }
-  notifyStateChangeListeners(snapshot) {
-    this.stateChangeListeners.forEach((listener) => {
-      try {
-        listener({ ...snapshot });
-      } catch (error) {
-        console.error("Error in state change listener:", error);
+  scheduleNotify() {
+    if (this.notifyScheduled) return;
+    this.notifyScheduled = true;
+    queueMicrotask(() => {
+      if (this.pendingStateChanges.length > 0) {
+        const snapshots = this.pendingStateChanges.splice(0);
+        this.stateChangeListeners.forEach((listener) => {
+          snapshots.forEach((snapshot) => {
+            try {
+              listener(snapshot);
+            } catch (error) {
+              console.error("Error in state change listener:", error);
+            }
+          });
+        });
       }
+      if (this.pendingActions.length > 0) {
+        const actions = this.pendingActions.splice(0);
+        this.actionListeners.forEach((listener) => {
+          actions.forEach((action) => {
+            try {
+              listener(action);
+            } catch (error) {
+              console.error("Error in action listener:", error);
+            }
+          });
+        });
+      }
+      this.notifyScheduled = false;
     });
   }
+  notifyStateChangeListeners(snapshot) {
+    this.pendingStateChanges.push(snapshot);
+    this.scheduleNotify();
+  }
   notifyActionListeners(record) {
-    this.actionListeners.forEach((listener) => {
-      try {
-        listener({ ...record });
-      } catch (error) {
-        console.error("Error in action listener:", error);
-      }
-    });
+    this.pendingActions.push(record);
+    this.scheduleNotify();
   }
   applyDiffs(base, diff) {
     if (!diff || diff.length === 0) {
@@ -603,16 +656,25 @@ var StateInspector = class {
     return cloned;
   }
   deepClone(obj) {
-    if (obj === null || typeof obj !== "object") return obj;
-    if (obj instanceof Date) return new Date(obj.getTime());
-    if (Array.isArray(obj)) return obj.map((item) => this.deepClone(item));
-    const cloned = {};
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        cloned[key] = this.deepClone(obj[key]);
+    if (typeof structuredClone !== "undefined") {
+      try {
+        return structuredClone(obj);
+      } catch (error) {
+        console.warn("[Inspector] structuredClone failed, falling back to JSON:", error);
+        try {
+          return JSON.parse(JSON.stringify(obj));
+        } catch (jsonError) {
+          console.error("[Inspector] JSON clone also failed:", jsonError);
+          return obj;
+        }
       }
     }
-    return cloned;
+    try {
+      return JSON.parse(JSON.stringify(obj));
+    } catch (error) {
+      console.error("[Inspector] JSON clone failed:", error);
+      return obj;
+    }
   }
 };
 

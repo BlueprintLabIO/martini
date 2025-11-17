@@ -3,7 +3,7 @@
 	import MartiniIDE from '@martini/ide';
 	import { getIDEConfig, getGameMetadata } from '$lib/games/ide-configs-map';
 
-	const gameId = $derived($page.params.gameId);
+	const gameId = $derived($page.params.gameId || '');
 	const config = $derived(getIDEConfig(gameId));
 	const metadata = $derived(getGameMetadata(gameId));
 </script>

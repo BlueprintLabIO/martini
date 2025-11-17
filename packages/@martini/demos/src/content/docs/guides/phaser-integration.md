@@ -742,6 +742,6 @@ export function createScene(runtime: GameRuntime<GameState>) {
 ## Examples
 
 Study working examples:
-- [Fire & Ice](../../ide-fire-ice) - Cooperative platformer with roles
-- [Blob Battle](../../ide-blob-battle) - Top-down competitive game
-- [Paddle Battle](../../ide-paddle-battle) - Classic Pong with multiplayer
+- [Fire & Ice](../../preview/fire-and-ice) - Cooperative platformer with roles
+- [Blob Battle](../../preview/blob-battle) - Top-down competitive game
+- [Paddle Battle](../../preview/paddle-battle) - Classic Pong with multiplayer

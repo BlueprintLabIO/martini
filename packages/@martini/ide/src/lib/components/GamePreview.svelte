@@ -49,11 +49,45 @@
 	let status = $state<'initializing' | 'ready' | 'running' | 'error'>('initializing');
 	let error = $state<{ type: 'runtime' | 'syntax'; message: string; stack?: string } | null>(null);
 
+	/**
+	 * Dynamically enable or disable DevTools
+	 */
+	export function setDevToolsEnabled(enabled: boolean): void {
+		sandpackManager?.setDevToolsEnabled(enabled);
+	}
+
+	/**
+	 * Pause/resume Inspector capturing
+	 */
+	export function setInspectorPaused(paused: boolean): void {
+		sandpackManager?.setInspectorPaused(paused);
+	}
+
 	function generateRoomId() {
 		if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
 			return `ide-room-${crypto.randomUUID()}`;
 		}
 		return `ide-room-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+	}
+
+	function upsertById<T extends { id?: number }>(items: T[], item: T, limit: number): T[] {
+		if (!item.id) {
+			const appended = [...items, item];
+			return appended.length > limit ? appended.slice(-limit) : appended;
+		}
+
+		const index = items.findIndex((existing) => existing.id === item.id);
+		if (index !== -1) {
+			const clone = [...items];
+			clone[index] = item;
+			return clone;
+		}
+
+		const updated = [...items, item];
+		if (updated.length > limit) {
+			updated.shift();
+		}
+		return updated;
 	}
 
 	const sessionRoomId = roomId ?? generateRoomId();
@@ -65,6 +99,7 @@
 			role,
 			roomId: sessionRoomId,
 			transportType,
+			enableDevTools: !hideDevTools, // Start with DevTools enabled if not hidden
 			onError: (err) => {
 				status = 'error';
 				error = err;
@@ -245,22 +280,3 @@
 		text-align: center;
 	}
 </style>
-	function upsertById<T extends { id?: number }>(items: T[], item: T, limit: number): T[] {
-		if (!item.id) {
-			const appended = [...items, item];
-			return appended.length > limit ? appended.slice(-limit) : appended;
-		}
-
-		const index = items.findIndex((existing) => existing.id === item.id);
-		if (index !== -1) {
-			const clone = [...items];
-			clone[index] = item;
-			return clone;
-		}
-
-		const updated = [...items, item];
-		if (updated.length > limit) {
-			updated.shift();
-		}
-		return updated;
-	}

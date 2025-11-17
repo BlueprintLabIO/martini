@@ -29,8 +29,12 @@
 	let entryPoint = $state<string>('/src/main.ts');
 	let filePaths = $state<string[]>([]);
 
+	// GamePreview component refs
+	let hostPreviewRef: any;
+	let clientPreviewRef: any;
+
 	// DevTools state (shared between both previews)
-	let showDevTools = $state(true);
+	let showDevTools = $state(false);
 	let activeDevToolsTab = $state<'console' | 'state' | 'actions' | 'diff' | 'network'>('console');
 	let hostLogs = $state<Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>>([]);
 	let clientLogs = $state<Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>>([]);
@@ -45,6 +49,7 @@
 	let hostNetworkPackets = $state<Array<{ timestamp: number; direction: 'send' | 'receive'; type: string; size: number; payload: any }>>([]);
 	let clientNetworkPackets = $state<Array<{ timestamp: number; direction: 'send' | 'receive'; type: string; size: number; payload: any }>>([]);
 	const sessionRoomId = generateRoomId();
+	const DEVTOOLS_STORAGE_KEY = 'martini-ide-show-devtools';
 
 	// Derived state: check if there are divergences
 	let hasDivergences = $derived(
@@ -58,6 +63,13 @@
 		// Initialize IframeBridgeRelay if using iframe-bridge transport
 		if (config.transport.type === 'iframe-bridge') {
 			relay = new IframeBridgeRelay();
+		}
+
+		if (typeof localStorage !== 'undefined') {
+			const storedPreference = localStorage.getItem(DEVTOOLS_STORAGE_KEY);
+			if (storedPreference !== null) {
+				showDevTools = storedPreference === 'true';
+			}
 		}
 
 		// Initialize core systems
@@ -81,6 +93,34 @@
 		return () => {
 			relay?.destroy();
 		};
+	});
+
+	$effect(() => {
+		if (typeof localStorage === 'undefined') {
+			return;
+		}
+		localStorage.setItem(DEVTOOLS_STORAGE_KEY, showDevTools ? 'true' : 'false');
+
+		// Dynamically toggle DevTools in GamePreviews
+		hostPreviewRef?.setDevToolsEnabled(showDevTools);
+		clientPreviewRef?.setDevToolsEnabled(showDevTools);
+
+		// Auto-switch to Console tab when DevTools is turned off
+		if (!showDevTools && activeDevToolsTab !== 'console') {
+			activeDevToolsTab = 'console';
+		}
+	});
+
+	// Pause Inspector when not viewing relevant tabs
+	$effect(() => {
+		// Only run Inspector when viewing tabs that need it
+		const inspectorActive = showDevTools &&
+			(activeDevToolsTab === 'state' ||
+			 activeDevToolsTab === 'actions' ||
+			 activeDevToolsTab === 'diff');
+
+		hostPreviewRef?.setInspectorPaused(!inspectorActive);
+		clientPreviewRef?.setInspectorPaused(!inspectorActive);
 	});
 
 	/**
@@ -164,12 +204,14 @@
 
 			<!-- Game Previews + DevTools -->
 			<Pane defaultSize={65} minSize={30} class="preview-pane">
-				<PaneGroup direction="vertical" class="preview-group">
-					<!-- Game Canvases -->
-					<Pane defaultSize={50} minSize={30} class="games-pane">
+				<div class="preview-pane-content">
+					<PaneGroup direction="vertical" class="preview-group">
+						<!-- Game Canvases -->
+						<Pane defaultSize={50} minSize={30} class="games-pane">
 						{#if config.layout === 'dual'}
 							<div class="dual-preview">
 								<GamePreview
+									bind:this={hostPreviewRef}
 									{vfs}
 									{entryPoint}
 									role="host"
@@ -186,6 +228,7 @@
 									onError={config.onError}
 								/>
 								<GamePreview
+									bind:this={clientPreviewRef}
 									{vfs}
 									{entryPoint}
 									role="client"
@@ -202,6 +245,7 @@
 							</div>
 						{:else}
 							<GamePreview
+								bind:this={hostPreviewRef}
 								{vfs}
 								{entryPoint}
 								role="host"
@@ -221,48 +265,68 @@
 					</Pane>
 
 					<!-- Shared DevTools Panel -->
-					{#if showDevTools}
-						<PaneResizer class="resizer-horizontal" />
-						<Pane defaultSize={50} minSize={25} class="devtools-pane">
-							<div class="devtools-container">
-								<!-- Tabs -->
-								<div class="devtools-tabs">
-									<button
-										class="devtools-tab"
-										class:active={activeDevToolsTab === 'console'}
-										onclick={() => (activeDevToolsTab = 'console')}
-									>
-										Console
-									</button>
-									<button
-										class="devtools-tab"
-										class:active={activeDevToolsTab === 'state'}
-										onclick={() => (activeDevToolsTab = 'state')}
-									>
-										State
-									</button>
-									<button
-										class="devtools-tab"
-										class:active={activeDevToolsTab === 'actions'}
-										onclick={() => (activeDevToolsTab = 'actions')}
-									>
-										Actions
-									</button>
-									<button
-										class="devtools-tab"
-										class:active={activeDevToolsTab === 'diff'}
-										onclick={() => (activeDevToolsTab = 'diff')}
-									>
-										Diff {#if hasDivergences}⚠️{/if}
-									</button>
-									<button
-										class="devtools-tab"
-										class:active={activeDevToolsTab === 'network'}
-										onclick={() => (activeDevToolsTab = 'network')}
-									>
-										Network
-									</button>
+					<PaneResizer class="resizer-horizontal" />
+					<Pane defaultSize={50} minSize={25} class="devtools-pane">
+						<div class="devtools-container">
+							<!-- Tabs -->
+							<div class="devtools-tabs">
+								<button
+									class="devtools-tab"
+									class:active={activeDevToolsTab === 'console'}
+									onclick={() => (activeDevToolsTab = 'console')}
+								>
+									Console
+								</button>
+								<button
+									class="devtools-tab"
+									class:active={activeDevToolsTab === 'state'}
+									class:disabled={!showDevTools}
+									disabled={!showDevTools}
+									onclick={() => showDevTools && (activeDevToolsTab = 'state')}
+								>
+									State
+								</button>
+								<button
+									class="devtools-tab"
+									class:active={activeDevToolsTab === 'actions'}
+									class:disabled={!showDevTools}
+									disabled={!showDevTools}
+									onclick={() => showDevTools && (activeDevToolsTab = 'actions')}
+								>
+									Actions
+								</button>
+								<button
+									class="devtools-tab"
+									class:active={activeDevToolsTab === 'diff'}
+									class:disabled={!showDevTools}
+									disabled={!showDevTools}
+									onclick={() => showDevTools && (activeDevToolsTab = 'diff')}
+								>
+									Diff {#if hasDivergences}⚠️{/if}
+								</button>
+								<button
+									class="devtools-tab"
+									class:active={activeDevToolsTab === 'network'}
+									class:disabled={!showDevTools}
+									disabled={!showDevTools}
+									onclick={() => showDevTools && (activeDevToolsTab = 'network')}
+								>
+									Network
+								</button>
+
+								<!-- DevTools Toggle Switch -->
+								<div class="devtools-toggle-container">
+									<label class="devtools-toggle-label">
+										<input
+											type="checkbox"
+											class="devtools-toggle-checkbox"
+											bind:checked={showDevTools}
+										/>
+										<span class="devtools-toggle-switch"></span>
+										<span class="devtools-toggle-text">Inspector</span>
+									</label>
 								</div>
+							</div>
 
 								<!-- Tab Content -->
 								{#if config.layout === 'dual'}
@@ -479,8 +543,8 @@
 								{/if}
 							</div>
 						</Pane>
-					{/if}
-				</PaneGroup>
+					</PaneGroup>
+				</div>
 			</Pane>
 		</PaneGroup>
 	{/if}
@@ -624,8 +688,17 @@
 	}
 
 	/* Preview Layout */
+	.preview-pane-content {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+
 	:global(.preview-group) {
 		height: 100%;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
 	}
 
 	:global(.games-pane),
@@ -675,6 +748,7 @@
 		padding: 0.5rem 0.75rem;
 		background: #252526;
 		border-bottom: 1px solid #3e3e42;
+		align-items: center;
 	}
 
 	.devtools-tab {
@@ -698,6 +772,82 @@
 		background: #1e1e1e;
 		color: #ffffff;
 		border: 1px solid #3e3e42;
+	}
+
+	.devtools-tab.disabled {
+		color: #4d4d4d;
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+
+	.devtools-tab.disabled:hover {
+		background: transparent;
+		color: #4d4d4d;
+	}
+
+	/* DevTools Toggle Switch */
+	.devtools-toggle-container {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+	}
+
+	.devtools-toggle-label {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.devtools-toggle-text {
+		font-size: 0.625rem;
+		color: #969696;
+		font-weight: 500;
+	}
+
+	.devtools-toggle-checkbox {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.devtools-toggle-switch {
+		position: relative;
+		width: 32px;
+		height: 18px;
+		background: #3e3e42;
+		border-radius: 9px;
+		transition: background 0.2s;
+	}
+
+	.devtools-toggle-switch::after {
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 14px;
+		height: 14px;
+		background: #969696;
+		border-radius: 50%;
+		transition: all 0.2s;
+	}
+
+	.devtools-toggle-checkbox:checked + .devtools-toggle-switch {
+		background: #0e639c;
+	}
+
+	.devtools-toggle-checkbox:checked + .devtools-toggle-switch::after {
+		left: 16px;
+		background: #ffffff;
+	}
+
+	.devtools-toggle-label:hover .devtools-toggle-switch {
+		background: #4d4d4d;
+	}
+
+	.devtools-toggle-checkbox:checked + .devtools-toggle-switch:hover {
+		background: #1177bb;
 	}
 
 	.devtools-dual {

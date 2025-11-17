@@ -2,8 +2,7 @@
  * IDE Configuration Mapping
  *
  * Maps game IDs to their IDE configurations and metadata.
- * Configs are extracted from the latest /ide-* routes which contain
- * the most up-to-date Martini SDK code.
+ * Configs are extracted from the restored preview sources to keep /preview routes in sync.
  */
 
 import type { MartiniIDEConfig } from '@martini/ide';
@@ -54,7 +53,7 @@ export const gameMetadata: Record<string, GamePreviewMetadata> = {
 /**
  * IDE configurations mapped by game ID
  */
-export const ideConfigs: Record<string, MartiniIDEConfig> = {
+const ideConfigs: Record<string, MartiniIDEConfig> = {
 	'fire-and-ice': fireAndIceConfig,
 	'paddle-battle': paddleBattleConfig,
 	'blob-battle': blobBattleConfig,
@@ -72,7 +71,7 @@ export function getIDEConfig(gameId: string): MartiniIDEConfig | null {
 		console.warn(`No IDE config found for game: ${gameId}`);
 		return null;
 	}
-	return config;
+	return cloneConfig(config);
 }
 
 /**
@@ -86,3 +85,14 @@ export function getGameMetadata(gameId: string): GamePreviewMetadata | null {
 	}
 	return metadata;
 }
+
+function cloneConfig(config: MartiniIDEConfig): MartiniIDEConfig {
+	return {
+		...config,
+		files: { ...config.files },
+		transport: { ...config.transport },
+		editor: config.editor ? { ...config.editor } : undefined
+	};
+}
+
+export { ideConfigs };

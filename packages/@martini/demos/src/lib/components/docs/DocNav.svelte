@@ -38,8 +38,8 @@
 		}))
 	);
 
-	// Expand Getting Started and API Reference by default
-	let expandedSections = $state<Set<string>>(new Set(['Getting Started', 'API Reference']));
+	// Expand Getting Started by default, collapse API Reference
+	let expandedSections = $state<Set<string>>(new Set(['Getting Started']));
 
 	function toggleSection(title: string) {
 		if (expandedSections.has(title)) {

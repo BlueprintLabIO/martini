@@ -66,6 +66,10 @@ export declare class StateInspector {
     private awaitingSnapshotActionId;
     private deferredSnapshotActionId;
     private snapshotTimer;
+    private paused;
+    private pendingStateChanges;
+    private pendingActions;
+    private notifyScheduled;
     constructor(options?: StateInspectorOptions);
     /**
      * Attach inspector to a GameRuntime instance
@@ -75,6 +79,10 @@ export declare class StateInspector {
      * Detach inspector from runtime
      */
     detach(): void;
+    /**
+     * Pause/resume snapshot capturing
+     */
+    setPaused(paused: boolean): void;
     /**
      * Check if inspector is attached
      */
@@ -111,6 +119,7 @@ export declare class StateInspector {
     private captureSnapshot;
     private trimSnapshots;
     private trackAction;
+    private scheduleNotify;
     private notifyStateChangeListeners;
     private notifyActionListeners;
     private applyDiffs;

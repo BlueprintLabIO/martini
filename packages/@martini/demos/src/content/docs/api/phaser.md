@@ -549,6 +549,6 @@ Shapes work with all helpers (SpriteManager, PhysicsManager, etc.).
 ## Examples
 
 See working examples in the demos:
-- [Fire & Ice](/ide-fire-ice) - Cooperative platformer
-- [Blob Battle](/ide-blob-battle) - Competitive agar.io clone
-- [Paddle Battle](/ide-paddle-battle) - Pong-style game
+- [Fire & Ice](/preview/fire-and-ice) - Cooperative platformer
+- [Blob Battle](/preview/blob-battle) - Competitive agar.io clone
+- [Paddle Battle](/preview/paddle-battle) - Pong-style game

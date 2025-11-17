@@ -28,6 +28,9 @@ export interface SandpackManagerOptions {
 	/** Transport type */
 	transportType: 'local' | 'iframe-bridge';
 
+	/** Enable DevTools - when false, skips DevTools bridge injection and listeners */
+	enableDevTools?: boolean;
+
 	/** Error callback */
 	onError?: (error: { type: 'runtime' | 'syntax'; message: string; stack?: string }) => void;
 
@@ -60,10 +63,42 @@ export class SandpackManager {
 	private client: SandpackClient | null = null;
 	private iframe: HTMLIFrameElement | null = null;
 	private options: SandpackManagerOptions;
+	private devToolsEnabled: boolean;
 
 	constructor(options: SandpackManagerOptions) {
 		this.options = options;
+		this.devToolsEnabled = options.enableDevTools !== false;
+		// Always setup DevTools listener (lightweight)
 		this.setupDevToolsListener();
+	}
+
+	/**
+	 * Dynamically enable or disable DevTools at runtime
+	 */
+	setDevToolsEnabled(enabled: boolean): void {
+		if (this.devToolsEnabled === enabled) {
+			return; // Already in desired state
+		}
+
+		this.devToolsEnabled = enabled;
+
+		// Send message to iframe to enable/disable DevTools
+		if (this.iframe?.contentWindow) {
+			this.iframe.contentWindow.postMessage({
+				type: enabled ? 'martini:devtools:enable' : 'martini:devtools:disable'
+			}, '*');
+		}
+	}
+
+	/**
+	 * Pause/resume Inspector capturing
+	 */
+	setInspectorPaused(paused: boolean): void {
+		if (this.iframe?.contentWindow) {
+			this.iframe.contentWindow.postMessage({
+				type: paused ? 'martini:devtools:pause' : 'martini:devtools:resume'
+			}, '*');
+		}
 	}
 
 	/**
@@ -352,8 +387,22 @@ export default window.Phaser;
 
 			const data = event.data;
 
-			// Handle DevTools messages
-			if (data?.type === 'martini:devtools:state') {
+			// Handle batched DevTools messages
+			if (data?.type === 'martini:devtools:state:batch') {
+				data.snapshots?.forEach((snapshot: any) => {
+					this.options.onStateSnapshot?.(snapshot);
+				});
+			} else if (data?.type === 'martini:devtools:action:batch') {
+				data.actions?.forEach((action: any) => {
+					this.options.onAction?.(action);
+				});
+			} else if (data?.type === 'martini:devtools:network:batch') {
+				data.packets?.forEach((packet: any) => {
+					this.options.onNetworkPacket?.(packet);
+				});
+			}
+			// Keep single-message handlers for backwards compatibility
+			else if (data?.type === 'martini:devtools:state') {
 				this.options.onStateSnapshot?.(data.snapshot);
 			} else if (data?.type === 'martini:devtools:action') {
 				this.options.onAction?.(data.action);
@@ -367,11 +416,17 @@ export default window.Phaser;
 	 * Create DevTools bridge script to inject into entry point
 	 */
 	private createDevToolsBridge(): string {
+		const initiallyEnabled = this.devToolsEnabled ? 'true' : 'false';
+
 		return `
 // ===== Martini DevTools Bridge =====
 // Auto-injected by MartiniIDE - forwards runtime data to parent window
 import { StateInspector } from '@martini/devtools';
 import * as MartiniPhaser from '@martini/phaser';
+
+// DevTools state (can be toggled at runtime)
+let devToolsEnabled = ${initiallyEnabled};
+let capturedRuntime = null;
 
 // Create global inspector (accessible from game code)
 window.__MARTINI_INSPECTOR__ = new StateInspector({
@@ -382,37 +437,101 @@ window.__MARTINI_INSPECTOR__ = new StateInspector({
   ignoreActions: ['tick']
 });
 
+// Listen for enable/disable commands from parent
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'martini:devtools:enable') {
+    if (!devToolsEnabled) {
+      devToolsEnabled = true;
+      console.log('[Martini DevTools] Enabled');
+
+      // If we already captured the runtime, attach inspector now
+      if (capturedRuntime) {
+        window.__MARTINI_INSPECTOR__.attach(capturedRuntime);
+        console.log('[Martini DevTools] Inspector attached to runtime');
+      }
+    }
+  } else if (event.data?.type === 'martini:devtools:disable') {
+    if (devToolsEnabled) {
+      devToolsEnabled = false;
+      console.log('[Martini DevTools] Disabled');
+
+      // Detach inspector to stop collecting data
+      if (capturedRuntime) {
+        window.__MARTINI_INSPECTOR__.detach();
+        console.log('[Martini DevTools] Inspector detached from runtime');
+      }
+    }
+  } else if (event.data?.type === 'martini:devtools:pause') {
+    window.__MARTINI_INSPECTOR__.setPaused(true);
+  } else if (event.data?.type === 'martini:devtools:resume') {
+    window.__MARTINI_INSPECTOR__.setPaused(false);
+  }
+});
+
 // Intercept initializeGame to capture runtime when user calls it
 const originalInitializeGame = MartiniPhaser.initializeGame;
 MartiniPhaser.initializeGame = function(...args) {
   // Call original function
   const result = originalInitializeGame.apply(this, args);
 
-  // Attach inspector to the runtime
-  window.__MARTINI_INSPECTOR__.attach(result.runtime);
-  console.log('[Martini DevTools] Inspector attached to runtime');
+  // Store runtime reference
+  capturedRuntime = result.runtime;
 
-  // Forward state snapshots to parent window
+  // Only attach inspector if DevTools is enabled
+  if (devToolsEnabled) {
+    window.__MARTINI_INSPECTOR__.attach(result.runtime);
+    console.log('[Martini DevTools] Inspector attached to runtime');
+  }
+
+  // Batch buffers for postMessage optimization
+  const stateSnapshotBatch = [];
+  const actionBatch = [];
+  let flushScheduled = false;
+
+  function scheduleFlush() {
+    if (flushScheduled) return;
+    flushScheduled = true;
+
+    requestAnimationFrame(() => {
+      if (stateSnapshotBatch.length > 0) {
+        window.parent.postMessage({
+          type: 'martini:devtools:state:batch',
+          snapshots: stateSnapshotBatch.splice(0)
+        }, '*');
+      }
+
+      if (actionBatch.length > 0) {
+        window.parent.postMessage({
+          type: 'martini:devtools:action:batch',
+          actions: actionBatch.splice(0)
+        }, '*');
+      }
+
+      flushScheduled = false;
+    });
+  }
+
+  // Forward state snapshots to parent window (batched)
   window.__MARTINI_INSPECTOR__.onStateChange((snapshot) => {
-    window.parent.postMessage({
-      type: 'martini:devtools:state',
-      snapshot
-    }, '*');
+    if (devToolsEnabled) {
+      stateSnapshotBatch.push(snapshot);
+      scheduleFlush();
+    }
   });
 
-  // Forward actions to parent window
+  // Forward actions to parent window (batched)
   window.__MARTINI_INSPECTOR__.onAction((action) => {
-    window.parent.postMessage({
-      type: 'martini:devtools:action',
-      action
-    }, '*');
+    if (devToolsEnabled) {
+      actionBatch.push(action);
+      scheduleFlush();
+    }
   });
 
   // Return result to user code
   return result;
 };
 
-console.log('[Martini DevTools] Bridge initialized');
+console.log('[Martini DevTools] Bridge initialized (enabled: ${initiallyEnabled})');
 // ===== End DevTools Bridge =====
 
 `;
