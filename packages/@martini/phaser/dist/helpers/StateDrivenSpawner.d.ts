@@ -5,35 +5,38 @@
  * Watches a state collection (e.g., state.players, state.bullets) and automatically
  * creates/removes sprites as the collection changes.
  *
- * **NEW: Optional position syncing!** Enable `syncProperties` to make sprites
- * automatically follow state changes. Perfect for bullets and non-physics entities.
+ * **PIT OF SUCCESS: Positions sync from state by default!**
+ * Sprites automatically follow state.x/y changes unless you opt-out.
  *
  * Usage:
  * ```ts
- * // Players with PhysicsManager (NO syncProperties - physics controls position)
- * const playerSpawner = adapter.createStateDrivenSpawner({
+ * // State-driven entities (default - positions sync automatically!)
+ * const blobSpawner = adapter.createStateDrivenSpawner({
  *   stateKey: 'players',
  *   spriteManager: this.spriteManager,
  *   keyPrefix: 'player-'
+ *   // syncProperties: ['x', 'y'] is automatic! Just mutate state and sprites follow.
  * });
  *
- * // Bullets with automatic movement (PIT OF SUCCESS!)
+ * // Physics-driven entities (opt-out of position sync)
+ * const paddleSpawner = adapter.createStateDrivenSpawner({
+ *   stateKey: 'players',
+ *   spriteManager: this.spriteManager,
+ *   keyPrefix: 'player-',
+ *   syncProperties: [] // Empty = physics body controls position, not state
+ * });
+ *
+ * // Custom properties (override default)
  * const bulletSpawner = adapter.createStateDrivenSpawner({
  *   stateKey: 'bullets',
  *   spriteManager: this.bulletManager,
- *   keyPrefix: 'bullet-',
- *   keyField: 'id',
- *   syncProperties: ['x', 'y'] // Sprites auto-follow state!
+ *   syncProperties: ['x', 'y', 'rotation', 'alpha'] // Sync more than just position
  * });
- *
- * // In your update loop, just mutate state:
- * bullet.x += bullet.velocityX * deltaSeconds;  // Sprite follows automatically!
- * bullet.y += bullet.velocityY * deltaSeconds;
  * ```
  *
  * This automatically:
  * - Creates sprites when new entries appear in state
- * - **Syncs sprite properties from state (opt-in via syncProperties)**
+ * - **Syncs x,y from state to sprites by default (opt-out with syncProperties: [])**
  * - Removes sprites when entries are deleted
  * - Works on both HOST (initial + late joins) and CLIENT (state sync)
  * - Handles arrays (bullets) and objects (players)
@@ -69,23 +72,26 @@ export interface StateDrivenSpawnerConfig {
     filter?: (data: any) => boolean;
     /**
      * Properties to sync from state to sprites on every update
-     * **OPT-IN**: Only syncs if you explicitly provide this array
+     * **DEFAULT: ['x', 'y']** - Positions sync automatically (PIT OF SUCCESS!)
      *
-     * **PIT OF SUCCESS:** This eliminates the "forgot to move the sprite" footgun!
-     * Just mutate state.bullets[i].x/y and the sprites automatically follow.
+     * Most state-driven entities want state-driven movement, so we default to syncing
+     * positions. This eliminates the "forgot to sync positions" bug.
      *
-     * **When to use:**
-     * - ✅ Bullets/projectiles (state-driven position)
-     * - ✅ Non-physics entities (UI elements, indicators)
-     * - ❌ Players with PhysicsManager (physics body controls position)
+     * **When to override:**
+     * - ✅ **Omit for default** → Positions sync automatically
+     * - ✅ **Custom props:** `['x', 'y', 'rotation', 'alpha']` → Sync more properties
+     * - ✅ **Opt-out:** `[]` → Physics-driven (physics body controls position)
      *
      * @example
      * ```ts
-     * // Bullets that move based on state position
-     * syncProperties: ['x', 'y', 'rotation']
+     * // State-driven entities (default)
+     * // syncProperties: ['x', 'y'] is automatic!
      *
-     * // Players use physics - don't sync position!
-     * // (omit syncProperties entirely)
+     * // Physics-driven entities (opt-out)
+     * syncProperties: [] // Physics body controls position
+     *
+     * // Custom properties
+     * syncProperties: ['x', 'y', 'rotation', 'alpha']
      * ```
      */
     syncProperties?: string[];

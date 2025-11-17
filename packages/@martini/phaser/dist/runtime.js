@@ -58,10 +58,16 @@ export function initializeGame(config) {
         width: config.phaserConfig?.width || 800,
         height: config.phaserConfig?.height || 600
     };
+    // Default input configuration ensures pointer/mouse/touch events work
+    // especially when running inside iframes (IDE environment)
+    const defaultInput = {
+        activePointers: 3 // Enable mouse + 2 touch pointers by default
+    };
     const phaserConfig = {
         type: Phaser.AUTO,
         parent: 'game',
         scale: defaultScale,
+        input: defaultInput,
         ...config.phaserConfig,
         scene: config.scene(runtime)
     };

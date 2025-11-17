@@ -100,10 +100,17 @@ export function initializeGame<TState = any>(
     height: config.phaserConfig?.height || 600
   };
 
+  // Default input configuration ensures pointer/mouse/touch events work
+  // especially when running inside iframes (IDE environment)
+  const defaultInput = {
+    activePointers: 3 // Enable mouse + 2 touch pointers by default
+  };
+
   const phaserConfig: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     parent: 'game',
     scale: defaultScale,
+    input: defaultInput,
     ...config.phaserConfig,
     scene: config.scene(runtime)
   };

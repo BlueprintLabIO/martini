@@ -1278,6 +1278,9 @@ var StateDrivenSpawner = class {
     __publicField(this, "trackedKeys", /* @__PURE__ */ new Set());
     __publicField(this, "unsubscribe");
     this.adapter = adapter;
+    if (!config.syncProperties && !config.onUpdateSprite) {
+      config.syncProperties = ["x", "y"];
+    }
     this.config = config;
     if (adapter.isHost()) {
     } else {
@@ -2315,10 +2318,15 @@ function initializeGame(config) {
     width: config.phaserConfig?.width || 800,
     height: config.phaserConfig?.height || 600
   };
+  const defaultInput = {
+    activePointers: 3
+    // Enable mouse + 2 touch pointers by default
+  };
   const phaserConfig = {
     type: Phaser.AUTO,
     parent: "game",
     scale: defaultScale,
+    input: defaultInput,
     ...config.phaserConfig,
     scene: config.scene(runtime)
   };
