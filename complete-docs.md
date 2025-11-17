@@ -2,24 +2,29 @@
 
 **Generated:** 2025-11-17
 **Last Updated:** 2025-11-17
-**Status:** In Progress (Phase 1 & 2 Partial)
+**Status:** In Progress (Starting Phase 4 - API Reference)
 **Documentation Site:** http://localhost:5173/docs
 
 ## Current Status Summary
 
 ### ✅ Completed
 - Navigation structure in `navigation.ts` (all sections defined)
-- Landing page: `index.md` (created)
-- Getting Started: `installation.md`, `quick-start.md`, `first-game.md`
-- Guides: `phaser-integration.md`, `best-practices.md`
+- Landing page: `index.md` (created, nested link bug fixed)
+- **Phase 1**: Getting Started - `installation.md`, `quick-start.md`, `first-game.md` ✅
+- **Phase 3**: Core Concepts - ALL 6 DOCS COMPLETE! 🎉
+  - `architecture.md` ✅
+  - `state-management.md` ✅
+  - `actions.md` ✅
+  - `determinism.md` ✅
+  - `transport-layer.md` ✅
+  - `player-lifecycle.md` ✅
+- Guides (partial): `phaser-integration.md`, `best-practices.md`
 - API (partial, high-level): `core.md`, `phaser.md`, `transports.md`
 
 ### 🚧 In Progress
-- Phase 1: Navigation & Structure (mostly done, need to verify routing)
-- Phase 2: Getting Started docs exist but need review for completeness
+- **Phase 4**: API Reference - @martini/core (Starting now)
 
 ### ⏳ Not Started
-- Phase 3: Core Concepts (6 docs)
 - Phase 4-7: Detailed API Reference (30+ docs)
 - Phase 8: Advanced Guides (4 docs)
 - Phase 9: Examples & Recipes (6 docs)
@@ -28,9 +33,10 @@
 - Phase 12: Migration & Changelog (2 docs)
 
 ### 📊 Progress Metrics
-- Files created: 9/60+ (~15%)
-- Sections covered: 3/12 partially
-- High-level coverage exists, need granular API docs
+- Files created: 15/60+ (~25%)
+- **Core Concepts: 6/6 complete (100%)** 🎉✅
+- **Getting Started: Complete** ✅
+- High-level API coverage exists, detailed API docs next priority
 
 ---
 

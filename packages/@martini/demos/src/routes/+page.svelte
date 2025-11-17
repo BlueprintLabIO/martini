@@ -72,7 +72,7 @@
 
 				<div class="hero-actions">
 					<a href="#demos" class="btn btn-primary">
-						Play Interactive Demos
+						Try Interactive Code Previews
 						<ArrowRight class="icon" size={16} />
 					</a>
 					<a href="https://github.com/yourusername/martini" class="btn btn-secondary">
@@ -330,14 +330,14 @@ export const game = defineGame({
 	<!-- Demos Section -->
 	<section id="demos" class="demos">
 		<div class="container">
-			<h2 class="section-title">Interactive Demos</h2>
+			<h2 class="section-title">Interactive Code Previews</h2>
 			<p class="section-description">
-				Each demo runs two game instances side-by-side. No tabs, no hassle—just instant multiplayer.
+				Live code editor with dual game previews. See the code, edit it, and watch both instances update in real-time.
 			</p>
 
 			<div class="demos-grid">
 				{#each demoGames as demo}
-					<a href="/demo/{demo.id}" class="demo-card">
+					<a href="/preview/{demo.id}" class="demo-card">
 						<div class="demo-header">
 							<h3>{demo.name}</h3>
 							<span class="demo-badge {demo.difficulty}">{demo.difficulty}</span>

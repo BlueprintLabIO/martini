@@ -40,18 +40,14 @@ section: home
 
 ## Key Features
 
-<div class="features">
-
-✅ **Declarative API** - Define state and actions, not networking code
-✅ **Host-authoritative** - Host runs the game, clients mirror state
-✅ **Automatic sync** - Efficient diff/patch algorithm minimizes bandwidth
-✅ **Engine-agnostic** - Works with Phaser, Unity, Godot, Three.js
-✅ **Transport-agnostic** - P2P, WebSocket, or custom - your choice
-✅ **TypeScript-first** - Full type safety and IntelliSense
-✅ **Production-ready** - Battle-tested in real games
-✅ **Open source** - MIT licensed, community-driven
-
-</div>
+- **Declarative API** - Define state and actions, not networking code
+- **Host-authoritative** - Host runs the game, clients mirror state
+- **Automatic sync** - Efficient diff/patch algorithm minimizes bandwidth
+- **Engine-agnostic** - Works with Phaser, Unity, Godot, Three.js
+- **Transport-agnostic** - P2P, WebSocket, or custom - your choice
+- **TypeScript-first** - Full type safety and IntelliSense
+- **Production-ready** - Battle-tested in real games
+- **Open source** - MIT licensed, community-driven
 
 ## What is Martini?
 

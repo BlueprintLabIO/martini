@@ -339,6 +339,21 @@
 		color: var(--text-secondary, #525252);
 	}
 
+	/* Enhanced styling for feature lists (list items with bold labels) */
+	.prose :global(li strong) {
+		color: var(--text-primary, #0b0a08);
+		font-weight: 600;
+	}
+
+	/* Custom bullet styling for main content lists */
+	.prose :global(ul) {
+		list-style-type: disc;
+	}
+
+	.prose :global(ul li::marker) {
+		color: var(--link-color, #3b82f6);
+	}
+
 	.prose :global(blockquote) {
 		border-left: 4px solid var(--border-color, #e5e5e5);
 		padding-left: 1rem;
