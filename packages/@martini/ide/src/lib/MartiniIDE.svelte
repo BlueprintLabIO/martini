@@ -3,9 +3,14 @@
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge';
 	import CodeEditor from './components/CodeEditor.svelte';
 	import GamePreview from './components/GamePreview.svelte';
+	import StateViewer from './components/StateViewer.svelte';
+	import ActionTimeline from './components/ActionTimeline.svelte';
+	import StateDiffViewer from './components/StateDiffViewer.svelte';
+	import NetworkMonitor from './components/NetworkMonitor.svelte';
 	import { VirtualFileSystem } from './core/VirtualFS';
 	import { IframeBridgeRelay } from '@martini/transport-iframe-bridge';
 	import type { MartiniIDEConfig } from './types';
+	import type { StateSnapshot, ActionRecord } from '@martini/devtools';
 
 	interface Props {
 		config: MartiniIDEConfig;
@@ -26,16 +31,28 @@
 
 	// DevTools state (shared between both previews)
 	let showDevTools = $state(true);
-	let activeDevToolsTab = $state<'console' | 'state' | 'actions'>('console');
+	let activeDevToolsTab = $state<'console' | 'state' | 'actions' | 'diff' | 'network'>('console');
 	let hostLogs = $state<Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>>([]);
 	let clientLogs = $state<Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>>([]);
 	let hostStatus = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
 	let clientStatus = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
-	let hostStateSnapshots = $state<Array<{ timestamp: number; state: any }>>([]);
-	let clientStateSnapshots = $state<Array<{ timestamp: number; state: any }>>([]);
-	let hostActions = $state<Array<{ timestamp: number; actionName: string; input: any; playerId?: string; targetId?: string }>>([]);
-	let clientActions = $state<Array<{ timestamp: number; actionName: string; input: any; playerId?: string; targetId?: string }>>([]);
+	let hostStateSnapshots = $state<StateSnapshot[]>([]);
+	let clientStateSnapshots = $state<StateSnapshot[]>([]);
+	let hostActions = $state<ActionRecord[]>([]);
+	let clientActions = $state<ActionRecord[]>([]);
+	let hostActionsExcluded = $state(0);
+	let clientActionsExcluded = $state(0);
+	let hostNetworkPackets = $state<Array<{ timestamp: number; direction: 'send' | 'receive'; type: string; size: number; payload: any }>>([]);
+	let clientNetworkPackets = $state<Array<{ timestamp: number; direction: 'send' | 'receive'; type: string; size: number; payload: any }>>([]);
 	const sessionRoomId = generateRoomId();
+
+	// Derived state: check if there are divergences
+	let hasDivergences = $derived(
+		hostStateSnapshots.length > 0 &&
+			clientStateSnapshots.length > 0 &&
+			JSON.stringify(hostStateSnapshots[hostStateSnapshots.length - 1]?.state) !==
+				JSON.stringify(clientStateSnapshots[clientStateSnapshots.length - 1]?.state)
+	);
 
 	onMount(async () => {
 		// Initialize IframeBridgeRelay if using iframe-bridge transport
@@ -149,7 +166,7 @@
 			<Pane defaultSize={65} minSize={30} class="preview-pane">
 				<PaneGroup direction="vertical" class="preview-group">
 					<!-- Game Canvases -->
-					<Pane defaultSize={75} minSize={40} class="games-pane">
+					<Pane defaultSize={50} minSize={30} class="games-pane">
 						{#if config.layout === 'dual'}
 							<div class="dual-preview">
 								<GamePreview
@@ -160,6 +177,10 @@
 									roomId={sessionRoomId}
 									bind:consoleLogs={hostLogs}
 									bind:connectionStatus={hostStatus}
+									bind:stateSnapshots={hostStateSnapshots}
+									bind:actionHistory={hostActions}
+									bind:actionExcludedCount={hostActionsExcluded}
+									bind:networkPackets={hostNetworkPackets}
 									hideDevTools={true}
 									onReady={config.onReady}
 									onError={config.onError}
@@ -172,6 +193,10 @@
 									roomId={sessionRoomId}
 									bind:consoleLogs={clientLogs}
 									bind:connectionStatus={clientStatus}
+									bind:stateSnapshots={clientStateSnapshots}
+									bind:actionHistory={clientActions}
+									bind:actionExcludedCount={clientActionsExcluded}
+									bind:networkPackets={clientNetworkPackets}
 									hideDevTools={true}
 								/>
 							</div>
@@ -184,6 +209,10 @@
 								roomId={sessionRoomId}
 								bind:consoleLogs={hostLogs}
 								bind:connectionStatus={hostStatus}
+								bind:stateSnapshots={hostStateSnapshots}
+								bind:actionHistory={hostActions}
+								bind:actionExcludedCount={hostActionsExcluded}
+								bind:networkPackets={hostNetworkPackets}
 								hideDevTools={true}
 								onReady={config.onReady}
 								onError={config.onError}
@@ -194,7 +223,7 @@
 					<!-- Shared DevTools Panel -->
 					{#if showDevTools}
 						<PaneResizer class="resizer-horizontal" />
-						<Pane defaultSize={25} minSize={15} class="devtools-pane">
+						<Pane defaultSize={50} minSize={25} class="devtools-pane">
 							<div class="devtools-container">
 								<!-- Tabs -->
 								<div class="devtools-tabs">
@@ -219,16 +248,189 @@
 									>
 										Actions
 									</button>
+									<button
+										class="devtools-tab"
+										class:active={activeDevToolsTab === 'diff'}
+										onclick={() => (activeDevToolsTab = 'diff')}
+									>
+										Diff {#if hasDivergences}⚠️{/if}
+									</button>
+									<button
+										class="devtools-tab"
+										class:active={activeDevToolsTab === 'network'}
+										onclick={() => (activeDevToolsTab = 'network')}
+									>
+										Network
+									</button>
 								</div>
+
+								<!-- Tab Content -->
 								{#if config.layout === 'dual'}
 									<div class="devtools-dual">
+										<!-- HOST Section -->
 										<div class="devtools-section">
 											<div class="devtools-section-header">
 												<span class="role-badge role-host">HOST</span>
+												{#if activeDevToolsTab === 'console'}
+													<span class="status-indicator" class:connected={hostStatus === 'connected'}>
+														{hostStatus}
+													</span>
+												{:else if activeDevToolsTab === 'state'}
+													<span class="snapshot-count">
+														{hostStateSnapshots.length} snapshot{hostStateSnapshots.length === 1 ? '' : 's'}
+													</span>
+												{:else if activeDevToolsTab === 'actions'}
+													<span class="action-count">
+														{hostActions.length} action{hostActions.length === 1 ? '' : 's'}
+													</span>
+												{:else if activeDevToolsTab === 'network'}
+													<span class="packet-count">
+														{hostNetworkPackets.length} packet{hostNetworkPackets.length === 1 ? '' : 's'}
+													</span>
+												{/if}
+											</div>
+
+											<!-- Console Tab Content -->
+											{#if activeDevToolsTab === 'console'}
+												<div class="devtools-logs">
+													{#if hostLogs.length === 0}
+														<p class="empty-logs">No console output</p>
+													{:else}
+														{#each hostLogs.slice(-20) as log}
+															<div class="log-entry log-{log.level}">
+																<span class="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
+																<span class="log-message">{log.message}</span>
+															</div>
+														{/each}
+													{/if}
+												</div>
+											{/if}
+
+											<!-- State Tab Content -->
+											{#if activeDevToolsTab === 'state'}
+												<div class="devtools-content">
+													<StateViewer snapshots={hostStateSnapshots} />
+												</div>
+											{/if}
+
+											<!-- Actions Tab Content -->
+											{#if activeDevToolsTab === 'actions'}
+												<div class="devtools-content">
+											<ActionTimeline actions={hostActions} excludedCount={hostActionsExcluded} />
+												</div>
+											{/if}
+
+											<!-- Network Tab Content -->
+											{#if activeDevToolsTab === 'network'}
+												<div class="devtools-content">
+													<NetworkMonitor packets={hostNetworkPackets} />
+												</div>
+											{/if}
+										</div>
+
+										<!-- CLIENT Section -->
+										<div class="devtools-section">
+											<div class="devtools-section-header">
+												<span class="role-badge role-client">CLIENT</span>
+												{#if activeDevToolsTab === 'console'}
+													<span class="status-indicator" class:connected={clientStatus === 'connected'}>
+														{clientStatus}
+													</span>
+												{:else if activeDevToolsTab === 'state'}
+													<span class="snapshot-count">
+														{clientStateSnapshots.length} snapshot{clientStateSnapshots.length === 1 ? '' : 's'}
+													</span>
+												{:else if activeDevToolsTab === 'actions'}
+													<span class="action-count">
+														{clientActions.length} action{clientActions.length === 1 ? '' : 's'}
+													</span>
+												{:else if activeDevToolsTab === 'network'}
+													<span class="packet-count">
+														{clientNetworkPackets.length} packet{clientNetworkPackets.length === 1 ? '' : 's'}
+													</span>
+												{/if}
+											</div>
+
+											<!-- Console Tab Content -->
+											{#if activeDevToolsTab === 'console'}
+												<div class="devtools-logs">
+													{#if clientLogs.length === 0}
+														<p class="empty-logs">No console output</p>
+													{:else}
+														{#each clientLogs.slice(-20) as log}
+															<div class="log-entry log-{log.level}">
+																<span class="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
+																<span class="log-message">{log.message}</span>
+															</div>
+														{/each}
+													{/if}
+												</div>
+											{/if}
+
+											<!-- State Tab Content -->
+											{#if activeDevToolsTab === 'state'}
+												<div class="devtools-content">
+													<StateViewer snapshots={clientStateSnapshots} />
+												</div>
+											{/if}
+
+											<!-- Actions Tab Content -->
+											{#if activeDevToolsTab === 'actions'}
+												<div class="devtools-content">
+											<ActionTimeline actions={clientActions} excludedCount={clientActionsExcluded} />
+												</div>
+											{/if}
+
+											<!-- Network Tab Content -->
+											{#if activeDevToolsTab === 'network'}
+												<div class="devtools-content">
+													<NetworkMonitor packets={clientNetworkPackets} />
+												</div>
+											{/if}
+										</div>
+
+										<!-- Diff Tab Content (full width, shows both sides) -->
+										{#if activeDevToolsTab === 'diff'}
+											<div class="devtools-diff-full">
+												<StateDiffViewer
+													hostSnapshots={hostStateSnapshots}
+													clientSnapshots={clientStateSnapshots}
+												/>
+											</div>
+										{/if}
+									</div>
+								{:else}
+									<!-- Single Player Mode -->
+									<div class="devtools-section">
+										<div class="devtools-section-header">
+											<span class="role-badge role-host">
+												{activeDevToolsTab === 'console'
+													? 'CONSOLE'
+													: activeDevToolsTab === 'state'
+														? 'STATE'
+														: activeDevToolsTab === 'actions'
+															? 'ACTIONS'
+															: activeDevToolsTab === 'network'
+																? 'NETWORK'
+																: 'DIFF'}
+											</span>
+											{#if activeDevToolsTab === 'console'}
 												<span class="status-indicator" class:connected={hostStatus === 'connected'}>
 													{hostStatus}
 												</span>
-											</div>
+											{:else if activeDevToolsTab === 'state'}
+												<span class="snapshot-count">
+													{hostStateSnapshots.length} snapshot{hostStateSnapshots.length === 1 ? '' : 's'}
+												</span>
+											{:else if activeDevToolsTab === 'actions'}
+												<span class="action-count">
+													{hostActions.length} action{hostActions.length === 1 ? '' : 's'}
+												</span>
+											{/if}
+										</div>
+
+										<!-- Console Tab Content -->
+										{#if activeDevToolsTab === 'console'}
 											<div class="devtools-logs">
 												{#if hostLogs.length === 0}
 													<p class="empty-logs">No console output</p>
@@ -241,48 +443,38 @@
 													{/each}
 												{/if}
 											</div>
-										</div>
-										<div class="devtools-section">
-											<div class="devtools-section-header">
-												<span class="role-badge role-client">CLIENT</span>
-												<span class="status-indicator" class:connected={clientStatus === 'connected'}>
-													{clientStatus}
-												</span>
+										{/if}
+
+										<!-- State Tab Content -->
+										{#if activeDevToolsTab === 'state'}
+											<div class="devtools-content">
+												<StateViewer snapshots={hostStateSnapshots} />
 											</div>
-											<div class="devtools-logs">
-												{#if clientLogs.length === 0}
-													<p class="empty-logs">No console output</p>
-												{:else}
-													{#each clientLogs.slice(-20) as log}
-														<div class="log-entry log-{log.level}">
-															<span class="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
-															<span class="log-message">{log.message}</span>
-														</div>
-													{/each}
-												{/if}
+										{/if}
+
+										<!-- Actions Tab Content -->
+										{#if activeDevToolsTab === 'actions'}
+											<div class="devtools-content">
+												<ActionTimeline actions={hostActions} excludedCount={hostActionsExcluded} />
 											</div>
-										</div>
-									</div>
-								{:else}
-									<div class="devtools-section">
-										<div class="devtools-section-header">
-											<span class="role-badge role-host">CONSOLE</span>
-											<span class="status-indicator" class:connected={hostStatus === 'connected'}>
-												{hostStatus}
-											</span>
-										</div>
-										<div class="devtools-logs">
-											{#if hostLogs.length === 0}
-												<p class="empty-logs">No console output</p>
-											{:else}
-												{#each hostLogs.slice(-20) as log}
-													<div class="log-entry log-{log.level}">
-														<span class="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
-														<span class="log-message">{log.message}</span>
-													</div>
-												{/each}
-											{/if}
-										</div>
+										{/if}
+
+										<!-- Diff Tab Content -->
+										{#if activeDevToolsTab === 'diff'}
+											<div class="devtools-content">
+												<StateDiffViewer
+													hostSnapshots={hostStateSnapshots}
+													clientSnapshots={clientStateSnapshots}
+												/>
+											</div>
+										{/if}
+
+										<!-- Network Tab Content -->
+										{#if activeDevToolsTab === 'network'}
+											<div class="devtools-content">
+												<NetworkMonitor packets={hostNetworkPackets} />
+											</div>
+										{/if}
 									</div>
 								{/if}
 							</div>
@@ -341,7 +533,7 @@
 	.sidebar {
 		height: 100%;
 		background: #f9fafb;
-		padding: 1rem;
+		padding: 0.75rem;
 		border-right: 1px solid #e5e7eb;
 		overflow-y: auto;
 		display: flex;
@@ -349,8 +541,8 @@
 	}
 
 	.sidebar h3 {
-		margin: 0 0 1rem 0;
-		font-size: 0.75rem;
+		margin: 0 0 0.5rem 0;
+		font-size: 0.625rem;
 		font-weight: 600;
 		text-transform: uppercase;
 		color: #6b7280;
@@ -360,24 +552,24 @@
 	.file-list {
 		list-style: none;
 		padding: 0;
-		margin: 0 0 1rem 0;
+		margin: 0 0 0.75rem 0;
 		flex: 1;
 	}
 
 	.file-list li {
-		margin-bottom: 0.125rem;
+		margin-bottom: 0.0625rem;
 	}
 
 	.file-list button {
 		width: 100%;
-		padding: 0.5rem 0.75rem;
+		padding: 0.375rem 0.5rem;
 		background: transparent;
 		border: none;
 		color: #374151;
 		text-align: left;
 		cursor: pointer;
-		border-radius: 6px;
-		font-size: 0.875rem;
+		border-radius: 4px;
+		font-size: 0.75rem;
 		transition: all 0.15s;
 	}
 
@@ -392,14 +584,15 @@
 
 	.run-button {
 		width: 100%;
-		padding: 0.75rem;
+		padding: 0.5rem;
 		background: #3b82f6;
 		color: #ffffff;
 		border: none;
-		border-radius: 6px;
+		border-radius: 4px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		cursor: pointer;
-		margin-bottom: 1rem;
+		margin-bottom: 0.75rem;
 		transition: background 0.15s;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 	}
@@ -470,8 +663,41 @@
 		background: #1e1e1e;
 		color: #d4d4d4;
 		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-		font-size: 0.75rem;
+		font-size: 0.6875rem;
 		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.devtools-tabs {
+		display: flex;
+		gap: 0.25rem;
+		padding: 0.5rem 0.75rem;
+		background: #252526;
+		border-bottom: 1px solid #3e3e42;
+	}
+
+	.devtools-tab {
+		padding: 0.25rem 0.5rem;
+		background: transparent;
+		border: none;
+		color: #969696;
+		cursor: pointer;
+		border-radius: 3px;
+		font-size: 0.625rem;
+		font-weight: 500;
+		transition: all 0.15s;
+	}
+
+	.devtools-tab:hover {
+		background: rgba(90, 93, 94, 0.31);
+		color: #d4d4d4;
+	}
+
+	.devtools-tab.active {
+		background: #1e1e1e;
+		color: #ffffff;
+		border: 1px solid #3e3e42;
 	}
 
 	.devtools-dual {
@@ -479,6 +705,15 @@
 		height: 100%;
 		gap: 1px;
 		background: #2d2d30;
+	}
+
+	.devtools-diff-full {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		background: #1e1e1e;
+		padding: 0.5rem;
 	}
 
 	.devtools-section {
@@ -536,6 +771,20 @@
 		padding: 0.5rem;
 	}
 
+	.devtools-content {
+		flex: 1;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.snapshot-count,
+	.action-count {
+		font-size: 0.625rem;
+		color: #6e6e6e;
+		text-transform: capitalize;
+	}
+
 	.empty-logs {
 		color: #6e6e6e;
 		text-align: center;
@@ -545,10 +794,10 @@
 
 	.log-entry {
 		display: flex;
-		gap: 0.5rem;
-		padding: 0.25rem 0.375rem;
-		font-size: 0.6875rem;
-		line-height: 1.4;
+		gap: 0.375rem;
+		padding: 0.1875rem 0.25rem;
+		font-size: 0.625rem;
+		line-height: 1.3;
 		border-radius: 3px;
 		margin-bottom: 1px;
 	}
@@ -560,7 +809,7 @@
 	.log-time {
 		color: #6e6e6e;
 		flex-shrink: 0;
-		font-size: 0.625rem;
+		font-size: 0.5625rem;
 	}
 
 	.log-message {

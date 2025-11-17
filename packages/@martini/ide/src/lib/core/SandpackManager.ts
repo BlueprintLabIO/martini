@@ -6,12 +6,14 @@
 
 import { loadSandpackClient, type SandpackClient, type SandpackMessage } from '@codesandbox/sandpack-client';
 import type { VirtualFileSystem } from './VirtualFS';
+import type { StateSnapshot, ActionRecord } from '@martini/devtools';
 
 // Import pre-bundled ESM modules (single file per package)
 import coreBrowserBundle from '@martini/core/dist/browser.js?raw';
 import phaserBrowserBundle from '@martini/phaser/dist/browser.js?raw';
 import localTransportBundle from '@martini/transport-local/dist/browser.js?raw';
 import iframeBridgeBundle from '@martini/transport-iframe-bridge/dist/browser.js?raw';
+import devtoolsBrowserBundle from '@martini/devtools/dist/martini-devtools.browser.js?raw';
 
 export interface SandpackManagerOptions {
 	/** Container element for the Sandpack iframe */
@@ -37,6 +39,21 @@ export interface SandpackManagerOptions {
 
 	/** Connection status callback */
 	onConnectionStatus?: (status: 'disconnected' | 'connecting' | 'connected') => void;
+
+	/** State snapshot callback (DevTools integration) */
+	onStateSnapshot?: (snapshot: StateSnapshot) => void;
+
+	/** Action callback (DevTools integration) */
+	onAction?: (action: ActionRecord) => void;
+
+	/** Network packet callback (DevTools integration) */
+	onNetworkPacket?: (packet: {
+		timestamp: number;
+		direction: 'send' | 'receive';
+		type: string;
+		size: number;
+		payload: any;
+	}) => void;
 }
 
 export class SandpackManager {
@@ -46,6 +63,7 @@ export class SandpackManager {
 
 	constructor(options: SandpackManagerOptions) {
 		this.options = options;
+		this.setupDevToolsListener();
 	}
 
 	/**
@@ -78,7 +96,7 @@ export class SandpackManager {
 		for (const path of vfs.getFilePaths()) {
 			let content = vfs.readFile(path);
 			if (content !== undefined) {
-				// Inject __MARTINI_CONFIG__ at the top of the entry file
+				// Inject __MARTINI_CONFIG__ and DevTools bridge at the top of the entry file
 				if (path === entryPoint) {
 					const configSetup = `// Injected by Martini IDE - setup config before any imports
 window.__MARTINI_CONFIG__ = ${JSON.stringify({
@@ -90,7 +108,8 @@ window.__MARTINI_CONFIG__ = ${JSON.stringify({
 })};
 
 `;
-					content = configSetup + content;
+					const devtoolsBridge = this.createDevToolsBridge();
+					content = configSetup + devtoolsBridge + content;
 				}
 				files[path] = { code: content };
 			}
@@ -117,7 +136,13 @@ window.__MARTINI_CONFIG__ = ${JSON.stringify({
 			code: JSON.stringify({ name: '@martini/transport-iframe-bridge', version: '2.0.0', main: './index.js', type: 'module' })
 		};
 
-		// 3. Add Phaser stub module (Phaser loaded globally via script tag in HTML)
+		// 3. Inject DevTools bundle
+		files['/node_modules/@martini/devtools/index.js'] = { code: devtoolsBrowserBundle };
+		files['/node_modules/@martini/devtools/package.json'] = {
+			code: JSON.stringify({ name: '@martini/devtools', version: '2.0.0', main: './index.js', type: 'module' })
+		};
+
+		// 4. Add Phaser stub module (Phaser loaded globally via script tag in HTML)
 		files['/node_modules/phaser/package.json'] = {
 			code: JSON.stringify({
 				name: 'phaser',
@@ -136,7 +161,7 @@ export default window.Phaser;
 			`.trim()
 		};
 
-		// 4. Add root package.json (required by Sandpack)
+		// 5. Add root package.json (required by Sandpack)
 		files['/package.json'] = {
 			code: JSON.stringify({
 				name: 'martini-game',
@@ -145,7 +170,7 @@ export default window.Phaser;
 			})
 		};
 
-		// 5. Add custom HTML template with Phaser loaded globally
+		// 6. Add custom HTML template with Phaser loaded globally
 		files['/index.html'] = {
 			code: this.createHTMLTemplate()
 		};
@@ -197,7 +222,7 @@ export default window.Phaser;
 		for (const path of vfs.getFilePaths()) {
 			let content = vfs.readFile(path);
 			if (content !== undefined) {
-				// Inject __MARTINI_CONFIG__ at the top of the entry file
+				// Inject __MARTINI_CONFIG__ and DevTools bridge at the top of the entry file
 				if (path === entryPoint) {
 					const configSetup = `// Injected by Martini IDE - setup config before any imports
 window.__MARTINI_CONFIG__ = ${JSON.stringify({
@@ -209,7 +234,8 @@ window.__MARTINI_CONFIG__ = ${JSON.stringify({
 })};
 
 `;
-					content = configSetup + content;
+					const devtoolsBridge = this.createDevToolsBridge();
+					content = configSetup + devtoolsBridge + content;
 				}
 				files[path] = { code: content };
 			}
@@ -220,6 +246,7 @@ window.__MARTINI_CONFIG__ = ${JSON.stringify({
 		files['/node_modules/@martini/phaser/index.js'] = { code: phaserBrowserBundle };
 		files['/node_modules/@martini/transport-local/index.js'] = { code: localTransportBundle };
 		files['/node_modules/@martini/transport-iframe-bridge/index.js'] = { code: iframeBridgeBundle };
+		files['/node_modules/@martini/devtools/index.js'] = { code: devtoolsBrowserBundle };
 
 		// Add Phaser stub module
 		files['/node_modules/phaser/package.json'] = {
@@ -313,6 +340,82 @@ export default window.Phaser;
 				});
 				break;
 		}
+	}
+
+	/**
+	 * Setup listener for DevTools postMessage events from iframe
+	 */
+	private setupDevToolsListener(): void {
+		window.addEventListener('message', (event) => {
+			// Only process messages from our Sandpack iframe
+			if (event.source !== this.iframe?.contentWindow) return;
+
+			const data = event.data;
+
+			// Handle DevTools messages
+			if (data?.type === 'martini:devtools:state') {
+				this.options.onStateSnapshot?.(data.snapshot);
+			} else if (data?.type === 'martini:devtools:action') {
+				this.options.onAction?.(data.action);
+			} else if (data?.type === 'martini:devtools:network') {
+				this.options.onNetworkPacket?.(data.packet);
+			}
+		});
+	}
+
+	/**
+	 * Create DevTools bridge script to inject into entry point
+	 */
+	private createDevToolsBridge(): string {
+		return `
+// ===== Martini DevTools Bridge =====
+// Auto-injected by MartiniIDE - forwards runtime data to parent window
+import { StateInspector } from '@martini/devtools';
+import * as MartiniPhaser from '@martini/phaser';
+
+// Create global inspector (accessible from game code)
+window.__MARTINI_INSPECTOR__ = new StateInspector({
+  maxSnapshots: 500,
+  maxActions: 2000,
+  snapshotIntervalMs: 250,
+  actionAggregationWindowMs: 200,
+  ignoreActions: ['tick']
+});
+
+// Intercept initializeGame to capture runtime when user calls it
+const originalInitializeGame = MartiniPhaser.initializeGame;
+MartiniPhaser.initializeGame = function(...args) {
+  // Call original function
+  const result = originalInitializeGame.apply(this, args);
+
+  // Attach inspector to the runtime
+  window.__MARTINI_INSPECTOR__.attach(result.runtime);
+  console.log('[Martini DevTools] Inspector attached to runtime');
+
+  // Forward state snapshots to parent window
+  window.__MARTINI_INSPECTOR__.onStateChange((snapshot) => {
+    window.parent.postMessage({
+      type: 'martini:devtools:state',
+      snapshot
+    }, '*');
+  });
+
+  // Forward actions to parent window
+  window.__MARTINI_INSPECTOR__.onAction((action) => {
+    window.parent.postMessage({
+      type: 'martini:devtools:action',
+      action
+    }, '*');
+  });
+
+  // Return result to user code
+  return result;
+};
+
+console.log('[Martini DevTools] Bridge initialized');
+// ===== End DevTools Bridge =====
+
+`;
 	}
 
 	/**

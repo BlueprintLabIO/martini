@@ -36,9 +36,17 @@
 
 ### DevTools Integration
 
+**Status:** ✅ Phases 1-4 Complete (State Timeline, Action History, Divergence Detection, Network Stats, Packet Inspection, Console Logging, UI Polish)
+
 - [x] **StateInspector → DevTools State tab** - Wire up real-time state snapshots to UI ✅
 - [x] **Action history → DevTools Actions tab** - Display action timeline with timestamps ✅
-- [ ] **Network traffic monitoring** - Add transport instrumentation for packet inspection
+- [x] **State Timeline** - Scrub through 500 snapshots with slider ✅
+- [x] **Divergence Detection** - Real-time host/client state comparison with severity warnings ✅
+- [x] **Network Stats** - Packet counts, bytes transferred, throughput rates ✅
+- [x] **Packet Inspection** - Click to expand and view JSON payloads ✅
+- [x] **Console Logging** - Dual host/client console output ✅
+- [x] **UI Polish** - Optimized font sizes and panel layouts ✅
+- [ ] **Transport instrumentation** - Add hooks to LocalTransport/IframeBridge for live packet capture (Phase 5)
 
 ---
 

@@ -108,7 +108,7 @@
 
 	:global(.cm-editor) {
 		height: 100%;
-		font-size: 14px;
+		font-size: 12px;
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		background: #ffffff;
 		color: #1f2937;

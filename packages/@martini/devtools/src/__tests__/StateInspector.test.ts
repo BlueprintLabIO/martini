@@ -1,491 +1,157 @@
-/**
- * StateInspector Tests (TDD approach)
- *
- * The StateInspector provides real-time state visualization and debugging tools.
- * It attaches to a GameRuntime and tracks state changes, actions, and network events.
- */
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { StateInspector } from '../StateInspector';
 import { defineGame, GameRuntime } from '@martini/core';
 import { LocalTransport } from '@martini/transport-local';
+import { StateInspector } from '../StateInspector';
+
+function createRuntime() {
+  const game = defineGame({
+    setup: () => ({ count: 0, history: [] as number[] }),
+    actions: {
+      increment: {
+        apply: (state) => {
+          state.count++;
+          state.history.push(state.count);
+        },
+      },
+      tick: {
+        apply: () => {
+          // no-op heartbeat
+        },
+      },
+      setValue: {
+        apply: (state, _ctx, input: { value: number }) => {
+          state.count = input.value;
+          state.history.push(state.count);
+        },
+      },
+    },
+  });
+
+  const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
+  const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
+
+  return { runtime, transport };
+}
 
 describe('StateInspector', () => {
-  describe('Basic Attachment', () => {
-    it('should attach to a GameRuntime instance', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-      });
+  let runtime: GameRuntime;
+  let transport: LocalTransport;
 
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      expect(inspector.isAttached()).toBe(true);
-      expect(inspector.getRuntime()).toBe(runtime);
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should detach from runtime', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-      inspector.detach();
-
-      expect(inspector.isAttached()).toBe(false);
-      expect(inspector.getRuntime()).toBe(null);
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should throw error if attaching to already-attached inspector', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-      });
-
-      const transport1 = new LocalTransport({ roomId: 'test1', playerId: 'p1', isHost: true });
-      const runtime1 = new GameRuntime(game, transport1, { isHost: true, playerIds: ['p1'] });
-
-      const transport2 = new LocalTransport({ roomId: 'test2', playerId: 'p2', isHost: true });
-      const runtime2 = new GameRuntime(game, transport2, { isHost: true, playerIds: ['p2'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime1);
-
-      expect(() => inspector.attach(runtime2)).toThrow('Inspector is already attached');
-
-      runtime1.destroy();
-      runtime2.destroy();
-      transport1.disconnect();
-      transport2.disconnect();
-    });
+  beforeEach(() => {
+    ({ runtime, transport } = createRuntime());
   });
 
-  describe('State Snapshots', () => {
-    it('should capture initial state snapshot on attach', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0, players: {} }),
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      const snapshots = inspector.getSnapshots();
-      expect(snapshots).toHaveLength(1);
-      expect(snapshots[0].state).toEqual({ count: 0, players: {} });
-      expect(snapshots[0].timestamp).toBeTypeOf('number');
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should capture state snapshots on state changes', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      runtime.submitAction('increment', {});
-      runtime.submitAction('increment', {});
-
-      const snapshots = inspector.getSnapshots();
-      expect(snapshots.length).toBeGreaterThanOrEqual(2);
-      expect(snapshots[snapshots.length - 1].state.count).toBe(2);
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should limit number of snapshots to max size', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector({ maxSnapshots: 5 });
-      inspector.attach(runtime);
-
-      // Submit 10 actions
-      for (let i = 0; i < 10; i++) {
-        runtime.submitAction('increment', {});
-      }
-
-      const snapshots = inspector.getSnapshots();
-      expect(snapshots.length).toBeLessThanOrEqual(6); // Initial + 5 max
-
-      runtime.destroy();
-      transport.disconnect();
-    });
+  afterEach(() => {
+    runtime.destroy();
+    transport.disconnect();
   });
 
-  describe('Action History', () => {
-    it('should track all actions submitted', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0, value: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-          setValue: {
-            apply: (state, context, input: { value: number }) => {
-              state.value = input.value;
-            },
-          },
-        },
-      });
+  it('attaches and detaches cleanly', () => {
+    const inspector = new StateInspector();
+    inspector.attach(runtime);
 
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
+    expect(inspector.isAttached()).toBe(true);
+    expect(inspector.getRuntime()).toBe(runtime);
 
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      runtime.submitAction('increment', {});
-      runtime.submitAction('setValue', { value: 42 });
-      runtime.submitAction('increment', {});
-
-      const history = inspector.getActionHistory();
-      expect(history).toHaveLength(3);
-      expect(history[0].actionName).toBe('increment');
-      expect(history[1].actionName).toBe('setValue');
-      expect(history[1].input).toEqual({ value: 42 });
-      expect(history[2].actionName).toBe('increment');
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should include timestamps in action history', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      const before = Date.now();
-      runtime.submitAction('increment', {});
-      const after = Date.now();
-
-      const history = inspector.getActionHistory();
-      expect(history[0].timestamp).toBeGreaterThanOrEqual(before);
-      expect(history[0].timestamp).toBeLessThanOrEqual(after);
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should limit action history size', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector({ maxActions: 5 });
-      inspector.attach(runtime);
-
-      for (let i = 0; i < 10; i++) {
-        runtime.submitAction('increment', {});
-      }
-
-      const history = inspector.getActionHistory();
-      expect(history).toHaveLength(5);
-      // Should keep most recent actions
-      expect(history[history.length - 1].actionName).toBe('increment');
-
-      runtime.destroy();
-      transport.disconnect();
-    });
+    inspector.detach();
+    expect(inspector.isAttached()).toBe(false);
+    expect(inspector.getRuntime()).toBe(null);
   });
 
-  describe('Event Listeners', () => {
-    it('should notify listeners on state change', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
+  it('captures initial state snapshot with id', () => {
+    const inspector = new StateInspector();
+    inspector.attach(runtime);
 
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      const stateChanges: any[] = [];
-      inspector.onStateChange((snapshot) => {
-        stateChanges.push(snapshot);
-      });
-
-      runtime.submitAction('increment', {});
-
-      expect(stateChanges.length).toBeGreaterThan(0);
-      expect(stateChanges[stateChanges.length - 1].state.count).toBe(1);
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should notify listeners on action', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      const actions: any[] = [];
-      inspector.onAction((actionRecord) => {
-        actions.push(actionRecord);
-      });
-
-      runtime.submitAction('increment', {});
-
-      expect(actions).toHaveLength(1);
-      expect(actions[0].actionName).toBe('increment');
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should allow unsubscribing from events', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      const actions: any[] = [];
-      const unsubscribe = inspector.onAction((actionRecord) => {
-        actions.push(actionRecord);
-      });
-
-      runtime.submitAction('increment', {});
-      expect(actions).toHaveLength(1);
-
-      unsubscribe();
-
-      runtime.submitAction('increment', {});
-      expect(actions).toHaveLength(1); // Should still be 1
-
-      runtime.destroy();
-      transport.disconnect();
-    });
+    const snapshots = inspector.getSnapshots();
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0].id).toBe(1);
+    expect(snapshots[0].state).toEqual({ count: 0, history: [] });
   });
 
-  describe('Statistics', () => {
-    it('should track total action count', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
+  it('records diffs and links them to actions', async () => {
+    const inspector = new StateInspector({ snapshotIntervalMs: 0 });
+    inspector.attach(runtime);
 
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
+    runtime.submitAction('increment', {});
 
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
+    const snapshots = inspector.getSnapshots();
+    expect(snapshots).toHaveLength(2);
+    const latest = snapshots[snapshots.length - 1];
+    expect(latest.state).toBeUndefined();
+    expect(latest.diff).toBeDefined();
+    expect(latest.lastActionId).toBe(1);
 
-      runtime.submitAction('increment', {});
-      runtime.submitAction('increment', {});
-      runtime.submitAction('increment', {});
-
-      const stats = inspector.getStats();
-      expect(stats.totalActions).toBe(3);
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should track total state changes', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      runtime.submitAction('increment', {});
-      runtime.submitAction('increment', {});
-
-      const stats = inspector.getStats();
-      expect(stats.totalStateChanges).toBeGreaterThanOrEqual(2);
-
-      runtime.destroy();
-      transport.disconnect();
-    });
-
-    it('should track action frequency by name', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0, value: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-          setValue: {
-            apply: (state, context, input: { value: number }) => {
-              state.value = input.value;
-            },
-          },
-        },
-      });
-
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
-
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
-
-      runtime.submitAction('increment', {});
-      runtime.submitAction('increment', {});
-      runtime.submitAction('setValue', { value: 42 });
-      runtime.submitAction('increment', {});
-
-      const stats = inspector.getStats();
-      expect(stats.actionsByName.increment).toBe(3);
-      expect(stats.actionsByName.setValue).toBe(1);
-
-      runtime.destroy();
-      transport.disconnect();
-    });
+    const actions = inspector.getActionHistory();
+    expect(actions[0].snapshotId).toBe(latest.id);
   });
 
-  describe('Clear History', () => {
-    it('should clear all snapshots and action history', () => {
-      const game = defineGame({
-        setup: () => ({ count: 0 }),
-        actions: {
-          increment: {
-            apply: (state) => {
-              state.count++;
-            },
-          },
-        },
-      });
+  it('throttles snapshot capture', async () => {
+    const inspector = new StateInspector({ snapshotIntervalMs: 10 });
+    inspector.attach(runtime);
 
-      const transport = new LocalTransport({ roomId: 'test', playerId: 'p1', isHost: true });
-      const runtime = new GameRuntime(game, transport, { isHost: true, playerIds: ['p1'] });
+    runtime.submitAction('increment', {});
+    runtime.submitAction('increment', {});
 
-      const inspector = new StateInspector();
-      inspector.attach(runtime);
+    // Wait a bit to let throttled timer flush
+    await new Promise(resolve => setTimeout(resolve, 20));
 
-      runtime.submitAction('increment', {});
-      runtime.submitAction('increment', {});
+    const snapshots = inspector.getSnapshots();
+    // Initial + throttled result
+    expect(snapshots.length).toBeLessThanOrEqual(3);
+  });
 
-      expect(inspector.getSnapshots().length).toBeGreaterThan(0);
-      expect(inspector.getActionHistory().length).toBeGreaterThan(0);
+  it('aggregates repeated actions within window', async () => {
+    const inspector = new StateInspector({ actionAggregationWindowMs: 100 });
+    inspector.attach(runtime);
 
-      inspector.clear();
+    const updates: any[] = [];
+    inspector.onAction((record) => updates.push(record));
 
-      expect(inspector.getSnapshots()).toHaveLength(0);
-      expect(inspector.getActionHistory()).toHaveLength(0);
+    runtime.submitAction('increment', {});
+    runtime.submitAction('increment', {});
 
-      const stats = inspector.getStats();
-      expect(stats.totalActions).toBe(0);
-      expect(stats.totalStateChanges).toBe(0);
+    expect(inspector.getActionHistory()).toHaveLength(1);
+    const action = inspector.getActionHistory()[0];
+    expect(action.count).toBe(2);
+    expect(updates).toHaveLength(2); // second update replaces existing entry
+  });
 
-      runtime.destroy();
-      transport.disconnect();
-    });
+  it('ignores actions listed in ignoreActions', () => {
+    const inspector = new StateInspector({ ignoreActions: ['tick'] });
+    inspector.attach(runtime);
+
+    runtime.submitAction('tick', {});
+
+    expect(inspector.getActionHistory()).toHaveLength(0);
+    expect(inspector.getStats().excludedActions).toBe(1);
+  });
+
+  it('notifies state listeners with latest snapshot', async () => {
+    const inspector = new StateInspector({ snapshotIntervalMs: 0 });
+    inspector.attach(runtime);
+
+    const listener = vi.fn();
+    inspector.onStateChange(listener);
+
+    runtime.submitAction('setValue', { value: 42 });
+
+    const snapshots = inspector.getSnapshots();
+    const latest = snapshots[snapshots.length - 1];
+
+    expect(listener).toHaveBeenCalledWith(expect.objectContaining({ id: latest.id }));
+  });
+
+  it('provides stats for totals and action frequency', () => {
+    const inspector = new StateInspector({ snapshotIntervalMs: 0 });
+    inspector.attach(runtime);
+
+    runtime.submitAction('increment', {});
+    runtime.submitAction('setValue', { value: 10 });
+    runtime.submitAction('increment', {});
+
+    const stats = inspector.getStats();
+    expect(stats.totalActions).toBe(3);
+    expect(stats.actionsByName.increment).toBe(2);
+    expect(stats.actionsByName.setValue).toBe(1);
   });
 });

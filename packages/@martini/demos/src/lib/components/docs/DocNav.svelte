@@ -1,33 +1,44 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import { ChevronDown, ChevronRight } from 'lucide-svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import SearchBar from '$lib/components/docs/SearchBar.svelte';
+	import { versions, defaultVersion } from '$lib/docs/versions';
+	import { docsSections } from '$lib/docs/navigation';
 
 	interface NavItem {
 		title: string;
-		href?: string;
-		items?: NavItem[];
+		href: string;
 	}
 
-	const navigation: NavItem[] = [
-		{
-			title: 'Getting Started',
-			items: [
-				{ title: 'Installation', href: '/docs/getting-started/installation' },
-				{ title: 'Quick Start', href: '/docs/getting-started/quick-start' }
-			]
-		},
-		{
-			title: 'API Reference',
-			items: [
-				{ title: '@martini/core', href: '/docs/api/core' },
-				{ title: '@martini/phaser', href: '/docs/api/phaser' },
-				{ title: 'Transports', href: '/docs/api/transports' }
-			]
-		}
-	];
+	interface NavSection {
+		title: string;
+		items: NavItem[];
+	}
 
+	// Get current version/alias from URL (e.g., 'latest', 'v0.1', 'next')
+	let currentVersion = $derived($page.params.version || defaultVersion);
+
+	// Helper to create version-aware href
+	// Replace 'latest' with current version/alias for consistent navigation
+	function versionHref(path: string): string {
+		return path.replace('/latest/', `/${currentVersion}/`);
+	}
+
+	// Use the comprehensive navigation structure from navigation.ts
+	// Update all hrefs to use current version
+	let navigation = $derived<NavSection[]>(
+		docsSections.map((section) => ({
+			title: section.title,
+			items: section.items.map((item) => ({
+				title: item.title,
+				href: versionHref(item.href)
+			}))
+		}))
+	);
+
+	// Expand Getting Started and API Reference by default
 	let expandedSections = $state<Set<string>>(new Set(['Getting Started', 'API Reference']));
 
 	function toggleSection(title: string) {
@@ -38,12 +49,50 @@
 		}
 		expandedSections = new Set(expandedSections);
 	}
+
+	function handleVersionChange(event: Event) {
+		const newVersion = (event.target as HTMLSelectElement).value;
+		const currentPath = $page.url.pathname;
+
+		// Replace current version/alias with new version
+		// e.g., /docs/latest/getting-started -> /docs/v0.1/getting-started
+		// e.g., /docs/v0.1/getting-started -> /docs/latest/getting-started
+		const newPath = currentPath.replace(
+			/\/docs\/(latest|next|v[\d.]+)\//,
+			`/docs/${newVersion}/`
+		);
+
+		goto(newPath);
+	}
 </script>
 
 <nav class="doc-nav">
 	<div class="nav-header">
 		<a href="/docs" class="nav-home">Documentation</a>
 		<ThemeToggle />
+	</div>
+
+	<!-- Version Selector -->
+	<div class="version-selector-container">
+		<label for="version-select" class="version-label">Version</label>
+		<select
+			id="version-select"
+			class="version-select"
+			value={currentVersion}
+			onchange={handleVersionChange}
+		>
+			<!-- Latest alias option -->
+			<option value="latest">latest (v0.1 - alpha)</option>
+
+			<!-- Actual version options -->
+			{#each versions as version}
+				<option value={version.id}>
+					{version.label}
+					{#if version.status === 'latest'}(alpha){/if}
+					{#if version.status === 'next'}(next){/if}
+				</option>
+			{/each}
+		</select>
 	</div>
 
 	<div class="search-container">
@@ -65,38 +114,9 @@
 				<ul class="section-items">
 					{#each section.items as item}
 						<li>
-							{#if item.items}
-								<!-- Nested subsection -->
-								<button
-									class="subsection-header"
-									onclick={() => toggleSection(item.title)}
-								>
-									{#if expandedSections.has(item.title)}
-										<ChevronDown size={14} />
-									{:else}
-										<ChevronRight size={14} />
-									{/if}
-									{item.title}
-								</button>
-								{#if expandedSections.has(item.title)}
-									<ul class="subsection-items">
-										{#each item.items as subitem}
-											<li>
-												<a
-													href={subitem.href}
-													class:active={$page.url.pathname === subitem.href}
-												>
-													{subitem.title}
-												</a>
-											</li>
-										{/each}
-									</ul>
-								{/if}
-							{:else}
-								<a href={item.href} class:active={$page.url.pathname === item.href}>
-									{item.title}
-								</a>
-							{/if}
+							<a href={item.href} class:active={$page.url.pathname === item.href}>
+								{item.title}
+							</a>
 						</li>
 					{/each}
 				</ul>
@@ -132,6 +152,46 @@
 
 	.nav-home:hover {
 		color: var(--link-color, #3b82f6);
+	}
+
+	.version-selector-container {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		padding: 0.75rem 0;
+		border-bottom: 1px solid var(--border-color, #e5e5e5);
+		margin-bottom: 0.75rem;
+	}
+
+	.version-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--text-secondary, #525252);
+		text-transform: uppercase;
+		letter-spacing: 0.025em;
+	}
+
+	.version-select {
+		padding: 0.5rem 0.75rem;
+		background: var(--bg-secondary, #fafafa);
+		border: 1px solid var(--border-color, #e5e5e5);
+		border-radius: 6px;
+		font-size: 0.875rem;
+		color: var(--text-primary, #0b0a08);
+		cursor: pointer;
+		transition: all 0.15s;
+		font-weight: 500;
+	}
+
+	.version-select:hover {
+		border-color: var(--link-color, #3b82f6);
+		background: var(--bg-primary, #ffffff);
+	}
+
+	.version-select:focus {
+		outline: none;
+		border-color: var(--link-color, #3b82f6);
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 	}
 
 	.search-container {

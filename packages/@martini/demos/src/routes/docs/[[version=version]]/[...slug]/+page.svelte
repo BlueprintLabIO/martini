@@ -5,14 +5,9 @@
 
 	let { data } = $props();
 
-	// Make editUrl reactive to slug changes
-	let editUrl = $derived(
-		`https://github.com/BlueprintLabIO/martini/edit/main/packages/@martini/demos/src/content/docs/${data.slug}.md`
-	);
-
 	let copiedMarkdown = $state(false);
-	let copyButtonContainer = $state(null);
-	let articleElement = $state(null);
+	let copyButtonContainer = null;
+	let articleElement = null;
 
 	async function copyAsMarkdown() {
 		try {
@@ -26,21 +21,12 @@
 		}
 	}
 
-	// Re-run when article content changes
-	$effect(() => {
-		// Trigger when data.slug changes
-		const slug = data.slug;
-
+	// Move copy button next to h1 on mount
+	onMount(() => {
 		if (articleElement && copyButtonContainer) {
 			const h1 = articleElement.querySelector('h1');
 
 			if (h1) {
-				// Remove existing wrapper if it exists
-				const existingWrapper = articleElement.querySelector('.page-header');
-				if (existingWrapper) {
-					existingWrapper.remove();
-				}
-
 				// Create a wrapper for h1 + button
 				const wrapper = document.createElement('div');
 				wrapper.className = 'page-header';
@@ -66,45 +52,45 @@
 	{/if}
 </svelte:head>
 
-<!-- Copy button that will be moved next to h1 -->
-<div bind:this={copyButtonContainer} class="copy-button-container">
-	<button onclick={copyAsMarkdown} class="copy-markdown-btn">
-		{#if copiedMarkdown}
-			<Check size={18} />
-			<span>Copied!</span>
-		{:else}
-			<Copy size={18} />
-			<span>Copy Markdown</span>
-		{/if}
-	</button>
-</div>
-
-<article class="doc-content" bind:this={articleElement}>
-	{#key data.slug}
-		{@render data.component()}
-	{/key}
-</article>
-
-<PrevNextNav prev={data.prev} next={data.next} />
-
-<footer class="doc-footer">
-	<div class="footer-actions">
-		<a href={editUrl} target="_blank" rel="noopener noreferrer" class="footer-link">
-			<PencilLine size={16} />
-			<span>Edit this page on GitHub</span>
-		</a>
-
-		<button onclick={copyAsMarkdown} class="footer-link footer-button">
+{#key data.slug}
+	<!-- Copy button that will be moved next to h1 -->
+	<div bind:this={copyButtonContainer} class="copy-button-container">
+		<button onclick={copyAsMarkdown} class="copy-markdown-btn">
 			{#if copiedMarkdown}
-				<Check size={16} />
+				<Check size={18} />
 				<span>Copied!</span>
 			{:else}
-				<FileText size={16} />
-				<span>Copy as Markdown</span>
+				<Copy size={18} />
+				<span>Copy Markdown</span>
 			{/if}
 		</button>
 	</div>
-</footer>
+
+	<article class="doc-content" bind:this={articleElement}>
+		{@render data.component()}
+	</article>
+
+	<PrevNextNav prev={data.prev} next={data.next} />
+
+	<footer class="doc-footer">
+		<div class="footer-actions">
+			<a href={`https://github.com/BlueprintLabIO/martini/edit/main/packages/@martini/demos/src/content/docs/${data.slug}.md`} target="_blank" rel="noopener noreferrer" class="footer-link">
+				<PencilLine size={16} />
+				<span>Edit this page on GitHub</span>
+			</a>
+
+			<button onclick={copyAsMarkdown} class="footer-link footer-button">
+				{#if copiedMarkdown}
+					<Check size={16} />
+					<span>Copied!</span>
+				{:else}
+					<FileText size={16} />
+					<span>Copy as Markdown</span>
+				{/if}
+			</button>
+		</div>
+	</footer>
+{/key}
 
 <style>
 	.doc-content {

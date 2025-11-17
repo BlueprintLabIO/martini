@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { SandpackManager } from '../core/SandpackManager';
 	import type { VirtualFileSystem } from '../core/VirtualFS';
+	import type { StateSnapshot, ActionRecord } from '@martini/devtools';
 
 	interface Props {
 		vfs: VirtualFileSystem;
@@ -12,6 +13,16 @@
 		onReady?: () => void;
 		consoleLogs?: Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error' }>;
 		connectionStatus?: 'disconnected' | 'connecting' | 'connected';
+		stateSnapshots?: StateSnapshot[];
+		actionHistory?: ActionRecord[];
+		actionExcludedCount?: number;
+		networkPackets?: Array<{
+			timestamp: number;
+			direction: 'send' | 'receive';
+			type: string;
+			size: number;
+			payload: any;
+		}>;
 		hideDevTools?: boolean;
 		roomId?: string;
 	}
@@ -25,6 +36,10 @@
 		onReady,
 		consoleLogs = $bindable([]),
 		connectionStatus = $bindable('disconnected'),
+		stateSnapshots = $bindable<StateSnapshot[]>([]),
+		actionHistory = $bindable<ActionRecord[]>([]),
+		actionExcludedCount = $bindable(0),
+		networkPackets = $bindable([]),
 		hideDevTools = false,
 		roomId
 	}: Props = $props();
@@ -65,6 +80,23 @@
 			},
 			onConnectionStatus: (newStatus) => {
 				connectionStatus = newStatus;
+			},
+			onStateSnapshot: (snapshot) => {
+				stateSnapshots = upsertById(stateSnapshots, snapshot, 500);
+			},
+			onAction: (action) => {
+				actionHistory = upsertById(actionHistory, action, 2000);
+				if (typeof action.excludedActionsTotal === 'number') {
+					actionExcludedCount = action.excludedActionsTotal;
+				}
+			},
+			onNetworkPacket: (packet) => {
+				networkPackets = [...networkPackets, packet];
+
+				// Enforce max packets limit
+				if (networkPackets.length > 1000) {
+					networkPackets.shift();
+				}
 			}
 		});
 
@@ -213,3 +245,22 @@
 		text-align: center;
 	}
 </style>
+	function upsertById<T extends { id?: number }>(items: T[], item: T, limit: number): T[] {
+		if (!item.id) {
+			const appended = [...items, item];
+			return appended.length > limit ? appended.slice(-limit) : appended;
+		}
+
+		const index = items.findIndex((existing) => existing.id === item.id);
+		if (index !== -1) {
+			const clone = [...items];
+			clone[index] = item;
+			return clone;
+		}
+
+		const updated = [...items, item];
+		if (updated.length > limit) {
+			updated.shift();
+		}
+		return updated;
+	}

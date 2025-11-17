@@ -21,7 +21,7 @@
 
 <div class="callout callout-{type}">
 	<div class="callout-header">
-		<Icon size={20} />
+		<svelte:component this={Icon} size={20} />
 		{#if title}
 			<strong>{title}</strong>
 		{/if}

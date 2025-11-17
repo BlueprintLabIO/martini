@@ -4,8 +4,8 @@ Development tools for Martini multiplayer SDK - debug your multiplayer games wit
 
 ## Features
 
-- **Real-time State Inspection** - View game state as it changes
-- **Action History Tracking** - See all actions submitted with timestamps
+- **Real-time State Inspection** - Diff-based snapshots with automatic throttling
+- **Action History Tracking** - Aggregated timelines that avoid spammy actions
 - **Statistics & Metrics** - Track action frequency and state changes
 - **Event Listeners** - React to state changes and actions programmatically
 - **Memory-Efficient** - Configurable limits for history size
@@ -62,6 +62,9 @@ new StateInspector(options?: StateInspectorOptions)
 Options:
 - `maxSnapshots` (default: 100) - Maximum number of state snapshots to keep
 - `maxActions` (default: 1000) - Maximum number of actions to keep in history
+- `snapshotIntervalMs` (default: 250) - Minimum time between automatic snapshots
+- `actionAggregationWindowMs` (default: 200) - Time window for grouping identical actions
+- `ignoreActions` (default: []) - Array of action names to drop entirely (e.g. `['tick']`)
 
 ### Methods
 
@@ -113,8 +116,11 @@ snapshots.forEach(snapshot => {
 Returns an array of:
 ```typescript
 interface StateSnapshot {
+  id: number;           // Incrementing identifier
   timestamp: number;    // Unix timestamp in milliseconds
-  state: any;          // Deep clone of game state
+  state?: any;          // Deep clone of game state (only stored for baseline snapshots)
+  diff?: Patch[];       // Diffs relative to previous snapshot
+  lastActionId?: number;// Action id responsible for this snapshot
 }
 ```
 
@@ -132,11 +138,16 @@ history.forEach(action => {
 Returns an array of:
 ```typescript
 interface ActionRecord {
+  id: number;              // Incrementing identifier
   timestamp: number;      // Unix timestamp in milliseconds
   actionName: string;     // Name of the action
   input: any;            // Action payload
   playerId?: string;     // Who submitted the action
   targetId?: string;     // Who was targeted
+  count?: number;         // Number of aggregated occurrences
+  duration?: number;      // Duration of aggregated burst in ms
+  snapshotId?: number;    // Linked snapshot id
+  excludedActionsTotal?: number; // Total ignored actions so far
 }
 ```
 
@@ -157,6 +168,7 @@ interface InspectorStats {
   totalActions: number;                   // Total actions submitted
   totalStateChanges: number;             // Total state updates
   actionsByName: Record<string, number>; // Action frequency map
+  excludedActions: number;               // Actions filtered via ignoreActions
 }
 ```
 

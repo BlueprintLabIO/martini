@@ -1,26 +1,57 @@
 ---
 title: Martini Documentation
-description: Comprehensive documentation for the Martini multiplayer game framework
+description: Build real-time multiplayer games with minimal code using the Martini SDK
 section: home
 ---
 
-# Martini Documentation
+# Martini SDK Documentation
 
-Welcome to the Martini multiplayer SDK documentation! Martini lets you build real-time multiplayer games with minimal code.
+**Build real-time multiplayer games with minimal code.** Martini is an engine-agnostic, host-authoritative multiplayer framework designed for rapid game development.
 
-## Quick Links
+## Quick Start
 
-- **[Getting Started](/docs/getting-started/installation)** - Build your first multiplayer game in 15 minutes
-- **[API Reference](/docs/api/core)** - Detailed API documentation
+<div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
 
-## Features
+<div>
+<h3>🚀 Installation</h3>
+<p>Install Martini and set up your first project in 5 minutes.</p>
+<a href="/docs/latest/getting-started/installation">Get Started →</a>
+</div>
+
+<div>
+<h3>⚡ Quick Start</h3>
+<p>Build a working multiplayer game with 30 lines of code.</p>
+<a href="/docs/latest/getting-started/quick-start">Quick Start →</a>
+</div>
+
+<div>
+<h3>🎮 First Game</h3>
+<p>Complete tutorial: build a multiplayer paddle game step-by-step.</p>
+<a href="/docs/latest/getting-started/first-game">Build Now →</a>
+</div>
+
+<div>
+<h3>📖 API Reference</h3>
+<p>Comprehensive API documentation for all packages.</p>
+<a href="/docs/latest/api/core/define-game">Read Docs →</a>
+</div>
+
+</div>
+
+## Key Features
+
+<div class="features">
 
 ✅ **Declarative API** - Define state and actions, not networking code
 ✅ **Host-authoritative** - Host runs the game, clients mirror state
-✅ **Automatic sync** - Efficient diff/patch algorithm
+✅ **Automatic sync** - Efficient diff/patch algorithm minimizes bandwidth
 ✅ **Engine-agnostic** - Works with Phaser, Unity, Godot, Three.js
-✅ **Transport-agnostic** - P2P, WebSocket, UDP - your choice
-✅ **TypeScript** - Full type safety
+✅ **Transport-agnostic** - P2P, WebSocket, or custom - your choice
+✅ **TypeScript-first** - Full type safety and IntelliSense
+✅ **Production-ready** - Battle-tested in real games
+✅ **Open source** - MIT licensed, community-driven
+
+</div>
 
 ## What is Martini?
 
@@ -74,4 +105,33 @@ That's it! Martini automatically:
 pnpm add @martini/core @martini/phaser
 ```
 
-Ready to build your first game? Head to the [Quick Start](/docs/getting-started/quick-start) guide!
+Ready to build your first game? Head to the [Quick Start](/docs/latest/getting-started/quick-start) guide!
+
+## Core Packages
+
+### @martini/core
+Engine-agnostic multiplayer SDK. Works with any rendering engine. [Learn more →](/docs/latest/api/core/define-game)
+
+### @martini/phaser
+High-level Phaser 3 integration with automatic sprite syncing, input management, and physics helpers. [Learn more →](/docs/latest/api/phaser/adapter)
+
+### @martini/transport-*
+Multiple transport layers: LocalTransport (testing), IframeBridge (IDE), Trystero (P2P), or build your own. [Learn more →](/docs/latest/api/transports/overview)
+
+### @martini/devtools
+State inspection, action history, and debugging tools for development. [Learn more →](/docs/latest/api/devtools/state-inspector)
+
+## Popular Topics
+
+- [Core Concepts](/docs/latest/concepts/architecture) - Understand Martini's architecture
+- [Actions Guide](/docs/latest/concepts/actions) - Learn how to define and use actions
+- [Phaser Integration](/docs/latest/guides/phaser-integration) - Deep dive into Phaser + Martini
+- [Examples](/docs/latest/examples/overview) - Explore complete game examples
+- [Contributing](/docs/latest/contributing/getting-started) - Help improve Martini
+
+## Need Help?
+
+- [Troubleshooting](/docs/latest/troubleshooting/common-issues) - Common issues and solutions
+- [FAQ](/docs/latest/faq) - Frequently asked questions
+- [GitHub Issues](https://github.com/your-org/martini/issues) - Report bugs or request features
+- [Discord](https://discord.gg/your-server) - Join the community

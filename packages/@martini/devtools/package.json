@@ -9,13 +9,14 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    }
+    },
+    "./dist/martini-devtools.browser.js": "./dist/martini-devtools.browser.js"
   },
   "scripts": {
     "build": "tsc && pnpm build:browser",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "build:browser": "esbuild browser.ts --bundle --format=iife --global-name=Martini --outfile=dist/martini-devtools.browser.js"
+    "build:browser": "esbuild browser.ts --bundle --format=esm --outfile=dist/martini-devtools.browser.js"
   },
   "keywords": [
     "devtools",

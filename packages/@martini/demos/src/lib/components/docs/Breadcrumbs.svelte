@@ -6,14 +6,23 @@
 		const path = $page.url.pathname;
 		const segments = path.split('/').filter(Boolean);
 
-		const crumbs = segments.map((segment, index) => {
-			const href = '/' + segments.slice(0, index + 1).join('/');
+		// Filter out version segments and aliases (e.g., 'latest', 'next', 'v0.1', 'v1.0')
+		const isVersionSegment = (segment: string) => /^(latest|next|v\d+\.\d+)$/.test(segment);
+		const filteredSegments = segments.filter((seg) => !isVersionSegment(seg));
+
+		const crumbs = filteredSegments.map((segment, index) => {
+			const href = '/' + filteredSegments.slice(0, index + 1).join('/');
 			const title = segment
 				.split('-')
 				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 				.join(' ');
 
-			return { title, href };
+			// Disable links for intermediate segments (api, guides, etc.) - only final pages should be clickable
+			const isLastSegment = index === filteredSegments.length - 1;
+			const isFirstSegment = index === 0; // "docs" segment
+			const clickable = isFirstSegment || isLastSegment;
+
+			return { title, href: clickable ? href : null };
 		});
 
 		return [{ title: 'Home', href: '/' }, ...crumbs];
@@ -27,8 +36,10 @@
 		{/if}
 		{#if i === breadcrumbs().length - 1}
 			<span class="current">{crumb.title}</span>
-		{:else}
+		{:else if crumb.href}
 			<a href={crumb.href}>{crumb.title}</a>
+		{:else}
+			<span>{crumb.title}</span>
 		{/if}
 	{/each}
 </nav>

@@ -107,6 +107,65 @@ export class PhaserAdapter {
         });
     }
     /**
+     * Watch a derived value from the current player's state with automatic change detection
+     *
+     * This is the reactive counterpart to `onMyPlayerChange`. It re-runs a selector function
+     * on every state change and only fires the callback when the selected value changes
+     * (using Object.is equality by default).
+     *
+     * Perfect for reactive UIs that need to respond to property mutations like size, health, score, etc.
+     *
+     * @param selector Function that extracts a value from the player state
+     * @param callback Invoked when the selected value changes
+     * @param options Optional configuration
+     * @returns Unsubscribe function
+     *
+     * @example
+     * ```ts
+     * // Watch player size changes
+     * adapter.watchMyPlayer(
+     *   (player) => player?.size,
+     *   (size) => {
+     *     hudText.setText(`Size: ${size}`);
+     *   }
+     * );
+     *
+     * // Watch multiple properties
+     * adapter.watchMyPlayer(
+     *   (player) => ({ size: player?.size, health: player?.health }),
+     *   (stats) => {
+     *     hudText.setText(`Size: ${stats.size}, HP: ${stats.health}`);
+     *   }
+     * );
+     *
+     * // Custom equality check
+     * adapter.watchMyPlayer(
+     *   (player) => player?.position,
+     *   (pos) => console.log('Position changed:', pos),
+     *   { equals: (a, b) => a?.x === b?.x && a?.y === b?.y }
+     * );
+     * ```
+     */
+    watchMyPlayer(selector, callback, options) {
+        const playersKey = options?.playersKey || 'players';
+        const equals = options?.equals || Object.is;
+        // Get initial value and fire callback
+        let lastSelected = selector(this.getMyPlayer(playersKey));
+        callback(lastSelected, undefined);
+        // Subscribe to all state changes
+        return this.runtime.onChange((state) => {
+            const players = state?.[playersKey];
+            const player = players ? players[this.getMyPlayerId()] : undefined;
+            const nextSelected = selector(player);
+            // Only fire callback if selected value changed
+            if (!equals(nextSelected, lastSelected)) {
+                const prev = lastSelected;
+                lastSelected = nextSelected;
+                callback(nextSelected, prev);
+            }
+        });
+    }
+    /**
      * Check if this peer is the host
      */
     isHost() {

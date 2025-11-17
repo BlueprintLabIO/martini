@@ -1,15 +1,32 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
+	import { page } from '$app/state';
 
 	let activeId = $state('');
 	let observer: IntersectionObserver | null = null;
+	let headings = $state<Array<{ id: string; text: string; level: number }>>([]);
 
-	onMount(() => {
+	async function setupHeadings() {
+		// Wait for DOM to update
+		await tick();
+
+		// Clean up previous observer
+		if (observer) {
+			observer.disconnect();
+		}
+
 		// Find all h2 and h3 elements in the article
 		const article = document.querySelector('.prose');
 		if (!article) return;
 
-		const headings = article.querySelectorAll('h2, h3');
+		const headingElements = article.querySelectorAll('h2, h3');
+
+		// Extract headings list
+		headings = Array.from(headingElements).map((el) => ({
+			id: el.id,
+			text: el.textContent || '',
+			level: parseInt(el.tagName[1])
+		}));
 
 		// Create IntersectionObserver for scroll spy
 		observer = new IntersectionObserver(
@@ -27,32 +44,27 @@
 		);
 
 		// Observe all headings
-		headings.forEach((heading) => {
+		headingElements.forEach((heading) => {
 			if (heading.id && observer) {
 				observer.observe(heading);
 			}
 		});
+	}
+
+	onMount(() => {
+		setupHeadings();
+	});
+
+	// Re-run when URL changes (page navigation)
+	$effect(() => {
+		page.url.pathname;
+		setupHeadings();
 	});
 
 	onDestroy(() => {
 		if (observer) {
 			observer.disconnect();
 		}
-	});
-
-	// Extract headings on mount
-	let headings = $state<Array<{ id: string; text: string; level: number }>>([]);
-
-	onMount(() => {
-		const article = document.querySelector('.prose');
-		if (!article) return;
-
-		const headingElements = article.querySelectorAll('h2, h3');
-		headings = Array.from(headingElements).map((el) => ({
-			id: el.id,
-			text: el.textContent || '',
-			level: parseInt(el.tagName[1])
-		}));
 	});
 </script>
 

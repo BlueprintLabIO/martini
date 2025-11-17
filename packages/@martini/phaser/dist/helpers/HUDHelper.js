@@ -91,22 +91,29 @@ export function createPlayerHUD(adapter, scene, config) {
             controlsText.setText(config.controlHints(myPlayer));
         }
     };
-    // Subscribe to player changes
-    const unsubscribe = adapter.onMyPlayerChange((myPlayer) => {
-        if (roleText && config.roleText) {
-            roleText.setText(config.roleText(myPlayer));
-        }
-        if (controlsText && config.controlHints) {
-            controlsText.setText(config.controlHints(myPlayer));
-        }
-    }, playersKey);
-    // Ensure HUD shows correct values immediately
-    update();
+    // Subscribe to player changes using watchMyPlayer for reactive property updates
+    // This watches the entire player object but only updates when roleText/controlHints output changes
+    const unsubscribers = [];
+    // Watch roleText changes (reactive to property mutations)
+    if (roleText && config.roleText) {
+        const unsubscribe = adapter.watchMyPlayer((player) => config.roleText(player), (text) => {
+            roleText.setText(text);
+        }, { playersKey });
+        unsubscribers.push(unsubscribe);
+    }
+    // Watch controlHints changes (reactive to property mutations)
+    if (controlsText && config.controlHints) {
+        const unsubscribe = adapter.watchMyPlayer((player) => config.controlHints(player), (text) => {
+            controlsText.setText(text);
+        }, { playersKey });
+        unsubscribers.push(unsubscribe);
+    }
     // Return HUD interface
     return {
         update,
         destroy: () => {
-            unsubscribe();
+            // Unsubscribe from all watchers
+            unsubscribers.forEach((unsub) => unsub());
             titleText?.destroy();
             roleText?.destroy();
             controlsText?.destroy();

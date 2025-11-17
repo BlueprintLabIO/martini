@@ -94,6 +94,52 @@ export declare class PhaserAdapter<TState = any> {
      */
     onMyPlayerChange<TPlayer = any>(callback: (player: TPlayer | undefined) => void, playersKey?: string): () => void;
     /**
+     * Watch a derived value from the current player's state with automatic change detection
+     *
+     * This is the reactive counterpart to `onMyPlayerChange`. It re-runs a selector function
+     * on every state change and only fires the callback when the selected value changes
+     * (using Object.is equality by default).
+     *
+     * Perfect for reactive UIs that need to respond to property mutations like size, health, score, etc.
+     *
+     * @param selector Function that extracts a value from the player state
+     * @param callback Invoked when the selected value changes
+     * @param options Optional configuration
+     * @returns Unsubscribe function
+     *
+     * @example
+     * ```ts
+     * // Watch player size changes
+     * adapter.watchMyPlayer(
+     *   (player) => player?.size,
+     *   (size) => {
+     *     hudText.setText(`Size: ${size}`);
+     *   }
+     * );
+     *
+     * // Watch multiple properties
+     * adapter.watchMyPlayer(
+     *   (player) => ({ size: player?.size, health: player?.health }),
+     *   (stats) => {
+     *     hudText.setText(`Size: ${stats.size}, HP: ${stats.health}`);
+     *   }
+     * );
+     *
+     * // Custom equality check
+     * adapter.watchMyPlayer(
+     *   (player) => player?.position,
+     *   (pos) => console.log('Position changed:', pos),
+     *   { equals: (a, b) => a?.x === b?.x && a?.y === b?.y }
+     * );
+     * ```
+     */
+    watchMyPlayer<TPlayer = any, TSelected = any>(selector: (player: TPlayer | undefined) => TSelected, callback: (selected: TSelected, prev: TSelected | undefined) => void, options?: {
+        /** Key in state where players are stored (default: 'players') */
+        playersKey?: string;
+        /** Custom equality check (default: Object.is) */
+        equals?: (a: TSelected, b: TSelected) => boolean;
+    }): () => void;
+    /**
      * Check if this peer is the host
      */
     isHost(): boolean;
