@@ -1,4 +1,4 @@
-import { x as sanitize_props, y as spread_props, z as slot } from "./index2.js";
+import { F as sanitize_props, G as spread_props, J as slot } from "./index2.js";
 import { I as Icon } from "./Icon.js";
 function Users($$renderer, $$props) {
   const $$sanitized_props = sanitize_props($$props);

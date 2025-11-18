@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Patch } from '@martini/core';
+	import { untrack } from 'svelte';
 
 	interface StateSnapshot {
 		id: number;
@@ -16,7 +17,7 @@
 	let { snapshots = [] }: Props = $props();
 
 	let selectedIndex = $state(snapshots.length - 1);
-	let viewMode = $state<'diff' | 'full'>('diff');
+	let viewMode = $state<'changes' | 'full'>('full');
 
 	$effect(() => {
 		// Auto-select latest snapshot when new data arrives
@@ -24,6 +25,7 @@
 	});
 
 	// Reconstruct full state by applying diffs sequentially
+	// Creates a plain object copy that Svelte's reactivity won't track
 	function getFullStateAtIndex(index: number): any {
 		if (index < 0 || index >= snapshots.length) return null;
 
@@ -32,10 +34,12 @@
 		for (let i = 0; i <= index; i++) {
 			const snapshot = snapshots[i];
 			if (snapshot.state) {
-				// First snapshot with full state
+				// First snapshot with full state - deep clone via JSON
+				// This creates a non-reactive plain object
 				state = JSON.parse(JSON.stringify(snapshot.state));
 			} else if (snapshot.diff && state) {
-				// Apply diff
+				// Apply diff mutations to the plain object
+				// Since it's a plain object (not $state), mutations won't be tracked
 				applyPatches(state, snapshot.diff);
 			}
 		}
@@ -113,7 +117,13 @@
 	}
 
 	let currentSnapshot = $derived(snapshots[selectedIndex]);
-	let fullState = $derived(viewMode === 'full' ? getFullStateAtIndex(selectedIndex) : null);
+	let fullState = $derived.by(() => {
+		if (viewMode !== 'full') return null;
+		// Access selectedIndex here so Svelte tracks it as a dependency
+		const index = selectedIndex;
+		// But use untrack for the actual state computation to avoid tracking mutations
+		return untrack(() => getFullStateAtIndex(index));
+	});
 </script>
 
 {#if snapshots.length === 0}
@@ -154,9 +164,16 @@
 			</span>
 
 			<!-- View Mode Toggle -->
-			<button class="view-toggle" onclick={() => (viewMode = viewMode === 'diff' ? 'full' : 'diff')}>
-				{viewMode === 'diff' ? '📊 Diff' : '📄 Full'}
-			</button>
+			<label class="view-toggle">
+				<input
+					type="checkbox"
+					checked={viewMode === 'changes'}
+					onchange={(e) => (viewMode = e.currentTarget.checked ? 'changes' : 'full')}
+					class="toggle-checkbox"
+				/>
+				<span class="toggle-slider"></span>
+				<span class="toggle-label">{viewMode === 'changes' ? 'Changes' : 'Full State'}</span>
+			</label>
 		</div>
 
 		<!-- Snapshot Metadata -->
@@ -176,13 +193,13 @@
 
 		<!-- Content -->
 		<div class="state-content">
-			{#if viewMode === 'diff'}
+			{#if viewMode === 'changes'}
 				{#if currentSnapshot.state}
 					<!-- First snapshot - show full state -->
 					<div class="diff-notice">Initial state snapshot (full)</div>
 					<pre class="state-json">{JSON.stringify(currentSnapshot.state, null, 2)}</pre>
 				{:else if currentSnapshot.diff && currentSnapshot.diff.length > 0}
-					<!-- Show diffs -->
+					<!-- Show changes -->
 					<div class="diff-list">
 						{#each currentSnapshot.diff as patch}
 							<div class="diff-entry" style="border-left-color: {getOperationColor(patch.op)}">
@@ -249,19 +266,51 @@
 	}
 
 	.view-toggle {
-		padding: 0.25rem 0.75rem;
-		background: rgba(78, 201, 176, 0.2);
-		color: #4ec9b0;
-		border: 1px solid rgba(78, 201, 176, 0.3);
-		border-radius: 3px;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		cursor: pointer;
-		font-size: 0.75rem;
-		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-		transition: background 0.15s;
+		position: relative;
 	}
 
-	.view-toggle:hover {
-		background: rgba(78, 201, 176, 0.3);
+	.toggle-checkbox {
+		display: none;
+	}
+
+	.toggle-slider {
+		width: 36px;
+		height: 20px;
+		background: #4a5568;
+		border-radius: 10px;
+		position: relative;
+		transition: background 0.2s;
+	}
+
+	.toggle-slider::before {
+		content: '';
+		position: absolute;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background: white;
+		top: 2px;
+		left: 2px;
+		transition: transform 0.2s;
+	}
+
+	.toggle-checkbox:checked + .toggle-slider {
+		background: #4ec9b0;
+	}
+
+	.toggle-checkbox:checked + .toggle-slider::before {
+		transform: translateX(16px);
+	}
+
+	.toggle-label {
+		font-size: 0.75rem;
+		color: #d4d4d4;
+		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+		user-select: none;
 	}
 
 	.timeline-slider {

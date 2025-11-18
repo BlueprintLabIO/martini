@@ -25,6 +25,7 @@
 		}>;
 		hideDevTools?: boolean;
 		roomId?: string;
+		enableDevTools?: boolean;
 	}
 
 	let {
@@ -41,7 +42,8 @@
 		actionExcludedCount = $bindable(0),
 		networkPackets = $bindable([]),
 		hideDevTools = false,
-		roomId
+		roomId,
+		enableDevTools = false
 	}: Props = $props();
 
 	let container: HTMLDivElement;
@@ -99,7 +101,7 @@
 			role,
 			roomId: sessionRoomId,
 			transportType,
-			// DevTools off by default - can be enabled via setDevToolsEnabled()
+			enableDevTools, // Use initial prop value
 			onError: (err) => {
 				status = 'error';
 				error = err;
@@ -153,6 +155,13 @@
 		return () => {
 			sandpackManager?.destroy();
 		};
+	});
+
+	// Sync enableDevTools prop changes to SandpackManager
+	$effect(() => {
+		if (sandpackManager) {
+			sandpackManager.setDevToolsEnabled(enableDevTools);
+		}
 	});
 </script>
 

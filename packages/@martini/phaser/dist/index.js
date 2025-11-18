@@ -22,6 +22,8 @@ export { createPlayerHUD } from './helpers/HUDHelper.js';
 export { createSpeedDisplay } from './helpers/SpeedDisplay.js';
 // Directional Indicator Helper
 export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';
+// Camera Follower Helper
+export { createCameraFollower } from './helpers/CameraFollower.js';
 // Dual Runtime Factory
 export { createDualRuntimePreview } from './helpers/DualRuntimeFactory.js';
 // Runtime initialization (transport abstraction)

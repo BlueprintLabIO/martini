@@ -74,6 +74,21 @@ const healthBars = adapter.createHealthBarManager({
 });
 ```
 
+### CameraFollower
+
+Automatic camera following with smooth tracking modes.
+
+```typescript
+const cameraFollower = adapter.createCameraFollower({
+  target: 'myPlayer',
+  mode: 'lerp',
+  lerpFactor: 0.1,
+  bounds: { width: 1600, height: 1200 }
+});
+```
+
+[Full docs →](./camera-manager)
+
 ## Creating Custom Helpers
 
 You can create your own helpers that integrate with the adapter:

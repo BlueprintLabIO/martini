@@ -242,6 +242,82 @@ export class PhaserAdapter<TState = any> {
   }
 
   /**
+   * FIX #2: Wait for required metadata properties before executing callback
+   *
+   * This is a shared utility that prevents race conditions when creating UI/sprites
+   * that depend on static properties like role, team, side, etc.
+   *
+   * Extracted pattern from PlayerUIManager and HUDHelper for reuse across the SDK.
+   *
+   * @param stateKey - Key in state where the entity data lives (e.g., 'players')
+   * @param entityId - ID of the specific entity (e.g., player ID)
+   * @param requiredProperties - Array of property names that must exist before callback fires
+   * @param callback - Called when all required properties are present
+   * @returns Unsubscribe function
+   *
+   * @example
+   * ```ts
+   * // Wait for player metadata before creating UI
+   * adapter.waitForMetadata('players', playerId, ['role', 'team'], (data) => {
+   *   const color = data.role === 'fire' ? 0xff0000 : 0x0000ff;
+   *   const sprite = this.add.circle(data.x, data.y, 20, color);
+   * });
+   *
+   * // Wait for sprite static properties
+   * adapter.waitForMetadata('__sprites__.players', spriteKey, ['role'], (data) => {
+   *   const label = this.add.text(data.x, data.y, data.role.toUpperCase());
+   * });
+   * ```
+   */
+  waitForMetadata(
+    stateKey: string,
+    entityId: string,
+    requiredProperties: string[],
+    callback: (data: any) => void
+  ): () => void {
+    // Helper to check if all required properties exist
+    const hasAllProperties = (data: any): boolean => {
+      if (!data) return false;
+      return requiredProperties.every(prop => prop in data && data[prop] !== undefined);
+    };
+
+    // Check current state immediately
+    const state = this.runtime.getState() as any;
+    const collection = this.getNestedProperty(state, stateKey);
+    const currentData = collection?.[entityId];
+
+    if (hasAllProperties(currentData)) {
+      // All properties already present - fire immediately
+      callback(currentData);
+      return () => {}; // No-op unsubscribe
+    }
+
+    // Properties not ready yet - subscribe to state changes
+    return this.runtime.onChange((state: any) => {
+      const collection = this.getNestedProperty(state, stateKey);
+      const data = collection?.[entityId];
+
+      if (hasAllProperties(data)) {
+        callback(data);
+      }
+    });
+  }
+
+  /**
+   * Helper to get nested property from state (e.g., '__sprites__.players')
+   * @internal
+   */
+  private getNestedProperty(obj: any, path: string): any {
+    const parts = path.split('.');
+    let current = obj;
+    for (const part of parts) {
+      if (current == null) return undefined;
+      current = current[part];
+    }
+    return current;
+  }
+
+  /**
    * Track a sprite - automatically syncs position/rotation/etc
    *
    * @param sprite Phaser sprite to track
@@ -263,9 +339,18 @@ export class PhaserAdapter<TState = any> {
       this.syncIntervalId = setInterval(() => this.syncAllSprites(), interval);
     }
 
-    // Note: We do NOT immediately sync here to avoid infinite loops
-    // when trackSprite is called inside onChange callbacks.
-    // The interval-based sync will handle the first sync.
+    // FIX #3 & #4: Do immediate first sync to guarantee ordering
+    // Previously, the first sync happened 50ms later via interval, which created
+    // a race condition where static data (from setSpriteStaticData) could arrive
+    // at clients before or after position data.
+    //
+    // Now we sync immediately, which guarantees the order:
+    // 1. setSpriteStaticData() writes static properties (e.g., role: 'fire')
+    // 2. trackSprite() immediately writes position (e.g., x, y)
+    // Both broadcasts happen synchronously in the correct order!
+    if (this.isHost()) {
+      this.syncSpriteToState(key, sprite, options);
+    }
   }
 
   /**
@@ -735,5 +820,78 @@ export class PhaserAdapter<TState = any> {
    */
   createHealthBarManager(config: HealthBarConfig): HealthBarManager {
     return new HealthBarManager(this, config);
+  }
+
+  /**
+   * Create a CameraFollower for automatic camera tracking
+   *
+   * Eliminates manual camera positioning and fixes initialization timing bugs.
+   * Automatically waits for player state, then follows smoothly.
+   *
+   * @example
+   * ```ts
+   * // Simplest usage - auto-follows local player
+   * this.cameraFollower = adapter.createCameraFollower({
+   *   target: 'myPlayer'
+   * });
+   *
+   * // With smooth lerp following
+   * this.cameraFollower = adapter.createCameraFollower({
+   *   target: 'myPlayer',
+   *   mode: 'lerp',
+   *   lerpFactor: 0.1
+   * });
+   *
+   * // With world bounds
+   * this.cameraFollower = adapter.createCameraFollower({
+   *   target: 'myPlayer',
+   *   bounds: { width: 1600, height: 1200 }
+   * });
+   *
+   * // No manual camera code needed in update()!
+   * // Camera automatically follows and handles all edge cases.
+   * ```
+   */
+  createCameraFollower(config: import('./helpers/CameraFollower.js').CameraFollowerConfig = {}): import('./helpers/CameraFollower.js').CameraFollower {
+    const { createCameraFollower } = require('./helpers/CameraFollower.js');
+    return createCameraFollower(this, this.scene, config);
+  }
+
+  /**
+   * Submit action ONLY when input changes (10x devtools improvement!)
+   *
+   * Automatically tracks previous input and only submits when changed.
+   * Prevents flooding devtools with 60 identical actions per second.
+   *
+   * @param actionName - Name of the action to submit
+   * @param input - Current input state
+   * @param targetId - Optional target player ID
+   *
+   * @example
+   * ```ts
+   * // In scene.update()
+   * const input = {
+   *   left: keys.left.isDown,
+   *   right: keys.right.isDown,
+   *   up: keys.up.isDown
+   * };
+   * adapter.submitActionOnChange('move', input); // Only sends when input changes!
+   * ```
+   */
+  submitActionOnChange(actionName: string, input: any, targetId?: string): void {
+    // Use a private map to track previous inputs per action
+    if (!(this as any)._previousInputs) {
+      (this as any)._previousInputs = new Map<string, string>();
+    }
+
+    const key = targetId ? `${actionName}:${targetId}` : actionName;
+    const inputJson = JSON.stringify(input);
+    const previousJson = (this as any)._previousInputs.get(key);
+
+    // Only submit if input changed
+    if (inputJson !== previousJson) {
+      (this as any)._previousInputs.set(key, inputJson);
+      this.runtime.submitAction(actionName, input, targetId);
+    }
   }
 }

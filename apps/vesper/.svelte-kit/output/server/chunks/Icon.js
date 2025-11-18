@@ -1,5 +1,5 @@
-import { x as sanitize_props, Q as rest_props, F as attributes, P as ensure_array_like, T as element, z as slot, G as bind_props } from "./index2.js";
-import { k as fallback } from "./utils2.js";
+import { F as sanitize_props, T as rest_props, K as attributes, x as ensure_array_like, V as element, J as slot, N as bind_props } from "./index2.js";
+import { l as fallback } from "./escaping.js";
 import { c as clsx } from "./attributes.js";
 const defaultAttributes = {
   xmlns: "http://www.w3.org/2000/svg",

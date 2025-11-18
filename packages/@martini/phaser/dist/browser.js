@@ -1,6 +1,168 @@
 var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+
+// src/helpers/CameraFollower.ts
+var CameraFollower_exports = {};
+__export(CameraFollower_exports, {
+  createCameraFollower: () => createCameraFollower
+});
+function createCameraFollower(adapter, scene, config = {}) {
+  const {
+    target = "myPlayer",
+    mode = "instant",
+    lerpFactor = 0.1,
+    offset = { x: 0, y: 0 },
+    bounds,
+    deadzone = { width: 200, height: 150 },
+    centerOnTarget = true
+  } = config;
+  let targetPlayerId;
+  let stateKey;
+  if (target === "myPlayer") {
+    targetPlayerId = adapter.getMyPlayerId();
+    stateKey = "players";
+  } else {
+    targetPlayerId = target.playerId || adapter.getMyPlayerId();
+    stateKey = target.stateKey || "players";
+  }
+  const camera = scene.cameras.main;
+  let unsubscribe = null;
+  let initialized = false;
+  let destroyed = false;
+  if (bounds) {
+    camera.setBounds(0, 0, bounds.width, bounds.height);
+  }
+  const initializeCamera = () => {
+    const state = adapter["runtime"].getState();
+    const players = state?.[stateKey];
+    const player = players?.[targetPlayerId];
+    if (player && typeof player.x === "number" && typeof player.y === "number") {
+      setCameraPosition(player.x, player.y, true);
+      initialized = true;
+    }
+  };
+  unsubscribe = adapter.waitForMetadata(
+    stateKey,
+    targetPlayerId,
+    ["x", "y"],
+    (playerData) => {
+      if (!initialized && !destroyed) {
+        setCameraPosition(playerData.x, playerData.y, true);
+        initialized = true;
+      }
+    }
+  );
+  initializeCamera();
+  function setCameraPosition(targetX, targetY, instant = false) {
+    if (destroyed) return;
+    const viewportWidth = camera.width;
+    const viewportHeight = camera.height;
+    let desiredScrollX;
+    let desiredScrollY;
+    if (centerOnTarget) {
+      desiredScrollX = targetX - viewportWidth / 2 + offset.x;
+      desiredScrollY = targetY - viewportHeight / 2 + offset.y;
+    } else {
+      desiredScrollX = targetX + offset.x;
+      desiredScrollY = targetY + offset.y;
+    }
+    if (instant || mode === "instant") {
+      camera.scrollX = desiredScrollX;
+      camera.scrollY = desiredScrollY;
+    } else if (mode === "lerp") {
+      camera.scrollX += (desiredScrollX - camera.scrollX) * lerpFactor;
+      camera.scrollY += (desiredScrollY - camera.scrollY) * lerpFactor;
+    } else if (mode === "deadzone") {
+      const targetScreenX = targetX - camera.scrollX;
+      const targetScreenY = targetY - camera.scrollY;
+      const deadzoneLeft = (viewportWidth - deadzone.width) / 2;
+      const deadzoneRight = deadzoneLeft + deadzone.width;
+      const deadzoneTop = (viewportHeight - deadzone.height) / 2;
+      const deadzoneBottom = deadzoneTop + deadzone.height;
+      if (targetScreenX < deadzoneLeft) {
+        camera.scrollX += targetScreenX - deadzoneLeft;
+      } else if (targetScreenX > deadzoneRight) {
+        camera.scrollX += targetScreenX - deadzoneRight;
+      }
+      if (targetScreenY < deadzoneTop) {
+        camera.scrollY += targetScreenY - deadzoneTop;
+      } else if (targetScreenY > deadzoneBottom) {
+        camera.scrollY += targetScreenY - deadzoneBottom;
+      }
+    }
+  }
+  function update() {
+    if (destroyed || !initialized) return;
+    const state = adapter["runtime"].getState();
+    const players = state?.[stateKey];
+    const player = players?.[targetPlayerId];
+    if (player && typeof player.x === "number" && typeof player.y === "number") {
+      setCameraPosition(player.x, player.y);
+    }
+  }
+  const updateEvent = scene.events.on("update", update);
+  function destroy() {
+    if (destroyed) return;
+    destroyed = true;
+    scene.events.off("update", update);
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+  }
+  function setTarget(newPlayerId) {
+    targetPlayerId = newPlayerId;
+    initialized = false;
+    if (unsubscribe) {
+      unsubscribe();
+    }
+    unsubscribe = adapter.waitForMetadata(
+      stateKey,
+      targetPlayerId,
+      ["x", "y"],
+      (playerData) => {
+        if (!initialized && !destroyed) {
+          setCameraPosition(playerData.x, playerData.y, true);
+          initialized = true;
+        }
+      }
+    );
+  }
+  function getTarget() {
+    return targetPlayerId;
+  }
+  return {
+    update,
+    destroy,
+    setTarget,
+    getTarget
+  };
+}
+var init_CameraFollower = __esm({
+  "src/helpers/CameraFollower.ts"() {
+    "use strict";
+  }
+});
 
 // src/helpers/SpriteManager.ts
 var SpriteManager = class {
@@ -152,6 +314,12 @@ var SpriteManager = class {
         continue;
       }
       if (!this.sprites.has(key)) {
+        if (this.config.staticProperties?.length) {
+          const hasAllStatic = this.config.staticProperties.every((prop) => prop in data);
+          if (!hasAllStatic) {
+            continue;
+          }
+        }
         const sprite = this.config.onCreate(key, data);
         this.sprites.set(key, sprite);
         this.spriteData.set(key, data);
@@ -567,13 +735,7 @@ var InputManager = class {
           stateChanged = true;
         }
       }
-      if (binding.mode === "continuous") {
-        this.runtime.submitAction(
-          action,
-          { ...binding.state },
-          binding.targetId
-        );
-      } else if (binding.mode === "oneshot" && stateChanged) {
+      if (stateChanged) {
         this.runtime.submitAction(
           action,
           { ...binding.state },
@@ -1782,6 +1944,68 @@ var PhaserAdapter = class {
     return this.scene;
   }
   /**
+   * FIX #2: Wait for required metadata properties before executing callback
+   *
+   * This is a shared utility that prevents race conditions when creating UI/sprites
+   * that depend on static properties like role, team, side, etc.
+   *
+   * Extracted pattern from PlayerUIManager and HUDHelper for reuse across the SDK.
+   *
+   * @param stateKey - Key in state where the entity data lives (e.g., 'players')
+   * @param entityId - ID of the specific entity (e.g., player ID)
+   * @param requiredProperties - Array of property names that must exist before callback fires
+   * @param callback - Called when all required properties are present
+   * @returns Unsubscribe function
+   *
+   * @example
+   * ```ts
+   * // Wait for player metadata before creating UI
+   * adapter.waitForMetadata('players', playerId, ['role', 'team'], (data) => {
+   *   const color = data.role === 'fire' ? 0xff0000 : 0x0000ff;
+   *   const sprite = this.add.circle(data.x, data.y, 20, color);
+   * });
+   *
+   * // Wait for sprite static properties
+   * adapter.waitForMetadata('__sprites__.players', spriteKey, ['role'], (data) => {
+   *   const label = this.add.text(data.x, data.y, data.role.toUpperCase());
+   * });
+   * ```
+   */
+  waitForMetadata(stateKey, entityId, requiredProperties, callback) {
+    const hasAllProperties = (data) => {
+      if (!data) return false;
+      return requiredProperties.every((prop) => prop in data && data[prop] !== void 0);
+    };
+    const state = this.runtime.getState();
+    const collection = this.getNestedProperty(state, stateKey);
+    const currentData = collection?.[entityId];
+    if (hasAllProperties(currentData)) {
+      callback(currentData);
+      return () => {
+      };
+    }
+    return this.runtime.onChange((state2) => {
+      const collection2 = this.getNestedProperty(state2, stateKey);
+      const data = collection2?.[entityId];
+      if (hasAllProperties(data)) {
+        callback(data);
+      }
+    });
+  }
+  /**
+   * Helper to get nested property from state (e.g., '__sprites__.players')
+   * @internal
+   */
+  getNestedProperty(obj, path) {
+    const parts = path.split(".");
+    let current = obj;
+    for (const part of parts) {
+      if (current == null) return void 0;
+      current = current[part];
+    }
+    return current;
+  }
+  /**
    * Track a sprite - automatically syncs position/rotation/etc
    *
    * @param sprite Phaser sprite to track
@@ -1799,6 +2023,9 @@ var PhaserAdapter = class {
     if (this.isHost() && !this.syncIntervalId) {
       const interval = options.syncInterval || 50;
       this.syncIntervalId = setInterval(() => this.syncAllSprites(), interval);
+    }
+    if (this.isHost()) {
+      this.syncSpriteToState(key, sprite, options);
     }
   }
   /**
@@ -2196,6 +2423,73 @@ var PhaserAdapter = class {
   createHealthBarManager(config) {
     return new HealthBarManager(this, config);
   }
+  /**
+   * Create a CameraFollower for automatic camera tracking
+   *
+   * Eliminates manual camera positioning and fixes initialization timing bugs.
+   * Automatically waits for player state, then follows smoothly.
+   *
+   * @example
+   * ```ts
+   * // Simplest usage - auto-follows local player
+   * this.cameraFollower = adapter.createCameraFollower({
+   *   target: 'myPlayer'
+   * });
+   *
+   * // With smooth lerp following
+   * this.cameraFollower = adapter.createCameraFollower({
+   *   target: 'myPlayer',
+   *   mode: 'lerp',
+   *   lerpFactor: 0.1
+   * });
+   *
+   * // With world bounds
+   * this.cameraFollower = adapter.createCameraFollower({
+   *   target: 'myPlayer',
+   *   bounds: { width: 1600, height: 1200 }
+   * });
+   *
+   * // No manual camera code needed in update()!
+   * // Camera automatically follows and handles all edge cases.
+   * ```
+   */
+  createCameraFollower(config = {}) {
+    const { createCameraFollower: createCameraFollower2 } = (init_CameraFollower(), __toCommonJS(CameraFollower_exports));
+    return createCameraFollower2(this, this.scene, config);
+  }
+  /**
+   * Submit action ONLY when input changes (10x devtools improvement!)
+   *
+   * Automatically tracks previous input and only submits when changed.
+   * Prevents flooding devtools with 60 identical actions per second.
+   *
+   * @param actionName - Name of the action to submit
+   * @param input - Current input state
+   * @param targetId - Optional target player ID
+   *
+   * @example
+   * ```ts
+   * // In scene.update()
+   * const input = {
+   *   left: keys.left.isDown,
+   *   right: keys.right.isDown,
+   *   up: keys.up.isDown
+   * };
+   * adapter.submitActionOnChange('move', input); // Only sends when input changes!
+   * ```
+   */
+  submitActionOnChange(actionName, input, targetId) {
+    if (!this._previousInputs) {
+      this._previousInputs = /* @__PURE__ */ new Map();
+    }
+    const key = targetId ? `${actionName}:${targetId}` : actionName;
+    const inputJson = JSON.stringify(input);
+    const previousJson = this._previousInputs.get(key);
+    if (inputJson !== previousJson) {
+      this._previousInputs.set(key, inputJson);
+      this.runtime.submitAction(actionName, input, targetId);
+    }
+  }
 };
 
 // src/helpers/HUDHelper.ts
@@ -2420,6 +2714,9 @@ function attachDirectionalIndicator(scene, sprite, config = {}) {
   };
 }
 
+// src/index.ts
+init_CameraFollower();
+
 // src/helpers/DualRuntimeFactory.ts
 import { GameRuntime } from "@martini/core";
 import { LocalTransport } from "@martini/transport-local";
@@ -2543,6 +2840,7 @@ export {
   SpriteManager,
   StateDrivenSpawner,
   attachDirectionalIndicator,
+  createCameraFollower,
   createDualRuntimePreview,
   createPlayerHUD,
   createSpeedDisplay,

@@ -1,1 +1,0 @@
-import{h as o,o as _,O as c,E as T,Q as d,R as E,T as b,B as p,A as f}from"./HPFAwkNo.js";import{B as y}from"./DCSryql4.js";function g(t,i,h=!1){_&&c();var e=new y(t),u=h?T:0;function n(a,r){if(_){const l=d(t)===E;if(a===l){var s=b();p(s),e.anchor=s,f(!1),e.ensure(a,r),f(!0);return}}e.ensure(a,r)}o(()=>{var a=!1;i((r,s=!0)=>{a=!0,n(s,r)}),a||n(!1,null)},u)}export{g as i};

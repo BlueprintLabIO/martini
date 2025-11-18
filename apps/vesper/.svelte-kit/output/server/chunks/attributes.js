@@ -1,4 +1,4 @@
-import { e as escape_html } from "./escaping.js";
+import { j as escape_html } from "./escaping.js";
 import { clsx as clsx$1 } from "clsx";
 const replacements = {
   translate: /* @__PURE__ */ new Map([
@@ -143,7 +143,7 @@ function to_style(value, styles) {
 }
 export {
   attr as a,
-  to_style as b,
+  to_class as b,
   clsx as c,
-  to_class as t
+  to_style as t
 };

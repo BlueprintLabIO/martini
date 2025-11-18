@@ -1,12 +1,11 @@
-import { e as escape_html } from "../../../../chunks/escaping.js";
+import { i as is_array, b as get_prototype_of, o as object_prototype, k as run, j as escape_html } from "../../../../chunks/escaping.js";
 import { clsx } from "clsx";
-import { w as ATTACHMENT_KEY, x as sanitize_props, y as spread_props, z as slot, F as attributes, G as bind_props, J as derived, K as props_id, N as attr_class, O as stringify, P as ensure_array_like } from "../../../../chunks/index2.js";
+import { z as ATTACHMENT_KEY, F as sanitize_props, G as spread_props, J as slot, K as attributes, N as bind_props, O as derived, P as props_id, Q as attr_class, y as stringify, x as ensure_array_like } from "../../../../chunks/index2.js";
 import { c as clearConsoleLogs } from "../../../../chunks/game-console-output.js";
 import { I as Icon } from "../../../../chunks/Icon.js";
 import { a as attr } from "../../../../chunks/attributes.js";
 import { a as ssr_context, h as hasContext, g as getContext, s as setContext } from "../../../../chunks/context.js";
 import { diffLines } from "diff";
-import { i as is_array, b as get_prototype_of, o as object_prototype, j as run } from "../../../../chunks/utils2.js";
 import { AbstractChat } from "ai";
 import { twMerge } from "tailwind-merge";
 const empty = [];

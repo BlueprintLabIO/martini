@@ -470,7 +470,7 @@ Did you mean "${suggestion}"?`;
       for (const patch of payload.patches) {
         applyPatch(this.state, patch);
       }
-      this.notifyStateChange();
+      this.notifyStateChange(payload.patches);
     }
   }
   handleActionFromClient(payload) {
@@ -505,23 +505,36 @@ Did you mean "${suggestion}"?`;
     if (!this._isHost) return;
     const patches = generateDiff(this.previousState, this.state);
     if (patches.length > 0) {
-      if (this.patchListeners.length > 0) {
+      this.transport.send({
+        type: "state_sync",
+        payload: { patches }
+      });
+      this.notifyStateChange(patches);
+    }
+    this.previousState = deepClone(this.state);
+  }
+  /**
+   * Unified state change notification - ensures all listeners are notified consistently
+   * @param patches - Optional pre-computed patches (e.g., from host sync). If not provided, generates them.
+   *
+   * Note: This does NOT update previousState. Only syncState() updates it (once per sync interval).
+   * This ensures optimal performance - we only clone state 20 times/sec (at sync) instead of
+   * on every action/mutation which could be 100+ times/sec.
+   */
+  notifyStateChange(patches) {
+    let computedPatches = null;
+    if (this.patchListeners.length > 0) {
+      computedPatches = patches ?? generateDiff(this.previousState, this.state);
+      if (computedPatches.length > 0) {
         this.patchListeners.forEach((listener) => {
           try {
-            listener(patches);
+            listener(computedPatches);
           } catch (error) {
             console.error("Error in patch listener:", error);
           }
         });
       }
-      this.transport.send({
-        type: "state_sync",
-        payload: { patches }
-      });
-      this.previousState = deepClone(this.state);
     }
-  }
-  notifyStateChange() {
     for (const callback of this.stateChangeCallbacks) {
       callback(this.state);
     }

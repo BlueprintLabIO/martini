@@ -178,6 +178,12 @@ export function createScene(runtime: GameRuntime) {
 		create() {
 			this.adapter = new PhaserAdapter(runtime, this);
 
+			// Auto-follow local player with camera
+			this.adapter.createCameraFollower({
+				target: 'myPlayer',
+				bounds: { width: WORLD_WIDTH, height: WORLD_HEIGHT }
+			});
+
 			// Background
 			this.add.rectangle(400, 300, 800, 600, 0x1a1a1a);
 

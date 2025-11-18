@@ -108,6 +108,14 @@ export declare class GameRuntime<TState = any> {
     private handleActionFromClient;
     private handleEvent;
     private syncState;
+    /**
+     * Unified state change notification - ensures all listeners are notified consistently
+     * @param patches - Optional pre-computed patches (e.g., from host sync). If not provided, generates them.
+     *
+     * Note: This does NOT update previousState. Only syncState() updates it (once per sync interval).
+     * This ensures optimal performance - we only clone state 20 times/sec (at sync) instead of
+     * on every action/mutation which could be 100+ times/sec.
+     */
     private notifyStateChange;
     /**
      * Handle errors with strict mode support

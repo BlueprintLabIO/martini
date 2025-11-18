@@ -104,6 +104,16 @@ export function createScene(runtime: GameRuntime) {
 					return this.add.circle(data.x, data.y, 20, color);
 				},
 
+				// DEFENSE IN DEPTH: Update sprite color if role changes
+				// With Fix #1 (metadata buffering), this should never be needed,
+				// but it's good practice for properties that might change dynamically.
+				onUpdate: (sprite: any, data: any) => {
+					const color = data.role === 'fire' ? 0xff3300 : 0x0033ff;
+					if (sprite.fillColor !== color) {
+						sprite.setFillStyle(color);
+					}
+				},
+
 				onCreatePhysics: (sprite: any) => {
 					this.physics.add.existing(sprite);
 					const body = sprite.body as Phaser.Physics.Arcade.Body;

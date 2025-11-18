@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Patch } from '@martini/core';
+	import { untrack } from 'svelte';
 
 	interface StateSnapshot {
 		id: number;
@@ -22,8 +23,11 @@
 		severity: 'critical' | 'warning' | 'info';
 	}
 
-	let divergences = $derived(detectDivergences(getLatestState(hostSnapshots), getLatestState(clientSnapshots)));
+	let divergences = $derived(untrack(() =>
+		detectDivergences(getLatestState(hostSnapshots), getLatestState(clientSnapshots))
+	));
 
+	// Creates a plain object copy that Svelte's reactivity won't track
 	function getLatestState(snapshots: StateSnapshot[]): any {
 		if (!snapshots || snapshots.length === 0) return null;
 
@@ -31,8 +35,11 @@
 
 		for (const snapshot of snapshots) {
 			if (snapshot.state) {
+				// Deep clone via JSON - creates a non-reactive plain object
 				state = JSON.parse(JSON.stringify(snapshot.state));
 			} else if (snapshot.diff && state) {
+				// Apply diff mutations to the plain object
+				// Since it's a plain object (not $state), mutations won't be tracked
 				applyPatches(state, snapshot.diff);
 			}
 		}
@@ -175,6 +182,18 @@
 			<p class="hint">No divergences detected</p>
 		</div>
 	{:else}
+		{@const hasPositionDivergences = divergences.some(d => d.path.includes('.x') || d.path.includes('.y') || d.path.includes('._sprites'))}
+
+		{#if hasPositionDivergences}
+			<div class="info-banner">
+				<span class="info-icon">ℹ️</span>
+				<div class="info-content">
+					<strong>Position divergences are normal</strong>
+					<p>Client state lags behind network sync due to latency, but sprites are correctly interpolated visually.</p>
+				</div>
+			</div>
+		{/if}
+
 		<div class="divergence-header">
 			<span class="divergence-count">
 				{divergences.length} divergence{divergences.length === 1 ? '' : 's'} detected
@@ -244,6 +263,40 @@
 	.hint {
 		font-size: 0.6875rem;
 		color: #6e6e6e;
+	}
+
+	.info-banner {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		padding: 0.75rem;
+		background: rgba(59, 130, 246, 0.1);
+		border: 1px solid rgba(59, 130, 246, 0.3);
+		border-radius: 4px;
+		margin-bottom: 0.5rem;
+	}
+
+	.info-icon {
+		font-size: 1.25rem;
+		flex-shrink: 0;
+	}
+
+	.info-content {
+		flex: 1;
+	}
+
+	.info-content strong {
+		display: block;
+		color: #3b82f6;
+		font-size: 0.75rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.info-content p {
+		margin: 0;
+		font-size: 0.6875rem;
+		color: #d4d4d4;
+		line-height: 1.4;
 	}
 
 	.divergence-header {

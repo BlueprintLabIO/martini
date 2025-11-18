@@ -29,6 +29,8 @@ export { createSpeedDisplay } from './helpers/SpeedDisplay.js';
 export type { SpeedDisplay, SpeedDisplayConfig } from './helpers/SpeedDisplay.js';
 export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';
 export type { DirectionalIndicator, DirectionalIndicatorConfig } from './helpers/DirectionalIndicator.js';
+export { createCameraFollower } from './helpers/CameraFollower.js';
+export type { CameraFollower, CameraFollowerConfig, CameraFollowerTarget } from './helpers/CameraFollower.js';
 export { createDualRuntimePreview } from './helpers/DualRuntimeFactory.js';
 export type { DualRuntimePreview, DualRuntimePreviewConfig } from './helpers/DualRuntimeFactory.js';
 export { initializeGame } from './runtime.js';

@@ -190,7 +190,17 @@ export class SpriteManager {
                 continue;
             }
             if (!this.sprites.has(key)) {
-                // Create new sprite
+                // FIX #1: Wait for static properties before creating sprites (pit of success!)
+                // This prevents the "sprite created before metadata arrives" race condition.
+                // Matches the pattern used by PlayerUIManager (lines 200-207).
+                if (this.config.staticProperties?.length) {
+                    const hasAllStatic = this.config.staticProperties.every(prop => prop in data);
+                    if (!hasAllStatic) {
+                        // Static metadata not ready yet - skip creation until next sync
+                        continue;
+                    }
+                }
+                // Create new sprite (now guaranteed to have all static properties!)
                 const sprite = this.config.onCreate(key, data);
                 this.sprites.set(key, sprite);
                 this.spriteData.set(key, data);

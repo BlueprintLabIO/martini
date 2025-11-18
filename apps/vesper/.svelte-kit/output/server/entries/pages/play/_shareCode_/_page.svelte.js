@@ -1,6 +1,6 @@
 import { v as head } from "../../../../chunks/index2.js";
 import { U as Users } from "../../../../chunks/users.js";
-import { e as escape_html } from "../../../../chunks/escaping.js";
+import { j as escape_html } from "../../../../chunks/escaping.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let { data } = $$props;

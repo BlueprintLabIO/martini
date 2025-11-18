@@ -320,15 +320,15 @@ export class GameRuntime<TState = any> {
 
   private handleStateSync(payload: any): void {
     if (payload.fullState) {
-      // Full state replacement
+      // Full state replacement - generate patches from old → new
       this.state = payload.fullState;
-      this.notifyStateChange();
+      this.notifyStateChange(); // Will generate patches internally
     } else if (payload.patches) {
-      // Apply patches
+      // Apply patches and reuse them for listeners (zero-copy optimization)
       for (const patch of payload.patches) {
         applyPatch(this.state, patch);
       }
-      this.notifyStateChange();
+      this.notifyStateChange(payload.patches); // Reuse host-computed patches
     }
   }
 
@@ -372,36 +372,57 @@ export class GameRuntime<TState = any> {
   private syncState(): void {
     if (!this._isHost) return;
 
-    // Generate diff
+    // Generate diff from last sync
     const patches = generateDiff(this.previousState, this.state);
 
     if (patches.length > 0) {
-      // Notify patch listeners FIRST (DevTools can reuse these patches)
-      if (this.patchListeners.length > 0) {
-        this.patchListeners.forEach(listener => {
-          try {
-            listener(patches);
-          } catch (error) {
-            console.error('Error in patch listener:', error);
-          }
-        });
-      }
-
       // Broadcast patches to all clients
       this.transport.send({
         type: 'state_sync',
         payload: { patches }
       });
 
-      // Update previous state
-      this.previousState = deepClone(this.state);
+      // Notify all listeners (Inspector + state change callbacks)
+      this.notifyStateChange(patches);
     }
+
+    // Update baseline for next sync (even if no patches this time)
+    // This captures all mutations that happened since last sync
+    this.previousState = deepClone(this.state);
   }
 
-  private notifyStateChange(): void {
+  /**
+   * Unified state change notification - ensures all listeners are notified consistently
+   * @param patches - Optional pre-computed patches (e.g., from host sync). If not provided, generates them.
+   *
+   * Note: This does NOT update previousState. Only syncState() updates it (once per sync interval).
+   * This ensures optimal performance - we only clone state 20 times/sec (at sync) instead of
+   * on every action/mutation which could be 100+ times/sec.
+   */
+  private notifyStateChange(patches?: Patch[]): void {
+    // 1. Generate patches if not provided (and we have listeners that need them)
+    let computedPatches: Patch[] | null = null;
+    if (this.patchListeners.length > 0) {
+      computedPatches = patches ?? generateDiff(this.previousState, this.state);
+
+      // 2. Emit to patch listeners (Inspector)
+      if (computedPatches.length > 0) {
+        this.patchListeners.forEach(listener => {
+          try {
+            listener(computedPatches!);
+          } catch (error) {
+            console.error('Error in patch listener:', error);
+          }
+        });
+      }
+    }
+
+    // 3. Emit to state change listeners
     for (const callback of this.stateChangeCallbacks) {
       callback(this.state);
     }
+
+    // Note: previousState is NOT updated here - only in syncState() for optimal performance
   }
 
   /**

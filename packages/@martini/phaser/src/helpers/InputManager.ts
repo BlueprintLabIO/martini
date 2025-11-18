@@ -273,16 +273,9 @@ export class InputManager {
         }
       }
 
-      // Submit aggregated state
-      if (binding.mode === 'continuous') {
-        // Submit every frame (spread to avoid mutation)
-        this.runtime.submitAction(
-          action,
-          { ...binding.state },
-          binding.targetId
-        );
-      } else if (binding.mode === 'oneshot' && stateChanged) {
-        // Submit only when state changes
+      // Submit aggregated state ONLY when changed (10x devtools improvement!)
+      // This prevents 60 actions/second when idle
+      if (stateChanged) {
         this.runtime.submitAction(
           action,
           { ...binding.state },

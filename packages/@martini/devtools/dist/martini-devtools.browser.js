@@ -526,9 +526,7 @@ var StateInspector = class {
       clearTimeout(this.snapshotTimer);
       this.snapshotTimer = null;
     }
-    const t0 = performance.now();
     const stateClone = this.deepClone(this.runtime.getState());
-    const t1 = performance.now();
     const timestamp = Date.now();
     const snapshotId = ++this.snapshotIdCounter;
     let snapshot;
@@ -539,13 +537,9 @@ var StateInspector = class {
         state: stateClone,
         lastActionId: linkedActionId ?? void 0
       };
-      const t2 = performance.now();
-      console.log(`[Inspector] Initial snapshot: clone=${(t1 - t0).toFixed(2)}ms, total=${(t2 - t0).toFixed(2)}ms`);
     } else {
       const diff = generateDiff(this.lastSnapshotState, stateClone);
-      const t2 = performance.now();
       if (diff.length === 0) {
-        console.log(`[Inspector] No changes: clone=${(t1 - t0).toFixed(2)}ms, diff=${(t2 - t1).toFixed(2)}ms (skipped)`);
         this.lastSnapshotState = stateClone;
         return;
       }
@@ -555,8 +549,6 @@ var StateInspector = class {
         diff,
         lastActionId: linkedActionId ?? void 0
       };
-      const t3 = performance.now();
-      console.log(`[Inspector] Snapshot #${snapshotId}: clone=${(t1 - t0).toFixed(2)}ms, diff=${(t2 - t1).toFixed(2)}ms, patches=${diff.length}, total=${(t3 - t0).toFixed(2)}ms`);
     }
     this.lastSnapshotState = stateClone;
     this.lastSnapshotTimestamp = timestamp;
@@ -610,7 +602,6 @@ var StateInspector = class {
         state: this.deepClone(fullState),
         lastActionId: linkedActionId
       };
-      console.log(`[Inspector] Checkpoint #${snapshotId}: Stored full state (every ${this.checkpointInterval} snapshots)`);
     } else {
       snapshot = {
         id: snapshotId,
@@ -619,7 +610,6 @@ var StateInspector = class {
         // Shallow copy patches
         lastActionId: linkedActionId
       };
-      console.log(`[Inspector] Snapshot #${snapshotId} from patches: patches=${patches.length}, overhead=~0ms`);
     }
     this.lastSnapshotTimestamp = timestamp;
     this.snapshots.push(snapshot);
@@ -644,7 +634,6 @@ var StateInspector = class {
           const derivedState = this.applyDiffs(baseState, next.diff);
           next.state = derivedState;
           delete next.diff;
-          console.log(`[Inspector] Converted snapshot #${next.id} to checkpoint during trim`);
         }
       }
     }

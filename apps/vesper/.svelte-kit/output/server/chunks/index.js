@@ -1,4 +1,4 @@
-import { n as noop } from "./utils2.js";
+import { n as noop } from "./escaping.js";
 import { a as safe_not_equal } from "./equality.js";
 import "clsx";
 const subscriber_queue = [];

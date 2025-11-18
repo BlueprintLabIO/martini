@@ -253,9 +253,7 @@ export class StateInspector {
             clearTimeout(this.snapshotTimer);
             this.snapshotTimer = null;
         }
-        const t0 = performance.now();
         const stateClone = this.deepClone(this.runtime.getState());
-        const t1 = performance.now();
         const timestamp = Date.now();
         const snapshotId = ++this.snapshotIdCounter;
         let snapshot;
@@ -266,14 +264,12 @@ export class StateInspector {
                 state: stateClone,
                 lastActionId: linkedActionId ?? undefined,
             };
-            const t2 = performance.now();
-            console.log(`[Inspector] Initial snapshot: clone=${(t1 - t0).toFixed(2)}ms, total=${(t2 - t0).toFixed(2)}ms`);
+            // Initial snapshot captured
         }
         else {
             const diff = generateDiff(this.lastSnapshotState, stateClone);
-            const t2 = performance.now();
             if (diff.length === 0) {
-                console.log(`[Inspector] No changes: clone=${(t1 - t0).toFixed(2)}ms, diff=${(t2 - t1).toFixed(2)}ms (skipped)`);
+                // No changes detected, skip snapshot
                 this.lastSnapshotState = stateClone;
                 return;
             }
@@ -283,8 +279,7 @@ export class StateInspector {
                 diff,
                 lastActionId: linkedActionId ?? undefined,
             };
-            const t3 = performance.now();
-            console.log(`[Inspector] Snapshot #${snapshotId}: clone=${(t1 - t0).toFixed(2)}ms, diff=${(t2 - t1).toFixed(2)}ms, patches=${diff.length}, total=${(t3 - t0).toFixed(2)}ms`);
+            // Snapshot captured with diff
         }
         this.lastSnapshotState = stateClone;
         this.lastSnapshotTimestamp = timestamp;
@@ -346,7 +341,7 @@ export class StateInspector {
                 state: this.deepClone(fullState),
                 lastActionId: linkedActionId,
             };
-            console.log(`[Inspector] Checkpoint #${snapshotId}: Stored full state (every ${this.checkpointInterval} snapshots)`);
+            // Checkpoint: stored full state
         }
         else {
             // Store diff for non-checkpoint snapshots (memory efficient)
@@ -356,7 +351,7 @@ export class StateInspector {
                 diff: patches.map(p => ({ ...p, path: [...p.path] })), // Shallow copy patches
                 lastActionId: linkedActionId,
             };
-            console.log(`[Inspector] Snapshot #${snapshotId} from patches: patches=${patches.length}, overhead=~0ms`);
+            // Snapshot from patches
         }
         this.lastSnapshotTimestamp = timestamp;
         this.snapshots.push(snapshot);
@@ -385,7 +380,7 @@ export class StateInspector {
                     const derivedState = this.applyDiffs(baseState, next.diff);
                     next.state = derivedState;
                     delete next.diff; // Convert to full checkpoint
-                    console.log(`[Inspector] Converted snapshot #${next.id} to checkpoint during trim`);
+                    // Converted snapshot to checkpoint during trim
                 }
             }
         }

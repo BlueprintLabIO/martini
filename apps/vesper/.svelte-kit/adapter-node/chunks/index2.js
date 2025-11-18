@@ -1,6 +1,5 @@
-import { c as clsx, a as attr, t as to_class, b as to_style } from "./attributes.js";
-import { n as noop } from "./utils2.js";
-import { e as escape_html } from "./escaping.js";
+import { c as clsx, a as attr, t as to_style, b as to_class } from "./attributes.js";
+import { n as noop, j as escape_html } from "./escaping.js";
 import { b as set_ssr_context, a as ssr_context, p as push, c as pop } from "./context.js";
 const DERIVED = 1 << 1;
 const EFFECT = 1 << 2;
@@ -745,6 +744,10 @@ function attr_class(value, hash, directives) {
   var result = to_class(value, hash, directives);
   return result ? ` class="${escape_html(result, true)}"` : "";
 }
+function attr_style(value, directives) {
+  var result = to_style(value, directives);
+  return result ? ` style="${escape_html(result, true)}"` : "";
+}
 function slot(renderer, $$props, name, slot_props, fallback_fn) {
   var slot_fn = $$props.$$slots?.[name];
   if (slot_fn === true) {
@@ -817,22 +820,23 @@ export {
   COMMENT_NODE as C,
   DIRTY as D,
   ERROR_VALUE as E,
-  attributes as F,
-  bind_props as G,
+  sanitize_props as F,
+  spread_props as G,
   HYDRATION_ERROR as H,
   INERT as I,
-  derived as J,
-  props_id as K,
+  slot as J,
+  attributes as K,
   LEGACY_PROPS as L,
   MAYBE_DIRTY as M,
-  attr_class as N,
-  stringify as O,
-  ensure_array_like as P,
-  rest_props as Q,
+  bind_props as N,
+  derived as O,
+  props_id as P,
+  attr_class as Q,
   ROOT_EFFECT as R,
   STATE_SYMBOL as S,
-  element as T,
+  rest_props as T,
   UNINITIALIZED as U,
+  element as V,
   WAS_MARKED as W,
   HYDRATION_END as a,
   HYDRATION_START as b,
@@ -856,8 +860,8 @@ export {
   is_passive_event as t,
   render as u,
   head as v,
-  ATTACHMENT_KEY as w,
-  sanitize_props as x,
-  spread_props as y,
-  slot as z
+  attr_style as w,
+  ensure_array_like as x,
+  stringify as y,
+  ATTACHMENT_KEY as z
 };

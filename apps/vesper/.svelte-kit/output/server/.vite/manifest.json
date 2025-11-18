@@ -54,7 +54,7 @@
     "name": "Icon",
     "imports": [
       "_index2.js",
-      "_utils2.js",
+      "_escaping.js",
       "_attributes.js"
     ]
   },
@@ -97,7 +97,7 @@
     "file": "chunks/index.js",
     "name": "index",
     "imports": [
-      "_utils2.js",
+      "_escaping.js",
       "_equality.js"
     ]
   },
@@ -106,7 +106,6 @@
     "name": "index",
     "imports": [
       "_attributes.js",
-      "_utils2.js",
       "_escaping.js",
       "_context.js"
     ]
@@ -124,7 +123,7 @@
     "imports": [
       "_index2.js",
       "_environment.js",
-      "_utils2.js",
+      "_escaping.js",
       "_equality.js",
       "_context.js",
       "_shared-server.js"
@@ -163,7 +162,7 @@
     "file": "chunks/state.svelte.js",
     "name": "state.svelte",
     "imports": [
-      "_utils2.js"
+      "_escaping.js"
     ]
   },
   "_users.js": {
@@ -176,10 +175,6 @@
   },
   "_utils.js": {
     "file": "chunks/utils.js",
-    "name": "utils"
-  },
-  "_utils2.js": {
-    "file": "chunks/utils2.js",
     "name": "utils"
   },
   "src/hooks.server.ts": {
@@ -210,7 +205,7 @@
       "_state.svelte.js"
     ],
     "css": [
-      "_app/immutable/assets/_layout.grg0fkY3.css"
+      "_app/immutable/assets/_layout.5lHJ66my.css"
     ]
   },
   "src/routes/+layout.ts": {
@@ -228,7 +223,12 @@
     "src": "src/routes/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_escaping.js"
+      "_index2.js",
+      "_escaping.js",
+      "_attributes.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_page.D-twOrlK.css"
     ]
   },
   "src/routes/api/chat/+server.ts": {
@@ -454,8 +454,7 @@
       "_game-console-output.js",
       "_Icon.js",
       "_attributes.js",
-      "_context.js",
-      "_utils2.js"
+      "_context.js"
     ],
     "css": [
       "_app/immutable/assets/_page.-GhynoMk.css"

@@ -101,9 +101,7 @@
 		}
 		localStorage.setItem(DEVTOOLS_STORAGE_KEY, showDevTools ? 'true' : 'false');
 
-		// Dynamically toggle DevTools in GamePreviews
-		hostPreviewRef?.setDevToolsEnabled(showDevTools);
-		clientPreviewRef?.setDevToolsEnabled(showDevTools);
+		// DevTools toggling is now handled via enableDevTools prop in GamePreview
 
 		// Auto-switch to Console tab when DevTools is turned off
 		if (!showDevTools && activeDevToolsTab !== 'console') {
@@ -224,6 +222,7 @@
 									bind:actionExcludedCount={hostActionsExcluded}
 									bind:networkPackets={hostNetworkPackets}
 									hideDevTools={true}
+									enableDevTools={showDevTools}
 									onReady={config.onReady}
 									onError={config.onError}
 								/>
@@ -241,6 +240,7 @@
 									bind:actionExcludedCount={clientActionsExcluded}
 									bind:networkPackets={clientNetworkPackets}
 									hideDevTools={true}
+									enableDevTools={showDevTools}
 								/>
 							</div>
 						{:else}
@@ -258,6 +258,7 @@
 								bind:actionExcludedCount={hostActionsExcluded}
 								bind:networkPackets={hostNetworkPackets}
 								hideDevTools={true}
+								enableDevTools={showDevTools}
 								onReady={config.onReady}
 								onError={config.onError}
 							/>
@@ -311,7 +312,7 @@
 									disabled={!showDevTools}
 									onclick={() => showDevTools && (activeDevToolsTab = 'network')}
 								>
-									Network
+									Network (coming soon)
 								</button>
 
 								<!-- DevTools Toggle Switch -->
@@ -330,10 +331,19 @@
 
 								<!-- Tab Content -->
 								{#if config.layout === 'dual'}
-									<div class="devtools-dual">
-										<!-- HOST Section -->
-										<div class="devtools-section">
-											<div class="devtools-section-header">
+									{#if activeDevToolsTab === 'diff'}
+										<!-- Diff Tab Content (full width, shows both sides) -->
+										<div class="devtools-diff-full">
+											<StateDiffViewer
+												hostSnapshots={hostStateSnapshots}
+												clientSnapshots={clientStateSnapshots}
+											/>
+										</div>
+									{:else}
+										<div class="devtools-dual">
+											<!-- HOST Section -->
+											<div class="devtools-section">
+												<div class="devtools-section-header">
 												<span class="role-badge role-host">HOST</span>
 												{#if activeDevToolsTab === 'console'}
 													<span class="status-indicator" class:connected={hostStatus === 'connected'}>
@@ -452,17 +462,8 @@
 												</div>
 											{/if}
 										</div>
-
-										<!-- Diff Tab Content (full width, shows both sides) -->
-										{#if activeDevToolsTab === 'diff'}
-											<div class="devtools-diff-full">
-												<StateDiffViewer
-													hostSnapshots={hostStateSnapshots}
-													clientSnapshots={clientStateSnapshots}
-												/>
-											</div>
-										{/if}
-									</div>
+										</div>
+									{/if}
 								{:else}
 									<!-- Single Player Mode -->
 									<div class="devtools-section">
