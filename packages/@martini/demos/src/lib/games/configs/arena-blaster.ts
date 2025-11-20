@@ -3,35 +3,38 @@ import type { MartiniIDEConfig } from '@martini/ide';
 // Arena Blaster - Top-down shooter with health, scoring, and bullet physics
 const config: MartiniIDEConfig = {
 	files: {
-		'/src/game.ts': `import { defineGame } from '@martini/core';
+		'/src/game.ts': `import { defineGame, createPlayerManager } from '@martini/core';
 
 const ARENA_WIDTH = 800;
 const ARENA_HEIGHT = 600;
 const WALL_THICKNESS = 20;
+const SPAWN_POINTS = [
+	{ x: 50, y: 50 },
+	{ x: 750, y: 550 }
+];
+const PLAYER_COLORS = [0x48bb78, 0xf56565];
+
+const playerManager = createPlayerManager({
+	factory: (_playerId, index) => {
+		const spawn = SPAWN_POINTS[index % SPAWN_POINTS.length];
+		return {
+			x: spawn.x,
+			y: spawn.y,
+			health: 100,
+			score: 0,
+			rotation: 0,
+			isInvulnerable: false,
+			invulnerabilityTimer: 0,
+			color: PLAYER_COLORS[index % PLAYER_COLORS.length],
+			spawnIndex: index % SPAWN_POINTS.length
+		};
+	}
+});
 
 export const game = defineGame({
 	setup: ({ playerIds }) => {
-		const spawnPoints = [
-			{ x: 50, y: 50 },
-			{ x: 750, y: 550 }
-		];
-
 		return {
-			players: Object.fromEntries(
-				playerIds.map((id, index) => [
-					id,
-					{
-						x: spawnPoints[index].x,
-						y: spawnPoints[index].y,
-						health: 100,
-						score: 0,
-						rotation: 0, // Radians, facing direction
-						isInvulnerable: false,
-						invulnerabilityTimer: 0, // ms remaining
-						color: index === 0 ? 0x48bb78 : 0xf56565 // Green vs Red
-					}
-				])
-			),
+			players: playerManager.initialize(playerIds),
 			bullets: [] as Array<{
 				id: number;
 				x: number;
@@ -55,33 +58,32 @@ export const game = defineGame({
 		};
 	},
 
-	actions: {
-		move: {
-			apply: (state, context, input) => {
-				if (!state.inputs) state.inputs = {};
+		actions: {
+			move: {
+				apply: (state, context, input) => {
+					if (!state.inputs) state.inputs = {};
 
-				// Store the full input
-				state.inputs[context.targetId] = {
-					left: input.left || false,
-					right: input.right || false,
-					up: input.up || false,
-					down: input.down || false,
-					shoot: input.shoot || false
-				};
+					const snapshot = {
+						left: Boolean(input.left),
+						right: Boolean(input.right),
+						up: Boolean(input.up),
+						down: Boolean(input.down),
+						shoot: Boolean(input.shoot)
+					};
 
-				// Calculate rotation from movement direction
-				const player = state.players[context.targetId];
-				if (!player) return;
+					state.inputs[context.targetId] = snapshot;
 
-				const dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-				const dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+					const player = state.players[context.targetId];
+					if (!player) return;
 
-				// Update rotation if moving
-				if (dx !== 0 || dy !== 0) {
-					player.rotation = Math.atan2(dy, dx);
+					const dx = (snapshot.right ? 1 : 0) - (snapshot.left ? 1 : 0);
+					const dy = (snapshot.down ? 1 : 0) - (snapshot.up ? 1 : 0);
+
+					if (dx !== 0 || dy !== 0) {
+						player.rotation = Math.atan2(dy, dx);
+					}
 				}
-			}
-		},
+			},
 
 		shoot: {
 			apply: (state, context) => {
@@ -92,8 +94,9 @@ export const game = defineGame({
 				const cooldown = state.shootCooldowns[context.targetId] || 0;
 				if (cooldown > 0) return;
 
-				// Create bullet
+				// Create bullet (include static metadata so SpriteManager can mirror on clients)
 				const BULLET_SPEED = 400;
+				const ownerColor = PLAYER_COLORS[player.spawnIndex ?? 0] || 0xffff00;
 				state.bullets.push({
 					id: state.nextBulletId++,
 					x: player.x,
@@ -101,6 +104,7 @@ export const game = defineGame({
 					velocityX: Math.cos(player.rotation) * BULLET_SPEED,
 					velocityY: Math.sin(player.rotation) * BULLET_SPEED,
 					ownerId: context.targetId,
+					color: ownerColor,
 					lifetime: 2000 // 2 seconds
 				});
 
@@ -139,17 +143,11 @@ export const game = defineGame({
 						}
 					}
 
-					// Respawn player
-					const spawnPoints = [
-						{ x: 50, y: 50 },
-						{ x: 750, y: 550 }
-					];
-					const playerIds = Object.keys(state.players);
-					const playerIndex = playerIds.indexOf(context.targetId);
-
+					// Respawn player at their assigned spawn point
 					player.health = 100;
-					player.x = spawnPoints[playerIndex]?.x || 400;
-					player.y = spawnPoints[playerIndex]?.y || 300;
+					const spawnPoint = SPAWN_POINTS[player.spawnIndex ?? 0] || { x: 400, y: 300 };
+					player.x = spawnPoint.x;
+					player.y = spawnPoint.y;
 					player.isInvulnerable = true;
 					player.invulnerabilityTimer = 1000; // 1 second
 				}
@@ -167,16 +165,13 @@ export const game = defineGame({
 				}
 
 				// Reset positions
-				const spawnPoints = [
-					{ x: 50, y: 50 },
-					{ x: 750, y: 550 }
-				];
-				const playerIds = Object.keys(state.players);
-				playerIds.forEach((playerId, index) => {
-					state.players[playerId].x = spawnPoints[index].x;
-					state.players[playerId].y = spawnPoints[index].y;
+				for (const playerId of Object.keys(state.players)) {
+					const player = state.players[playerId];
+					const spawnPoint = SPAWN_POINTS[player.spawnIndex ?? 0] || { x: 400, y: 300 };
+					player.x = spawnPoint.x;
+					player.y = spawnPoint.y;
 					state.players[playerId].rotation = 0;
-				});
+				}
 
 				// Clear bullets
 				state.bullets = [];
@@ -188,27 +183,11 @@ export const game = defineGame({
 	},
 
 	onPlayerJoin: (state, playerId) => {
-		const spawnPoints = [
-			{ x: 50, y: 50 },
-			{ x: 750, y: 550 }
-		];
-		const index = Object.keys(state.players).length;
-		const color = index === 0 ? 0x48bb78 : 0xf56565;
-
-		state.players[playerId] = {
-			x: spawnPoints[index % 2].x,
-			y: spawnPoints[index % 2].y,
-			health: 100,
-			score: 0,
-			rotation: 0,
-			isInvulnerable: false,
-			invulnerabilityTimer: 0,
-			color
-		};
+		playerManager.handleJoin(state.players, playerId);
 	},
 
 	onPlayerLeave: (state, playerId) => {
-		delete state.players[playerId];
+		playerManager.handleLeave(state.players, playerId);
 	}
 });
 `,
@@ -228,6 +207,8 @@ export function createScene(runtime: GameRuntime) {
 		private spriteManager: any;
 		private bulletManager: any;
 		private inputManager: any;
+		private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+		private wasdKeys: Record<string, Phaser.Input.Keyboard.Key> = {};
 		private physicsManager: any;
 		private playerSpawner: any;
 		private bulletSpawner: any;
@@ -263,15 +244,13 @@ export function createScene(runtime: GameRuntime) {
 				},
 
 				onAdd: (sprite: any, key: string) => {
-					// Attach directional indicator!
-					sprite.directionArrow = attachDirectionalIndicator(this, sprite, {
+					// Attach directional indicator - auto-updates by default!
+					attachDirectionalIndicator(this, sprite, {
 						shape: 'triangle',
 						offset: 20,
 						color: 0xffffff
+						// autoUpdate: true (default) - no manual update() needed!
 					});
-
-					// Store update function
-					(sprite as any)._updateArrow = () => sprite.directionArrow?.update();
 				}
 			});
 
@@ -293,7 +272,9 @@ export function createScene(runtime: GameRuntime) {
 			this.playerSpawner = this.adapter.createStateDrivenSpawner({
 				stateKey: 'players',
 				spriteManager: this.spriteManager,
-				keyPrefix: 'player-'
+				keyPrefix: 'player-',
+				// Host physics drives position, so disable state→sprite sync
+				sync: { properties: [] }
 			});
 
 			// NEW: StateDrivenSpawner for bullets!
@@ -315,15 +296,23 @@ export function createScene(runtime: GameRuntime) {
 				height: 5
 			});
 
-			// InputManager with topDown profile
+			// InputManager handles edge-triggered actions
 			this.inputManager = this.adapter.createInputManager();
-			this.inputManager.useProfile('topDown');
 
 			// NEW: Edge-triggered actions via InputManager!
 			this.inputManager.bindEdgeTriggers({
 				'Space': 'shoot',
 				'R': 'reset'
 			});
+
+			// Capture Arrow + WASD movement keys manually (submit via adapter)
+			this.cursors = this.input.keyboard.createCursorKeys();
+			this.wasdKeys = this.input.keyboard.addKeys({
+				W: Phaser.Input.Keyboard.KeyCodes.W,
+				A: Phaser.Input.Keyboard.KeyCodes.A,
+				S: Phaser.Input.Keyboard.KeyCodes.S,
+				D: Phaser.Input.Keyboard.KeyCodes.D
+			}) as Record<string, Phaser.Input.Keyboard.Key>;
 
 			// PhysicsManager for top-down movement
 			this.physicsManager = this.adapter.createPhysicsManager({
@@ -352,7 +341,7 @@ export function createScene(runtime: GameRuntime) {
 			this.winText.setVisible(false);
 
 			// Controls
-			this.add.text(400, 570, 'WASD: Move | Space: Shoot | R: Reset', {
+			this.add.text(400, 570, 'Arrow Keys or WASD: Move | Space: Shoot | R: Reset', {
 				fontSize: '14px',
 				color: '#ffffff'
 			}).setOrigin(0.5).setDepth(100);
@@ -364,6 +353,15 @@ export function createScene(runtime: GameRuntime) {
 
 		update(time: number, delta: number) {
 			const state = runtime.getState();
+
+			// Capture movement input (Arrow + WASD) and submit when changed
+			const moveInput = {
+				left: Boolean(this.cursors?.left?.isDown || this.wasdKeys?.A?.isDown),
+				right: Boolean(this.cursors?.right?.isDown || this.wasdKeys?.D?.isDown),
+				up: Boolean(this.cursors?.up?.isDown || this.wasdKeys?.W?.isDown),
+				down: Boolean(this.cursors?.down?.isDown || this.wasdKeys?.S?.isDown)
+			};
+			this.adapter.submitActionOnChange('move', moveInput);
 
 			// HOST: Auto-spawn players and bullets via StateDrivenSpawner!
 			if (this.adapter.isHost()) {
@@ -430,15 +428,14 @@ export function createScene(runtime: GameRuntime) {
 				}
 			}
 
-			// Update directional arrows and invulnerability flash
+			// Update sprite rotation and invulnerability flash
 			for (const [key, sprite] of this.spriteManager.getAll()) {
 				const playerId = key.replace('player-', '');
 				const playerState = state.players[playerId];
 
-				// Update arrow
-				if ((sprite as any)._updateArrow && playerState) {
+				// Sync sprite rotation (directional indicator auto-updates via scene events)
+				if (playerState) {
 					sprite.rotation = playerState.rotation;
-					(sprite as any)._updateArrow();
 				}
 
 				// Invulnerability flash

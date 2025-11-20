@@ -7,7 +7,7 @@
 
 	let query = $state('');
 	let isOpen = $state(false);
-	let searchIndex: Fuse<SearchDoc> | null = null;
+let searchIndex = $state<Fuse<SearchDoc> | null>(null);
 	let results = $state<Array<{ item: SearchDoc }>>([]);
 	let inputElement = $state<HTMLInputElement>();
 
@@ -157,11 +157,11 @@
 		position: fixed;
 		inset: 0;
 		background: rgba(0, 0, 0, 0.5);
-		z-index: 9999;
+		z-index: 99999;
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		justify-content: center;
-		padding-top: 10vh;
+		padding: 1.5rem;
 		animation: fadeIn 0.2s;
 	}
 

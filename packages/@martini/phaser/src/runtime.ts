@@ -122,6 +122,20 @@ export function initializeGame<TState = any>(
     (window as any).__MARTINI_IDE__.registerRuntime(runtime);
   }
 
+  // Listen for transport disconnect message from parent (IDE cleanup)
+  // This ensures proper cleanup when navigating away from preview pages
+  if (typeof window !== 'undefined') {
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'martini:transport:disconnect') {
+        // Disconnect transport to notify relay and remove stale peers
+        // Only IframeBridgeTransport has disconnect() method
+        if ('disconnect' in transport && typeof transport.disconnect === 'function') {
+          transport.disconnect();
+        }
+      }
+    });
+  }
+
   return { runtime, phaser: phaserGame };
 }
 

@@ -83,30 +83,58 @@ export function createPlayerHUD(adapter, scene, config) {
     }
     // Update function
     const update = () => {
+        const state = adapter.getState();
         const myPlayer = adapter.getMyPlayer(playersKey);
         if (roleText && config.roleText) {
-            roleText.setText(config.roleText(myPlayer));
+            roleText.setText(config.roleText(myPlayer, state));
         }
         if (controlsText && config.controlHints) {
-            controlsText.setText(config.controlHints(myPlayer));
+            controlsText.setText(config.controlHints(myPlayer, state));
         }
     };
-    // Subscribe to player changes using watchMyPlayer for reactive property updates
-    // This watches the entire player object but only updates when roleText/controlHints output changes
+    // Subscribe to state changes to reactively update HUD
+    // Uses onChange instead of watchMyPlayer to get full state access
     const unsubscribers = [];
-    // Watch roleText changes (reactive to property mutations)
+    // Track last values to avoid unnecessary updates
+    let lastRoleText;
+    let lastControlsText;
+    // Watch roleText changes (reactive to both player and state changes)
     if (roleText && config.roleText) {
-        const unsubscribe = adapter.watchMyPlayer((player) => config.roleText(player), (text) => {
-            roleText.setText(text);
-        }, { playersKey });
+        const unsubscribe = adapter.onChange((state) => {
+            const players = state?.[playersKey];
+            const myPlayer = players ? players[adapter.getMyPlayerId()] : undefined;
+            const text = config.roleText(myPlayer, state);
+            // Only update if text changed
+            if (text !== lastRoleText) {
+                lastRoleText = text;
+                roleText.setText(text);
+            }
+        });
         unsubscribers.push(unsubscribe);
+        // Initial update
+        const initialState = adapter.getState();
+        const initialPlayer = adapter.getMyPlayer(playersKey);
+        lastRoleText = config.roleText(initialPlayer, initialState);
+        roleText.setText(lastRoleText);
     }
-    // Watch controlHints changes (reactive to property mutations)
+    // Watch controlHints changes (reactive to both player and state changes)
     if (controlsText && config.controlHints) {
-        const unsubscribe = adapter.watchMyPlayer((player) => config.controlHints(player), (text) => {
-            controlsText.setText(text);
-        }, { playersKey });
+        const unsubscribe = adapter.onChange((state) => {
+            const players = state?.[playersKey];
+            const myPlayer = players ? players[adapter.getMyPlayerId()] : undefined;
+            const text = config.controlHints(myPlayer, state);
+            // Only update if text changed
+            if (text !== lastControlsText) {
+                lastControlsText = text;
+                controlsText.setText(text);
+            }
+        });
         unsubscribers.push(unsubscribe);
+        // Initial update
+        const initialState = adapter.getState();
+        const initialPlayer = adapter.getMyPlayer(playersKey);
+        lastControlsText = config.controlHints(initialPlayer, initialState);
+        controlsText.setText(lastControlsText);
     }
     // Return HUD interface
     return {

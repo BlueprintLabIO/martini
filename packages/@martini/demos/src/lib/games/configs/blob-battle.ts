@@ -256,10 +256,11 @@ export function createScene(runtime: GameRuntime) {
 
 			// Mouse input for blob movement
 			// Click anywhere to set target position
+			// IMPORTANT: Use worldX/worldY to account for camera scroll position
 			this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
 				runtime.submitAction('move', {
-					x: pointer.x,
-					y: pointer.y
+					x: pointer.worldX,
+					y: pointer.worldY
 				});
 			});
 

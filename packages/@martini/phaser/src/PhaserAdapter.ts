@@ -13,6 +13,7 @@ import { CollisionManager, type CollisionManagerConfig } from './helpers/Collisi
 import { PhysicsManager, type PhysicsManagerConfig } from './helpers/PhysicsManager.js';
 import { StateDrivenSpawner, type StateDrivenSpawnerConfig } from './helpers/StateDrivenSpawner.js';
 import { HealthBarManager, type HealthBarConfig } from './helpers/HealthBarManager.js';
+import { GridClickHelper, type GridClickConfig } from './helpers/GridClickHelper.js';
 
 export interface SpriteTrackingOptions {
   /** Sync interval in ms (default: 50ms / 20 FPS) */
@@ -796,6 +797,37 @@ export class PhaserAdapter<TState = any> {
    */
   createStateDrivenSpawner(config: StateDrivenSpawnerConfig): StateDrivenSpawner {
     return new StateDrivenSpawner(this, config);
+  }
+
+  /**
+   * Create a GridClickHelper for robust grid/board click handling
+   *
+   * Solves the common problem where interactive rectangles don't scale properly
+   * with the canvas. Uses pointer.worldX/worldY for accurate coordinate mapping
+   * that works in any scale mode (FIT, RESIZE, etc).
+   *
+   * Perfect for: Connect Four, Chess, Tic-Tac-Toe, Minesweeper, Battleship, etc.
+   *
+   * @example
+   * ```ts
+   * const gridHelper = adapter.createClickableGrid({
+   *   columns: 7,
+   *   rows: 6,
+   *   cellWidth: 80,
+   *   cellHeight: 80,
+   *   offsetX: 100,
+   *   offsetY: 100,
+   *   onCellClick: (col, row) => {
+   *     runtime.submitAction('dropToken', { col });
+   *   },
+   *   highlightColor: 0xffffff,
+   *   highlightAlpha: 0.15,
+   *   origin: 'bottom-left' // For Connect Four
+   * });
+   * ```
+   */
+  createClickableGrid(config: GridClickConfig): GridClickHelper {
+    return new GridClickHelper(this, this.scene, config);
   }
 
   /**

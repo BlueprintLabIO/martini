@@ -130,24 +130,24 @@
 		max-width: 1600px;
 		margin: 0 auto;
 		padding: 2rem;
-		min-height: 100vh;
+		min-height: calc(100vh - 64px);
 		background: var(--bg-primary, #ffffff);
 		color: var(--text-primary, #0b0a08);
 	}
 
 	.sidebar {
 		position: sticky;
-		top: 2rem;
+		top: calc(64px + 2rem);
 		height: fit-content;
-		max-height: calc(100vh - 4rem);
+		max-height: calc(100vh - 64px - 4rem);
 		overflow-y: auto;
 	}
 
 	.toc-sidebar {
 		position: sticky;
-		top: 2rem;
+		top: calc(64px + 2rem);
 		height: fit-content;
-		max-height: calc(100vh - 4rem);
+		max-height: calc(100vh - 64px - 4rem);
 		overflow-y: auto;
 	}
 

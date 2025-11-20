@@ -22,11 +22,15 @@ export interface PeerInfo {
     roomId: string;
     iframe: HTMLIFrameElement;
     isHost: boolean;
+    lastHeartbeat: number;
 }
 export declare class IframeBridgeRelay {
     private peers;
     private rooms;
     private messageHandler;
+    private heartbeatInterval;
+    private readonly HEARTBEAT_CHECK_MS;
+    private readonly PEER_TIMEOUT_MS;
     constructor();
     /**
      * Set up listener for messages from iframes
@@ -41,9 +45,18 @@ export declare class IframeBridgeRelay {
      */
     private handleSend;
     /**
+     * Handle heartbeat from peers
+     */
+    private handleHeartbeat;
+    /**
      * Handle peer leaving
      */
     private handlePeerLeave;
+    /**
+     * Start heartbeat monitor to detect stale peers
+     * Checks every 5 seconds and removes peers inactive for 10+ seconds
+     */
+    private startHeartbeatMonitor;
     /**
      * Get all peers in a room
      */

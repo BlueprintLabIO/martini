@@ -1,3 +1,7 @@
+<script>
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
+</script>
+
 # UI and HUD
 
 This guide covers building reactive user interfaces, HUDs (Heads-Up Displays), scoreboards, health bars, and other UI elements for Martini multiplayer games.
@@ -27,7 +31,158 @@ In multiplayer games, UI must be responsive to state changes from any player:
 
 ## Basic HUD Setup
 
-### Simple Text HUD
+Martini offers two approaches for creating HUDs: the **Phaser Helpers** approach using `createPlayerHUD`, or the **Core Primitives** approach with manual text management.
+
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+### Using `createPlayerHUD` Helper
+
+The `createPlayerHUD` helper eliminates HUD boilerplate by automatically managing title, role, and control hint text with reactive updates.
+
+#### Basic Usage (Action Games)
+
+For action games that only need player-specific data:
+
+```typescript
+import { createPlayerHUD } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Create HUD with automatic updates
+  this.hud = createPlayerHUD(this.adapter, this, {
+    title: 'Blob Battle',
+    titleStyle: { fontSize: '32px', color: '#fff', fontStyle: 'bold' },
+
+    roleText: (myPlayer) => {
+      if (!myPlayer) return 'Spectator';
+      return `Size: ${myPlayer.size}`;
+    },
+    roleStyle: { fontSize: '18px', color: '#fff' },
+
+    controlHints: () => 'Click anywhere to move your blob',
+    controlsStyle: { fontSize: '14px', color: '#aaa' },
+
+    layout: {
+      title: { x: 400, y: 30 },
+      role: { x: 400, y: 70 },
+      controls: { x: 400, y: 575 }
+    }
+  });
+}
+```
+
+**Benefits:**
+- Automatic reactive updates when player state changes
+- No manual `onChange` subscriptions needed
+- Handles player join/leave automatically
+- Deduplicates updates for performance
+
+### Advanced Usage (Turn-Based Games)
+
+For turn-based games that need access to global game state (turns, game status, etc.):
+
+```typescript
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  this.hud = createPlayerHUD(this.adapter, this, {
+    title: 'Connect Four',
+    titleStyle: { fontSize: '28px', color: '#fff', fontStyle: 'bold' },
+
+    // Second parameter provides full game state!
+    roleText: (myPlayer, state) => {
+      if (!myPlayer) return 'Spectator';
+      if (!state) return 'Loading...';
+
+      // Access global game state for turn-based logic
+      if (state.gameOver) {
+        if (state.isDraw) return 'Game Draw!';
+        if (state.winner) {
+          const winnerPlayer = state.players[state.winner];
+          return state.winner === this.adapter.getMyPlayerId()
+            ? \`You Win! (\${winnerPlayer?.color})\`
+            : \`\${winnerPlayer?.color.toUpperCase()} Wins!\`;
+        }
+      }
+
+      // Show whose turn it is
+      const playerIds = Object.keys(state.players || {});
+      const currentPlayerId = playerIds[state.currentTurn];
+      const currentPlayer = state.players?.[currentPlayerId];
+
+      if (currentPlayerId === this.adapter.getMyPlayerId()) {
+        return \`Your Turn (\${myPlayer.color.toUpperCase()})\`;
+      }
+
+      return \`\${currentPlayer?.color?.toUpperCase() || 'Opponent'}'s Turn\`;
+    },
+    roleStyle: { fontSize: '18px', color: '#fff' },
+
+    controlHints: () => 'Click a column to drop your token',
+    controlsStyle: { fontSize: '14px', color: '#aaa' },
+
+    layout: {
+      title: { x: 400, y: 30 },
+      role: { x: 400, y: 65 },
+      controls: { x: 400, y: 575 }
+    }
+  });
+}
+```
+
+**When to use state parameter:**
+- Turn-based games (chess, checkers, card games)
+- Game mode state (time remaining, round number)
+- Win/loss conditions
+- Any UI that depends on global state, not just player data
+
+**Backward compatibility:** The `state` parameter is optional - existing games that ignore it continue to work perfectly.
+
+#### API Reference
+
+```typescript
+interface PlayerHUDConfig<TPlayer = any, TState = any> {
+  /** Static title text */
+  title?: string;
+  titleStyle?: HUDTextStyle;
+
+  /**
+   * Dynamic role text - receives player and optionally full state
+   * @param myPlayer - Current player data or undefined if spectator
+   * @param state - Full game state (optional, for turn-based games)
+   */
+  roleText?: (myPlayer: TPlayer | undefined, state?: TState) => string;
+  roleStyle?: HUDTextStyle;
+
+  /**
+   * Dynamic control hints
+   * @param myPlayer - Current player data or undefined if spectator
+   * @param state - Full game state (optional)
+   */
+  controlHints?: (myPlayer: TPlayer | undefined, state?: TState) => string;
+  controlsStyle?: HUDTextStyle;
+
+  /** Custom layout positions */
+  layout?: {
+    title?: { x: number; y: number };
+    role?: { x: number; y: number };
+    controls?: { x: number; y: number };
+  };
+
+  /** Key in state where players are stored (default: 'players') */
+  playersKey?: string;
+}
+```
+
+{/snippet}
+
+{#snippet core()}
+
+### Manual Text HUD
+
+For complete control over HUD rendering, create and update text objects manually:
 
 ```typescript
 import Phaser from 'phaser';
@@ -87,6 +242,15 @@ export class GameScene extends Phaser.Scene {
   }
 }
 ```
+
+**Manual Approach Benefits:**
+- Complete control over positioning and styling
+- Can create complex custom UI layouts
+- No abstraction layer - direct Phaser access
+- Useful when `createPlayerHUD` doesn't fit your needs
+
+{/snippet}
+</CodeTabs>
 
 ## Reactive UI Patterns
 

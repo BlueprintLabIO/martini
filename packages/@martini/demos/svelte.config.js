@@ -47,9 +47,10 @@ const config = {
 						]
 					});
 
-					// Convert HAST to HTML
-					const html = escapeSvelte(toHtml(hast));
-					return `{@html \`${html}\` }`;
+					// Convert HAST to HTML and escape for safe Svelte rendering
+					const html = toHtml(hast);
+					const escaped = escapeSvelte(html);
+					return `{@html \`${escaped}\`}`;
 				}
 			}
 		})

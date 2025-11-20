@@ -9,51 +9,46 @@ export interface SearchDoc {
 }
 
 let searchIndex: Fuse<SearchDoc> | null = null;
-
-function extractTextContent(html: string): string {
-	// Remove HTML tags and get plain text
-	return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-}
+let loadingPromise: Promise<Fuse<SearchDoc>> | null = null;
 
 export async function getSearchIndex(): Promise<Fuse<SearchDoc>> {
 	if (searchIndex) {
 		return searchIndex;
 	}
 
-	// Import all markdown files
-	const modules = import.meta.glob('/src/content/docs/**/*.md', { eager: true });
+	if (!loadingPromise) {
+		loadingPromise = loadSearchDocs().then((docs) => {
+			searchIndex = new Fuse(docs, {
+				keys: [
+					{ name: 'title', weight: 0.7 },
+					{ name: 'description', weight: 0.3 }
+				],
+				threshold: 0.3,
+				includeMatches: true,
+				minMatchCharLength: 2,
+				ignoreLocation: true
+			});
 
-	const searchDocs: SearchDoc[] = [];
-
-	for (const [path, module] of Object.entries(modules)) {
-		const mod = module as any;
-		const metadata = mod.metadata || {};
-
-		// Convert path to URL
-		const urlPath = path
-			.replace('/src/content/docs', '/docs')
-			.replace('.md', '')
-			.replace('/index', '');
-
-		searchDocs.push({
-			title: metadata.title || 'Untitled',
-			description: metadata.description || '',
-			content: '', // We'll skip content extraction for now to keep it simple
-			path: urlPath,
-			section: metadata.section || 'general'
+			return searchIndex;
+		}).catch((err) => {
+			loadingPromise = null;
+			throw err;
 		});
 	}
 
-	searchIndex = new Fuse(searchDocs, {
-		keys: [
-			{ name: 'title', weight: 0.7 },
-			{ name: 'description', weight: 0.3 }
-		],
-		threshold: 0.3,
-		includeMatches: true,
-		minMatchCharLength: 2,
-		ignoreLocation: true
+	return loadingPromise;
+}
+
+async function loadSearchDocs(): Promise<SearchDoc[]> {
+	const response = await fetch('/docs/search.json', {
+		headers: {
+			accept: 'application/json'
+		}
 	});
 
-	return searchIndex;
+	if (!response.ok) {
+		throw new Error(`Failed to load search index: ${response.status}`);
+	}
+
+	return response.json();
 }

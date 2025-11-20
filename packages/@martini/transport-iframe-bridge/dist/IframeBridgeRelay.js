@@ -22,7 +22,11 @@ export class IframeBridgeRelay {
         this.peers = new Map();
         this.rooms = new Map(); // roomId → Set<playerId>
         this.messageHandler = null;
+        this.heartbeatInterval = null;
+        this.HEARTBEAT_CHECK_MS = 5000; // Check every 5 seconds
+        this.PEER_TIMEOUT_MS = 60000; // Remove peers inactive for 60 seconds (accounts for browser throttling)
         this.setupMessageListener();
+        this.startHeartbeatMonitor();
     }
     /**
      * Set up listener for messages from iframes
@@ -39,7 +43,10 @@ export class IframeBridgeRelay {
                     this.handleRegister(data, event.source);
                     break;
                 case 'BRIDGE_SEND':
-                    this.handleSend(data);
+                    this.handleSend(data, event.source);
+                    break;
+                case 'BRIDGE_HEARTBEAT':
+                    this.handleHeartbeat(data);
                     break;
                 case 'BRIDGE_PEER_LEAVE':
                     this.handlePeerLeave(data);
@@ -59,15 +66,27 @@ export class IframeBridgeRelay {
             console.warn('[IframeBridgeRelay] Could not find iframe for registration:', playerId);
             return;
         }
+        const existingPeer = this.peers.get(playerId);
+        if (existingPeer) {
+            existingPeer.iframe = iframe;
+            existingPeer.roomId = roomId;
+            existingPeer.lastHeartbeat = Date.now();
+            if (!this.rooms.has(roomId)) {
+                this.rooms.set(roomId, new Set());
+            }
+            this.rooms.get(roomId).add(playerId);
+            return;
+        }
         // Determine if this is the host (first peer in room)
         const room = this.rooms.get(roomId);
         const isHost = !room || room.size === 0;
-        // Register peer
+        // Register peer with current timestamp as heartbeat
         this.peers.set(playerId, {
             playerId,
             roomId,
             iframe,
-            isHost
+            isHost,
+            lastHeartbeat: Date.now()
         });
         // Add to room
         if (!this.rooms.has(roomId)) {
@@ -97,7 +116,7 @@ export class IframeBridgeRelay {
     /**
      * Handle message send from a peer
      */
-    handleSend(data) {
+    handleSend(data, source) {
         const { playerId, roomId, payload } = data;
         if (!payload?.message) {
             console.warn('[IframeBridgeRelay] No message in BRIDGE_SEND');
@@ -106,8 +125,20 @@ export class IframeBridgeRelay {
         const sender = this.peers.get(playerId);
         if (!sender) {
             console.warn('[IframeBridgeRelay] Unknown sender:', playerId);
+            // Find the iframe that sent this message and notify it to reconnect
+            const iframe = Array.from(document.querySelectorAll('iframe')).find((iframe) => iframe.contentWindow === source);
+            if (iframe?.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'BRIDGE_ERROR',
+                    roomId,
+                    playerId,
+                    payload: { error: 'unknown_sender' }
+                }, '*');
+            }
             return;
         }
+        // Update heartbeat on any activity
+        sender.lastHeartbeat = Date.now();
         // Get target peer(s)
         const targets = payload.targetId
             ? [this.peers.get(payload.targetId)].filter(Boolean)
@@ -121,6 +152,18 @@ export class IframeBridgeRelay {
                 payload: { message: payload.message }
             });
         }
+    }
+    /**
+     * Handle heartbeat from peers
+     */
+    handleHeartbeat(data) {
+        const { playerId } = data;
+        const peer = this.peers.get(playerId);
+        if (!peer) {
+            console.warn('[IframeBridgeRelay] Unknown heartbeat sender:', playerId);
+            return;
+        }
+        peer.lastHeartbeat = Date.now();
     }
     /**
      * Handle peer leaving
@@ -166,6 +209,35 @@ export class IframeBridgeRelay {
         }
     }
     /**
+     * Start heartbeat monitor to detect stale peers
+     * Checks every 5 seconds and removes peers inactive for 10+ seconds
+     */
+    startHeartbeatMonitor() {
+        this.heartbeatInterval = setInterval(() => {
+            const now = Date.now();
+            const stalePeers = [];
+            // Find stale peers
+            for (const [playerId, peer] of this.peers) {
+                if (now - peer.lastHeartbeat > this.PEER_TIMEOUT_MS) {
+                    console.warn(`[IframeBridgeRelay] Removing stale peer: ${playerId} (inactive for ${now - peer.lastHeartbeat}ms)`);
+                    stalePeers.push(playerId);
+                }
+            }
+            // Remove stale peers
+            for (const playerId of stalePeers) {
+                const peer = this.peers.get(playerId);
+                if (peer) {
+                    this.handlePeerLeave({
+                        type: 'BRIDGE_PEER_LEAVE',
+                        playerId,
+                        roomId: peer.roomId,
+                        payload: { peerId: playerId }
+                    });
+                }
+            }
+        }, this.HEARTBEAT_CHECK_MS);
+    }
+    /**
      * Get all peers in a room
      */
     getPeersInRoom(roomId) {
@@ -194,7 +266,8 @@ export class IframeBridgeRelay {
             playerId,
             roomId,
             iframe,
-            isHost
+            isHost,
+            lastHeartbeat: Date.now()
         });
         if (!this.rooms.has(roomId)) {
             this.rooms.set(roomId, new Set());
@@ -221,6 +294,11 @@ export class IframeBridgeRelay {
         if (this.messageHandler) {
             window.removeEventListener('message', this.messageHandler);
             this.messageHandler = null;
+        }
+        // Stop heartbeat monitor
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
         }
         this.peers.clear();
         this.rooms.clear();

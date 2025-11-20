@@ -15,9 +15,12 @@
  * This helper automatically adds a +π/2 offset to triangle/arrow shapes
  * (which naturally point UP) so they align with the sprite's rotation.
  *
- * **No manual rotation offset needed!** Just call `update()` and it works.
+ * ## Auto-Update (Pit of Success!)
  *
- * @example
+ * By default, indicators automatically update every frame via scene events.
+ * **No manual update() calls needed!** Just attach and forget.
+ *
+ * @example Automatic updates (recommended - default behavior)
  * ```ts
  * import { attachDirectionalIndicator } from '@martini/phaser';
  *
@@ -25,24 +28,44 @@
  * onCreate: (key, data) => {
  *   const car = this.add.rectangle(data.x, data.y, 30, 20, data.color);
  *
- *   // Attach arrow - automatically handles rotation offset!
- *   car.directionArrow = attachDirectionalIndicator(this, car, {
+ *   // That's it! Arrow auto-updates every frame
+ *   attachDirectionalIndicator(this, car, {
  *     shape: 'triangle',
  *     offset: 20,
  *     color: 0xffffff
+ *     // autoUpdate: true is the default
+ *   });
+ *
+ *   return car;
+ * }
+ * ```
+ *
+ * @example Manual updates (if you need fine control)
+ * ```ts
+ * onCreate: (key, data) => {
+ *   const car = this.add.rectangle(data.x, data.y, 30, 20, data.color);
+ *
+ *   car.directionArrow = attachDirectionalIndicator(this, car, {
+ *     shape: 'triangle',
+ *     offset: 20,
+ *     color: 0xffffff,
+ *     autoUpdate: false  // Disable auto-update
  *   });
  *
  *   return car;
  * },
  *
- * onAdd: (sprite) => {
- *   // Arrow auto-updates in the update loop
- *   (sprite as any)._updateArrow = () => sprite.directionArrow?.update();
+ * // Then in your scene's update loop:
+ * update() {
+ *   for (const [, sprite] of this.spriteManager.getAll()) {
+ *     sprite.directionArrow?.update();
+ *   }
  * }
  * ```
  */
 
 import type Phaser from 'phaser';
+import { createSpriteAttachment, type SpriteAttachment } from './SpriteAttachment';
 
 export interface DirectionalIndicatorConfig {
   /**
@@ -75,22 +98,26 @@ export interface DirectionalIndicatorConfig {
    * Z-depth for layering
    */
   depth?: number;
+
+  /**
+   * Automatically update the indicator every frame
+   *
+   * When true (default), the indicator subscribes to the scene's update event
+   * and automatically follows the sprite's position/rotation each frame.
+   * No manual update() calls needed!
+   *
+   * When false, you must manually call indicator.update() in your scene loop.
+   *
+   * @default true
+   */
+  autoUpdate?: boolean;
 }
 
-export interface DirectionalIndicator {
-  /**
-   * Update indicator position and rotation based on parent sprite
-   * Call this in your scene's update loop
-   */
-  update: () => void;
-
-  /**
-   * Destroy the indicator
-   */
-  destroy: () => void;
-
+export interface DirectionalIndicator extends SpriteAttachment {
   /**
    * Get the underlying Phaser game object
+   *
+   * @override Always defined for DirectionalIndicator (not optional)
    */
   getGameObject: () => Phaser.GameObjects.GameObject;
 }
@@ -103,6 +130,9 @@ export interface DirectionalIndicator {
  * - Math.PI/2 = pointing down (+Y axis)
  * - Math.PI = pointing left (-X axis)
  * - -Math.PI/2 = pointing up (-Y axis)
+ *
+ * By default (autoUpdate: true), the indicator automatically updates every frame.
+ * No manual update() calls needed - it "just works"!
  *
  * @param scene - Phaser scene
  * @param sprite - Sprite to attach indicator to
@@ -118,6 +148,7 @@ export function attachDirectionalIndicator(
   const offset = config.offset ?? 20;
   const color = config.color ?? 0xffffff;
   const size = config.size ?? 1.0;
+  const autoUpdate = config.autoUpdate ?? true;
 
   let indicator: Phaser.GameObjects.GameObject & {
     setPosition?: (x: number, y: number) => any;
@@ -205,14 +236,17 @@ export function attachDirectionalIndicator(
     indicator.setRotation?.(sprite.rotation + Math.PI / 2);
   };
 
-  // Initial update
-  update();
-
-  return {
-    update,
-    destroy: () => {
-      indicator.destroy();
+  // Use generic SpriteAttachment system for lifecycle management
+  return createSpriteAttachment(
+    scene,
+    sprite,
+    {
+      update,
+      destroy: () => {
+        indicator.destroy();
+      },
+      getGameObject: () => indicator
     },
-    getGameObject: () => indicator
-  };
+    { autoUpdate }
+  ) as DirectionalIndicator;
 }

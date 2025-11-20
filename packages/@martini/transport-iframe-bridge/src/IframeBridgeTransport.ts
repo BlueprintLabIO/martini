@@ -45,7 +45,7 @@ export interface IframeBridgeConfig {
  * Message types for iframe ↔ parent communication
  */
 export interface BridgeMessage {
-  type: 'BRIDGE_REGISTER' | 'BRIDGE_SEND' | 'BRIDGE_DELIVER' | 'BRIDGE_PEER_JOIN' | 'BRIDGE_PEER_LEAVE' | 'BRIDGE_HOST_DISCONNECT';
+  type: 'BRIDGE_REGISTER' | 'BRIDGE_SEND' | 'BRIDGE_DELIVER' | 'BRIDGE_PEER_JOIN' | 'BRIDGE_PEER_LEAVE' | 'BRIDGE_HOST_DISCONNECT' | 'BRIDGE_HEARTBEAT' | 'BRIDGE_ERROR';
   roomId: string;
   playerId: string;
   payload?: {
@@ -53,6 +53,7 @@ export interface BridgeMessage {
     targetId?: string;
     peerId?: string;
     wasHost?: boolean;
+    error?: string;
   };
 }
 
@@ -147,6 +148,7 @@ export class IframeBridgeTransport implements Transport {
   private readonly roomId: string;
   private readonly _isHost: boolean;
   public readonly metrics: TransportMetrics;
+  private readonly HEARTBEAT_INTERVAL_MS = 3000;
 
   private messageHandlers: Array<(msg: WireMessage, senderId: string) => void> = [];
   private peerJoinHandlers: Array<(peerId: string) => void> = [];
@@ -156,6 +158,8 @@ export class IframeBridgeTransport implements Transport {
   private peerIds: Set<string> = new Set();
   private messageHandler: ((event: MessageEvent) => void) | null = null;
   private isDisconnected = false;
+  private heartbeatInterval: number | null = null;
+  private visibilityHandler?: () => void;
 
   constructor(config: IframeBridgeConfig) {
     this.roomId = config.roomId;
@@ -167,6 +171,8 @@ export class IframeBridgeTransport implements Transport {
 
     this.setupMessageListener();
     this.registerWithRelay();
+    this.startHeartbeat();
+    this.setupVisibilityListener();
   }
 
   /**
@@ -218,6 +224,14 @@ export class IframeBridgeTransport implements Transport {
             this.hostDisconnectHandlers.forEach(h => h());
           }
           break;
+
+        case 'BRIDGE_ERROR':
+          // Relay rejected our message (e.g., unknown sender after timeout)
+          // Auto-reconnect to re-establish connection
+          console.warn('[IframeBridgeTransport] Relay error, reconnecting...', data.payload?.error);
+          this.registerWithRelay();
+          this.sendHeartbeat();
+          break;
       }
     };
 
@@ -241,6 +255,51 @@ export class IframeBridgeTransport implements Transport {
     };
 
     window.parent.postMessage(registerMessage, '*');
+  }
+
+  /**
+   * Send periodic heartbeat to relay
+   */
+  private sendHeartbeat(): void {
+    if (this.isDisconnected) return;
+    if (!window.parent || window.parent === window) return;
+
+    const heartbeat: BridgeMessage = {
+      type: 'BRIDGE_HEARTBEAT',
+      roomId: this.roomId,
+      playerId: this.playerId
+    };
+
+    window.parent.postMessage(heartbeat, '*');
+  }
+
+  private startHeartbeat(): void {
+    if (typeof window === 'undefined') return;
+    this.stopHeartbeat();
+    this.sendHeartbeat();
+    this.heartbeatInterval = window.setInterval(() => this.sendHeartbeat(), this.HEARTBEAT_INTERVAL_MS);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  private setupVisibilityListener(): void {
+    if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') {
+      return;
+    }
+
+    this.visibilityHandler = () => {
+      if (document.visibilityState === 'visible') {
+        this.registerWithRelay();
+        this.sendHeartbeat();
+      }
+    };
+
+    document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
   /**
@@ -327,6 +386,7 @@ export class IframeBridgeTransport implements Transport {
 
     (this.metrics as IframeBridgeTransportMetrics).setDisconnected();
     this.isDisconnected = true;
+    this.stopHeartbeat();
 
     // Notify relay
     if (window.parent && window.parent !== window) {
@@ -354,5 +414,10 @@ export class IframeBridgeTransport implements Transport {
     this.peerLeaveHandlers = [];
     this.hostDisconnectHandlers = [];
     this.peerIds.clear();
+
+    if (this.visibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = undefined;
+    }
   }
 }

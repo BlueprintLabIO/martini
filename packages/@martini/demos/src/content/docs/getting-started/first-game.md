@@ -1,13 +1,17 @@
 ---
 title: First Game - Paddle Battle
-description: Build a complete multiplayer Pong game step-by-step
+description: Build a complete multiplayer Pong game with Martini
 section: getting-started
 order: 3
 ---
 
+<script>
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
+</script>
+
 # Your First Multiplayer Game
 
-In this tutorial, you'll build **Paddle Battle** - a complete multiplayer Pong game. You'll learn core Martini concepts by building a real game from scratch.
+In this tutorial, you'll build **Paddle Battle** - a complete 2-player Pong game with Martini. You'll learn how to sync game state, handle player input, and render everything smoothly across multiple clients.
 
 ## What You'll Build
 
@@ -17,7 +21,21 @@ A 2-player Pong game where:
 - Score points when the ball passes the opponent
 - Everything stays in perfect sync across both clients
 
-**Time to complete:** 20-30 minutes
+**Time to complete:** 15-30 minutes
+
+---
+
+## Choosing Your Approach
+
+Martini offers two ways to build multiplayer games:
+
+**Phaser Helpers (Recommended)** - Use built-in helpers that automate sprite sync, input handling, and physics. ~180 lines of code, perfect for rapid development.
+
+**Core Primitives (Advanced)** - Manual control over every aspect. ~280 lines of code, gives you deep understanding of how Martini works.
+
+Use the SDK selector above to choose your approach, or toggle between them as you learn!
+
+---
 
 ## Prerequisites
 
@@ -27,6 +45,9 @@ Make sure you've [installed Martini](/docs/latest/getting-started/installation) 
 
 Create a new directory and initialize your project:
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
 ```bash
 mkdir paddle-battle
 cd paddle-battle
@@ -34,6 +55,21 @@ pnpm init
 pnpm add @martini/core @martini/phaser @martini/transport-local phaser
 pnpm add -D typescript vite
 ```
+
+{/snippet}
+
+{#snippet core()}
+
+```bash
+mkdir paddle-battle
+cd paddle-battle
+pnpm init
+pnpm add @martini/core @martini/phaser @martini/transport-local phaser
+pnpm add -D typescript vite
+```
+
+{/snippet}
+</CodeTabs>
 
 Create `tsconfig.json`:
 
@@ -72,18 +108,16 @@ First, let's think about what state we need to track:
 - **Players**: Position, score, which side (left/right)
 - **Ball**: Position, velocity
 - **Inputs**: Current player controls
-- **Game status**: Has the game started?
 
 Create `src/game.ts`:
 
 ```typescript
 import { defineGame } from '@martini/core';
 
-// Define the shape of our game state
 interface Player {
   y: number;          // Paddle vertical position
   score: number;      // Player's score
-  side: 'left' | 'right';  // Which side of screen
+  side: 'left' | 'right';
 }
 
 interface Ball {
@@ -97,66 +131,49 @@ interface GameState {
   players: Record<string, Player>;
   ball: Ball;
   inputs: Record<string, { up: boolean; down: boolean }>;
-  gameStarted: boolean;
 }
 
 export const game = defineGame<GameState>({
   setup: ({ playerIds }) => ({
-    // Initialize players
     players: Object.fromEntries(
       playerIds.map((id, index) => [
         id,
         {
-          y: 250,  // Center of 600px height
+          y: 300,
           score: 0,
           side: index === 0 ? 'left' : 'right',
         },
       ])
     ),
-
-    // Initialize ball
     ball: {
-      x: 400,      // Center of 800px width
-      y: 300,      // Center of 600px height
+      x: 400,
+      y: 300,
       velocityX: 200,
       velocityY: 150,
     },
-
     inputs: {},
-    gameStarted: false,
   }),
 
   actions: {
-    // Players send their input each frame
     move: {
       apply: (state, context, input: { up: boolean; down: boolean }) => {
-        // Store input in state - host will use this to update physics
         if (!state.inputs) state.inputs = {};
         state.inputs[context.targetId] = input;
       },
     },
 
-    // Award point when ball goes off screen
     score: {
       apply: (state, context) => {
-        // context.targetId is the player who should receive the score
         const player = state.players[context.targetId];
         if (!player) return;
 
         player.score += 1;
 
-        // Reset ball to center
+        // Reset ball to center with random direction
         state.ball.x = 400;
         state.ball.y = 300;
-        // Random direction
         state.ball.velocityX = 200 * (Math.random() > 0.5 ? 1 : -1);
         state.ball.velocityY = 150 * (Math.random() > 0.5 ? 1 : -1);
-      },
-    },
-
-    startGame: {
-      apply: (state) => {
-        state.gameStarted = true;
       },
     },
   },
@@ -164,7 +181,7 @@ export const game = defineGame<GameState>({
   onPlayerJoin: (state, playerId) => {
     const index = Object.keys(state.players).length;
     state.players[playerId] = {
-      y: 250,
+      y: 300,
       score: 0,
       side: index === 0 ? 'left' : 'right',
     };
@@ -176,37 +193,46 @@ export const game = defineGame<GameState>({
 });
 ```
 
-**Key Concepts:**
-
-1. **Type Safety**: We defined `GameState` interface for full TypeScript support
-2. **setup()**: Creates initial state - each player gets assigned left or right side
-3. **move action**: Stores player input (doesn't move paddles directly!)
-4. **score action**: Uses `context.targetId` to award points to correct player
-5. **Player lifecycle**: Handles mid-game joins and disconnects
+**Key Points:**
+- `GameState` defines all networked data
+- `move` action stores input in state (doesn't move directly!)
+- `score` action uses `context.targetId` to award points
+- Player lifecycle hooks handle mid-game joins/leaves
 
 ---
 
 ## Step 2: Create the Phaser Scene
 
-Now let's render our game with Phaser. Create `src/scene.ts`:
+This is where the magic happens! The implementation differs significantly between Phaser Helpers and Core Primitives.
+
+Create `src/scene.ts`:
+
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+### Using Phaser Helpers
 
 ```typescript
 import Phaser from 'phaser';
 import type { GameRuntime } from '@martini/core';
-import { PhaserAdapter } from '@martini/phaser';
+import { PhaserAdapter, createPlayerHUD } from '@martini/phaser';
 
 export function createPaddleBattleScene(runtime: GameRuntime, isHost: boolean) {
   return class PaddleBattleScene extends Phaser.Scene {
     private adapter!: PhaserAdapter;
-    private paddles: Record<string, Phaser.GameObjects.Rectangle> = {};
+    private spriteManager: any;
+    private inputManager: any;
     private ball!: Phaser.GameObjects.Arc;
-    private scoreTexts: Record<string, Phaser.GameObjects.Text> = {};
+    private hud: any;
 
     constructor() {
       super({ key: 'PaddleBattle' });
     }
 
     create() {
+      // Initialize adapter
+      this.adapter = new PhaserAdapter(runtime, this);
+
       // Background
       this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
 
@@ -215,182 +241,160 @@ export function createPaddleBattleScene(runtime: GameRuntime, isHost: boolean) {
         this.add.rectangle(400, i + 10, 4, 10, 0x444444);
       }
 
-      // Create adapter - this connects Martini to Phaser
-      this.adapter = new PhaserAdapter(runtime, this);
+      // ====== HELPER 1: SpriteManager ======
+      // Automatically syncs all paddles (players) between host and clients
+      this.spriteManager = this.adapter.createSpriteManager({
+        // staticProperties = metadata synced once, not every frame
+        staticProperties: ['side'],
 
+        // Built-in labels (no manual positioning needed!)
+        label: {
+          getText: (data: any) => data.side === 'left' ? 'P1' : 'P2',
+          offset: { y: -35 },
+          style: {
+            fontSize: '14px',
+            color: '#fff',
+            backgroundColor: '#000',
+            padding: { x: 4, y: 2 },
+          },
+        },
+
+        // Create the visual sprite
+        onCreate: (key: string, data: any) => {
+          const x = data.side === 'left' ? 50 : 750;
+          return this.add.rectangle(x, data.y, 15, 100, 0xffffff);
+        },
+
+        // Set up physics for each sprite
+        onCreatePhysics: (sprite: any) => {
+          this.physics.add.existing(sprite);
+          const body = sprite.body as Phaser.Physics.Arcade.Body;
+          body.setCollideWorldBounds(true);
+          body.setImmovable(true);
+        },
+      });
+
+      // ====== HELPER 2: HUD ======
+      this.hud = createPlayerHUD(this.adapter, this, {
+        title: 'Paddle Battle - Multiplayer Pong',
+
+        roleText: (myPlayer: any) => {
+          if (!myPlayer) return 'Spectator';
+          return myPlayer.side === 'left' ? 'Left Player' : 'Right Player';
+        },
+
+        controlHints: () => 'W/S or ↑/↓ to Move',
+
+        stats: (state: any) => {
+          const scores = Object.entries(state.players)
+            .map(([_, player]: any) => `${player.side}: ${player.score}`)
+            .join('   |   ');
+          return scores;
+        },
+      });
+
+      // ====== HELPER 3: InputManager ======
+      this.inputManager = this.adapter.createInputManager();
+      this.inputManager.useProfile('platformer');
+
+      // Create ball manually (special object, not managed by sprite manager)
       if (isHost) {
-        this.setupHost();
+        const state = runtime.getState();
+        this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
+        this.physics.add.existing(this.ball);
+
+        const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
+        ballBody.setBounce(1, 1);
+        ballBody.setCollideWorldBounds(false);
+        ballBody.setVelocity(state.ball.velocityX, state.ball.velocityY);
+
+        this.adapter.trackSprite(this.ball, 'ball');
+
+        // Add collisions between ball and all paddles
+        for (const paddle of Object.values(this.spriteManager.group.getChildren())) {
+          this.physics.add.collider(this.ball, paddle as any);
+        }
       } else {
-        this.setupClient();
-      }
+        // Clients receive ball updates via sprite tracking
+        this.adapter.onChange((state: any) => {
+          if (!state._sprites?.ball) return;
+          if (this.ball) return;
 
-      // Add controls label
-      const label = isHost ? 'W/S to Move (Left Paddle)' : '↑/↓ to Move (Right Paddle)';
-      this.add.text(400, 570, label, {
-        fontSize: '14px',
-        color: '#ffffff',
-      }).setOrigin(0.5);
-    }
-
-    private setupHost() {
-      const state = runtime.getState();
-
-      // Create paddles for each player
-      for (const [playerId, playerData] of Object.entries(state.players)) {
-        const x = playerData.side === 'left' ? 50 : 750;
-
-        // Create paddle with physics
-        const paddle = this.add.rectangle(x, playerData.y, 15, 100, 0xffffff);
-        this.physics.add.existing(paddle, false);
-
-        const body = paddle.body as Phaser.Physics.Arcade.Body;
-        body.setCollideWorldBounds(true);  // Keep paddle on screen
-        body.setImmovable(true);           // Ball bounces off it
-
-        this.paddles[playerId] = paddle;
-
-        // Track sprite - Martini will sync position automatically
-        this.adapter.trackSprite(paddle, `paddle-${playerId}`);
-
-        // Score text
-        const scoreX = playerData.side === 'left' ? 200 : 600;
-        this.scoreTexts[playerId] = this.add.text(scoreX, 50, '0', {
-          fontSize: '48px',
-          color: '#ffffff',
+          const data = state._sprites.ball;
+          this.ball = this.add.circle(data.x || 400, data.y || 300, 10, 0xff6b6b);
+          this.adapter.registerRemoteSprite('ball', this.ball);
         });
       }
 
-      // Create ball with physics
-      this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
-      this.physics.add.existing(this.ball);
-
-      const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
-      ballBody.setBounce(1, 1);  // Perfect bounce
-      ballBody.setCollideWorldBounds(false);  // We'll handle bounds manually
-      ballBody.setVelocity(state.ball.velocityX, state.ball.velocityY);
-
-      // Track ball sprite
-      this.adapter.trackSprite(this.ball, 'ball');
-
-      // Add colliders between ball and all paddles
-      for (const paddle of Object.values(this.paddles)) {
-        this.physics.add.collider(this.ball, paddle);
+      // HOST SETUP
+      if (isHost) {
+        const state = runtime.getState();
+        for (const [playerId, playerData] of Object.entries(state.players)) {
+          this.spriteManager.add(`paddle-${playerId}`, playerData);
+        }
       }
-    }
-
-    private setupClient() {
-      // Clients create sprites when they appear in state
-      this.adapter.onChange((state: any) => {
-        if (!state._sprites) return;
-
-        for (const [key, data] of Object.entries(state._sprites)) {
-          // Create paddles
-          if (key.startsWith('paddle-') && !this.paddles[key]) {
-            const paddle = this.add.rectangle(
-              data.x || 50,
-              data.y || 300,
-              15,
-              100,
-              0xffffff
-            );
-            this.paddles[key] = paddle;
-            this.adapter.registerRemoteSprite(key, paddle);
-          }
-
-          // Create ball
-          if (key === 'ball' && !this.ball) {
-            this.ball = this.add.circle(
-              data.x || 400,
-              data.y || 300,
-              10,
-              0xff6b6b
-            );
-            this.adapter.registerRemoteSprite(key, this.ball);
-          }
-        }
-
-        // Update score displays
-        if (state.players) {
-          for (const [playerId, playerData] of Object.entries(state.players)) {
-            if (!this.scoreTexts[playerId]) {
-              const scoreX = playerData.side === 'left' ? 200 : 600;
-              this.scoreTexts[playerId] = this.add.text(
-                scoreX,
-                50,
-                String(playerData.score || 0),
-                { fontSize: '48px', color: '#ffffff' }
-              );
-            } else {
-              this.scoreTexts[playerId].setText(String(playerData.score || 0));
-            }
-          }
-        }
-      });
     }
 
     update() {
-      // CLIENTS: Smooth interpolation
-      if (!isHost) {
-        this.adapter.updateInterpolation();
-        return;  // Clients don't run game logic
+      // HOST: Ensure new players get sprites
+      if (this.adapter.isHost()) {
+        const state = runtime.getState();
+        for (const [playerId, playerData] of Object.entries(state.players)) {
+          const key = `paddle-${playerId}`;
+          if (!this.spriteManager.get(key)) {
+            this.spriteManager.add(key, playerData);
+          }
+        }
       }
 
-      // HOST ONLY: Run game logic
-      this.handleInput();
+      // CLIENT & HOST: Smooth interpolation
+      this.spriteManager.update();
+
+      if (!isHost) return; // Clients don't run logic
+
+      // ====== HOST ONLY ======
+
+      // Capture input and submit actions
+      this.inputManager.update();
+      const myInput = this.inputManager.getState();
+
+      runtime.submitAction('move', {
+        up: myInput.up || false,
+        down: myInput.down || false,
+      });
+
+      // Update physics
       this.updatePhysics();
+
+      // Check scoring
       this.checkScoring();
     }
 
-    private handleInput() {
+    private updatePhysics() {
       const state = runtime.getState();
+      if (!this.ball?.body) return;
+
       const speed = 300;
+      const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
 
-      // Get keyboard input
-      const cursors = this.input.keyboard!.createCursorKeys();
-      const wasd = this.input.keyboard!.addKeys('W,S') as any;
-
-      // Determine which controls this player uses
-      const myId = this.adapter.playerId;
-      const myPlayer = state.players[myId];
-
-      if (!myPlayer) return;
-
-      // Left player uses W/S, right player uses arrow keys
-      const input = {
-        up: myPlayer.side === 'left' ? wasd.W.isDown : cursors.up.isDown,
-        down: myPlayer.side === 'left' ? wasd.S.isDown : cursors.down.isDown,
-      };
-
-      // Submit input to runtime
-      runtime.submitAction('move', input);
-
-      // Apply physics to all paddles based on their inputs
+      // Apply input to paddles
       const inputs = state.inputs || {};
-      for (const [playerId, playerInput] of Object.entries(inputs)) {
-        const paddle = this.paddles[playerId];
+      for (const [playerId, input] of Object.entries(inputs)) {
+        const paddle = this.spriteManager.get(`paddle-${playerId}`);
         if (!paddle?.body) continue;
 
-        const body = paddle.body as Phaser.Physics.Arcade.Body;
-
-        if (playerInput.up) {
-          body.setVelocityY(-speed);
-        } else if (playerInput.down) {
-          body.setVelocityY(speed);
+        const paddleBody = paddle.body as Phaser.Physics.Arcade.Body;
+        if (input.up) {
+          paddleBody.setVelocityY(-speed);
+        } else if (input.down) {
+          paddleBody.setVelocityY(speed);
         } else {
-          body.setVelocityY(0);
+          paddleBody.setVelocityY(0);
         }
 
         // Update state with new position
         state.players[playerId].y = paddle.y;
       }
-    }
-
-    private updatePhysics() {
-      const state = runtime.getState();
-
-      if (!this.ball?.body) return;
-
-      const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
 
       // Update ball state
       state.ball.x = this.ball.x;
@@ -411,20 +415,17 @@ export function createPaddleBattleScene(runtime: GameRuntime, isHost: boolean) {
     private checkScoring() {
       const state = runtime.getState();
 
-      // Ball went past left edge - RIGHT player scores
       if (this.ball.x < -10) {
         const rightPlayer = Object.entries(state.players).find(
-          ([_, data]) => data.side === 'right'
+          ([_, data]: any) => data.side === 'right'
         );
         if (rightPlayer) {
           runtime.submitAction('score', undefined, rightPlayer[0]);
           this.resetBall();
         }
-      }
-      // Ball went past right edge - LEFT player scores
-      else if (this.ball.x > 810) {
+      } else if (this.ball.x > 810) {
         const leftPlayer = Object.entries(state.players).find(
-          ([_, data]) => data.side === 'left'
+          ([_, data]: any) => data.side === 'left'
         );
         if (leftPlayer) {
           runtime.submitAction('score', undefined, leftPlayer[0]);
@@ -434,7 +435,6 @@ export function createPaddleBattleScene(runtime: GameRuntime, isHost: boolean) {
     }
 
     private resetBall() {
-      // Wait for state update, then reset ball physics
       setTimeout(() => {
         const state = runtime.getState();
         this.ball.setPosition(state.ball.x, state.ball.y);
@@ -442,32 +442,246 @@ export function createPaddleBattleScene(runtime: GameRuntime, isHost: boolean) {
           state.ball.velocityX,
           state.ball.velocityY
         );
-
-        // Update score displays
-        for (const [playerId, playerData] of Object.entries(state.players)) {
-          this.scoreTexts[playerId]?.setText(String(playerData.score || 0));
-        }
       }, 10);
     }
-  }
+  };
 }
 ```
 
-**Key Concepts:**
+**What Helpers Do:**
+- **SpriteManager**: Automatically syncs paddle positions between host and clients
+- **InputManager**: Handles keyboard input with preset profiles (platformer = up/down keys)
+- **HUD**: Displays scores and player information automatically
 
-1. **PhaserAdapter**: Bridges Martini runtime with Phaser scene
-2. **Host vs Client Setup**:
-   - Host creates sprites with `this.physics.add.*` and calls `trackSprite()`
-   - Clients create sprites with `this.add.*` and calls `registerRemoteSprite()`
-3. **updateInterpolation()**: Clients must call this for smooth movement
-4. **Input Handling**: Both players submit input, but only host applies physics
-5. **targetId Parameter**: `submitAction('score', data, playerId)` specifies who scores
+{/snippet}
+
+{#snippet core()}
+
+### Using Core Primitives
+
+```typescript
+import Phaser from 'phaser';
+import type { GameRuntime } from '@martini/core';
+import { PhaserAdapter } from '@martini/phaser';
+
+export function createPaddleBattleScene(runtime: GameRuntime, isHost: boolean) {
+  return class PaddleBattleScene extends Phaser.Scene {
+    private adapter!: PhaserAdapter;
+    private paddles: Map<string, Phaser.GameObjects.Rectangle> = new Map();
+    private ball!: Phaser.GameObjects.Arc;
+    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    private wasd!: any;
+    private scoreText!: Phaser.GameObjects.Text;
+
+    constructor() {
+      super({ key: 'PaddleBattle' });
+    }
+
+    create() {
+      this.adapter = new PhaserAdapter(runtime, this);
+
+      // Background
+      this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
+
+      // Center line
+      for (let i = 0; i < 600; i += 20) {
+        this.add.rectangle(400, i + 10, 4, 10, 0x444444);
+      }
+
+      // Manual input setup
+      this.cursors = this.input.keyboard!.createCursorKeys();
+      this.wasd = this.input.keyboard!.addKeys({
+        up: Phaser.Input.Keyboard.KeyCodes.W,
+        down: Phaser.Input.Keyboard.KeyCodes.S,
+      });
+
+      // Manual HUD
+      this.scoreText = this.add.text(400, 30, 'Waiting...', {
+        fontSize: '24px',
+        color: '#ffffff',
+      }).setOrigin(0.5);
+      this.scoreText.setScrollFactor(0);
+
+      // HOST: Create ball with physics
+      if (isHost) {
+        const state = runtime.getState();
+        this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
+        this.physics.add.existing(this.ball);
+
+        const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
+        ballBody.setBounce(1, 1);
+        ballBody.setCollideWorldBounds(false);
+        ballBody.setVelocity(state.ball.velocityX, state.ball.velocityY);
+
+        // Track ball for clients
+        this.adapter.trackSprite(this.ball, 'ball');
+
+        // Create initial paddles
+        for (const [playerId, playerData] of Object.entries(state.players)) {
+          this.createPaddle(playerId, playerData);
+        }
+      } else {
+        // CLIENT: Listen for ball data
+        this.adapter.onChange((state: any) => {
+          if (!state._sprites?.ball) return;
+          if (this.ball) return;
+
+          const data = state._sprites.ball;
+          this.ball = this.add.circle(data.x || 400, data.y || 300, 10, 0xff6b6b);
+          this.adapter.registerRemoteSprite('ball', this.ball);
+        });
+
+        // CLIENT: Listen for player data
+        const state = runtime.getState();
+        for (const [playerId, playerData] of Object.entries(state.players)) {
+          this.createPaddle(playerId, playerData);
+        }
+      }
+
+      // Listen for state changes (both host and client)
+      this.adapter.onChange((state: any) => {
+        // Update HUD
+        const scores = Object.entries(state.players)
+          .map(([_, p]: any) => `${p.side}: ${p.score}`)
+          .join('  |  ');
+        this.scoreText.setText(scores);
+
+        // Update paddle positions
+        for (const [playerId, playerData] of Object.entries(state.players)) {
+          const paddle = this.paddles.get(playerId);
+          if (paddle) {
+            paddle.y = playerData.y;
+          } else {
+            this.createPaddle(playerId, playerData);
+          }
+        }
+      });
+    }
+
+    private createPaddle(playerId: string, playerData: any) {
+      const x = playerData.side === 'left' ? 50 : 750;
+      const paddle = this.add.rectangle(x, playerData.y, 15, 100, 0xffffff);
+
+      if (isHost) {
+        this.physics.add.existing(paddle);
+        const body = paddle.body as Phaser.Physics.Arcade.Body;
+        body.setCollideWorldBounds(true);
+        body.setImmovable(true);
+
+        // Add collision with ball
+        if (this.ball) {
+          this.physics.add.collider(this.ball, paddle);
+        }
+      }
+
+      this.paddles.set(playerId, paddle);
+    }
+
+    update() {
+      if (!isHost) return; // Clients don't run physics
+
+      const state = runtime.getState();
+
+      // Manual input capture
+      const up = this.cursors.up.isDown || this.wasd.up.isDown;
+      const down = this.cursors.down.isDown || this.wasd.down.isDown;
+
+      runtime.submitAction('move', { up, down });
+
+      // Update physics
+      this.updatePhysics();
+
+      // Check scoring
+      this.checkScoring();
+    }
+
+    private updatePhysics() {
+      const state = runtime.getState();
+      const speed = 300;
+
+      // Apply input to paddles
+      for (const [playerId, input] of Object.entries(state.inputs || {})) {
+        const paddle = this.paddles.get(playerId);
+        if (!paddle?.body) continue;
+
+        const body = paddle.body as Phaser.Physics.Arcade.Body;
+        if (input.up) {
+          body.setVelocityY(-speed);
+        } else if (input.down) {
+          body.setVelocityY(speed);
+        } else {
+          body.setVelocityY(0);
+        }
+
+        // Update state
+        state.players[playerId].y = paddle.y;
+      }
+
+      // Update ball state
+      if (this.ball?.body) {
+        const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
+        state.ball.x = this.ball.x;
+        state.ball.y = this.ball.y;
+        state.ball.velocityX = ballBody.velocity.x;
+        state.ball.velocityY = ballBody.velocity.y;
+
+        // Manual bounce
+        if (this.ball.y <= 10 || this.ball.y >= 590) {
+          ballBody.setVelocityY(-ballBody.velocity.y);
+        }
+      }
+    }
+
+    private checkScoring() {
+      const state = runtime.getState();
+
+      if (this.ball.x < -10) {
+        const rightPlayer = Object.entries(state.players).find(
+          ([_, data]: any) => data.side === 'right'
+        );
+        if (rightPlayer) {
+          runtime.submitAction('score', undefined, rightPlayer[0]);
+          this.resetBall();
+        }
+      } else if (this.ball.x > 810) {
+        const leftPlayer = Object.entries(state.players).find(
+          ([_, data]: any) => data.side === 'left'
+        );
+        if (leftPlayer) {
+          runtime.submitAction('score', undefined, leftPlayer[0]);
+          this.resetBall();
+        }
+      }
+    }
+
+    private resetBall() {
+      setTimeout(() => {
+        const state = runtime.getState();
+        this.ball.setPosition(state.ball.x, state.ball.y);
+        (this.ball.body as Phaser.Physics.Arcade.Body).setVelocity(
+          state.ball.velocityX,
+          state.ball.velocityY
+        );
+      }, 10);
+    }
+  };
+}
+```
+
+**Manual Implementation Details:**
+- Explicit sprite creation and management
+- Manual keyboard input handling
+- Custom HUD with text updates
+- Direct state change listeners
+
+{/snippet}
+</CodeTabs>
 
 ---
 
 ## Step 3: Initialize the Game
 
-Create `src/main.ts` to wire everything together:
+Create `src/main.ts`:
 
 ```typescript
 import Phaser from 'phaser';
@@ -476,19 +690,17 @@ import { LocalTransport } from '@martini/transport-local';
 import { game } from './game';
 import { createPaddleBattleScene } from './scene';
 
-// Create transport - LocalTransport lets you test with multiple browser tabs
+// LocalTransport lets you test with multiple browser tabs
 const transport = new LocalTransport({
   roomId: 'paddle-battle-room',
-  isHost: true,  // First tab is host
+  isHost: true,
 });
 
-// Create runtime
 const runtime = new GameRuntime(game, transport, {
   isHost: transport.isHost(),
   playerIds: [transport.getPlayerId()],
 });
 
-// Create Phaser game
 const PaddleBattleScene = createPaddleBattleScene(runtime, transport.isHost());
 
 new Phaser.Game({
@@ -499,7 +711,7 @@ new Phaser.Game({
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { x: 0, y: 0 },  // No gravity for Pong
+      gravity: { x: 0, y: 0 },
       debug: false,
     },
   },
@@ -540,7 +752,7 @@ Create `index.html`:
 </html>
 ```
 
-Add scripts to `package.json`:
+Update `package.json`:
 
 ```json
 {
@@ -563,10 +775,10 @@ pnpm dev
 
 Open http://localhost:3000 in **two browser tabs side by side**:
 
-1. **First tab** (Host): Controls left paddle with W/S keys
-2. **Second tab** (Client): Controls right paddle with arrow keys
+1. **First tab** (Host): Controls left paddle with W/S or Arrow Up/Down
+2. **Second tab** (Client): Controls right paddle
 
-You should see both paddles and the ball in sync across both tabs!
+You should see both paddles and the ball in perfect sync!
 
 ---
 
@@ -575,53 +787,27 @@ You should see both paddles and the ball in sync across both tabs!
 ### The Multiplayer Flow
 
 ```
-1. Player presses W (move up)
+1. Player presses W
    ↓
-2. runtime.submitAction('move', { up: true })
+2. Input captured (InputManager or manual)
    ↓
-3. Action sent to host via transport
+3. runtime.submitAction('move', { up: true })
    ↓
-4. Host applies action: state.inputs[playerId] = { up: true }
+4. Action sent to host, applies to state
    ↓
-5. Host runs physics: paddle.body.setVelocityY(-speed)
+5. state.inputs[playerId] = { up: true }
    ↓
-6. adapter.trackSprite() updates state._sprites.paddle-123
+6. Host's updatePhysics() reads state.inputs
    ↓
-7. Host generates diff: [{ op: 'replace', path: ['_sprites','paddle-123','y'], value: 245 }]
+7. paddleBody.setVelocityY(-speed) applies physics
    ↓
-8. Host broadcasts patches to all clients
+8. SpriteManager/adapter tracks new position
    ↓
-9. Clients apply patches to their state
+9. Host broadcasts state diff to all clients
    ↓
-10. adapter.updateInterpolation() smoothly moves client sprites
-```
-
-### Key Patterns
-
-**1. Input → State → Physics**
-
-```typescript
-// DON'T do this (direct sprite manipulation)
-runtime.submitAction('move', { up: true });
-paddle.y -= 10;  // ❌ Not synced!
-
-// DO this (state-driven)
-runtime.submitAction('move', { up: true });  // Store input in state
-// Host reads state.inputs and applies physics
-// Sprites update automatically via trackSprite()
-```
-
-**2. Host Authority**
-
-Only the host runs `this.physics.*` and collision detection. Clients are "dumb terminals" that just render what they receive.
-
-**3. targetId for Multi-Target Actions**
-
-```typescript
-// Award point to right player
-const rightPlayer = findRightPlayer();
-runtime.submitAction('score', undefined, rightPlayer.id);
-//                                       ↑ targetId parameter
+10. Clients receive diff and update their sprites
+   ↓
+11. Smooth interpolation displays movement
 ```
 
 ---
@@ -632,64 +818,60 @@ runtime.submitAction('score', undefined, rightPlayer.id);
 
 **1. Add a Winning Condition**
 
+In `src/game.ts`:
 ```typescript
-// In score action:
-if (player.score >= 5) {
-  state.gameOver = true;
-  state.winner = context.targetId;
+score: {
+  apply: (state, context) => {
+    const player = state.players[context.targetId];
+    if (!player) return;
+
+    player.score += 1;
+
+    if (player.score >= 11) {
+      state.gameOver = true;
+      state.winner = context.targetId;
+    }
+
+    // Reset ball...
+  },
 }
 ```
 
 **2. Add Sound Effects**
 
+In `src/scene.ts` create():
 ```typescript
-// In scene.ts create():
 this.sound.add('bounce');
 this.sound.add('score');
 
-// In ball collision:
+// In the collider callback:
 this.sound.play('bounce');
 ```
 
-**3. Add Power-ups**
+---
 
-```typescript
-// Add to state:
-powerups: [
-  { x: 400, y: 300, type: 'speed' }
-]
+## Learn More
 
-// Check collision:
-if (ballTouchesPowerup()) {
-  state.ball.velocityX *= 1.5;
-}
-```
-
-### Learn More
-
-- [Core Concepts](/docs/latest/concepts/architecture) - Understand Martini's architecture
-- [Actions Deep Dive](/docs/latest/concepts/actions) - Master action patterns
-- [Phaser Integration](/docs/latest/guides/phaser-integration) - Advanced Phaser techniques
-- [Production Deployment](/docs/latest/guides/deployment) - Deploy to real servers
+- **Core Concepts** - Read [Architecture](/docs/latest/concepts/architecture)
+- **Phaser Helpers** - Check out the [Phaser Helpers API](/docs/latest/api/phaser/helpers)
+- **More Examples** - Explore [Example Games](/docs/latest/examples/overview)
 
 ---
 
 ## Troubleshooting
 
 **Ball doesn't bounce off paddles?**
-- Make sure you're calling `this.physics.add.collider(ball, paddle)` on the host
-- Check that `ballBody.setBounce(1, 1)` is set
+- Check that you've added colliders: `this.physics.add.collider(this.ball, paddle)`
+
+**Paddles jittery on client?**
+- Phaser: Ensure `spriteManager.update()` is called every frame
+- Core: Check that state changes trigger visual updates
 
 **Second player's paddle doesn't appear?**
-- Clients must check `if (!state._sprites) return` before creating sprites
-- Make sure `adapter.registerRemoteSprite()` is called
+- Verify `onPlayerJoin` hook is creating paddles properly
 
-**Paddles are jittery on client?**
-- Call `adapter.updateInterpolation()` in the client's `update()` method
-
-**Scores don't update?**
-- Use `context.targetId` in the score action, not `context.playerId`
-- Make sure you're using the third parameter: `submitAction('score', undefined, winnerId)`
+**Scores don't sync?**
+- Make sure you're using `context.targetId`: `submitAction('score', undefined, playerId)`
 
 ---
 
@@ -698,10 +880,28 @@ if (ballTouchesPowerup()) {
 You've built a complete multiplayer game with Martini! You now understand:
 
 ✅ Defining game state with TypeScript
-✅ Creating actions that modify state
+✅ Handling multiplayer actions and state sync
 ✅ Host-authoritative architecture
-✅ Sprite synchronization with PhaserAdapter
-✅ Input handling and physics
-✅ Using targetId for multi-player actions
+✅ Smooth client-side rendering
 
-Ready for more? Check out our [example games](/docs/latest/examples/overview) to see advanced patterns!
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+✅ Using SpriteManager for automatic sprite sync
+✅ Using InputManager for simplified input handling
+✅ Using createPlayerHUD for automatic HUD management
+
+Ready to build more complex games? Check out the [Phaser helpers documentation](/docs/latest/api/phaser/helpers)!
+
+{/snippet}
+
+{#snippet core()}
+
+✅ Manual sprite management and synchronization
+✅ Direct input handling
+✅ Custom HUD implementation
+
+Ready for more complex games? Check out the [complete examples](/docs/latest/examples/overview) or try the Phaser helpers for faster development!
+
+{/snippet}
+</CodeTabs>

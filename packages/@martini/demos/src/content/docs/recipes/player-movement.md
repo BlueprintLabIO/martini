@@ -1,3 +1,7 @@
+<script>
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
+</script>
+
 # Player Movement Recipes
 
 Common player movement patterns for multiplayer games. Copy and adapt these recipes for your game.
@@ -99,6 +103,54 @@ export const game = defineGame({
 
 ### Phaser Scene (Input Handling)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using InputManager Helper** - Automatic WASD/Arrow key handling:
+
+```typescript
+import Phaser from 'phaser';
+import { PhaserAdapter, InputManager } from '@martini/phaser';
+
+export class GameScene extends Phaser.Scene {
+  private adapter!: PhaserAdapter;
+  private inputManager!: InputManager;
+
+  create() {
+    this.adapter = new PhaserAdapter(runtime, this);
+
+    // Automatically handles WASD + Arrow keys
+    this.inputManager = new InputManager(this.adapter, this, {
+      type: 'wasd-arrows',
+      actionName: 'move',
+    });
+
+    // That's it! Input is automatically submitted every frame
+  }
+
+  update(time: number, delta: number) {
+    // Update physics (host only)
+    if (this.adapter.isHost()) {
+      this.runtime.submitAction('tick', { delta });
+    }
+
+    this.adapter.update(time, delta);
+  }
+}
+```
+
+**Benefits:**
+- ✅ Handles both WASD and Arrow keys automatically
+- ✅ Auto-submits input every frame
+- ✅ Just 3 lines instead of 20+
+- ✅ Supports gamepad out of the box
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Input Handling** - Full control over keyboard:
+
 ```typescript
 import Phaser from 'phaser';
 import { PhaserAdapter } from '@martini/phaser';
@@ -140,6 +192,14 @@ export class GameScene extends Phaser.Scene {
   }
 }
 ```
+
+**Use when:**
+- Custom key bindings needed
+- Special input processing required
+- Non-standard control schemes
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Smooth 8-direction movement
@@ -347,21 +407,7 @@ create() {
   const platform = this.add.rectangle(400, 570, 600, 20, 0x8b4513);
   this.physics.add.existing(platform, true);
 
-  // Create player sprites with physics
-  const sprites = this.adapter.createSpriteRegistry({
-    players: {
-      onCreate: (key, data) => {
-        return this.add.circle(data.x, data.y, 20, 0xff3300);
-      },
-      onCreatePhysics: (sprite) => {
-        this.physics.add.existing(sprite);
-        const body = sprite.body as Phaser.Physics.Arcade.Body;
-        body.setCollideWorldBounds(true);
-        body.setBounce(0.2);
-        this.physics.add.collider(sprite, platform);
-      },
-    },
-  });
+  // Create player sprites with physics (use SpriteManager for auto-sync)
 }
 
 update(time: number, delta: number) {
@@ -555,9 +601,9 @@ update(time: number, delta: number) {
     cursorY: pointer.y,
   });
 
-  // Render rotation
+  // Render rotation (if using SpriteManager, this is automatic)
   const state = this.runtime.getState();
-  const myPlayer = state.players[this.adapter.playerId];
+  const myPlayer = state.players[this.adapter.getMyPlayerId()];
   if (myPlayer && this.playerSprite) {
     this.playerSprite.rotation = myPlayer.rotation;
   }
@@ -647,6 +693,7 @@ export const game = defineGame({
 - **Clamp boundaries** to prevent players going out of bounds
 - **Buffer inputs** using `createInputAction` for efficiency
 - **Separate input from physics** (input action + tick action)
+- **Use InputManager** for automatic keyboard/gamepad handling
 
 ### DON'T ❌
 
@@ -660,7 +707,7 @@ export const game = defineGame({
 
 ## See Also
 
-- [Shooting Mechanics](/docs/recipes/shooting-mechanics) - Projectile movement
-- [Physics Integration](/docs/guides/physics-and-collision) - Advanced physics
-- [Input Manager](/docs/api/phaser/input-manager) - Phaser input utilities
-- [Arena Blaster Example](/docs/examples/overview#arena-blaster) - Complete movement example
+- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics) - Projectile movement
+- [Physics Integration](/docs/latest/guides/physics-and-collision) - Advanced physics
+- [Input Manager](/docs/latest/api/phaser/input-manager) - Phaser input utilities
+- [Arena Blaster Example](/docs/latest/examples/overview#arena-blaster) - Complete movement example

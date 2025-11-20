@@ -15,9 +15,12 @@
  * This helper automatically adds a +π/2 offset to triangle/arrow shapes
  * (which naturally point UP) so they align with the sprite's rotation.
  *
- * **No manual rotation offset needed!** Just call `update()` and it works.
+ * ## Auto-Update (Pit of Success!)
  *
- * @example
+ * By default, indicators automatically update every frame via scene events.
+ * **No manual update() calls needed!** Just attach and forget.
+ *
+ * @example Automatic updates (recommended - default behavior)
  * ```ts
  * import { attachDirectionalIndicator } from '@martini/phaser';
  *
@@ -25,22 +28,42 @@
  * onCreate: (key, data) => {
  *   const car = this.add.rectangle(data.x, data.y, 30, 20, data.color);
  *
- *   // Attach arrow - automatically handles rotation offset!
- *   car.directionArrow = attachDirectionalIndicator(this, car, {
+ *   // That's it! Arrow auto-updates every frame
+ *   attachDirectionalIndicator(this, car, {
  *     shape: 'triangle',
  *     offset: 20,
  *     color: 0xffffff
+ *     // autoUpdate: true is the default
+ *   });
+ *
+ *   return car;
+ * }
+ * ```
+ *
+ * @example Manual updates (if you need fine control)
+ * ```ts
+ * onCreate: (key, data) => {
+ *   const car = this.add.rectangle(data.x, data.y, 30, 20, data.color);
+ *
+ *   car.directionArrow = attachDirectionalIndicator(this, car, {
+ *     shape: 'triangle',
+ *     offset: 20,
+ *     color: 0xffffff,
+ *     autoUpdate: false  // Disable auto-update
  *   });
  *
  *   return car;
  * },
  *
- * onAdd: (sprite) => {
- *   // Arrow auto-updates in the update loop
- *   (sprite as any)._updateArrow = () => sprite.directionArrow?.update();
+ * // Then in your scene's update loop:
+ * update() {
+ *   for (const [, sprite] of this.spriteManager.getAll()) {
+ *     sprite.directionArrow?.update();
+ *   }
  * }
  * ```
  */
+import { createSpriteAttachment } from './SpriteAttachment';
 /**
  * Attach a directional indicator to a sprite
  *
@@ -49,6 +72,9 @@
  * - Math.PI/2 = pointing down (+Y axis)
  * - Math.PI = pointing left (-X axis)
  * - -Math.PI/2 = pointing up (-Y axis)
+ *
+ * By default (autoUpdate: true), the indicator automatically updates every frame.
+ * No manual update() calls needed - it "just works"!
  *
  * @param scene - Phaser scene
  * @param sprite - Sprite to attach indicator to
@@ -60,6 +86,7 @@ export function attachDirectionalIndicator(scene, sprite, config = {}) {
     const offset = config.offset ?? 20;
     const color = config.color ?? 0xffffff;
     const size = config.size ?? 1.0;
+    const autoUpdate = config.autoUpdate ?? true;
     let indicator;
     // Create the appropriate shape
     switch (shape) {
@@ -126,14 +153,13 @@ export function attachDirectionalIndicator(scene, sprite, config = {}) {
         // - So we need +90 degrees (π/2 radians) to align them
         indicator.setRotation?.(sprite.rotation + Math.PI / 2);
     };
-    // Initial update
-    update();
-    return {
+    // Use generic SpriteAttachment system for lifecycle management
+    return createSpriteAttachment(scene, sprite, {
         update,
         destroy: () => {
             indicator.destroy();
         },
         getGameObject: () => indicator
-    };
+    }, { autoUpdate });
 }
 //# sourceMappingURL=DirectionalIndicator.js.map

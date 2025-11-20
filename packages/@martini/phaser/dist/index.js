@@ -14,12 +14,15 @@ export { CollisionManager } from './helpers/CollisionManager.js';
 export { PlayerUIManager } from './helpers/PlayerUIManager.js';
 export { StateDrivenSpawner } from './helpers/StateDrivenSpawner.js';
 export { HealthBarManager } from './helpers/HealthBarManager.js';
+export { GridClickHelper } from './helpers/GridClickHelper.js';
 // Input Profiles
 export { registerProfile, getProfile, listProfiles, BUILT_IN_PROFILES } from './helpers/InputProfiles.js';
 // HUD Helper
 export { createPlayerHUD } from './helpers/HUDHelper.js';
 // Speed Display Helper
 export { createSpeedDisplay } from './helpers/SpeedDisplay.js';
+// Sprite Attachment System (Generic)
+export { createSpriteAttachment, createSpriteAttachments, createCompositeAttachment } from './helpers/SpriteAttachment.js';
 // Directional Indicator Helper
 export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';
 // Camera Follower Helper

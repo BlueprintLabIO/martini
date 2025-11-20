@@ -11,6 +11,7 @@ import { CollisionManager } from './helpers/CollisionManager.js';
 import { PhysicsManager } from './helpers/PhysicsManager.js';
 import { StateDrivenSpawner } from './helpers/StateDrivenSpawner.js';
 import { HealthBarManager } from './helpers/HealthBarManager.js';
+import { GridClickHelper } from './helpers/GridClickHelper.js';
 /**
  * Phaser Adapter - Auto-syncs sprites via GameRuntime
  *
@@ -680,6 +681,36 @@ export class PhaserAdapter {
      */
     createStateDrivenSpawner(config) {
         return new StateDrivenSpawner(this, config);
+    }
+    /**
+     * Create a GridClickHelper for robust grid/board click handling
+     *
+     * Solves the common problem where interactive rectangles don't scale properly
+     * with the canvas. Uses pointer.worldX/worldY for accurate coordinate mapping
+     * that works in any scale mode (FIT, RESIZE, etc).
+     *
+     * Perfect for: Connect Four, Chess, Tic-Tac-Toe, Minesweeper, Battleship, etc.
+     *
+     * @example
+     * ```ts
+     * const gridHelper = adapter.createClickableGrid({
+     *   columns: 7,
+     *   rows: 6,
+     *   cellWidth: 80,
+     *   cellHeight: 80,
+     *   offsetX: 100,
+     *   offsetY: 100,
+     *   onCellClick: (col, row) => {
+     *     runtime.submitAction('dropToken', { col });
+     *   },
+     *   highlightColor: 0xffffff,
+     *   highlightAlpha: 0.15,
+     *   origin: 'bottom-left' // For Connect Four
+     * });
+     * ```
+     */
+    createClickableGrid(config) {
+        return new GridClickHelper(this, this.scene, config);
     }
     /**
      * Create a HealthBarManager for automatic health bar management

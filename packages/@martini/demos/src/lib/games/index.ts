@@ -62,4 +62,13 @@ export const demoGames: DemoGame[] = [
     difficulty: 'advanced',
     controls: ['WASD - Move', 'Space - Shoot'],
   },
+  {
+    id: 'tile-matcher',
+    name: 'Connect Four',
+    description: 'Classic Connect Four game. Get 4 in a row to win! Turn-based strategy with simple rules and deep tactics.',
+    players: '2',
+    type: 'Turn-Based Strategy',
+    difficulty: 'intermediate',
+    controls: ['Mouse - Click column to drop token'],
+  },
 ];

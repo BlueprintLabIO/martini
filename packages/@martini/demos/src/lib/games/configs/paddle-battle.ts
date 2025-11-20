@@ -86,6 +86,23 @@ export function createScene(runtime: GameRuntime) {
 			}
 		}
 
+		private getPlayerIdBySide(side: 'left' | 'right') {
+			const state = runtime.getState() as any;
+			for (const [playerId, data] of Object.entries(state.players ?? {})) {
+				if ((data as any).side === side) {
+					return playerId;
+				}
+			}
+			return undefined;
+		}
+
+		private resetBallToState(ballState: any) {
+			if (!this.ball || !ballState) return;
+			this.ball.setPosition(ballState.x, ballState.y);
+			const body = this.ball.body as Phaser.Physics.Arcade.Body;
+			body.setVelocity(ballState.velocityX, ballState.velocityY);
+		}
+
 		create() {
 			this.adapter = new PhaserAdapter(runtime, this);
 			(this as any).debugLog = (event: string, payload?: any) => {
@@ -197,9 +214,10 @@ export function createScene(runtime: GameRuntime) {
 
 		update() {
 			const state = runtime.getState();
+			const isHost = this.adapter.isHost();
 
 			// HOST: Keep paddles synced
-			if (this.adapter.isHost()) {
+			if (isHost) {
 				for (const [playerId, playerData] of Object.entries(state.players)) {
 					this.addHostPaddle(playerId, playerData);
 				}
@@ -212,19 +230,89 @@ export function createScene(runtime: GameRuntime) {
 			this.spriteManager.update();
 
 			// HOST ONLY - Ball physics + scoring
-			if (this.adapter.isHost() && this.ball) {
-				const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
+			if (!isHost) return;
 
-				// Manual world bounds checks for scoring (no duplicates)
-				if (this.ball.x < 0) {
-					runtime.submitAction('score', {}, { targetId: Object.keys(state.players)[1] });
-				} else if (this.ball.x > 800) {
-					runtime.submitAction('score', {}, { targetId: Object.keys(state.players)[0] });
+			const inputs = (state as any).inputs || {};
+			const paddlePositions: Record<string, number> = {};
+			const paddleSpeed = 325;
+
+			for (const playerId of Object.keys(state.players)) {
+				const spriteKey = 'player-' + playerId;
+				const paddle = this.spriteManager.get(spriteKey);
+				if (!paddle?.body) continue;
+
+				const body = paddle.body as Phaser.Physics.Arcade.Body;
+				const playerInput = inputs[playerId] || {};
+
+				let velocityY = 0;
+				if (playerInput.up && !playerInput.down) {
+					velocityY = -paddleSpeed;
+				} else if (playerInput.down && !playerInput.up) {
+					velocityY = paddleSpeed;
 				}
 
-				// Simple AI bounce (reverse horizontal velocity on paddle hit)
-				this.physics.world.collide(this.ball, this.spriteManager.group, () => {
-					ballBody.setVelocityX(-ballBody.velocity.x);
+				body.setVelocityY(velocityY);
+				paddlePositions[playerId] = paddle.y;
+			}
+
+			let scored = false;
+			let ballSnapshot: { x: number; y: number; velocityX: number; velocityY: number } | undefined;
+
+				if (this.ball) {
+					const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
+					ballSnapshot = {
+						x: this.ball.x,
+						y: this.ball.y,
+					velocityX: ballBody.velocity.x,
+					velocityY: ballBody.velocity.y
+				};
+
+				const rightPlayerId = this.getPlayerIdBySide('right');
+				const leftPlayerId = this.getPlayerIdBySide('left');
+
+				// Manual world bounds checks for scoring (no duplicates)
+				if (this.ball.x < -10 && rightPlayerId) {
+					runtime.submitAction('score', undefined, rightPlayerId);
+					this.resetBallToState(runtime.getState().ball);
+					scored = true;
+				} else if (this.ball.x > 810 && leftPlayerId) {
+					runtime.submitAction('score', undefined, leftPlayerId);
+					this.resetBallToState(runtime.getState().ball);
+					scored = true;
+				}
+
+					// Simple AI bounce (reverse horizontal velocity on paddle hit)
+					this.physics.world.collide(this.ball, this.spriteManager.group, () => {
+						ballBody.setVelocityX(-ballBody.velocity.x);
+					});
+
+					// Manual top/bottom bounds bounce (world bounds disabled)
+					const topLimit = 10;
+					const bottomLimit = 590;
+					if (this.ball.y <= topLimit) {
+						this.ball.y = topLimit;
+						ballBody.setVelocityY(Math.abs(ballBody.velocity.y));
+					} else if (this.ball.y >= bottomLimit) {
+						this.ball.y = bottomLimit;
+						ballBody.setVelocityY(-Math.abs(ballBody.velocity.y));
+					}
+				}
+
+			if (Object.keys(paddlePositions).length || (ballSnapshot && !scored)) {
+				const snapshot = scored ? undefined : ballSnapshot;
+				runtime.mutateState((nextState: any) => {
+					for (const [playerId, y] of Object.entries(paddlePositions)) {
+						if (nextState.players?.[playerId]) {
+							nextState.players[playerId].y = y;
+						}
+					}
+
+					if (snapshot && nextState.ball) {
+						nextState.ball.x = snapshot.x;
+						nextState.ball.y = snapshot.y;
+						nextState.ball.velocityX = snapshot.velocityX;
+						nextState.ball.velocityY = snapshot.velocityY;
+					}
 				});
 			}
 		}
@@ -242,7 +330,14 @@ initializeGame({
   phaserConfig: {
     width: 800,
     height: 600,
-    backgroundColor: '#0f172a'
+    backgroundColor: '#0f172a',
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: { y: 0 },
+        debug: false
+      }
+    }
   }
 });
 `

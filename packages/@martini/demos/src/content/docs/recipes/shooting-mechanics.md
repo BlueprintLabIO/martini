@@ -1,3 +1,7 @@
+<script>
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
+</script>
+
 # Shooting Mechanics Recipes
 
 Common shooting and projectile patterns for multiplayer games. Copy and adapt these recipes for your game.
@@ -106,6 +110,62 @@ export const game = defineGame({
 
 ### Phaser Scene (Rendering Bullets)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using SpriteManager Helper** - Automatically syncs bullet sprites with state:
+
+```typescript
+import Phaser from 'phaser';
+import { PhaserAdapter, SpriteManager } from '@martini/phaser';
+
+export class GameScene extends Phaser.Scene {
+  private adapter!: PhaserAdapter;
+  private bulletManager!: SpriteManager;
+
+  create() {
+    this.adapter = new PhaserAdapter(runtime, this);
+
+    // Automatically sync bullet collection
+    this.bulletManager = new SpriteManager(this.adapter, this, {
+      collection: 'bullets',
+      createSprite: (bullet) => {
+        return this.add.circle(bullet.x, bullet.y, 4, 0xffff00);
+      },
+      updateSprite: (sprite, bullet) => {
+        sprite.x = bullet.x;
+        sprite.y = bullet.y;
+      },
+    });
+  }
+
+  update(time: number, delta: number) {
+    // Shoot on spacebar
+    if (this.input.keyboard!.addKey('SPACE').isDown) {
+      this.runtime.submitAction('shoot');
+    }
+
+    if (this.adapter.isHost()) {
+      this.runtime.submitAction('tick', { delta });
+    }
+
+    this.adapter.update(time, delta);
+  }
+}
+```
+
+**Benefits:**
+- ✅ Auto-creates sprites when bullets spawn
+- ✅ Auto-destroys sprites when bullets expire
+- ✅ Handles all sprite lifecycle management
+- ✅ Just 10 lines instead of 40+
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Sprite Management** - Full control over sprite lifecycle:
+
 ```typescript
 import Phaser from 'phaser';
 import { PhaserAdapter } from '@martini/phaser';
@@ -159,6 +219,14 @@ export class GameScene extends Phaser.Scene {
   }
 }
 ```
+
+**Use when:**
+- Custom sprite pooling needed
+- Complex sprite state beyond position
+- Special destruction effects
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Bullet spawning
@@ -240,6 +308,46 @@ export const game = defineGame({
 
 ### Phaser Scene (Cooldown UI)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using HUD Helper** - Reactive cooldown display:
+
+```typescript
+import { PhaserAdapter, createPlayerHUD } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Cooldown bar
+  this.cooldownBar = this.add.rectangle(400, 580, 100, 10, 0x00ff00);
+  this.cooldownBar.setOrigin(0.5);
+
+  // Auto-updating cooldown text
+  this.hud = createPlayerHUD(this.adapter, this, {
+    controlHints: (myPlayer, state) => {
+      const cooldown = state.shootCooldowns[this.adapter.playerId] || 0;
+      return cooldown > 0 ? `Cooldown: ${Math.ceil(cooldown / 100) / 10}s` : 'Ready to fire!';
+    },
+    controlsStyle: { fontSize: '14px', color: '#fff' },
+    layout: { controls: { x: 400, y: 560 } }
+  });
+
+  this.adapter.onChange((state) => {
+    const cooldown = state.shootCooldowns[this.adapter.playerId] || 0;
+    const cooldownPercent = cooldown / SHOOT_COOLDOWN;
+    this.cooldownBar.setScale(cooldownPercent, 1);
+    this.cooldownBar.setFillStyle(cooldown === 0 ? 0x00ff00 : 0xff0000);
+  });
+}
+```
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Cooldown UI** - Full control over visualization:
+
 ```typescript
 create() {
   // Cooldown bar
@@ -247,7 +355,7 @@ create() {
   this.cooldownBar.setOrigin(0.5);
 
   this.adapter.onChange((state) => {
-    const cooldown = state.shootCooldowns[this.adapter.playerId] || 0;
+    const cooldown = state.shootCooldowns[this.adapter.getMyPlayerId()] || 0;
     const cooldownPercent = cooldown / SHOOT_COOLDOWN;
     this.cooldownBar.setScale(cooldownPercent, 1);
 
@@ -260,6 +368,9 @@ create() {
   });
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Rate limiting
@@ -411,7 +522,43 @@ export const game = defineGame({
 });
 ```
 
-### Phaser Scene
+### Phaser Scene (Mouse Input)
+
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using InputManager** - Automatic pointer tracking:
+
+```typescript
+import { PhaserAdapter, InputManager } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Automatically tracks pointer and submits aim action
+  this.inputManager = new InputManager(this.adapter, this, {
+    type: 'pointer',
+    actionName: 'aim',
+    submitOnMove: true,
+  });
+
+  // Shoot on click
+  this.input.on('pointerdown', () => {
+    this.runtime.submitAction('shoot');
+  });
+}
+```
+
+**Benefits:**
+- ✅ Auto-submits pointer position
+- ✅ Handles both mouse and touch
+- ✅ Just 3 lines for input handling
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Pointer Handling** - Full control:
 
 ```typescript
 update(time: number, delta: number) {
@@ -431,6 +578,9 @@ update(time: number, delta: number) {
   // ... rest of update ...
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Mouse aiming
@@ -688,7 +838,49 @@ export const game = defineGame({
 });
 ```
 
-### Phaser Scene
+### Phaser Scene (Weapon UI)
+
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using HUD Helper** - Reactive weapon display:
+
+```typescript
+import { PhaserAdapter, createPlayerHUD } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Auto-updating weapon HUD
+  this.hud = createPlayerHUD(this.adapter, this, {
+    roleText: (myPlayer) => {
+      if (!myPlayer) return '';
+      return `Weapon: ${myPlayer.currentWeapon.toUpperCase()}`;
+    },
+    roleStyle: { fontSize: '16px', color: '#fff' },
+    layout: { role: { x: 10, y: 10 } }
+  });
+
+  // Weapon switch keys
+  this.input.keyboard!.on('keydown-ONE', () => {
+    this.runtime.submitAction('switchWeapon', { weapon: 'pistol' });
+  });
+
+  this.input.keyboard!.on('keydown-TWO', () => {
+    this.runtime.submitAction('switchWeapon', { weapon: 'shotgun' });
+  });
+
+  this.input.keyboard!.on('keydown-THREE', () => {
+    this.runtime.submitAction('switchWeapon', { weapon: 'laser' });
+  });
+}
+```
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Weapon UI** - Full control:
 
 ```typescript
 create() {
@@ -709,13 +901,16 @@ create() {
   this.weaponText = this.add.text(10, 10, '', { fontSize: '16px', color: '#ffffff' });
 
   this.adapter.onChange((state) => {
-    const myPlayer = state.players[this.adapter.playerId];
+    const myPlayer = state.players[this.adapter.getMyPlayerId()];
     if (myPlayer) {
       this.weaponText.setText(`Weapon: ${myPlayer.currentWeapon.toUpperCase()}`);
     }
   });
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Multiple weapons
@@ -819,13 +1014,56 @@ export const game = defineGame({
 
 ### Phaser Scene (Ammo UI)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using HUD Helper** - Reactive ammo display:
+
+```typescript
+import { PhaserAdapter, createPlayerHUD } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Auto-updating ammo HUD
+  this.hud = createPlayerHUD(this.adapter, this, {
+    roleText: (myPlayer) => {
+      if (!myPlayer) return '';
+      if (myPlayer.isReloading) {
+        const reloadPercent = (1 - myPlayer.reloadTimer / 1500) * 100;
+        return `RELOADING... ${Math.floor(reloadPercent)}%`;
+      }
+      return `Ammo: ${myPlayer.ammo}/${myPlayer.maxAmmo}`;
+    },
+    roleStyle: { fontSize: '18px', color: '#fff' },
+    layout: { role: { x: 10, y: 30 } }
+  });
+
+  // Reload key
+  this.input.keyboard!.on('keydown-R', () => {
+    this.runtime.submitAction('reload');
+  });
+}
+```
+
+**Benefits:**
+- ✅ Reactive ammo counter
+- ✅ Auto-updates on state change
+- ✅ Cleaner code
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Ammo UI** - Full control over styling:
+
 ```typescript
 create() {
   // Ammo counter
   this.ammoText = this.add.text(10, 30, '', { fontSize: '18px', color: '#ffffff' });
 
   this.adapter.onChange((state) => {
-    const myPlayer = state.players[this.adapter.playerId];
+    const myPlayer = state.players[this.adapter.getMyPlayerId()];
     if (myPlayer) {
       if (myPlayer.isReloading) {
         const reloadPercent = (1 - myPlayer.reloadTimer / 1500) * 100;
@@ -847,6 +1085,9 @@ update() {
 }
 ```
 
+{/snippet}
+</CodeTabs>
+
 **Features:**
 - ✅ Ammo tracking
 - ✅ Reload mechanic
@@ -865,6 +1106,7 @@ update() {
 - **Use unique IDs** for bullet tracking
 - **Normalize aim vectors** for consistent speed
 - **Clean up** expired bullets in tick action
+- **Use SpriteManager** for automatic bullet sprite lifecycle
 
 ### DON'T ❌
 
@@ -878,7 +1120,7 @@ update() {
 
 ## See Also
 
-- [Player Movement](/docs/recipes/player-movement) - Movement and rotation
-- [Health and Damage](/docs/recipes/health-and-damage) - Bullet collision
-- [Arena Blaster Example](/docs/examples/overview#arena-blaster) - Complete shooting example
-- [Phaser Sprite Manager](/docs/api/phaser/sprite-manager) - Sprite lifecycle
+- [Player Movement](/docs/latest/recipes/player-movement) - Movement and rotation
+- [Health and Damage](/docs/latest/recipes/health-and-damage) - Bullet collision
+- [Arena Blaster Example](/docs/latest/examples/overview#arena-blaster) - Complete shooting example
+- [Phaser Sprite Manager](/docs/latest/api/phaser/sprite-manager) - Sprite lifecycle

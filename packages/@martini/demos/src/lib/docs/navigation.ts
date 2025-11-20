@@ -1,11 +1,22 @@
+import type { SDK } from '$lib/stores/sdkPreference';
+
 export interface DocsPage {
 	title: string;
 	href: string;
+	sdks?: SDK[]; // Which SDKs this page applies to (undefined = all SDKs)
+	external?: boolean; // For external links (roadmap items)
+}
+
+export interface DocsSubsection {
+	title: string;
+	items: DocsPage[];
+	comingSoon?: boolean; // For future SDK subsections
 }
 
 export interface DocsSection {
 	title: string;
 	items: DocsPage[];
+	subsections?: DocsSubsection[];
 }
 
 // Hierarchical navigation structure for sidebar
@@ -14,9 +25,9 @@ export const docsSections: DocsSection[] = [
 		title: 'Getting Started',
 		items: [
 			{ title: 'Introduction', href: '/docs' },
-			{ title: 'Installation', href: '/docs/latest/getting-started/installation' },
-			{ title: 'Quick Start', href: '/docs/latest/getting-started/quick-start' },
-			{ title: 'First Game', href: '/docs/latest/getting-started/first-game' }
+			{ title: 'Installation', href: '/docs/latest/getting-started/installation', sdks: ['phaser', 'core'] },
+			{ title: 'Quick Start', href: '/docs/latest/getting-started/quick-start', sdks: ['phaser', 'core'] },
+			{ title: 'First Game', href: '/docs/latest/getting-started/first-game', sdks: ['phaser', 'core'] }
 		]
 	},
 	{
@@ -31,41 +42,11 @@ export const docsSections: DocsSection[] = [
 		]
 	},
 	{
-		title: 'API Reference',
-		items: [
-			// Core
-			{ title: 'defineGame()', href: '/docs/latest/api/core/define-game' },
-			{ title: 'GameRuntime', href: '/docs/latest/api/core/game-runtime' },
-			{ title: 'Transport', href: '/docs/latest/api/core/transport' },
-			{ title: 'SeededRandom', href: '/docs/latest/api/core/seeded-random' },
-			{ title: 'Helpers', href: '/docs/latest/api/core/helpers' },
-			{ title: 'Logger', href: '/docs/latest/api/core/logger' },
-			{ title: 'Sync (Diff/Patch)', href: '/docs/latest/api/core/sync' },
-			// Phaser
-			{ title: 'PhaserAdapter', href: '/docs/latest/api/phaser/adapter' },
-			{ title: 'SpriteManager', href: '/docs/latest/api/phaser/sprite-manager' },
-			{ title: 'Reactive APIs', href: '/docs/latest/api/phaser/reactive-apis' },
-			{ title: 'InputManager', href: '/docs/latest/api/phaser/input-manager' },
-			{ title: 'PhysicsManager', href: '/docs/latest/api/phaser/physics-manager' },
-			{ title: 'CollisionManager', href: '/docs/latest/api/phaser/collision-manager' },
-			{ title: 'UI Helpers', href: '/docs/latest/api/phaser/ui-helpers' },
-			{ title: 'StateDrivenSpawner', href: '/docs/latest/api/phaser/spawner' },
-			// Transports
-			{ title: 'Transports Overview', href: '/docs/latest/api/transports/overview' },
-			{ title: 'LocalTransport', href: '/docs/latest/api/transports/local' },
-			{ title: 'IframeBridgeTransport', href: '/docs/latest/api/transports/iframe-bridge' },
-			{ title: 'TrysteroTransport', href: '/docs/latest/api/transports/trystero' },
-			{ title: 'Custom Transports', href: '/docs/latest/api/transports/custom' },
-			// DevTools
-			{ title: 'StateInspector', href: '/docs/latest/api/devtools/state-inspector' }
-		]
-	},
-	{
 		title: 'Guides',
 		items: [
-			{ title: 'Phaser Integration', href: '/docs/latest/guides/phaser-integration' },
-			{ title: 'Physics & Collision', href: '/docs/latest/guides/physics-and-collision' },
-			{ title: 'UI & HUD', href: '/docs/latest/guides/ui-and-hud' },
+			{ title: 'Phaser Integration', href: '/docs/latest/guides/phaser-integration', sdks: ['phaser'] },
+			{ title: 'Physics & Collision', href: '/docs/latest/guides/physics-and-collision', sdks: ['phaser', 'core'] },
+			{ title: 'UI & HUD', href: '/docs/latest/guides/ui-and-hud', sdks: ['phaser', 'core'] },
 			{ title: 'Testing', href: '/docs/latest/guides/testing' },
 			{ title: 'Deployment', href: '/docs/latest/guides/deployment' },
 			{ title: 'Optimization', href: '/docs/latest/guides/optimization' }
@@ -80,6 +61,60 @@ export const docsSections: DocsSection[] = [
 			{ title: 'Health & Damage', href: '/docs/latest/recipes/health-and-damage' },
 			{ title: 'Power-ups', href: '/docs/latest/recipes/power-ups' },
 			{ title: 'Game Modes', href: '/docs/latest/recipes/game-modes' }
+		]
+	},
+	{
+		title: 'API Reference',
+		items: [],
+		subsections: [
+			{
+				title: 'Core',
+				items: [
+					{ title: 'defineGame()', href: '/docs/latest/api/core/define-game', sdks: ['core', 'phaser'] },
+					{ title: 'GameRuntime', href: '/docs/latest/api/core/game-runtime', sdks: ['core', 'phaser'] },
+					{ title: 'Transport', href: '/docs/latest/api/core/transport', sdks: ['core', 'phaser'] },
+					{ title: 'SeededRandom', href: '/docs/latest/api/core/seeded-random', sdks: ['core', 'phaser'] },
+					{ title: 'Helpers', href: '/docs/latest/api/core/helpers', sdks: ['core', 'phaser'] },
+					{ title: 'Logger', href: '/docs/latest/api/core/logger', sdks: ['core', 'phaser'] },
+					{ title: 'Sync (Diff/Patch)', href: '/docs/latest/api/core/sync', sdks: ['core', 'phaser'] }
+				]
+			},
+			{
+				title: 'Phaser',
+				items: [
+					{ title: 'PhaserAdapter', href: '/docs/latest/api/phaser/adapter', sdks: ['phaser'] },
+					{ title: 'SpriteManager', href: '/docs/latest/api/phaser/sprite-manager', sdks: ['phaser'] },
+					{ title: 'Reactive APIs', href: '/docs/latest/api/phaser/reactive-apis', sdks: ['phaser'] },
+					{ title: 'InputManager', href: '/docs/latest/api/phaser/input-manager', sdks: ['phaser'] },
+					{ title: 'PhysicsManager', href: '/docs/latest/api/phaser/physics-manager', sdks: ['phaser'] },
+					{ title: 'CollisionManager', href: '/docs/latest/api/phaser/collision-manager', sdks: ['phaser'] },
+					{ title: 'UI Helpers', href: '/docs/latest/api/phaser/ui-helpers', sdks: ['phaser'] },
+					{ title: 'StateDrivenSpawner', href: '/docs/latest/api/phaser/spawner', sdks: ['phaser'] }
+				]
+			},
+			{
+				title: 'Transports',
+				items: [
+					{ title: 'Overview', href: '/docs/latest/api/transports/overview', sdks: ['core', 'phaser'] },
+					{ title: 'LocalTransport', href: '/docs/latest/api/transports/local', sdks: ['core', 'phaser'] },
+					{ title: 'IframeBridgeTransport', href: '/docs/latest/api/transports/iframe-bridge', sdks: ['core', 'phaser'] },
+					{ title: 'TrysteroTransport', href: '/docs/latest/api/transports/trystero', sdks: ['core', 'phaser'] },
+					{ title: 'Custom Transports', href: '/docs/latest/api/transports/custom', sdks: ['core', 'phaser'] }
+				]
+			},
+			{
+				title: 'DevTools',
+				items: [
+					{ title: 'StateInspector', href: '/docs/latest/api/devtools/state-inspector', sdks: ['core', 'phaser'] }
+				]
+			},
+			{
+				title: 'Unity (Coming Soon)',
+				comingSoon: true,
+				items: [
+					{ title: 'Track on GitHub', href: 'https://github.com/BlueprintLabIO/martini', external: true }
+				]
+			}
 		]
 	},
 	{
@@ -107,7 +142,11 @@ export const docsSections: DocsSection[] = [
 
 // Flat list of all documentation pages in reading order
 // All hrefs use "latest" alias which points to the latest version
-export const docsNavigation: DocsPage[] = docsSections.flatMap((section) => section.items);
+export const docsNavigation: DocsPage[] = docsSections.flatMap((section) => {
+	const sectionItems = section.items;
+	const subsectionItems = section.subsections?.flatMap((sub) => sub.items) || [];
+	return [...sectionItems, ...subsectionItems];
+});
 
 /**
  * Normalize path by removing version/alias prefix if present

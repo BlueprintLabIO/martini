@@ -52,25 +52,42 @@ export interface HUDTextStyle {
         y: number;
     };
 }
-export interface PlayerHUDConfig<TPlayer = any> {
+export interface PlayerHUDConfig<TPlayer = any, TState = any> {
     /** Title text (static) */
     title?: string;
     /** Title text style */
     titleStyle?: HUDTextStyle;
     /**
-     * Generate role text from player data
+     * Generate role text from player data and optionally game state
      * @param myPlayer - Current player data or undefined if spectator
+     * @param state - Full game state (optional, for turn-based games)
      * @returns Text to display
+     *
+     * @example
+     * // Simple usage (action games)
+     * roleText: (myPlayer) => {
+     *   if (!myPlayer) return 'Spectator';
+     *   return `Player ${myPlayer.id}`;
+     * }
+     *
+     * @example
+     * // With state (turn-based games)
+     * roleText: (myPlayer, state) => {
+     *   if (!myPlayer) return 'Spectator';
+     *   if (state?.gameOver) return 'Game Over!';
+     *   return state?.currentTurn === myPlayer.id ? 'Your Turn' : 'Waiting...';
+     * }
      */
-    roleText?: (myPlayer: TPlayer | undefined) => string;
+    roleText?: (myPlayer: TPlayer | undefined, state?: TState) => string;
     /** Role text style */
     roleStyle?: HUDTextStyle;
     /**
-     * Generate control hints from player data
+     * Generate control hints from player data and optionally game state
      * @param myPlayer - Current player data or undefined if spectator
+     * @param state - Full game state (optional)
      * @returns Text to display
      */
-    controlHints?: (myPlayer: TPlayer | undefined) => string;
+    controlHints?: (myPlayer: TPlayer | undefined, state?: TState) => string;
     /** Control hints text style */
     controlsStyle?: HUDTextStyle;
     /** Custom layout positions */

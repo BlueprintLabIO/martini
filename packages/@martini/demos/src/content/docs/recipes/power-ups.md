@@ -1,3 +1,7 @@
+<script>
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
+</script>
+
 # Power-Ups and Collectibles Recipes
 
 Common collectible and power-up patterns for multiplayer games. Copy and adapt these recipes for your game.
@@ -89,6 +93,39 @@ export const game = defineGame({
 
 ### Phaser Scene (Rendering Collectibles)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using SpriteManager Helper** - Automatically syncs collectible sprites:
+
+```typescript
+import { PhaserAdapter, SpriteManager } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Automatically manage collectible sprites
+  this.collectibleManager = new SpriteManager(this.adapter, this, {
+    collection: 'collectibles',
+    createSprite: (collectible) => {
+      const color = collectible.type === 'coin' ? 0xffd700 : 0xff0000;
+      return this.add.circle(collectible.x, collectible.y, 10, color);
+    },
+  });
+}
+```
+
+**Benefits:**
+- ✅ Auto-creates sprites when items spawn
+- ✅ Auto-destroys sprites when items are collected
+- ✅ Just 6 lines instead of 20+
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Sprite Management** - Full control over sprite lifecycle:
+
 ```typescript
 create() {
   this.collectibleSprites = new Map();
@@ -115,6 +152,14 @@ create() {
   });
 }
 ```
+
+**Use when:**
+- Custom sprite animations needed
+- Complex visual effects on pickup
+- Sprite pooling for performance
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Collectible items
@@ -228,6 +273,59 @@ export const game = defineGame({
 
 ### Phaser Scene (Buff UI)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using HUD Helper** - Reactive buff UI with automatic updates:
+
+```typescript
+import { PhaserAdapter, createPlayerHUD } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Buff icons container
+  this.buffIcons = this.add.container(10, 50);
+
+  // Create reactive HUD that shows active buffs
+  this.hud = createPlayerHUD(this.adapter, this, {
+    roleText: (myPlayer) => {
+      if (!myPlayer) return '';
+      return `Active Buffs: ${myPlayer.activeBuffs.length}`;
+    },
+    roleStyle: { fontSize: '14px', color: '#fff' },
+    layout: { role: { x: 10, y: 30 } }
+  });
+
+  // Manually update buff icons
+  this.adapter.onChange((state) => {
+    const myPlayer = state.players[this.adapter.playerId];
+    if (myPlayer) {
+      this.buffIcons.removeAll(true);
+
+      myPlayer.activeBuffs.forEach((buff, index) => {
+        const icon = this.add.circle(index * 30, 0, 12, this.getBuffColor(buff.type));
+        const timePercent = buff.duration / BUFF_DURATION;
+
+        const graphics = this.add.graphics();
+        graphics.lineStyle(2, 0xffffff, 1);
+        graphics.beginPath();
+        graphics.arc(index * 30, 0, 14, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * timePercent);
+        graphics.strokePath();
+
+        this.buffIcons.add([icon, graphics]);
+      });
+    }
+  });
+}
+```
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual UI Management** - Full control over buff visualization:
+
 ```typescript
 create() {
   this.buffIcons = this.add.container(10, 50);
@@ -264,6 +362,9 @@ getBuffColor(type: BuffType): number {
   }
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Temporary buffs

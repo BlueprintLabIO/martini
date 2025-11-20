@@ -31,11 +31,9 @@ Setup (t=0)              Mid-Game                Leave
    2 players               3 players             2 players
 ```
 
----
-
 ## Lifecycle Hooks
 
-### setup({ playerIds })
+### `setup({ playerIds })`
 
 Called once when the game initializes. Receives **initial player IDs**:
 

@@ -35,9 +35,36 @@ inputManager.loadProfile('platformer');
 
 [Full docs →](./input-manager)
 
+### PlayerHUD
+
+Automatic HUD (Heads-Up Display) with reactive updates for title, role, and controls.
+
+```typescript
+import { createPlayerHUD } from '@martini/phaser';
+
+const hud = createPlayerHUD(adapter, this, {
+  title: 'My Game',
+  roleText: (myPlayer, state) => {
+    if (!myPlayer) return 'Spectator';
+    // For turn-based games: access full state
+    if (state?.gameOver) return 'Game Over!';
+    return `Score: ${myPlayer.score}`;
+  },
+  controlHints: () => 'WASD to move'
+});
+```
+
+**Features:**
+- Automatic reactive updates on state changes
+- Turn-based game support with optional `state` parameter
+- Backward compatible - works with both action and turn-based games
+- No manual `onChange` subscriptions needed
+
+[Full guide →](../../guides/ui-and-hud#using-createplayerhud-helper)
+
 ### PlayerUIManager
 
-Automatic health bars and player labels (coming soon).
+Automatic per-player health bars and labels for all players.
 
 ### CollisionManager
 
@@ -74,6 +101,31 @@ const healthBars = adapter.createHealthBarManager({
 });
 ```
 
+### GridClickHelper
+
+Robust grid/board click handling for turn-based and board games. Solves the common problem where interactive rectangles don't scale properly with the canvas.
+
+```typescript
+const gridHelper = adapter.createClickableGrid({
+  columns: 7,
+  rows: 6,
+  cellWidth: 80,
+  cellHeight: 80,
+  offsetX: 100,
+  offsetY: 100,
+  onCellClick: (col, row) => {
+    runtime.submitAction('dropToken', { col });
+  },
+  highlightColor: 0xffffff,
+  highlightAlpha: 0.15,
+  origin: 'bottom-left' // For Connect Four
+});
+```
+
+**Perfect for:** Connect Four, Chess, Tic-Tac-Toe, Minesweeper, Battleship, Checkers, Go, etc.
+
+[Full docs →](./grid-click-helper)
+
 ### CameraFollower
 
 Automatic camera following with smooth tracking modes.
@@ -88,6 +140,67 @@ const cameraFollower = adapter.createCameraFollower({
 ```
 
 [Full docs →](./camera-manager)
+
+### DirectionalIndicator
+
+Attach arrows/indicators that automatically show sprite direction. **Auto-updates by default** - no manual update() calls needed!
+
+```typescript
+import { attachDirectionalIndicator } from '@martini/phaser';
+
+// In SpriteManager onCreate:
+onCreate: (key, data) => {
+  const car = this.add.rectangle(data.x, data.y, 30, 20, data.color);
+
+  // That's it! Arrow auto-updates every frame
+  attachDirectionalIndicator(this, car, {
+    shape: 'triangle',  // or 'arrow', 'chevron'
+    offset: 20,         // distance from sprite
+    color: 0xffffff     // white
+    // autoUpdate: true (default)
+  });
+
+  return car;
+}
+```
+
+**Shapes:**
+- `triangle` - Classic arrow (default)
+- `arrow` - Longer arrow with tail
+- `chevron` - V-shaped chevron
+
+**Pit of Success:** Automatically handles Phaser rotation offsets and cleans up when sprite/scene is destroyed.
+
+[Full guide →](../../guides/sprite-attachments)
+
+## Sprite Attachment System
+
+The [SpriteAttachment system](./sprite-attachment) provides a generic foundation for creating auto-updating sprite attachments (arrows, health bars, name tags, etc.).
+
+```typescript
+import { createSpriteAttachment } from '@martini/phaser';
+
+function createGlowEffect(scene: Phaser.Scene, sprite: any) {
+  const glow = scene.add.circle(sprite.x, sprite.y, 40, 0xffff00, 0.3);
+
+  return createSpriteAttachment(scene, sprite, {
+    update: () => {
+      glow.setPosition(sprite.x, sprite.y);
+      const scale = 1 + Math.sin(Date.now() / 200) * 0.1;
+      glow.setScale(scale);
+    },
+    destroy: () => glow.destroy()
+  });
+  // Auto-updates and auto-destroys!
+}
+```
+
+**Built on this system:**
+- `attachDirectionalIndicator` - Direction arrows
+- `createHealthBar` (coming soon) - Health bars
+- `createNameTag` (coming soon) - Name labels
+
+[Full API docs →](./sprite-attachment)
 
 ## Creating Custom Helpers
 

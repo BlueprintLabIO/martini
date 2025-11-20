@@ -38,7 +38,7 @@ export interface IframeBridgeConfig {
  * Message types for iframe ↔ parent communication
  */
 export interface BridgeMessage {
-    type: 'BRIDGE_REGISTER' | 'BRIDGE_SEND' | 'BRIDGE_DELIVER' | 'BRIDGE_PEER_JOIN' | 'BRIDGE_PEER_LEAVE' | 'BRIDGE_HOST_DISCONNECT';
+    type: 'BRIDGE_REGISTER' | 'BRIDGE_SEND' | 'BRIDGE_DELIVER' | 'BRIDGE_PEER_JOIN' | 'BRIDGE_PEER_LEAVE' | 'BRIDGE_HOST_DISCONNECT' | 'BRIDGE_HEARTBEAT' | 'BRIDGE_ERROR';
     roomId: string;
     playerId: string;
     payload?: {
@@ -46,6 +46,7 @@ export interface BridgeMessage {
         targetId?: string;
         peerId?: string;
         wasHost?: boolean;
+        error?: string;
     };
 }
 export declare class IframeBridgeTransport implements Transport {
@@ -53,6 +54,7 @@ export declare class IframeBridgeTransport implements Transport {
     private readonly roomId;
     private readonly _isHost;
     readonly metrics: TransportMetrics;
+    private readonly HEARTBEAT_INTERVAL_MS;
     private messageHandlers;
     private peerJoinHandlers;
     private peerLeaveHandlers;
@@ -60,6 +62,8 @@ export declare class IframeBridgeTransport implements Transport {
     private peerIds;
     private messageHandler;
     private isDisconnected;
+    private heartbeatInterval;
+    private visibilityHandler?;
     constructor(config: IframeBridgeConfig);
     /**
      * Set up listener for messages from parent relay
@@ -69,6 +73,13 @@ export declare class IframeBridgeTransport implements Transport {
      * Register this transport instance with parent relay
      */
     private registerWithRelay;
+    /**
+     * Send periodic heartbeat to relay
+     */
+    private sendHeartbeat;
+    private startHeartbeat;
+    private stopHeartbeat;
+    private setupVisibilityListener;
     /**
      * Send message to peer(s)
      */

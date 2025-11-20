@@ -71,6 +71,7 @@ var IframeBridgeTransportMetrics = class {
 };
 var IframeBridgeTransport = class {
   constructor(config) {
+    this.HEARTBEAT_INTERVAL_MS = 3e3;
     this.messageHandlers = [];
     this.peerJoinHandlers = [];
     this.peerLeaveHandlers = [];
@@ -78,12 +79,15 @@ var IframeBridgeTransport = class {
     this.peerIds = /* @__PURE__ */ new Set();
     this.messageHandler = null;
     this.isDisconnected = false;
+    this.heartbeatInterval = null;
     this.roomId = config.roomId;
     this.playerId = config.playerId || `player-${Math.random().toString(36).substring(2, 9)}`;
     this._isHost = config.isHost;
     this.metrics = new IframeBridgeTransportMetrics(this);
     this.setupMessageListener();
     this.registerWithRelay();
+    this.startHeartbeat();
+    this.setupVisibilityListener();
   }
   /**
    * Set up listener for messages from parent relay
@@ -122,6 +126,11 @@ var IframeBridgeTransport = class {
             this.hostDisconnectHandlers.forEach((h) => h());
           }
           break;
+        case "BRIDGE_ERROR":
+          console.warn("[IframeBridgeTransport] Relay error, reconnecting...", data.payload?.error);
+          this.registerWithRelay();
+          this.sendHeartbeat();
+          break;
       }
     };
     window.addEventListener("message", this.messageHandler);
@@ -141,6 +150,43 @@ var IframeBridgeTransport = class {
       payload: {}
     };
     window.parent.postMessage(registerMessage, "*");
+  }
+  /**
+   * Send periodic heartbeat to relay
+   */
+  sendHeartbeat() {
+    if (this.isDisconnected) return;
+    if (!window.parent || window.parent === window) return;
+    const heartbeat = {
+      type: "BRIDGE_HEARTBEAT",
+      roomId: this.roomId,
+      playerId: this.playerId
+    };
+    window.parent.postMessage(heartbeat, "*");
+  }
+  startHeartbeat() {
+    if (typeof window === "undefined") return;
+    this.stopHeartbeat();
+    this.sendHeartbeat();
+    this.heartbeatInterval = window.setInterval(() => this.sendHeartbeat(), this.HEARTBEAT_INTERVAL_MS);
+  }
+  stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+  setupVisibilityListener() {
+    if (typeof document === "undefined" || typeof document.addEventListener !== "function") {
+      return;
+    }
+    this.visibilityHandler = () => {
+      if (document.visibilityState === "visible") {
+        this.registerWithRelay();
+        this.sendHeartbeat();
+      }
+    };
+    document.addEventListener("visibilitychange", this.visibilityHandler);
   }
   /**
    * Send message to peer(s)
@@ -214,6 +260,7 @@ var IframeBridgeTransport = class {
     if (this.isDisconnected) return;
     this.metrics.setDisconnected();
     this.isDisconnected = true;
+    this.stopHeartbeat();
     if (window.parent && window.parent !== window) {
       const disconnectMessage = {
         type: "BRIDGE_PEER_LEAVE",
@@ -235,17 +282,27 @@ var IframeBridgeTransport = class {
     this.peerLeaveHandlers = [];
     this.hostDisconnectHandlers = [];
     this.peerIds.clear();
+    if (this.visibilityHandler && typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", this.visibilityHandler);
+      this.visibilityHandler = void 0;
+    }
   }
 };
 
 // src/IframeBridgeRelay.ts
 var IframeBridgeRelay = class {
+  // Remove peers inactive for 60 seconds (accounts for browser throttling)
   constructor() {
     this.peers = /* @__PURE__ */ new Map();
     this.rooms = /* @__PURE__ */ new Map();
     // roomId → Set<playerId>
     this.messageHandler = null;
+    this.heartbeatInterval = null;
+    this.HEARTBEAT_CHECK_MS = 5e3;
+    // Check every 5 seconds
+    this.PEER_TIMEOUT_MS = 6e4;
     this.setupMessageListener();
+    this.startHeartbeatMonitor();
   }
   /**
    * Set up listener for messages from iframes
@@ -261,7 +318,10 @@ var IframeBridgeRelay = class {
           this.handleRegister(data, event.source);
           break;
         case "BRIDGE_SEND":
-          this.handleSend(data);
+          this.handleSend(data, event.source);
+          break;
+        case "BRIDGE_HEARTBEAT":
+          this.handleHeartbeat(data);
           break;
         case "BRIDGE_PEER_LEAVE":
           this.handlePeerLeave(data);
@@ -282,13 +342,25 @@ var IframeBridgeRelay = class {
       console.warn("[IframeBridgeRelay] Could not find iframe for registration:", playerId);
       return;
     }
+    const existingPeer = this.peers.get(playerId);
+    if (existingPeer) {
+      existingPeer.iframe = iframe;
+      existingPeer.roomId = roomId;
+      existingPeer.lastHeartbeat = Date.now();
+      if (!this.rooms.has(roomId)) {
+        this.rooms.set(roomId, /* @__PURE__ */ new Set());
+      }
+      this.rooms.get(roomId).add(playerId);
+      return;
+    }
     const room = this.rooms.get(roomId);
     const isHost = !room || room.size === 0;
     this.peers.set(playerId, {
       playerId,
       roomId,
       iframe,
-      isHost
+      isHost,
+      lastHeartbeat: Date.now()
     });
     if (!this.rooms.has(roomId)) {
       this.rooms.set(roomId, /* @__PURE__ */ new Set());
@@ -315,7 +387,7 @@ var IframeBridgeRelay = class {
   /**
    * Handle message send from a peer
    */
-  handleSend(data) {
+  handleSend(data, source) {
     const { playerId, roomId, payload } = data;
     if (!payload?.message) {
       console.warn("[IframeBridgeRelay] No message in BRIDGE_SEND");
@@ -324,8 +396,20 @@ var IframeBridgeRelay = class {
     const sender = this.peers.get(playerId);
     if (!sender) {
       console.warn("[IframeBridgeRelay] Unknown sender:", playerId);
+      const iframe = Array.from(document.querySelectorAll("iframe")).find(
+        (iframe2) => iframe2.contentWindow === source
+      );
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: "BRIDGE_ERROR",
+          roomId,
+          playerId,
+          payload: { error: "unknown_sender" }
+        }, "*");
+      }
       return;
     }
+    sender.lastHeartbeat = Date.now();
     const targets = payload.targetId ? [this.peers.get(payload.targetId)].filter(Boolean) : this.getPeersInRoom(roomId).filter((p) => p.playerId !== playerId);
     for (const target of targets) {
       this.sendToIframe(target.iframe, {
@@ -336,6 +420,18 @@ var IframeBridgeRelay = class {
         payload: { message: payload.message }
       });
     }
+  }
+  /**
+   * Handle heartbeat from peers
+   */
+  handleHeartbeat(data) {
+    const { playerId } = data;
+    const peer = this.peers.get(playerId);
+    if (!peer) {
+      console.warn("[IframeBridgeRelay] Unknown heartbeat sender:", playerId);
+      return;
+    }
+    peer.lastHeartbeat = Date.now();
   }
   /**
    * Handle peer leaving
@@ -377,6 +473,33 @@ var IframeBridgeRelay = class {
     }
   }
   /**
+   * Start heartbeat monitor to detect stale peers
+   * Checks every 5 seconds and removes peers inactive for 10+ seconds
+   */
+  startHeartbeatMonitor() {
+    this.heartbeatInterval = setInterval(() => {
+      const now = Date.now();
+      const stalePeers = [];
+      for (const [playerId, peer] of this.peers) {
+        if (now - peer.lastHeartbeat > this.PEER_TIMEOUT_MS) {
+          console.warn(`[IframeBridgeRelay] Removing stale peer: ${playerId} (inactive for ${now - peer.lastHeartbeat}ms)`);
+          stalePeers.push(playerId);
+        }
+      }
+      for (const playerId of stalePeers) {
+        const peer = this.peers.get(playerId);
+        if (peer) {
+          this.handlePeerLeave({
+            type: "BRIDGE_PEER_LEAVE",
+            playerId,
+            roomId: peer.roomId,
+            payload: { peerId: playerId }
+          });
+        }
+      }
+    }, this.HEARTBEAT_CHECK_MS);
+  }
+  /**
    * Get all peers in a room
    */
   getPeersInRoom(roomId) {
@@ -402,7 +525,8 @@ var IframeBridgeRelay = class {
       playerId,
       roomId,
       iframe,
-      isHost
+      isHost,
+      lastHeartbeat: Date.now()
     });
     if (!this.rooms.has(roomId)) {
       this.rooms.set(roomId, /* @__PURE__ */ new Set());
@@ -429,6 +553,10 @@ var IframeBridgeRelay = class {
     if (this.messageHandler) {
       window.removeEventListener("message", this.messageHandler);
       this.messageHandler = null;
+    }
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
     }
     this.peers.clear();
     this.rooms.clear();

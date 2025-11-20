@@ -207,6 +207,9 @@ export declare class SpriteManager<TData extends SpriteData = SpriteData> {
     getAll(): Map<string, any>;
     /**
      * Update loop (call this in scene.update() for smooth interpolation on clients)
+     *
+     * Automatically calls update methods on attached components (arrows, health bars, etc.)
+     * if they use the `_update*` naming convention and autoUpdate is disabled.
      */
     update(): void;
     /**

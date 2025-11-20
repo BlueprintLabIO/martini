@@ -24,6 +24,8 @@ export { StateDrivenSpawner } from './helpers/StateDrivenSpawner.js';
 export type { StateDrivenSpawnerConfig } from './helpers/StateDrivenSpawner.js';
 export { HealthBarManager } from './helpers/HealthBarManager.js';
 export type { HealthBarConfig } from './helpers/HealthBarManager.js';
+export { GridClickHelper } from './helpers/GridClickHelper.js';
+export type { GridClickConfig } from './helpers/GridClickHelper.js';
 
 // Input Profiles
 export { registerProfile, getProfile, listProfiles, BUILT_IN_PROFILES } from './helpers/InputProfiles.js';
@@ -36,6 +38,10 @@ export type { PlayerHUD, PlayerHUDConfig, HUDLayout, HUDTextStyle } from './help
 // Speed Display Helper
 export { createSpeedDisplay } from './helpers/SpeedDisplay.js';
 export type { SpeedDisplay, SpeedDisplayConfig } from './helpers/SpeedDisplay.js';
+
+// Sprite Attachment System (Generic)
+export { createSpriteAttachment, createSpriteAttachments, createCompositeAttachment } from './helpers/SpriteAttachment.js';
+export type { SpriteAttachment, SpriteAttachmentConfig } from './helpers/SpriteAttachment.js';
 
 // Directional Indicator Helper
 export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';

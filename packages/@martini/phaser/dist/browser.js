@@ -287,12 +287,20 @@ var SpriteManager = class {
   }
   /**
    * Update loop (call this in scene.update() for smooth interpolation on clients)
+   *
+   * Automatically calls update methods on attached components (arrows, health bars, etc.)
+   * if they use the `_update*` naming convention and autoUpdate is disabled.
    */
   update() {
     if (!this.adapter.isHost()) {
       this.adapter.updateInterpolation();
     }
     this.updateLabels();
+    for (const sprite of this.sprites.values()) {
+      if (typeof sprite._updateArrow === "function") {
+        sprite._updateArrow();
+      }
+    }
   }
   /**
    * Cleanup
@@ -1797,6 +1805,195 @@ var HealthBarManager = class {
   }
 };
 
+// src/helpers/GridClickHelper.ts
+var GridClickHelper = class {
+  constructor(adapter, scene, config) {
+    __publicField(this, "config");
+    __publicField(this, "scene");
+    __publicField(this, "highlights", []);
+    __publicField(this, "debugGraphics");
+    __publicField(this, "debugTexts", []);
+    this.scene = scene;
+    this.config = {
+      ...config,
+      canClick: config.canClick ?? (() => true),
+      canHighlight: config.canHighlight ?? (() => true),
+      highlightColor: config.highlightColor ?? 16777215,
+      highlightAlpha: config.highlightAlpha ?? 0.15,
+      useHandCursor: config.useHandCursor ?? true,
+      origin: config.origin ?? "top-left",
+      clickMode: config.clickMode ?? "down",
+      debug: config.debug ?? false
+    };
+    this.setupHighlights();
+    this.setupInputHandlers();
+    if (this.config.debug) {
+      this.setupDebugVisualization();
+    }
+  }
+  /**
+   * Create highlight rectangles for visual feedback
+   */
+  setupHighlights() {
+    const { columns, rows, cellWidth, cellHeight, offsetX, offsetY, highlightColor, origin } = this.config;
+    for (let col = 0; col < columns; col++) {
+      for (let row = 0; row < rows; row++) {
+        const x = offsetX + col * cellWidth + cellWidth / 2;
+        const y = origin === "bottom-left" ? offsetY + (rows - 1 - row) * cellHeight + cellHeight / 2 : offsetY + row * cellHeight + cellHeight / 2;
+        const highlight = this.scene.add.rectangle(
+          x,
+          y,
+          cellWidth,
+          cellHeight,
+          highlightColor,
+          0
+          // Start invisible
+        );
+        highlight.gridCol = col;
+        highlight.gridRow = row;
+        this.highlights.push(highlight);
+      }
+    }
+  }
+  /**
+   * Setup pointer event handlers using worldX/worldY for accurate mapping
+   */
+  setupInputHandlers() {
+    const { useHandCursor, clickMode } = this.config;
+    this.scene.input.on("pointermove", (pointer) => {
+      const cell = this.pointerToCell(pointer);
+      this.highlights.forEach((h) => h.setAlpha(0));
+      if (cell && this.config.canHighlight(cell.col, cell.row)) {
+        const highlight = this.getHighlight(cell.col, cell.row);
+        if (highlight) {
+          highlight.setAlpha(this.config.highlightAlpha);
+        }
+      }
+      if (useHandCursor) {
+        const canClick = cell && this.config.canClick(cell.col, cell.row);
+        this.scene.input.setDefaultCursor(canClick ? "pointer" : "default");
+      }
+    });
+    const eventName = clickMode === "down" ? "pointerdown" : "pointerup";
+    this.scene.input.on(eventName, (pointer) => {
+      const cell = this.pointerToCell(pointer);
+      if (cell && this.config.canClick(cell.col, cell.row)) {
+        this.config.onCellClick(cell.col, cell.row);
+        const highlight = this.getHighlight(cell.col, cell.row);
+        if (highlight) {
+          this.scene.tweens.add({
+            targets: highlight,
+            alpha: this.config.highlightAlpha * 2,
+            duration: 100,
+            yoyo: true
+          });
+        }
+      }
+    });
+    this.scene.input.on("pointerout", () => {
+      this.highlights.forEach((h) => h.setAlpha(0));
+      if (useHandCursor) {
+        this.scene.input.setDefaultCursor("default");
+      }
+    });
+  }
+  /**
+   * Convert pointer coordinates to grid cell
+   * Uses worldX/worldY for accurate mapping in any scale mode
+   */
+  pointerToCell(pointer) {
+    const { columns, rows, cellWidth, cellHeight, offsetX, offsetY, origin } = this.config;
+    const col = Math.floor((pointer.worldX - offsetX) / cellWidth);
+    const rowFromTop = Math.floor((pointer.worldY - offsetY) / cellHeight);
+    const row = origin === "bottom-left" ? rows - 1 - rowFromTop : rowFromTop;
+    if (col < 0 || col >= columns || row < 0 || row >= rows) {
+      return null;
+    }
+    return { col, row };
+  }
+  /**
+   * Get highlight rectangle for a specific cell
+   */
+  getHighlight(col, row) {
+    return this.highlights.find((h) => h.gridCol === col && h.gridRow === row);
+  }
+  /**
+   * Setup debug visualization (grid lines and coordinates)
+   */
+  setupDebugVisualization() {
+    const { columns, rows, cellWidth, cellHeight, offsetX, offsetY, origin } = this.config;
+    this.debugGraphics = this.scene.add.graphics();
+    this.debugGraphics.lineStyle(1, 16711935, 0.5);
+    for (let col = 0; col <= columns; col++) {
+      const x = offsetX + col * cellWidth;
+      this.debugGraphics.lineBetween(x, offsetY, x, offsetY + rows * cellHeight);
+    }
+    for (let row = 0; row <= rows; row++) {
+      const y = offsetY + row * cellHeight;
+      this.debugGraphics.lineBetween(offsetX, y, offsetX + columns * cellWidth, y);
+    }
+    for (let col = 0; col < columns; col++) {
+      for (let row = 0; row < rows; row++) {
+        const x = offsetX + col * cellWidth + 5;
+        const y = origin === "bottom-left" ? offsetY + (rows - 1 - row) * cellHeight + 5 : offsetY + row * cellHeight + 5;
+        const text = this.scene.add.text(x, y, `${col},${row}`, {
+          fontSize: "10px",
+          color: "#ff00ff",
+          backgroundColor: "#000000"
+        });
+        this.debugTexts.push(text);
+      }
+    }
+  }
+  /**
+   * Manually trigger a highlight (useful for showing valid moves, etc.)
+   */
+  showHighlight(col, row, alpha) {
+    const highlight = this.getHighlight(col, row);
+    if (highlight) {
+      highlight.setAlpha(alpha ?? this.config.highlightAlpha);
+    }
+  }
+  /**
+   * Hide a specific cell's highlight
+   */
+  hideHighlight(col, row) {
+    const highlight = this.getHighlight(col, row);
+    if (highlight) {
+      highlight.setAlpha(0);
+    }
+  }
+  /**
+   * Hide all highlights
+   */
+  hideAllHighlights() {
+    this.highlights.forEach((h) => h.setAlpha(0));
+  }
+  /**
+   * Update highlight color for a specific cell
+   */
+  setHighlightColor(col, row, color) {
+    const highlight = this.getHighlight(col, row);
+    if (highlight) {
+      highlight.setFillStyle(color);
+    }
+  }
+  /**
+   * Destroy the helper and clean up resources
+   */
+  destroy() {
+    this.highlights.forEach((h) => h.destroy());
+    this.debugGraphics?.destroy();
+    this.debugTexts.forEach((t) => t.destroy());
+    this.highlights = [];
+    this.debugTexts = [];
+    this.scene.input.off("pointermove");
+    this.scene.input.off("pointerdown");
+    this.scene.input.off("pointerup");
+    this.scene.input.off("pointerout");
+  }
+};
+
 // src/PhaserAdapter.ts
 var PhaserAdapter = class {
   // Track all registered SpriteManagers
@@ -2401,6 +2598,36 @@ var PhaserAdapter = class {
     return new StateDrivenSpawner(this, config);
   }
   /**
+   * Create a GridClickHelper for robust grid/board click handling
+   *
+   * Solves the common problem where interactive rectangles don't scale properly
+   * with the canvas. Uses pointer.worldX/worldY for accurate coordinate mapping
+   * that works in any scale mode (FIT, RESIZE, etc).
+   *
+   * Perfect for: Connect Four, Chess, Tic-Tac-Toe, Minesweeper, Battleship, etc.
+   *
+   * @example
+   * ```ts
+   * const gridHelper = adapter.createClickableGrid({
+   *   columns: 7,
+   *   rows: 6,
+   *   cellWidth: 80,
+   *   cellHeight: 80,
+   *   offsetX: 100,
+   *   offsetY: 100,
+   *   onCellClick: (col, row) => {
+   *     runtime.submitAction('dropToken', { col });
+   *   },
+   *   highlightColor: 0xffffff,
+   *   highlightAlpha: 0.15,
+   *   origin: 'bottom-left' // For Connect Four
+   * });
+   * ```
+   */
+  createClickableGrid(config) {
+    return new GridClickHelper(this, this.scene, config);
+  }
+  /**
    * Create a HealthBarManager for automatic health bar management
    *
    * Auto-creates, positions, scales, and colors health bars for all sprites.
@@ -2537,34 +2764,49 @@ function createPlayerHUD(adapter, scene, config) {
     controlsText.setOrigin(0.5);
   }
   const update = () => {
+    const state = adapter.getState();
     const myPlayer = adapter.getMyPlayer(playersKey);
     if (roleText && config.roleText) {
-      roleText.setText(config.roleText(myPlayer));
+      roleText.setText(config.roleText(myPlayer, state));
     }
     if (controlsText && config.controlHints) {
-      controlsText.setText(config.controlHints(myPlayer));
+      controlsText.setText(config.controlHints(myPlayer, state));
     }
   };
   const unsubscribers = [];
+  let lastRoleText;
+  let lastControlsText;
   if (roleText && config.roleText) {
-    const unsubscribe = adapter.watchMyPlayer(
-      (player) => config.roleText(player),
-      (text) => {
+    const unsubscribe = adapter.onChange((state) => {
+      const players = state?.[playersKey];
+      const myPlayer = players ? players[adapter.getMyPlayerId()] : void 0;
+      const text = config.roleText(myPlayer, state);
+      if (text !== lastRoleText) {
+        lastRoleText = text;
         roleText.setText(text);
-      },
-      { playersKey }
-    );
+      }
+    });
     unsubscribers.push(unsubscribe);
+    const initialState = adapter.getState();
+    const initialPlayer = adapter.getMyPlayer(playersKey);
+    lastRoleText = config.roleText(initialPlayer, initialState);
+    roleText.setText(lastRoleText);
   }
   if (controlsText && config.controlHints) {
-    const unsubscribe = adapter.watchMyPlayer(
-      (player) => config.controlHints(player),
-      (text) => {
+    const unsubscribe = adapter.onChange((state) => {
+      const players = state?.[playersKey];
+      const myPlayer = players ? players[adapter.getMyPlayerId()] : void 0;
+      const text = config.controlHints(myPlayer, state);
+      if (text !== lastControlsText) {
+        lastControlsText = text;
         controlsText.setText(text);
-      },
-      { playersKey }
-    );
+      }
+    });
     unsubscribers.push(unsubscribe);
+    const initialState = adapter.getState();
+    const initialPlayer = adapter.getMyPlayer(playersKey);
+    lastControlsText = config.controlHints(initialPlayer, initialState);
+    controlsText.setText(lastControlsText);
   }
   return {
     update,
@@ -2626,12 +2868,87 @@ function createSpeedDisplay(physicsManager, adapter, scene, config = {}) {
   };
 }
 
+// src/helpers/SpriteAttachment.ts
+function createSpriteAttachment(scene, sprite, attachment, config = {}) {
+  const autoUpdate = config.autoUpdate ?? true;
+  let isDestroyed = false;
+  const originalDestroy = attachment.destroy;
+  const wrappedDestroy = () => {
+    if (isDestroyed) return;
+    isDestroyed = true;
+    if (updateHandler) {
+      scene.events.off("update", updateHandler);
+      updateHandler = null;
+    }
+    originalDestroy();
+  };
+  let updateHandler = null;
+  if (autoUpdate) {
+    attachment.update();
+    updateHandler = () => {
+      if (!isDestroyed) {
+        attachment.update();
+      }
+    };
+    scene.events.on("update", updateHandler);
+    if (sprite.once) {
+      sprite.once("destroy", () => {
+        wrappedDestroy();
+      });
+    }
+    scene.events.once("shutdown", () => {
+      if (updateHandler) {
+        scene.events.off("update", updateHandler);
+        updateHandler = null;
+      }
+    });
+  } else {
+    attachment.update();
+  }
+  return {
+    update: attachment.update,
+    destroy: wrappedDestroy,
+    getGameObject: attachment.getGameObject
+  };
+}
+function createSpriteAttachments(scene, sprite, attachments, config = {}) {
+  return attachments.map(
+    (attachment) => createSpriteAttachment(scene, sprite, attachment, config)
+  );
+}
+function createCompositeAttachment(scene, sprite, children, config = {}) {
+  const wrappedChildren = children.map(
+    (child) => createSpriteAttachment(scene, sprite, child, { autoUpdate: false })
+  );
+  return createSpriteAttachment(
+    scene,
+    sprite,
+    {
+      update: () => {
+        for (const child of wrappedChildren) {
+          child.update();
+        }
+      },
+      destroy: () => {
+        for (const child of wrappedChildren) {
+          child.destroy();
+        }
+      },
+      getGameObject: () => {
+        return wrappedChildren[0]?.getGameObject?.() ?? null;
+      }
+    },
+    config
+  );
+}
+
 // src/helpers/DirectionalIndicator.ts
 function attachDirectionalIndicator(scene, sprite, config = {}) {
   const shape = config.shape ?? "triangle";
   const offset = config.offset ?? 20;
   const color = config.color ?? 16777215;
   const size = config.size ?? 1;
+  const autoUpdate = config.autoUpdate ?? true;
   let indicator;
   switch (shape) {
     case "triangle": {
@@ -2704,14 +3021,18 @@ function attachDirectionalIndicator(scene, sprite, config = {}) {
     indicator.setPosition?.(indicatorX, indicatorY);
     indicator.setRotation?.(sprite.rotation + Math.PI / 2);
   };
-  update();
-  return {
-    update,
-    destroy: () => {
-      indicator.destroy();
+  return createSpriteAttachment(
+    scene,
+    sprite,
+    {
+      update,
+      destroy: () => {
+        indicator.destroy();
+      },
+      getGameObject: () => indicator
     },
-    getGameObject: () => indicator
-  };
+    { autoUpdate }
+  );
 }
 
 // src/index.ts
@@ -2805,6 +3126,15 @@ function initializeGame(config) {
   if (typeof window !== "undefined" && window.__MARTINI_IDE__) {
     window.__MARTINI_IDE__.registerRuntime(runtime);
   }
+  if (typeof window !== "undefined") {
+    window.addEventListener("message", (event) => {
+      if (event.data?.type === "martini:transport:disconnect") {
+        if ("disconnect" in transport && typeof transport.disconnect === "function") {
+          transport.disconnect();
+        }
+      }
+    });
+  }
   return { runtime, phaser: phaserGame };
 }
 function createTransport(config) {
@@ -2832,6 +3162,7 @@ function createTransport(config) {
 export {
   BUILT_IN_PROFILES,
   CollisionManager,
+  GridClickHelper,
   HealthBarManager,
   InputManager,
   PhaserAdapter,
@@ -2841,9 +3172,12 @@ export {
   StateDrivenSpawner,
   attachDirectionalIndicator,
   createCameraFollower,
+  createCompositeAttachment,
   createDualRuntimePreview,
   createPlayerHUD,
   createSpeedDisplay,
+  createSpriteAttachment,
+  createSpriteAttachments,
   getProfile,
   initializeGame,
   listProfiles,

@@ -321,6 +321,15 @@ export default window.Phaser;
 	 * Destroy Sandpack instance
 	 */
 	destroy(): void {
+		// CRITICAL: Disconnect transport BEFORE removing iframe
+		// This notifies the iframe-bridge relay to remove stale peers
+		// Prevents phantom players from appearing in subsequent game sessions
+		if (this.iframe?.contentWindow) {
+			this.iframe.contentWindow.postMessage({
+				type: 'martini:transport:disconnect'
+			}, '*');
+		}
+
 		if (this.client) {
 			this.client.destroy();
 			this.client = null;

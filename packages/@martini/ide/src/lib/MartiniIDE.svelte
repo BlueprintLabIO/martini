@@ -48,7 +48,9 @@
 	let clientActionsExcluded = $state(0);
 	let hostNetworkPackets = $state<Array<{ timestamp: number; direction: 'send' | 'receive'; type: string; size: number; payload: any }>>([]);
 	let clientNetworkPackets = $state<Array<{ timestamp: number; direction: 'send' | 'receive'; type: string; size: number; payload: any }>>([]);
-	const sessionRoomId = generateRoomId();
+	// Room scoping per navigation: include timestamp to ensure fresh room per page load
+	// This prevents phantom peers from previous navigations from appearing in new sessions
+	const sessionRoomId = `${generateRoomId()}-${Date.now()}`;
 	const DEVTOOLS_STORAGE_KEY = 'martini-ide-show-devtools';
 
 	// Derived state: check if there are divergences

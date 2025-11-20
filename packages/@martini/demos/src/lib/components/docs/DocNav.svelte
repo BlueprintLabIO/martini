@@ -1,24 +1,41 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { ChevronDown, ChevronRight } from 'lucide-svelte';
+	import { ChevronDown, ChevronRight } from '@lucide/svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import SearchBar from '$lib/components/docs/SearchBar.svelte';
+	import SDKSelector from '$lib/components/docs/SDKSelector.svelte';
 	import { versions, defaultVersion } from '$lib/docs/versions';
-	import { docsSections } from '$lib/docs/navigation';
+	import { docsSections, type DocsPage, type DocsSubsection } from '$lib/docs/navigation';
+	import { selectedSDK, type SDK } from '$lib/stores/sdkPreference';
 
 	interface NavItem {
 		title: string;
 		href: string;
+		sdks?: SDK[];
+		external?: boolean;
+	}
+
+	interface NavSubsection {
+		title: string;
+		items: NavItem[];
+		comingSoon?: boolean;
 	}
 
 	interface NavSection {
 		title: string;
 		items: NavItem[];
+		subsections?: NavSubsection[];
 	}
 
 	// Get current version/alias from URL (e.g., 'latest', 'v0.1', 'next')
 	let currentVersion = $derived($page.params.version || defaultVersion);
+
+	// Helper to check if an item is compatible with current SDK
+	function isCompatible(item: NavItem): boolean {
+		if (!item.sdks || item.sdks.length === 0) return true; // No SDK restriction
+		return item.sdks.includes($selectedSDK);
+	}
 
 	// Helper to create version-aware href
 	// Replace 'latest' with current version/alias for consistent navigation
@@ -27,19 +44,32 @@
 	}
 
 	// Use the comprehensive navigation structure from navigation.ts
-	// Update all hrefs to use current version
+	// Update all hrefs to use current version and preserve SDK metadata
 	let navigation = $derived<NavSection[]>(
 		docsSections.map((section) => ({
 			title: section.title,
 			items: section.items.map((item) => ({
 				title: item.title,
-				href: versionHref(item.href)
+				href: versionHref(item.href),
+				sdks: item.sdks,
+				external: item.external
+			})),
+			subsections: section.subsections?.map((sub) => ({
+				title: sub.title,
+				items: sub.items.map((item) => ({
+					title: item.title,
+					href: versionHref(item.href),
+					sdks: item.sdks,
+					external: item.external
+				})),
+				comingSoon: sub.comingSoon
 			}))
 		}))
 	);
 
 	// Expand Getting Started by default, collapse API Reference
 	let expandedSections = $state<Set<string>>(new Set(['Getting Started']));
+	let expandedSubsections = $state<Set<string>>(new Set([]));
 
 	function toggleSection(title: string) {
 		if (expandedSections.has(title)) {
@@ -48,6 +78,15 @@
 			expandedSections.add(title);
 		}
 		expandedSections = new Set(expandedSections);
+	}
+
+	function toggleSubsection(title: string) {
+		if (expandedSubsections.has(title)) {
+			expandedSubsections.delete(title);
+		} else {
+			expandedSubsections.add(title);
+		}
+		expandedSubsections = new Set(expandedSubsections);
 	}
 
 	function handleVersionChange(event: Event) {
@@ -99,6 +138,9 @@
 		<SearchBar />
 	</div>
 
+	<!-- SDK Selector -->
+	<SDKSelector />
+
 	{#each navigation as section}
 		<div class="nav-section">
 			<button class="section-header" onclick={() => toggleSection(section.title)}>
@@ -110,16 +152,61 @@
 				{section.title}
 			</button>
 
-			{#if expandedSections.has(section.title) && section.items}
-				<ul class="section-items">
-					{#each section.items as item}
-						<li>
-							<a href={item.href} class:active={$page.url.pathname === item.href}>
-								{item.title}
-							</a>
-						</li>
+			{#if expandedSections.has(section.title)}
+				{#if section.items && section.items.length > 0}
+					<ul class="section-items">
+						{#each section.items as item}
+							<li>
+								<a
+									href={item.href}
+									class:active={$page.url.pathname === item.href}
+									class:dimmed={!isCompatible(item)}
+									target={item.external ? '_blank' : undefined}
+									rel={item.external ? 'noopener noreferrer' : undefined}
+								>
+									{item.title}
+								</a>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+
+				{#if section.subsections}
+					{#each section.subsections as subsection}
+						<div class="subsection">
+							<button
+								class="subsection-header"
+								class:coming-soon={subsection.comingSoon}
+								onclick={() => toggleSubsection(subsection.title)}
+							>
+								{#if expandedSubsections.has(subsection.title)}
+									<ChevronDown size={14} />
+								{:else}
+									<ChevronRight size={14} />
+								{/if}
+								{subsection.title}
+							</button>
+
+							{#if expandedSubsections.has(subsection.title)}
+								<ul class="subsection-items">
+									{#each subsection.items as item}
+										<li>
+											<a
+												href={item.href}
+												class:active={$page.url.pathname === item.href}
+												class:dimmed={!isCompatible(item)}
+												target={item.external ? '_blank' : undefined}
+												rel={item.external ? 'noopener noreferrer' : undefined}
+											>
+												{item.title}
+											</a>
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</div>
 					{/each}
-				</ul>
+				{/if}
 			{/if}
 		</div>
 	{/each}
@@ -253,7 +340,21 @@
 		font-weight: 500;
 	}
 
+	.section-items a.dimmed {
+		opacity: 0.4;
+		cursor: default;
+	}
+
+	.section-items a.dimmed:hover {
+		background: transparent;
+		color: var(--text-secondary, #525252);
+	}
+
 	/* Nested subsections */
+	.subsection {
+		margin-left: 0.5rem;
+	}
+
 	.subsection-header {
 		display: flex;
 		align-items: center;
@@ -274,6 +375,11 @@
 	.subsection-header:hover {
 		background: var(--bg-tertiary, #f5f5f5);
 		color: var(--text-primary, #0b0a08);
+	}
+
+	.subsection-header.coming-soon {
+		opacity: 0.6;
+		font-style: italic;
 	}
 
 	.subsection-items {
@@ -301,5 +407,15 @@
 		background: #3b82f6;
 		color: white;
 		font-weight: 500;
+	}
+
+	.subsection-items a.dimmed {
+		opacity: 0.4;
+		cursor: default;
+	}
+
+	.subsection-items a.dimmed:hover {
+		background: transparent;
+		color: var(--text-tertiary, #737373);
 	}
 </style>

@@ -158,12 +158,25 @@ export class SpriteManager {
     }
     /**
      * Update loop (call this in scene.update() for smooth interpolation on clients)
+     *
+     * Automatically calls update methods on attached components (arrows, health bars, etc.)
+     * if they use the `_update*` naming convention and autoUpdate is disabled.
      */
     update() {
         if (!this.adapter.isHost()) {
             this.adapter.updateInterpolation();
         }
         this.updateLabels();
+        // Auto-call attached component updates (fallback for manual mode)
+        // Note: If attachDirectionalIndicator is using autoUpdate: true (default),
+        // this is redundant but harmless. This provides backward compatibility
+        // for code that set autoUpdate: false and expects manual updates.
+        for (const sprite of this.sprites.values()) {
+            if (typeof sprite._updateArrow === 'function') {
+                sprite._updateArrow();
+            }
+            // Future: _updateHealthBar, _updateNameTag, etc.
+        }
     }
     /**
      * Cleanup

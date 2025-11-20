@@ -1,3 +1,7 @@
+<script>
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
+</script>
+
 # Health and Damage Recipes
 
 Common health and damage patterns for multiplayer games. Copy and adapt these recipes for your game.
@@ -79,6 +83,53 @@ export const game = defineGame({
 
 ### Phaser Scene (Health Bar)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using HUDHelper** - Automatic health bar with color coding:
+
+```typescript
+import Phaser from 'phaser';
+import { PhaserAdapter, HUDHelper } from '@martini/phaser';
+
+export class GameScene extends Phaser.Scene {
+  private adapter!: PhaserAdapter;
+  private hudHelper!: HUDHelper;
+
+  create() {
+    this.adapter = new PhaserAdapter(runtime, this);
+
+    // Create health bar with automatic updates
+    this.hudHelper = new HUDHelper(this.adapter, this);
+    this.hudHelper.createHealthBar({
+      x: 10,
+      y: 10,
+      width: 200,
+      height: 20,
+      showText: true,
+      textFormat: (health, maxHealth) => `${health}/${maxHealth}`,
+      colorThresholds: {
+        high: { threshold: 0.5, color: 0x00ff00 },    // Green > 50%
+        medium: { threshold: 0.25, color: 0xffaa00 }, // Yellow > 25%
+        low: { threshold: 0, color: 0xff0000 },       // Red <= 25%
+      },
+    });
+  }
+}
+```
+
+**Benefits:**
+- ✅ Auto-updates on state changes
+- ✅ Color transitions based on health
+- ✅ Built-in text formatting
+- ✅ Just 5 lines instead of 30+
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Health Bar** - Full control over rendering:
+
 ```typescript
 import Phaser from 'phaser';
 import { PhaserAdapter } from '@martini/phaser';
@@ -106,7 +157,7 @@ export class GameScene extends Phaser.Scene {
 
     // Update on state change
     this.adapter.onChange((state) => {
-      const myPlayer = state.players[this.adapter.playerId];
+      const myPlayer = state.players[this.adapter.getMyPlayerId()];
       if (myPlayer) {
         const healthPercent = myPlayer.health / myPlayer.maxHealth;
 
@@ -129,6 +180,14 @@ export class GameScene extends Phaser.Scene {
   }
 }
 ```
+
+**Use when:**
+- Custom health bar shapes needed
+- Special animations or effects
+- Non-standard color schemes
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Health tracking
@@ -209,6 +268,50 @@ export const game = defineGame({
 
 ### Phaser Scene (Invincibility Visual)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using SpriteManager** - Automatic sprite flashing with updateSprite callback:
+
+```typescript
+import { PhaserAdapter, SpriteManager } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Auto-manages player sprites with invincibility effects
+  this.playerManager = new SpriteManager(this.adapter, this, {
+    collection: 'players',
+    createSprite: (player) => {
+      return this.add.circle(player.x, player.y, 20, 0x00aaff);
+    },
+    updateSprite: (sprite, player) => {
+      sprite.x = player.x;
+      sprite.y = player.y;
+
+      // Flash sprite when invulnerable
+      if (player.isInvulnerable) {
+        const flashPhase = Math.floor(Date.now() / 100) % 2;
+        sprite.setAlpha(flashPhase === 0 ? 0.3 : 1.0);
+      } else {
+        sprite.setAlpha(1.0);
+      }
+    },
+  });
+}
+```
+
+**Benefits:**
+- ✅ Automatic sprite lifecycle
+- ✅ Built-in update callback for effects
+- ✅ Less boilerplate code
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Sprite Management** - Full control:
+
 ```typescript
 create() {
   // ... create player sprites ...
@@ -230,6 +333,9 @@ create() {
   });
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Invincibility frames
@@ -333,6 +439,52 @@ export const game = defineGame({
 
 ### Phaser Scene (Death Screen)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using HUD Helper** - Reactive death screen with auto-updating timer:
+
+```typescript
+import { PhaserAdapter, createPlayerHUD } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Death overlay
+  this.deathOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
+  this.deathOverlay.setVisible(false);
+  this.deathOverlay.setDepth(1000);
+
+  // Auto-updating respawn message
+  this.hud = createPlayerHUD(this.adapter, this, {
+    roleText: (myPlayer) => {
+      if (!myPlayer) return '';
+      if (!myPlayer.isAlive) {
+        const seconds = Math.ceil(myPlayer.respawnTimer / 1000);
+        return `You were eliminated!\nRespawning in ${seconds}...`;
+      }
+      return '';
+    },
+    roleStyle: { fontSize: '24px', color: '#fff' },
+    layout: { role: { x: 400, y: 300 } }
+  });
+
+  // Show/hide overlay based on alive status
+  this.adapter.onChange((state) => {
+    const myPlayer = state.players[this.adapter.playerId];
+    if (myPlayer) {
+      this.deathOverlay.setVisible(!myPlayer.isAlive);
+    }
+  });
+}
+```
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Death Screen** - Full control:
+
 ```typescript
 create() {
   // Death overlay
@@ -346,7 +498,7 @@ create() {
   }).setOrigin(0.5).setDepth(1001);
 
   this.adapter.onChange((state) => {
-    const myPlayer = state.players[this.adapter.playerId];
+    const myPlayer = state.players[this.adapter.getMyPlayerId()];
     if (myPlayer) {
       if (!myPlayer.isAlive) {
         this.deathOverlay.setVisible(true);
@@ -361,6 +513,9 @@ create() {
   });
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Death detection
@@ -535,7 +690,7 @@ create() {
   this.shieldBar.setOrigin(0);
 
   this.adapter.onChange((state) => {
-    const myPlayer = state.players[this.adapter.playerId];
+    const myPlayer = state.players[this.adapter.getMyPlayerId()];
     if (myPlayer) {
       this.healthBar.setScale(myPlayer.health / myPlayer.maxHealth, 1);
       this.shieldBar.setScale(myPlayer.shield / myPlayer.maxShield, 1);
@@ -733,6 +888,7 @@ export const game = defineGame({
 - **Use invincibility frames** to prevent spam damage
 - **Clamp health** to min/max values
 - **Color-code health bars** for quick visual feedback
+- **Use HUDHelper** for automatic health bar updates
 
 ### DON'T ❌
 
@@ -746,7 +902,7 @@ export const game = defineGame({
 
 ## See Also
 
-- [Shooting Mechanics](/docs/recipes/shooting-mechanics) - Dealing damage
-- [Player Movement](/docs/recipes/player-movement) - Movement systems
-- [Arena Blaster Example](/docs/examples/overview#arena-blaster) - Complete health/damage example
-- [Game Modes](/docs/recipes/game-modes) - Victory conditions
+- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics) - Dealing damage
+- [Player Movement](/docs/latest/recipes/player-movement) - Movement systems
+- [Arena Blaster Example](/docs/latest/examples/overview#arena-blaster) - Complete health/damage example
+- [Game Modes](/docs/latest/recipes/game-modes) - Victory conditions

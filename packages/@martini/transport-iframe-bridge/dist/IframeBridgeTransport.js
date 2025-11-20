@@ -103,6 +103,7 @@ class IframeBridgeTransportMetrics {
 }
 export class IframeBridgeTransport {
     constructor(config) {
+        this.HEARTBEAT_INTERVAL_MS = 3000;
         this.messageHandlers = [];
         this.peerJoinHandlers = [];
         this.peerLeaveHandlers = [];
@@ -110,6 +111,7 @@ export class IframeBridgeTransport {
         this.peerIds = new Set();
         this.messageHandler = null;
         this.isDisconnected = false;
+        this.heartbeatInterval = null;
         this.roomId = config.roomId;
         this.playerId = config.playerId || `player-${Math.random().toString(36).substring(2, 9)}`;
         this._isHost = config.isHost;
@@ -117,6 +119,8 @@ export class IframeBridgeTransport {
         this.metrics = new IframeBridgeTransportMetrics(this);
         this.setupMessageListener();
         this.registerWithRelay();
+        this.startHeartbeat();
+        this.setupVisibilityListener();
     }
     /**
      * Set up listener for messages from parent relay
@@ -161,6 +165,13 @@ export class IframeBridgeTransport {
                         this.hostDisconnectHandlers.forEach(h => h());
                     }
                     break;
+                case 'BRIDGE_ERROR':
+                    // Relay rejected our message (e.g., unknown sender after timeout)
+                    // Auto-reconnect to re-establish connection
+                    console.warn('[IframeBridgeTransport] Relay error, reconnecting...', data.payload?.error);
+                    this.registerWithRelay();
+                    this.sendHeartbeat();
+                    break;
             }
         };
         window.addEventListener('message', this.messageHandler);
@@ -180,6 +191,46 @@ export class IframeBridgeTransport {
             payload: {}
         };
         window.parent.postMessage(registerMessage, '*');
+    }
+    /**
+     * Send periodic heartbeat to relay
+     */
+    sendHeartbeat() {
+        if (this.isDisconnected)
+            return;
+        if (!window.parent || window.parent === window)
+            return;
+        const heartbeat = {
+            type: 'BRIDGE_HEARTBEAT',
+            roomId: this.roomId,
+            playerId: this.playerId
+        };
+        window.parent.postMessage(heartbeat, '*');
+    }
+    startHeartbeat() {
+        if (typeof window === 'undefined')
+            return;
+        this.stopHeartbeat();
+        this.sendHeartbeat();
+        this.heartbeatInterval = window.setInterval(() => this.sendHeartbeat(), this.HEARTBEAT_INTERVAL_MS);
+    }
+    stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
+    }
+    setupVisibilityListener() {
+        if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') {
+            return;
+        }
+        this.visibilityHandler = () => {
+            if (document.visibilityState === 'visible') {
+                this.registerWithRelay();
+                this.sendHeartbeat();
+            }
+        };
+        document.addEventListener('visibilitychange', this.visibilityHandler);
     }
     /**
      * Send message to peer(s)
@@ -259,6 +310,7 @@ export class IframeBridgeTransport {
             return;
         this.metrics.setDisconnected();
         this.isDisconnected = true;
+        this.stopHeartbeat();
         // Notify relay
         if (window.parent && window.parent !== window) {
             const disconnectMessage = {
@@ -282,6 +334,10 @@ export class IframeBridgeTransport {
         this.peerLeaveHandlers = [];
         this.hostDisconnectHandlers = [];
         this.peerIds.clear();
+        if (this.visibilityHandler && typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this.visibilityHandler);
+            this.visibilityHandler = undefined;
+        }
     }
 }
 //# sourceMappingURL=IframeBridgeTransport.js.map

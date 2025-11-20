@@ -29,9 +29,7 @@ interface GameState {
 
 **Key principle**: If it affects gameplay, it belongs in state.
 
-##
-
- State Definition
+## State Definition
 
 ### Setup Function
 

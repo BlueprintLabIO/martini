@@ -70,6 +70,16 @@ export function createScene(runtime: GameRuntime) {
 				onCreate: (key: string, data: any) => {
 					// Create car body
 					const car = this.add.rectangle(data.x, data.y, 30, 20, data.color);
+
+					// Attach directional indicator - auto-updates by default!
+					// No manual update() calls needed - it "just works"!
+					attachDirectionalIndicator(this, car, {
+						shape: 'triangle',
+						offset: 20,
+						color: 0xffffff
+						// autoUpdate: true (default) - uses scene events for automatic updates
+					});
+
 					return car;
 				},
 
@@ -77,19 +87,6 @@ export function createScene(runtime: GameRuntime) {
 					this.physics.add.existing(sprite);
 					const body = sprite.body as Phaser.Physics.Arcade.Body;
 					body.setCollideWorldBounds(true);
-				},
-
-				// NEW: onAdd hook - uses attachDirectionalIndicator helper!
-				onAdd: (sprite: any, key: string) => {
-					// One-liner! No rotation offset math needed!
-					sprite.directionArrow = attachDirectionalIndicator(this, sprite, {
-						shape: 'triangle',
-						offset: 20,
-						color: 0xffffff
-					});
-
-					// Store update function on sprite
-					(sprite as any)._updateArrow = () => sprite.directionArrow?.update();
 				}
 			});
 
