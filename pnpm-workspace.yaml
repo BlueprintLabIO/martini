@@ -1,7 +1,5 @@
 packages:
-  - 'apps/*'
-  - 'packages/*'
-  - 'packages/@martini-kit/*'
+  - '@martini/*'
 
 onlyBuiltDependencies:
   - esbuild

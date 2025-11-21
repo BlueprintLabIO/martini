@@ -49,10 +49,10 @@
 		<div class="container">
 			<div class="hero-content">
 				<h1 class="hero-title">
-					Write multiplayer<br />like single-player
+					Multiplayer without networking.
 				</h1>
 				<p class="hero-description">
-					Declarative state. Automatic sync. Zero server code. Battle-tested with 96%+ coverage.
+					Write multiplayer like single-player. Declarative state. Automatic sync. Zero server code.
 				</p>
 
 				<!-- Install Command -->
@@ -75,7 +75,7 @@
 						Try Interactive Code Previews
 						<ArrowRight class="icon" size={16} />
 					</a>
-					<a href="https://github.com/yourusername/martini-kit" class="btn btn-secondary">
+					<a href="https://github.com/BlueprintLabIO/martini" class="btn btn-secondary">
 						<Github class="icon" size={16} />
 						GitHub
 					</a>
@@ -420,9 +420,9 @@ export const game = defineGame({
 		<div class="container">
 			<p>Built with SvelteKit, Phaser 3, and Trystero</p>
 			<p class="footer-links">
-				<a href="https://github.com/yourusername/martini-kit">GitHub</a>
+				<a href="https://github.com/BlueprintLabIO/martini">GitHub</a>
 				<span>•</span>
-				<a href="https://github.com/yourusername/martini-kit/blob/main/LICENSE">MIT License</a>
+				<a href="https://github.com/BlueprintLabIO/martini/blob/main/LICENSE">Apache 2.0 License</a>
 			</p>
 		</div>
 	</footer>

@@ -1,0 +1,57 @@
+{
+  "name": "@martini-kit/transport-local",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Local in-memory transport for testing and demos. Part of martini-kit: Multiplayer without networking.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "license": "Apache-2.0",
+  "author": "Yao <yao@blueprintlab.io>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlueprintLabIO/martini.git",
+    "directory": "@martini/transport-local"
+  },
+  "homepage": "https://github.com/BlueprintLabIO/martini",
+  "bugs": {
+    "url": "https://github.com/BlueprintLabIO/martini/issues"
+  },
+  "keywords": [
+    "multiplayer",
+    "transport",
+    "local",
+    "testing",
+    "martini-kit"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./sdk-bundle": "./dist/sdk-bundle.json",
+    "./dist/browser.js": "./dist/browser.js"
+  },
+  "scripts": {
+    "build": "tsc && tsx scripts/build-browser-bundle.ts",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "clean": "rm -rf dist",
+    "build:types": "tsc",
+    "build:browser": "tsx scripts/build-browser-bundle.ts"
+  },
+  "dependencies": {
+    "@martini-kit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

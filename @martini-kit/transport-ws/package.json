@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/transport-ws",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "private": true,
   "description": "WebSocket transport for @martini-kit/core - production-ready client-server networking",
@@ -32,5 +32,16 @@
   },
   "dependencies": {
     "@martini-kit/core": "workspace:*"
+  },
+  "license": "Apache-2.0",
+  "author": "Yao <yao@blueprintlab.io>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlueprintLabIO/martini.git",
+    "directory": "@martini/transport-ws"
+  },
+  "homepage": "https://github.com/BlueprintLabIO/martini",
+  "bugs": {
+    "url": "https://github.com/BlueprintLabIO/martini/issues"
   }
 }

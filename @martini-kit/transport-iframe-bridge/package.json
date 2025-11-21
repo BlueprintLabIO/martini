@@ -1,40 +1,48 @@
 {
-  "name": "@martini-kit/transport-local",
-  "version": "1.0.0",
+  "name": "@martini-kit/transport-iframe-bridge",
+  "version": "0.1.0",
+  "description": "Iframe-based transport for sandboxed multiplayer testing",
   "type": "module",
-  "private": true,
-  "description": "Local in-memory transport for same-page multiplayer demos and testing",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.js"
     },
     "./sdk-bundle": "./dist/sdk-bundle.json",
     "./dist/browser.js": "./dist/browser.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc && tsx scripts/build-browser-bundle.ts",
-    "dev": "tsc --watch",
     "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
-    "clean": "rm -rf dist",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "build:types": "tsc",
     "build:browser": "tsx scripts/build-browser-bundle.ts"
   },
+  "keywords": [
+    "martini-kit",
+    "multiplayer",
+    "transport",
+    "iframe",
+    "testing"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
   "dependencies": {
     "@martini-kit/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22",
-    "@vitest/coverage-v8": "^3.2.4",
-    "@vitest/ui": "^3.2.4",
+    "@vitest/coverage-v8": "^2.0.0",
     "esbuild": "^0.27.0",
+    "happy-dom": "^15.0.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.6.3",
+    "vitest": "^2.0.0"
   }
 }

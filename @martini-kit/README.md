@@ -1,6 +1,8 @@
-# martini-kit Multiplayer SDK v2
+# martini-kit
 
-**Open-source, engine-agnostic multiplayer SDK** with declarative API and host-authoritative state synchronization.
+**Multiplayer without networking.**
+
+Open-source, engine-agnostic multiplayer SDK with declarative API and host-authoritative state synchronization.
 
 Build multiplayer games that work with Phaser, Unity, Godot—without writing networking code.
 
@@ -347,7 +349,7 @@ We welcome contributions! See [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 - **Documentation:** You're reading it!
 - **Demo:** [packages/@martini-kit/demo-vite](../demo-vite)
-- **Issues:** [GitHub Issues](https://github.com/your-org/martini-kit/issues)
+- **Issues:** [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues)
 - **Tests:** Run `pnpm test` in any package
 
 ---

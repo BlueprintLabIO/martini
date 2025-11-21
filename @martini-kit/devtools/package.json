@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/devtools",
-  "version": "2.0.0-alpha.1",
+  "version": "0.1.0",
   "description": "Development tools for martini-kit - state inspector, action history, network monitor",
   "type": "module",
   "main": "./dist/index.js",
@@ -26,8 +26,17 @@
     "state",
     "martini-kit"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Yao <yao@blueprintlab.io>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlueprintLabIO/martini.git",
+    "directory": "@martini/devtools"
+  },
+  "homepage": "https://github.com/BlueprintLabIO/martini",
+  "bugs": {
+    "url": "https://github.com/BlueprintLabIO/martini/issues"
+  },
   "devDependencies": {
     "@martini-kit/transport-local": "workspace:*",
     "@types/node": "^22.10.2",

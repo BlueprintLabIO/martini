@@ -437,5 +437,5 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md)
 ## Support
 
 - **Documentation:** [martini-kit-sdk-v2](../../docs/martini-kit-sdk-v2/)
-- **Issues:** [GitHub Issues](https://github.com/your-org/martini-kit/issues)
+- **Issues:** [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues)
 - **Demo:** [packages/@martini-kit/demo-vite](../demo-vite)

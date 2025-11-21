@@ -1,11 +1,31 @@
 {
   "name": "@martini-kit/phaser",
-  "version": "2.0.0-alpha.1",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
-  "description": "Phaser 3 adapter for @martini-kit/core - host-authoritative multiplayer",
+  "description": "Multiplayer without networking. Phaser 3 adapter with automatic sprite synchronization.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "license": "Apache-2.0",
+  "author": "Yao <yao@blueprintlab.io>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlueprintLabIO/martini.git",
+    "directory": "@martini/phaser"
+  },
+  "homepage": "https://github.com/BlueprintLabIO/martini",
+  "bugs": {
+    "url": "https://github.com/BlueprintLabIO/martini/issues"
+  },
+  "keywords": [
+    "multiplayer",
+    "phaser",
+    "game",
+    "p2p",
+    "state-sync",
+    "host-authoritative",
+    "networking",
+    "gamedev"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

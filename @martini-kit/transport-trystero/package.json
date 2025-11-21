@@ -1,11 +1,29 @@
 {
   "name": "@martini-kit/transport-trystero",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
-  "description": "Trystero P2P transport adapter for @martini-kit/core",
+  "description": "P2P WebRTC transport for martini-kit. Multiplayer without networking servers.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "license": "Apache-2.0",
+  "author": "Yao <yao@blueprintlab.io>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlueprintLabIO/martini.git",
+    "directory": "@martini/transport-trystero"
+  },
+  "homepage": "https://github.com/BlueprintLabIO/martini",
+  "bugs": {
+    "url": "https://github.com/BlueprintLabIO/martini/issues"
+  },
+  "keywords": [
+    "multiplayer",
+    "p2p",
+    "webrtc",
+    "transport",
+    "trystero",
+    "martini-kit"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
