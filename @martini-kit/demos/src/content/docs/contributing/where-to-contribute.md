@@ -296,7 +296,7 @@ Enable 3D multiplayer games:
 
 ## 🐛 Bug Fixes
 
-Check the [GitHub Issues](https://github.com/yourusername/martini-kit/issues) for:
+Check the [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues) for:
 
 - Bugs labeled `good first issue`
 - Performance issues
@@ -305,7 +305,7 @@ Check the [GitHub Issues](https://github.com/yourusername/martini-kit/issues) fo
 
 ## 💡 Feature Requests
 
-Review [Feature Requests](https://github.com/yourusername/martini-kit/discussions/categories/feature-requests) and:
+Review [Feature Requests](https://github.com/BlueprintLabIO/martini/discussions/categories/feature-requests) and:
 
 - Discuss implementation approaches
 - Prototype new features

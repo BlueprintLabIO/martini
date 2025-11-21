@@ -5,7 +5,7 @@
  * Configs are extracted from the restored preview sources to keep /preview routes in sync.
  */
 
-import type { martini-kitIDEConfig } from '@martini-kit/ide';
+import type { MartiniKitIDEConfig } from '@martini-kit/ide';
 
 // Import all IDE configs from individual routes
 // These are the source of truth for the latest martini-kit code
@@ -61,7 +61,7 @@ export const gameMetadata: Record<string, GamePreviewMetadata> = {
 /**
  * IDE configurations mapped by game ID
  */
-const ideConfigs: Record<string, martini-kitIDEConfig> = {
+const ideConfigs: Record<string, MartiniKitIDEConfig> = {
 	'fire-and-ice': fireAndIceConfig,
 	'paddle-battle': paddleBattleConfig,
 	'blob-battle': blobBattleConfig,
@@ -73,7 +73,7 @@ const ideConfigs: Record<string, martini-kitIDEConfig> = {
 /**
  * Get IDE configuration for a game
  */
-export function getIDEConfig(gameId: string): martini-kitIDEConfig | null {
+export function getIDEConfig(gameId: string): MartiniKitIDEConfig | null {
 	const config = ideConfigs[gameId];
 	if (!config) {
 		console.warn(`No IDE config found for game: ${gameId}`);
@@ -94,7 +94,7 @@ export function getGameMetadata(gameId: string): GamePreviewMetadata | null {
 	return metadata;
 }
 
-function cloneConfig(config: martini-kitIDEConfig): martini-kitIDEConfig {
+function cloneConfig(config: MartiniKitIDEConfig): MartiniKitIDEConfig {
 	return {
 		...config,
 		files: { ...config.files },

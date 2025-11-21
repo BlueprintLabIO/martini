@@ -2,7 +2,7 @@
  * @martini-kit/ide - Type definitions
  */
 
-export interface martini-kitIDEConfig {
+export interface MartiniKitIDEConfig {
 	/** Initial project files (reactive - can be updated externally) */
 	files: Record<string, string>;
 

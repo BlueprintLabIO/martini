@@ -1,11 +1,11 @@
 <script lang="ts">
-	import martini-kitIDE from '@martini-kit/ide';
-	import type { martini-kitIDEConfig } from '@martini-kit/ide';
+	import MartiniIDE from '@martini-kit/ide';
+	import type { MartiniKitIDEConfig } from '@martini-kit/ide';
 
 	interface Props {
 		title: string;
 		description?: string;
-		code: martini-kitIDEConfig;
+		code: MartiniKitIDEConfig;
 		layout?: 'dual' | 'side-by-side' | 'tabs';
 		height?: string;
 	}
@@ -22,7 +22,7 @@
 	</header>
 
 	<div class="ide-wrapper" style="height: {height}">
-		<martini-kitIDE config={code} />
+		<MartiniIDE config={code} />
 	</div>
 </div>
 

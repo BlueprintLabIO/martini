@@ -669,4 +669,4 @@ Before submitting a PR, ensure:
 
 ---
 
-Questions about coding standards? Ask in [GitHub Discussions](https://github.com/yourusername/martini-kit/discussions)!
+Questions about coding standards? Ask in [GitHub Discussions](https://github.com/BlueprintLabIO/martini/discussions)!

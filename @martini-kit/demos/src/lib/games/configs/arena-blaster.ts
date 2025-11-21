@@ -1,7 +1,7 @@
-import type { martini-kitIDEConfig } from '@martini-kit/ide';
+import type { MartiniKitIDEConfig } from '@martini-kit/ide';
 
 // Arena Blaster - Top-down shooter with health, scoring, and bullet physics
-const config: martini-kitIDEConfig = {
+const config: MartiniKitIDEConfig = {
 	files: {
 		'/src/game.ts': `import { defineGame, createPlayerManager } from '@martini-kit/core';
 

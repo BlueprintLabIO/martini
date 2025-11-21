@@ -1,7 +1,7 @@
-import type { martini-kitIDEConfig } from '@martini-kit/ide';
+import type { MartiniKitIDEConfig } from '@martini-kit/ide';
 
 // Tile Matcher - Classic Connect Four game
-const config: martini-kitIDEConfig = {
+const config: MartiniKitIDEConfig = {
 	files: {
 		'/src/game.ts': `import { defineGame, createPlayerManager } from '@martini-kit/core';
 

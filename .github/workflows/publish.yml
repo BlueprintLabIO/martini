@@ -1,0 +1,104 @@
+name: Version Bump and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: 'patch'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  version-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build --filter='@martini-kit/*' --filter='!demos'
+
+      - name: Run tests
+        run: pnpm test --filter='@martini-kit/*' --filter='!demos'
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Bump version
+        run: |
+          pnpm run version:${{ inputs.version_type }}
+          NEW_VERSION=$(node -p "require('./@martini-kit/core/package.json').version")
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Commit version bump
+        run: |
+          git add .
+          git commit -m "chore: bump version to ${{ env.NEW_VERSION }}" || echo "No changes to commit"
+          git push origin main || echo "No changes to push"
+
+      - name: Create Git tag
+        run: |
+          git tag -a "v${{ env.NEW_VERSION }}" -m "Release v${{ env.NEW_VERSION }}"
+          git push origin "v${{ env.NEW_VERSION }}"
+
+      - name: Dry run publish (verification)
+        run: pnpm run publish:dry-run
+
+      - name: Publish to npm
+        run: pnpm run publish:all
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          release_name: Release v${{ env.NEW_VERSION }}
+          body: |
+            ## Changes in v${{ env.NEW_VERSION }}
+
+            Published packages:
+            - @martini-kit/core@${{ env.NEW_VERSION }}
+            - @martini-kit/phaser@${{ env.NEW_VERSION }}
+            - @martini-kit/devtools@${{ env.NEW_VERSION }}
+            - @martini-kit/transport-local@${{ env.NEW_VERSION }}
+            - @martini-kit/transport-trystero@${{ env.NEW_VERSION }}
+            - @martini-kit/transport-ws@${{ env.NEW_VERSION }}
+            - @martini-kit/transport-iframe-bridge@${{ env.NEW_VERSION }}
+            - @martini-kit/transport-colyseus@${{ env.NEW_VERSION }}
+            - @martini-kit/ide@${{ env.NEW_VERSION }}
+
+            See [CHANGELOG.md](https://github.com/BlueprintLabIO/martini/blob/main/CHANGELOG.md) for details.
+          draft: false
+          prerelease: false

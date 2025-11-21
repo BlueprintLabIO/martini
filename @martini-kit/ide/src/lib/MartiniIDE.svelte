@@ -9,7 +9,7 @@
 	import NetworkMonitor from './components/NetworkMonitor.svelte';
 	import { VirtualFileSystem } from './core/VirtualFS';
 	import { IframeBridgeRelay } from '@martini-kit/transport-iframe-bridge';
-	import type { martini-kitIDEConfig } from './types';
+	import type { MartiniKitIDEConfig } from './types';
 	import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
 
 	type FileNode = {
@@ -22,7 +22,7 @@
 	type VisibleNode = FileNode & { depth: number };
 
 	interface Props {
-		config: martini-kitIDEConfig;
+		config: MartiniKitIDEConfig;
 	}
 
 	let { config }: Props = $props();

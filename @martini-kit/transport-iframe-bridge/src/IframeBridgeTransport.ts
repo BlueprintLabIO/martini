@@ -164,7 +164,7 @@ export class IframeBridgeTransport implements Transport {
   constructor(config: IframeBridgeConfig) {
     // Transport lifecycle guardrail: Prevent double-initialization
     // This catches bugs where transport is created multiple times without cleanup
-    if (typeof globalThis !== 'undefined' && (globalThis as any).__martini-kit_TRANSPORT__) {
+    if (typeof globalThis !== 'undefined' && (globalThis as any)['__martini-kit_TRANSPORT__']) {
       throw new Error(
         '[IframeBridgeTransport] Transport already exists! ' +
         'Did you forget to call disconnect() before creating a new transport? ' +
@@ -185,7 +185,7 @@ export class IframeBridgeTransport implements Transport {
 
     // Register this transport globally for guardrail
     if (typeof globalThis !== 'undefined') {
-      (globalThis as any).__martini-kit_TRANSPORT__ = this;
+      (globalThis as any)['__martini-kit_TRANSPORT__'] = this;
     }
 
     this.setupMessageListener();
@@ -408,8 +408,8 @@ export class IframeBridgeTransport implements Transport {
     this.stopHeartbeat();
 
     // Clear global transport reference to allow new instances
-    if (typeof globalThis !== 'undefined' && (globalThis as any).__martini-kit_TRANSPORT__ === this) {
-      delete (globalThis as any).__martini-kit_TRANSPORT__;
+    if (typeof globalThis !== 'undefined' && (globalThis as any)['__martini-kit_TRANSPORT__'] === this) {
+      delete (globalThis as any)['__martini-kit_TRANSPORT__'];
     }
 
     // Notify relay

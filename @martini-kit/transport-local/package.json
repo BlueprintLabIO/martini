@@ -10,7 +10,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/BlueprintLabIO/martini.git",
-    "directory": "@martini/transport-local"
+    "directory": "@martini-kit/transport-local"
   },
   "homepage": "https://github.com/BlueprintLabIO/martini",
   "bugs": {

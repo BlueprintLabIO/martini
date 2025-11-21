@@ -17,8 +17,17 @@
     "transport",
     "game-dev"
   ],
-  "author": "",
+  "author": "Yao <yao@blueprintlab.io>",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlueprintLabIO/martini.git",
+    "directory": "@martini-kit/transport-colyseus"
+  },
+  "homepage": "https://github.com/BlueprintLabIO/martini",
+  "bugs": {
+    "url": "https://github.com/BlueprintLabIO/martini/issues"
+  },
   "peerDependencies": {
     "@martini-kit/core": "workspace:*",
     "colyseus.js": "^0.15.0"

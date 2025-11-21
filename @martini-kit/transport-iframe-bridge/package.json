@@ -31,8 +31,17 @@
     "iframe",
     "testing"
   ],
-  "author": "",
+  "author": "Yao <yao@blueprintlab.io>",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlueprintLabIO/martini.git",
+    "directory": "@martini-kit/transport-iframe-bridge"
+  },
+  "homepage": "https://github.com/BlueprintLabIO/martini",
+  "bugs": {
+    "url": "https://github.com/BlueprintLabIO/martini/issues"
+  },
   "dependencies": {
     "@martini-kit/core": "workspace:*"
   },

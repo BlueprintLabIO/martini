@@ -129,5 +129,5 @@ State inspection, action history, and debugging tools for development. [Learn mo
 
 - [Troubleshooting](/docs/latest/troubleshooting/common-issues) - Common issues and solutions
 - [FAQ](/docs/latest/faq) - Frequently asked questions
-- [GitHub Issues](https://github.com/your-org/martini-kit/issues) - Report bugs or request features
+- [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues) - Report bugs or request features
 - [Discord](https://discord.gg/your-server) - Join the community

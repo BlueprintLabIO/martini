@@ -114,7 +114,7 @@ export class IframeBridgeTransport {
         this.heartbeatInterval = null;
         // Transport lifecycle guardrail: Prevent double-initialization
         // This catches bugs where transport is created multiple times without cleanup
-        if (typeof globalThis !== 'undefined' && globalThis.__martini-kit_TRANSPORT__) {
+        if (typeof globalThis !== 'undefined' && globalThis['__martini-kit_TRANSPORT__']) {
             throw new Error('[IframeBridgeTransport] Transport already exists! ' +
                 'Did you forget to call disconnect() before creating a new transport? ' +
                 'Each iframe should only have ONE transport instance. ' +
@@ -130,7 +130,7 @@ export class IframeBridgeTransport {
         this.metrics = new IframeBridgeTransportMetrics(this);
         // Register this transport globally for guardrail
         if (typeof globalThis !== 'undefined') {
-            globalThis.__martini-kit_TRANSPORT__ = this;
+            globalThis['__martini-kit_TRANSPORT__'] = this;
         }
         this.setupMessageListener();
         this.registerWithRelay();
@@ -327,8 +327,8 @@ export class IframeBridgeTransport {
         this.isDisconnected = true;
         this.stopHeartbeat();
         // Clear global transport reference to allow new instances
-        if (typeof globalThis !== 'undefined' && globalThis.__martini-kit_TRANSPORT__ === this) {
-            delete globalThis.__martini-kit_TRANSPORT__;
+        if (typeof globalThis !== 'undefined' && globalThis['__martini-kit_TRANSPORT__'] === this) {
+            delete globalThis['__martini-kit_TRANSPORT__'];
         }
         // Notify relay
         if (window.parent && window.parent !== window) {

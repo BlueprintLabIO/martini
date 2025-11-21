@@ -159,7 +159,6 @@
 				bind:value={query}
 				placeholder="Search documentation..."
 				class="search-input"
-				autofocus
 			/>
 			<button class="close-btn" onclick={closeSearch} aria-label="Close search">
 				<X size={20} />
@@ -410,12 +409,6 @@
 	}
 
 	@media (max-width: 768px) {
-		.search-overlay {
-			padding-top: 2rem;
-			padding-left: 1rem;
-			padding-right: 1rem;
-		}
-
 		.search-trigger {
 			max-width: none;
 		}

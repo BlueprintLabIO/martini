@@ -24,7 +24,7 @@ martini-kit SDK is open source under the MIT license.
 
 ### Who maintains martini-kit SDK?
 
-martini-kit SDK is maintained by the core team and community contributors. See [CONTRIBUTORS.md](https://github.com/yourusername/martini-kit/blob/main/CONTRIBUTORS.md) for the full list.
+martini-kit SDK is maintained by the core team and community contributors. See [CONTRIBUTORS.md](https://github.com/BlueprintLabIO/martini/blob/main/CONTRIBUTORS.md) for the full list.
 
 ## Architecture Questions
 
@@ -361,7 +361,7 @@ Everyone can contribute!
 
 ### Where do I report bugs?
 
-[Open an issue on GitHub](https://github.com/yourusername/martini-kit/issues) with:
+[Open an issue on GitHub](https://github.com/BlueprintLabIO/martini/issues) with:
 - Steps to reproduce
 - Expected vs actual behavior
 - Browser and OS
@@ -369,7 +369,7 @@ Everyone can contribute!
 
 ### How do I request features?
 
-Post in [GitHub Discussions](https://github.com/yourusername/martini-kit/discussions/categories/feature-requests):
+Post in [GitHub Discussions](https://github.com/BlueprintLabIO/martini/discussions/categories/feature-requests):
 - Describe the feature
 - Explain the use case
 - Discuss implementation ideas
@@ -377,6 +377,6 @@ Post in [GitHub Discussions](https://github.com/yourusername/martini-kit/discuss
 ## Still Have Questions?
 
 - **Documentation**: Browse the [guides](/docs/latest/guides/phaser-integration) and [API reference](/docs/latest/api/core/game-runtime)
-- **Community**: Ask in [GitHub Discussions](https://github.com/yourusername/martini-kit/discussions)
-- **Issues**: Report bugs on [GitHub Issues](https://github.com/yourusername/martini-kit/issues)
+- **Community**: Ask in [GitHub Discussions](https://github.com/BlueprintLabIO/martini/discussions)
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues)
 - **Examples**: Check out the [example games](/docs/latest/examples/overview)

@@ -1,7 +1,7 @@
-import type { martini-kitIDEConfig } from '@martini-kit/ide';
+import type { MartiniKitIDEConfig } from '@martini-kit/ide';
 
 // Paddle Battle - Classic multiplayer Pong (restored from the legacy preview source)
-const config: martini-kitIDEConfig = {
+const config: MartiniKitIDEConfig = {
 	files: {
 		'/src/game.ts': `import { defineGame, createPlayerManager, createInputAction } from '@martini-kit/core';
 

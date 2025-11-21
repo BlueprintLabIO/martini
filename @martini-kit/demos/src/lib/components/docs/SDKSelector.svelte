@@ -4,6 +4,8 @@
 
 	let isOpen = $state(false);
 	let dropdownRef: HTMLDivElement | null = null;
+	const dropdownId = `sdk-dropdown-${Math.random().toString(36).slice(2, 8)}`;
+	const labelId = `${dropdownId}-label`;
 
 	const sdkOptions: SDK[] = ['phaser', 'core', 'unity', 'unreal', 'godot'];
 
@@ -28,13 +30,15 @@
 </script>
 
 <div class="sdk-selector" bind:this={dropdownRef}>
-	<label class="sdk-label">SDK:</label>
+	<label class="sdk-label" for={dropdownId} id={labelId}>SDK:</label>
 
 	<button
 		class="sdk-dropdown-trigger"
+		id={dropdownId}
 		onclick={() => isOpen = !isOpen}
 		aria-label="Select SDK"
 		aria-expanded={isOpen}
+		aria-labelledby={labelId}
 	>
 		<span class="sdk-current">{SDK_LABELS[$selectedSDK]}</span>
 		<ChevronDown size={16} class={isOpen ? 'rotated' : ''} />

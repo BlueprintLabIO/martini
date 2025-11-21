@@ -441,8 +441,8 @@ import type { A } from './types';
 If you can't find a solution here:
 
 1. **Check the [Debugging Guide](/docs/latest/troubleshooting/debugging)** for detailed debugging steps
-2. **Search [GitHub Issues](https://github.com/yourusername/martini-kit/issues)** for similar problems
-3. **Ask in [GitHub Discussions](https://github.com/yourusername/martini-kit/discussions)**
+2. **Search [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues)** for similar problems
+3. **Ask in [GitHub Discussions](https://github.com/BlueprintLabIO/martini/discussions)**
 4. **Open a new issue** with a minimal reproduction
 
 When asking for help, include:

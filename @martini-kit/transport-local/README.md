@@ -1,114 +1,64 @@
 # @martini-kit/transport-local
 
-In-memory transport for same-page multiplayer demos and testing.
+**Multiplayer without networking.**
 
-## Why?
+Local transport for martini-kit that enables testing and development of multiplayer games without any network infrastructure.
 
-When building demos or testing multiplayer game logic, you often want to run multiple game instances on the same page without the complexity of WebRTC signaling, STUN servers, or network latency.
-
-`LocalTransport` provides instant, synchronous communication between game instances in the same JavaScript context.
-
-## Use Cases
-
-- **Side-by-side demos**: Show host and client views simultaneously
-- **Unit testing**: Test multiplayer logic without network mocking
-- **Local development**: Fast iteration without opening multiple tabs
-- **Documentation**: Interactive examples in docs
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/BlueprintLabIO/martini/blob/main/LICENSE)
+[![npm](https://img.shields.io/npm/v/@martini-kit/transport-local)](https://www.npmjs.com/package/@martini-kit/transport-local)
 
 ## Features
 
-- ✅ Zero latency - messages delivered synchronously
-- ✅ No network setup - works offline
-- ✅ Instant peer discovery - no async connection phase
-- ✅ Same API as other transports - drop-in replacement
-- ✅ Automatic cleanup - garbage collected with instances
+- **Zero network setup** - Test multiplayer games instantly
+- **Multiple instances** - Run multiple game instances in same process/page
+- **Perfect for development** - Fast iteration without server setup
+- **Perfect for demos** - Show multiplayer features without deployment
+- **Deterministic** - Predictable behavior for testing
 
 ## Installation
 
 ```bash
-pnpm add @martini-kit/transport-local
+npm install @martini-kit/transport-local @martini-kit/core
 ```
 
-## Usage
+## Quick Start
 
 ```typescript
+import { defineGame, GameRuntime } from '@martini-kit/core';
 import { LocalTransport } from '@martini-kit/transport-local';
-import { GameRuntime } from '@martini-kit/core';
 
-// Create two instances in the same room
-const hostTransport = new LocalTransport({
-  roomId: 'demo-room',
-  isHost: true,
+const game = defineGame({
+  initialState: { count: 0 },
+  actions: {
+    increment: (state) => { state.count++; }
+  }
 });
 
-const clientTransport = new LocalTransport({
-  roomId: 'demo-room',
-  isHost: false,
-});
+// Create two local instances
+const transport1 = new LocalTransport({ roomId: 'test-room' });
+const transport2 = new LocalTransport({ roomId: 'test-room' });
 
-// They instantly see each other - no waiting!
-console.log(hostTransport.getPeerIds());   // [clientTransport.playerId]
-console.log(clientTransport.getPeerIds()); // [hostTransport.playerId]
+const runtime1 = new GameRuntime(game, transport1, { isHost: true });
+const runtime2 = new GameRuntime(game, transport2, { isHost: false });
 
-// Create game runtimes
-const hostRuntime = new GameRuntime(gameLogic, hostTransport, {
-  isHost: true,
-  playerIds: [hostTransport.getPlayerId()],
-});
+// Connect them
+await transport1.connect();
+await transport2.connect();
 
-const clientRuntime = new GameRuntime(gameLogic, clientTransport, {
-  isHost: false,
-  playerIds: [clientTransport.getPlayerId()],
-});
+// Dispatch action from host
+runtime1.dispatchAction('increment', {});
 
-// Messages are delivered instantly
-hostRuntime.submitAction('move', { x: 100, y: 200 });
-// Client sees the update immediately - no network delay!
+// Both runtimes see the change!
+console.log(runtime1.state.count); // 1
+console.log(runtime2.state.count); // 1
 ```
-
-## API
-
-### `new LocalTransport(config)`
-
-```typescript
-interface LocalTransportConfig {
-  roomId: string;      // Room identifier - instances with same roomId connect
-  playerId?: string;   // Optional custom player ID (auto-generated if omitted)
-  isHost: boolean;     // Whether this instance is the authoritative host
-}
-```
-
-### Methods
-
-All standard `Transport` interface methods:
-
-- `send(message, targetId?)` - Send message to all peers or specific peer
-- `onMessage(handler)` - Listen for incoming messages
-- `onPeerJoin(handler)` - Called when peer joins (instant)
-- `onPeerLeave(handler)` - Called when peer leaves
-- `onHostDisconnect(handler)` - Called when host disconnects
-- `getPlayerId()` - Get this instance's player ID
-- `getPeerIds()` - Get all peer IDs in the room
-- `isHost()` - Check if this is the host
-- `disconnect()` - Leave the room
-
-## Comparison with Other Transports
-
-| Feature | LocalTransport | TrysteroTransport |
-|---------|---------------|-------------------|
-| Latency | 0ms (synchronous) | 10-100ms (network) |
-| Setup | Instant | WebRTC signaling required |
-| Use case | Same-page demos/tests | Real multiplayer |
-| Offline | ✅ Yes | ❌ Needs STUN server |
-| Cross-tab | ❌ No | ✅ Yes |
-
-## When NOT to Use
-
-Don't use `LocalTransport` for:
-- Real multiplayer games (use `@martini-kit/transport-trystero` or custom transport)
-- Cross-tab/cross-device communication
-- Testing network latency/lag scenarios
 
 ## License
 
-MIT
+Apache-2.0 © Blueprint Lab
+
+## Links
+
+- [GitHub Repository](https://github.com/BlueprintLabIO/martini)
+- [Report Issues](https://github.com/BlueprintLabIO/martini/issues)
+- [NPM Package](https://www.npmjs.com/package/@martini-kit/transport-local)

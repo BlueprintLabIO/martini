@@ -1,7 +1,6 @@
 {
 	"name": "@martini-kit/ide",
 	"version": "0.1.0",
-	"private": true,
 	"description": "Embeddable multiplayer game IDE with dual-view local testing",
 	"scripts": {
 		"dev": "vite dev",
@@ -88,7 +87,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/BlueprintLabIO/martini.git",
-    "directory": "@martini/ide"
+    "directory": "@martini-kit/ide"
   },
   "homepage": "https://github.com/BlueprintLabIO/martini",
   "bugs": {

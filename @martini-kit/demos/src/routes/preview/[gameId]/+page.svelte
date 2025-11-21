@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import martini-kitIDE from '@martini-kit/ide';
+	import MartiniIDE from '@martini-kit/ide';
 	import { getIDEConfig, getGameMetadata } from '$lib/games/ide-configs-map';
-	import type { martini-kitIDEConfig } from '@martini-kit/ide';
+	import type { MartiniKitIDEConfig } from '@martini-kit/ide';
 
 	const gameId = $derived($page.params.gameId || '');
 	const originalConfig = $derived(getIDEConfig(gameId));
 	const metadata = $derived(getGameMetadata(gameId));
 
-	let config = $state<martini-kitIDEConfig | null>(null);
+	let config = $state<MartiniKitIDEConfig | null>(null);
 	let showShareMenu = $state(false);
 	let shareUrl = $state('');
 	let copied = $state(false);
@@ -169,7 +169,7 @@
 		</header>
 
 		<div class="ide-container">
-			<martini-kitIDE {config} />
+			<MartiniIDE {config} />
 		</div>
 	</div>
 {:else}

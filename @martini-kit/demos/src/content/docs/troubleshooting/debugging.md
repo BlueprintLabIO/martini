@@ -469,7 +469,7 @@ If you're stuck:
 2. Include console errors
 3. Share relevant code
 4. Describe expected vs actual behavior
-5. Post in [GitHub Discussions](https://github.com/yourusername/martini-kit/discussions)
+5. Post in [GitHub Discussions](https://github.com/BlueprintLabIO/martini/discussions)
 
 ---
 

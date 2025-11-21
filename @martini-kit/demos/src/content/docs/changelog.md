@@ -148,8 +148,8 @@ martini-kit SDK follows semantic versioning:
 
 ## Stay Updated
 
-- **GitHub Releases**: [github.com/yourusername/martini-kit/releases](https://github.com/yourusername/martini-kit/releases)
-- **Discussions**: [github.com/yourusername/martini-kit/discussions](https://github.com/yourusername/martini-kit/discussions)
+- **GitHub Releases**: [github.com/BlueprintLabIO/martini/releases](https://github.com/BlueprintLabIO/martini/releases)
+- **Discussions**: [github.com/BlueprintLabIO/martini/discussions](https://github.com/BlueprintLabIO/martini/discussions)
 - **Twitter**: [@martini-kit_sdk](https://twitter.com/martini-kit_sdk) _(if available)_
 
 ## Contributing

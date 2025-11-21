@@ -8,13 +8,6 @@ import { loadSandpackClient, type SandpackClient, type SandpackMessage } from '@
 import type { VirtualFileSystem } from './VirtualFS';
 import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
 
-// Import pre-bundled ESM modules (single file per package)
-import coreBrowserBundle from '@martini-kit/core/dist/browser.js?raw';
-import phaserBrowserBundle from '@martini-kit/phaser/dist/browser.js?raw';
-import localTransportBundle from '@martini-kit/transport-local/dist/browser.js?raw';
-import iframeBridgeBundle from '@martini-kit/transport-iframe-bridge/dist/browser.js?raw';
-import devtoolsBrowserBundle from '@martini-kit/devtools/dist/martini-kit-devtools.browser.js?raw';
-
 export interface SandpackManagerOptions {
 	/** Container element for the Sandpack iframe */
 	container: HTMLElement;
@@ -132,10 +125,10 @@ export class SandpackManager {
 		for (const path of vfs.getFilePaths()) {
 			let content = vfs.readFile(path);
 			if (content !== undefined) {
-				// Inject __martini-kit_CONFIG__ and DevTools bridge at the top of the entry file
+				// Inject __MARTINI_KIT_CONFIG__ and DevTools bridge at the top of the entry file
 				if (path === entryPoint) {
 					const configSetup = `// Injected by martini-kit IDE - setup config before any imports
-window.__martini-kit_CONFIG__ = ${JSON.stringify({
+window.__MARTINI_KIT_CONFIG__ = ${JSON.stringify({
 	transport: {
 		type: this.options.transportType,
 		roomId: this.options.roomId,
@@ -151,62 +144,23 @@ window.__martini-kit_CONFIG__ = ${JSON.stringify({
 			}
 		}
 
-		// 2. Inject pre-bundled martini-kit SDK packages as single ESM files
-		files['/node_modules/@martini-kit/core/index.js'] = { code: coreBrowserBundle };
-		files['/node_modules/@martini-kit/core/package.json'] = {
-			code: JSON.stringify({ name: '@martini-kit/core', version: '2.0.0', main: './index.js', type: 'module' })
-		};
-
-		files['/node_modules/@martini-kit/phaser/index.js'] = { code: phaserBrowserBundle };
-		files['/node_modules/@martini-kit/phaser/package.json'] = {
-			code: JSON.stringify({ name: '@martini-kit/phaser', version: '2.0.0', main: './index.js', type: 'module' })
-		};
-
-		files['/node_modules/@martini-kit/transport-local/index.js'] = { code: localTransportBundle };
-		files['/node_modules/@martini-kit/transport-local/package.json'] = {
-			code: JSON.stringify({ name: '@martini-kit/transport-local', version: '1.0.0', main: './index.js', type: 'module' })
-		};
-
-		files['/node_modules/@martini-kit/transport-iframe-bridge/index.js'] = { code: iframeBridgeBundle };
-		files['/node_modules/@martini-kit/transport-iframe-bridge/package.json'] = {
-			code: JSON.stringify({ name: '@martini-kit/transport-iframe-bridge', version: '2.0.0', main: './index.js', type: 'module' })
-		};
-
-		// 3. Inject DevTools bundle
-		files['/node_modules/@martini-kit/devtools/index.js'] = { code: devtoolsBrowserBundle };
-		files['/node_modules/@martini-kit/devtools/package.json'] = {
-			code: JSON.stringify({ name: '@martini-kit/devtools', version: '2.0.0', main: './index.js', type: 'module' })
-		};
-
-		// 4. Add Phaser stub module (Phaser loaded globally via script tag in HTML)
-		files['/node_modules/phaser/package.json'] = {
-			code: JSON.stringify({
-				name: 'phaser',
-				version: '3.80.1',
-				main: './index.js',
-				module: './index.js'
-			})
-		};
-
-		// Create a module that exports the global Phaser object
-		files['/node_modules/phaser/index.js'] = {
-			code: `
-// Phaser is loaded globally via script tag in index.html
-// This stub module just exports the global Phaser object
-export default window.Phaser;
-			`.trim()
-		};
-
-		// 5. Add root package.json (required by Sandpack)
+		// 2. Add root package.json (required by Sandpack)
 		files['/package.json'] = {
 			code: JSON.stringify({
 				name: 'martini-kit-game',
 				version: '1.0.0',
-				dependencies: {}
+				dependencies: {
+					'@martini-kit/core': '^0.1.0',
+					'@martini-kit/phaser': '^0.1.0',
+					'@martini-kit/devtools': '^0.1.0',
+					'@martini-kit/transport-local': '^0.1.0',
+					'@martini-kit/transport-iframe-bridge': '^0.1.0',
+					phaser: '^3.80.1'
+				}
 			})
 		};
 
-		// 6. Add custom HTML template with Phaser loaded globally
+		// 3. Add custom HTML template (Phaser pulled from npm dependency)
 		files['/index.html'] = {
 			code: this.createHTMLTemplate()
 		};
@@ -269,15 +223,15 @@ export default window.Phaser;
 		for (const path of vfs.getFilePaths()) {
 			let content = vfs.readFile(path);
 			if (content !== undefined) {
-				// Inject __martini-kit_CONFIG__ and DevTools bridge at the top of the entry file
+				// Inject __MARTINI_KIT_CONFIG__ and DevTools bridge at the top of the entry file
 				if (path === entryPoint) {
 					const configSetup = `// Injected by martini-kit IDE - setup config before any imports
-window.__martini-kit_CONFIG__ = ${JSON.stringify({
-	transport: {
-		type: this.options.transportType,
-		roomId: this.options.roomId,
-		isHost: this.options.role === 'host'
-	}
+	window.__MARTINI_KIT_CONFIG__ = ${JSON.stringify({
+		transport: {
+			type: this.options.transportType,
+			roomId: this.options.roomId,
+			isHost: this.options.role === 'host'
+		}
 })};
 
 `;
@@ -288,35 +242,19 @@ window.__martini-kit_CONFIG__ = ${JSON.stringify({
 			}
 		}
 
-		// Re-inject pre-bundled martini-kit SDK packages
-		files['/node_modules/@martini-kit/core/index.js'] = { code: coreBrowserBundle };
-		files['/node_modules/@martini-kit/phaser/index.js'] = { code: phaserBrowserBundle };
-		files['/node_modules/@martini-kit/transport-local/index.js'] = { code: localTransportBundle };
-		files['/node_modules/@martini-kit/transport-iframe-bridge/index.js'] = { code: iframeBridgeBundle };
-		files['/node_modules/@martini-kit/devtools/index.js'] = { code: devtoolsBrowserBundle };
-
-		// Add Phaser stub module
-		files['/node_modules/phaser/package.json'] = {
-			code: JSON.stringify({
-				name: 'phaser',
-				version: '3.80.1',
-				main: './index.js',
-				module: './index.js'
-			})
-		};
-
-		files['/node_modules/phaser/index.js'] = {
-			code: `
-export default window.Phaser;
-			`.trim()
-		};
-
 		// Add root package.json
 		files['/package.json'] = {
 			code: JSON.stringify({
 				name: 'martini-kit-game',
 				version: '1.0.0',
-				dependencies: {}
+				dependencies: {
+					'@martini-kit/core': '^0.1.0',
+					'@martini-kit/phaser': '^0.1.0',
+					'@martini-kit/devtools': '^0.1.0',
+					'@martini-kit/transport-local': '^0.1.0',
+					'@martini-kit/transport-iframe-bridge': '^0.1.0',
+					phaser: '^3.80.1'
+				}
 			})
 		};
 
@@ -447,72 +385,53 @@ export default window.Phaser;
 
 		return `
 // ===== martini-kit DevTools Bridge =====
-// Auto-injected by martini-kitIDE - forwards runtime data to parent window
-import { StateInspector } from '/node_modules/@martini-kit/devtools/index.js';
-import * as martini-kitPhaser from '/node_modules/@martini-kit/phaser/index.js';
+// Auto-injected by martini-kit IDE - forwards runtime data to parent window
+import { StateInspector } from '@martini-kit/devtools';
+import * as MartiniKitPhaser from '@martini-kit/phaser';
 
-// DevTools state (can be toggled at runtime)
 let devToolsEnabled = ${initiallyEnabled};
 let capturedRuntime = null;
 
-// Create global inspector (accessible from game code)
-// Reduced limits for memory safety: prevents tab freezing with long-running games
-window.__martini-kit_INSPECTOR__ = new StateInspector({
-  maxSnapshots: 200,        // Down from 500: ~3-5 min history at 250ms interval
-  maxActions: 1000,          // Down from 2000: reasonable action history
-  snapshotIntervalMs: 250,   // Keep at 250ms (4 snapshots/sec)
+window.__MARTINI_KIT_INSPECTOR__ = new StateInspector({
+  maxSnapshots: 200,
+  maxActions: 1000,
+  snapshotIntervalMs: 250,
   actionAggregationWindowMs: 200,
   ignoreActions: ['tick'],
-  maxMemoryBytes: 30 * 1024 * 1024  // 30MB hard limit to prevent tab freeze
+  maxMemoryBytes: 30 * 1024 * 1024
 });
 
-// Listen for enable/disable commands from parent
 window.addEventListener('message', (event) => {
   if (event.data?.type === 'martini-kit:devtools:enable') {
     if (!devToolsEnabled) {
       devToolsEnabled = true;
-      console.log('[martini-kit DevTools] Enabled');
-
-      // If we already captured the runtime, attach inspector now
       if (capturedRuntime) {
-        window.__martini-kit_INSPECTOR__.attach(capturedRuntime);
-        console.log('[martini-kit DevTools] Inspector attached to runtime');
+        window.__MARTINI_KIT_INSPECTOR__.attach(capturedRuntime);
       }
     }
   } else if (event.data?.type === 'martini-kit:devtools:disable') {
     if (devToolsEnabled) {
       devToolsEnabled = false;
-      console.log('[martini-kit DevTools] Disabled');
-
-      // Detach inspector to stop collecting data
       if (capturedRuntime) {
-        window.__martini-kit_INSPECTOR__.detach();
-        console.log('[martini-kit DevTools] Inspector detached from runtime');
+        window.__MARTINI_KIT_INSPECTOR__.detach();
       }
     }
   } else if (event.data?.type === 'martini-kit:devtools:pause') {
-    window.__martini-kit_INSPECTOR__.setPaused(true);
+    window.__MARTINI_KIT_INSPECTOR__.setPaused(true);
   } else if (event.data?.type === 'martini-kit:devtools:resume') {
-    window.__martini-kit_INSPECTOR__.setPaused(false);
+    window.__MARTINI_KIT_INSPECTOR__.setPaused(false);
   }
 });
 
-// Intercept initializeGame to capture runtime when user calls it
-const originalInitializeGame = martini-kitPhaser.initializeGame;
-martini-kitPhaser.initializeGame = function(...args) {
-  // Call original function
+const originalInitializeGame = MartiniKitPhaser.initializeGame;
+MartiniKitPhaser.initializeGame = function(...args) {
   const result = originalInitializeGame.apply(this, args);
-
-  // Store runtime reference
   capturedRuntime = result.runtime;
 
-  // Only attach inspector if DevTools is enabled
   if (devToolsEnabled) {
-    window.__martini-kit_INSPECTOR__.attach(result.runtime);
-    console.log('[martini-kit DevTools] Inspector attached to runtime');
+    window.__MARTINI_KIT_INSPECTOR__.attach(result.runtime);
   }
 
-  // Batch buffers for postMessage optimization
   const stateSnapshotBatch = [];
   const actionBatch = [];
   let flushScheduled = false;
@@ -520,7 +439,6 @@ martini-kitPhaser.initializeGame = function(...args) {
   function scheduleFlush() {
     if (flushScheduled) return;
     flushScheduled = true;
-
     requestAnimationFrame(() => {
       if (stateSnapshotBatch.length > 0) {
         window.parent.postMessage({
@@ -528,41 +446,32 @@ martini-kitPhaser.initializeGame = function(...args) {
           snapshots: stateSnapshotBatch.splice(0)
         }, '*');
       }
-
       if (actionBatch.length > 0) {
         window.parent.postMessage({
           type: 'martini-kit:devtools:action:batch',
           actions: actionBatch.splice(0)
         }, '*');
       }
-
       flushScheduled = false;
     });
   }
 
-  // Forward state snapshots to parent window (batched)
-  window.__martini-kit_INSPECTOR__.onStateChange((snapshot) => {
+  window.__MARTINI_KIT_INSPECTOR__.onStateChange((snapshot) => {
     if (devToolsEnabled) {
       stateSnapshotBatch.push(snapshot);
       scheduleFlush();
     }
   });
 
-  // Forward actions to parent window (batched)
-  window.__martini-kit_INSPECTOR__.onAction((action) => {
+  window.__MARTINI_KIT_INSPECTOR__.onAction((action) => {
     if (devToolsEnabled) {
       actionBatch.push(action);
       scheduleFlush();
     }
   });
 
-  // Return result to user code
   return result;
 };
-
-console.log('[martini-kit DevTools] Bridge initialized (enabled: ${initiallyEnabled})');
-// ===== End DevTools Bridge =====
-
 `;
 	}
 

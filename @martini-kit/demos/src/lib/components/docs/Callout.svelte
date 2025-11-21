@@ -16,12 +16,12 @@
 		danger: AlertCircle
 	};
 
-	const Icon = icons[type];
+	const Icon = $derived(icons[type]);
 </script>
 
 <div class="callout callout-{type}">
 	<div class="callout-header">
-		<svelte:component this={Icon} size={20} />
+		<Icon size={20} />
 		{#if title}
 			<strong>{title}</strong>
 		{/if}

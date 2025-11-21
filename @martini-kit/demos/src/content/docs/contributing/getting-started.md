@@ -22,7 +22,7 @@ Before you begin, make sure you have the following installed:
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/martini-kit.git
+git clone https://github.com/BlueprintLabIO/martini.git
 cd martini-kit
 ```
 

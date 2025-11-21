@@ -83,7 +83,7 @@ export const paddleBattleGame = defineGame({
 
 ### Try It
 - [Play Demo](/demo/paddle-battle)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/paddle-battle)
+- [View Source](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/paddle-battle)
 
 ---
 
@@ -142,7 +142,7 @@ export const fireAndIceGame = defineGame({
 
 ### Try It
 - [Play Demo](/demo/fire-and-ice)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/fire-and-ice)
+- [View Source](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/fire-and-ice)
 
 ---
 
@@ -245,7 +245,7 @@ hit: {
 
 ### Try It
 - [Play Demo](/demo/arena-blaster)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/arena-blaster)
+- [View Source](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/arena-blaster)
 
 ---
 
@@ -271,7 +271,7 @@ A physics-driven multiplayer battle game where players control blobs that can pu
 
 ### Try It
 - [Play Demo](/demo/blob-battle)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/blob-battle)
+- [View Source](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/blob-battle)
 
 ---
 
@@ -298,7 +298,7 @@ A racing game with lap tracking, checkpoints, and competitive leaderboards.
 
 ### Try It
 - [Play Demo](/demo/circuit-racer)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/circuit-racer)
+- [View Source](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/circuit-racer)
 
 ---
 
@@ -324,7 +324,7 @@ A turn-based puzzle game where players take turns matching tiles to score points
 
 ### Try It
 - [Play Demo](/demo/tile-matcher)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/tile-matcher)
+- [View Source](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/tile-matcher)
 
 ---
 
@@ -334,7 +334,7 @@ A turn-based puzzle game where players take turns matching tiles to score points
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/martini-kit.git
+   git clone https://github.com/BlueprintLabIO/martini.git
    cd martini-kit
    ```
 

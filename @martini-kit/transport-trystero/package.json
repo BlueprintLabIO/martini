@@ -10,7 +10,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/BlueprintLabIO/martini.git",
-    "directory": "@martini/transport-trystero"
+    "directory": "@martini-kit/transport-trystero"
   },
   "homepage": "https://github.com/BlueprintLabIO/martini",
   "bugs": {

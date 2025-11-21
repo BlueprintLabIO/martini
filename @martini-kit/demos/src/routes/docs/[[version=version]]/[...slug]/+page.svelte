@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { Copy, Check, PencilLine, FileText } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import PrevNextNav from '$lib/components/docs/PrevNextNav.svelte';
@@ -6,8 +6,8 @@
 	let { data } = $props();
 
 	let copiedMarkdown = $state(false);
-	let copyButtonContainer = null;
-	let articleElement = null;
+	let copyButtonContainer = $state<HTMLElement | null>(null);
+	let articleElement = $state<HTMLElement | null>(null);
 
 	async function copyAsMarkdown() {
 		try {

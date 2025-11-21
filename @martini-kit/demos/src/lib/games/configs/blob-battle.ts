@@ -1,7 +1,7 @@
-import type { martini-kitIDEConfig } from '@martini-kit/ide';
+import type { MartiniKitIDEConfig } from '@martini-kit/ide';
 
 // Blob Battle - Agar.io-style multiplayer (restored from the legacy preview source)
-const config: martini-kitIDEConfig = {
+const config: MartiniKitIDEConfig = {
 	files: {
 		'/src/game.ts': `import { defineGame, createPlayerManager, createTickAction } from '@martini-kit/core';
 
