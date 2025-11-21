@@ -2,34 +2,26 @@
 	import { goto } from '$app/navigation';
 	import { gameMetadata } from '$lib/games/ide-configs-map';
 
-	// Separate games by category
-	const examples = Object.entries(gameMetadata)
-		.filter(([_, meta]) => meta.category === 'example')
-		.map(([id, meta]) => ({ id, ...meta }));
-
-	const templates = Object.entries(gameMetadata)
-		.filter(([_, meta]) => meta.category === 'template')
-		.map(([id, meta]) => ({ id, ...meta }));
+	const games = Object.entries(gameMetadata).map(([id, meta]) => ({ id, ...meta }));
 </script>
 
 <svelte:head>
-	<title>Games & Templates - Martini</title>
+	<title>Games - Martini</title>
 </svelte:head>
 
 <div class="preview-page">
 	<header>
 		<div class="container">
-			<h1>Interactive Games & Templates</h1>
+			<h1>Interactive Games</h1>
 			<p>
-				Explore full-featured example games or start from a template. All games run in your browser
-				with live code editing, dual-player preview, and shareable links.
+				Explore full-featured multiplayer games. All games run in your browser with live code
+				editing, dual-player preview, and shareable links.
 			</p>
 		</div>
 	</header>
 
 	<main>
 		<div class="container">
-			<!-- Example Games Section -->
 			<section class="section">
 				<div class="section-header">
 					<h2>Example Games</h2>
@@ -37,7 +29,7 @@
 				</div>
 
 				<div class="games-grid">
-					{#each examples as game (game.id)}
+					{#each games as game (game.id)}
 						<button class="game-card" onclick={() => goto(`/preview/${game.id}`)}>
 							<div class="card-header">
 								<h3>{game.title}</h3>
@@ -54,32 +46,6 @@
 				</div>
 			</section>
 
-			<!-- Templates Section -->
-			<section class="section">
-				<div class="section-header">
-					<h2>Starter Templates</h2>
-					<p>Ready-to-customize templates to jumpstart your game development</p>
-				</div>
-
-				<div class="games-grid">
-					{#each templates as template (template.id)}
-						<button class="game-card" onclick={() => goto(`/preview/${template.id}`)}>
-							<div class="icon">{template.icon || '🎮'}</div>
-							<div class="card-header">
-								<h3>{template.title}</h3>
-								{#if template.difficulty}
-									<span class="badge badge-{template.difficulty}">{template.difficulty}</span>
-								{/if}
-							</div>
-							<p class="description">{template.description}</p>
-							<div class="action">
-								<span class="arrow">Open Template →</span>
-							</div>
-						</button>
-					{/each}
-				</div>
-			</section>
-
 			<!-- Info Section -->
 			<section class="info-section">
 				<h2>What Can You Do Here?</h2>
@@ -87,7 +53,7 @@
 					<div class="feature">
 						<div class="feature-icon">🎮</div>
 						<h3>Play & Experiment</h3>
-						<p>Try full-featured games or start with blank templates. Edit code and see changes instantly.</p>
+						<p>Try full-featured games and edit code to see changes instantly.</p>
 					</div>
 					<div class="feature">
 						<div class="feature-icon">👥</div>

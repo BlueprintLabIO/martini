@@ -13,7 +13,7 @@
 
 	const navLinks: NavLink[] = [
 		{ label: 'Home', href: '/' },
-		{ label: 'Games & Templates', href: '/preview' },
+		{ label: 'Games', href: '/preview' },
 		{ label: 'Docs', href: '/docs' },
 		{ label: 'GitHub', href: 'https://github.com/anthropics/martini', external: true }
 	];

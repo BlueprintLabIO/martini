@@ -888,7 +888,7 @@ var logger = new Logger("Martini");
 
 // src/PlayerManager.ts
 function createPlayerManager(config) {
-  const { factory, roles, spawnPoints } = config;
+  const { factory, roles, spawnPoints, worldBounds } = config;
   let playerCount = 0;
   const createPlayer = (playerId, index) => {
     let player = factory(playerId, index);
@@ -897,6 +897,15 @@ function createPlayerManager(config) {
     }
     if (roles && roles[index]) {
       player = { ...player, role: roles[index] };
+    }
+    if (worldBounds) {
+      const clamped = player;
+      if (typeof clamped.x === "number") {
+        clamped.x = Math.max(0, Math.min(worldBounds.width, clamped.x));
+      }
+      if (typeof clamped.y === "number") {
+        clamped.y = Math.max(0, Math.min(worldBounds.height, clamped.y));
+      }
     }
     return player;
   };

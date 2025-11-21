@@ -80,10 +80,18 @@ var IframeBridgeTransport = class {
     this.messageHandler = null;
     this.isDisconnected = false;
     this.heartbeatInterval = null;
+    if (typeof globalThis !== "undefined" && globalThis.__MARTINI_TRANSPORT__) {
+      throw new Error(
+        "[IframeBridgeTransport] Transport already exists! Did you forget to call disconnect() before creating a new transport? Each iframe should only have ONE transport instance. If you see this error, check for: 1. Multiple initializeGame() calls without cleanup 2. Hot reload without proper transport.disconnect() 3. Navigation without cleanup (should be handled by beforeunload)"
+      );
+    }
     this.roomId = config.roomId;
     this.playerId = config.playerId || `player-${Math.random().toString(36).substring(2, 9)}`;
     this._isHost = config.isHost;
     this.metrics = new IframeBridgeTransportMetrics(this);
+    if (typeof globalThis !== "undefined") {
+      globalThis.__MARTINI_TRANSPORT__ = this;
+    }
     this.setupMessageListener();
     this.registerWithRelay();
     this.startHeartbeat();
@@ -261,6 +269,9 @@ var IframeBridgeTransport = class {
     this.metrics.setDisconnected();
     this.isDisconnected = true;
     this.stopHeartbeat();
+    if (typeof globalThis !== "undefined" && globalThis.__MARTINI_TRANSPORT__ === this) {
+      delete globalThis.__MARTINI_TRANSPORT__;
+    }
     if (window.parent && window.parent !== window) {
       const disconnectMessage = {
         type: "BRIDGE_PEER_LEAVE",

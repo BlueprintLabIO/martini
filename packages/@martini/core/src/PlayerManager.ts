@@ -62,6 +62,25 @@ export interface PlayerManagerConfig<TPlayer = any> {
    * If provided, automatically sets x/y coordinates
    */
   spawnPoints?: Array<{ x: number; y: number; [key: string]: any }>;
+
+  /**
+   * Optional: World bounds for spawn clamping
+   * Prevents players from spawning outside the playable area
+   * Automatically clamps x/y coordinates returned by factory
+   *
+   * @example
+   * ```ts
+   * createPlayerManager({
+   *   worldBounds: { width: 800, height: 600 },
+   *   factory: (playerId, index) => ({
+   *     x: index * 1000, // Would spawn off-screen
+   *     y: 300
+   *   })
+   *   // Result: x is automatically clamped to 0-800
+   * });
+   * ```
+   */
+  worldBounds?: { width: number; height: number };
 }
 
 export interface PlayerManager<TPlayer = any> {
@@ -125,7 +144,7 @@ export interface PlayerManager<TPlayer = any> {
 export function createPlayerManager<TPlayer = any>(
   config: PlayerManagerConfig<TPlayer>
 ): PlayerManager<TPlayer> {
-  const { factory, roles, spawnPoints } = config;
+  const { factory, roles, spawnPoints, worldBounds } = config;
 
   // Track current player count for role/spawn assignment
   let playerCount = 0;
@@ -141,6 +160,17 @@ export function createPlayerManager<TPlayer = any>(
     // Auto-assign role if roles are defined
     if (roles && roles[index]) {
       player = { ...player, role: roles[index] } as TPlayer;
+    }
+
+    // Clamp spawn position to world bounds (if worldBounds provided and player has x/y)
+    if (worldBounds) {
+      const clamped = player as any;
+      if (typeof clamped.x === 'number') {
+        clamped.x = Math.max(0, Math.min(worldBounds.width, clamped.x));
+      }
+      if (typeof clamped.y === 'number') {
+        clamped.y = Math.max(0, Math.min(worldBounds.height, clamped.y));
+      }
     }
 
     return player;

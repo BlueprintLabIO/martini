@@ -61,6 +61,27 @@ export interface PlayerManagerConfig<TPlayer = any> {
         y: number;
         [key: string]: any;
     }>;
+    /**
+     * Optional: World bounds for spawn clamping
+     * Prevents players from spawning outside the playable area
+     * Automatically clamps x/y coordinates returned by factory
+     *
+     * @example
+     * ```ts
+     * createPlayerManager({
+     *   worldBounds: { width: 800, height: 600 },
+     *   factory: (playerId, index) => ({
+     *     x: index * 1000, // Would spawn off-screen
+     *     y: 300
+     *   })
+     *   // Result: x is automatically clamped to 0-800
+     * });
+     * ```
+     */
+    worldBounds?: {
+        width: number;
+        height: number;
+    };
 }
 export interface PlayerManager<TPlayer = any> {
     /**

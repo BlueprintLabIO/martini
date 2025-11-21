@@ -1,3 +1,7 @@
+<script>
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
+</script>
+
 # Game Modes Recipes
 
 Common game mode patterns for multiplayer games. Copy and adapt these recipes for your game.
@@ -64,6 +68,48 @@ export const game = defineGame({
 
 ### Phaser Scene (Team UI)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using Phaser Helpers** - Automatic reactive UI updates:
+
+```typescript
+import { createPlayerHUD } from '@martini/phaser';
+
+create() {
+  // Create HUD with team info
+  const hud = createPlayerHUD(this.adapter, this, {
+    customStats: (state, playerId) => {
+      const player = state.players[playerId];
+      return `Team ${player.team.toUpperCase()} | Score: ${player.score}`;
+    }
+  });
+
+  // Add team scores display
+  this.add.text(400, 10, '', {
+    fontSize: '24px',
+    color: '#ffffff',
+  }).setOrigin(0.5, 0);
+
+  this.adapter.onChange((state) => {
+    this.teamScoreText.setText(
+      `RED: ${state.teamScores.red}  |  BLUE: ${state.teamScores.blue}`
+    );
+  });
+}
+```
+
+**Benefits:**
+- ✅ Automatic player info display
+- ✅ Built-in reactive updates
+- ✅ Less boilerplate
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Text Management** - Full control over UI:
+
 ```typescript
 create() {
   // Team scores
@@ -83,6 +129,14 @@ create() {
   });
 }
 ```
+
+**Benefits:**
+- ✅ Complete control over styling
+- ✅ Custom positioning
+- ✅ Direct state access
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Team assignment
@@ -214,6 +268,37 @@ export const game = defineGame({
 
 ### Phaser Scene (Timer UI)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using Phaser Helpers** - Automatic timer formatting:
+
+```typescript
+import { createGameTimer } from '@martini/phaser';
+
+create() {
+  // Create timer with automatic formatting and styling
+  const timer = createGameTimer(this.adapter, this, {
+    position: { x: 400, y: 10 },
+    format: 'mm:ss',
+    stateKey: 'matchTimeRemaining',
+    warningThreshold: 10000, // Flash red at 10 seconds
+    warningColor: '#ff0000',
+  });
+}
+```
+
+**Benefits:**
+- ✅ Automatic time formatting
+- ✅ Built-in warning states
+- ✅ One-line setup
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Timer Management** - Custom formatting:
+
 ```typescript
 create() {
   this.timerText = this.add.text(400, 10, '2:00', {
@@ -235,6 +320,14 @@ create() {
   });
 }
 ```
+
+**Benefits:**
+- ✅ Custom time formatting
+- ✅ Fine-grained control
+- ✅ Custom warning logic
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Match timer
@@ -429,6 +522,40 @@ export const game = defineGame({
 
 ### Phaser Scene (Zone Visual)
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using Phaser Helpers** - Reactive zone rendering:
+
+```typescript
+import { createCaptureZone } from '@martini/phaser';
+
+create() {
+  // Create capture zone with automatic state-based styling
+  const zone = createCaptureZone(this.adapter, this, {
+    x: 400,
+    y: 300,
+    radius: 100,
+    controlStateKey: 'controllingPlayer',
+    colors: {
+      neutral: 0xaaaaaa,
+      controlled: 0x00ff00,
+    },
+  });
+}
+```
+
+**Benefits:**
+- ✅ Automatic color switching
+- ✅ Built-in state reactivity
+- ✅ Minimal setup
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Zone Rendering** - Custom visuals:
+
 ```typescript
 create() {
   // Draw capture zone
@@ -445,6 +572,14 @@ create() {
   });
 }
 ```
+
+**Benefits:**
+- ✅ Custom visual effects
+- ✅ Direct Phaser control
+- ✅ Flexible styling
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Capture zone

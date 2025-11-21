@@ -221,6 +221,50 @@ const playerManager = createPlayerManager({
 });
 ```
 
+### With World Bounds (Spawn Clamping)
+
+Prevent players from spawning outside the playable area:
+
+```typescript
+const playerManager = createPlayerManager({
+  worldBounds: { width: 800, height: 600 },
+
+  factory: (playerId, index) => ({
+    x: index * 1000,  // ⚠️ Would spawn at x=0, x=1000, x=2000...
+    y: 300,
+    health: 100
+    // ✅ PlayerManager automatically clamps x to 0-800
+    // Result: x=0, x=800, x=800 (clamped)
+  })
+});
+```
+
+<Callout type="info">
+**Why clamp spawns?** If your factory uses math like `index * largeNumber`, players might spawn off-screen or outside world boundaries. The `worldBounds` option ensures all players spawn within valid coordinates.
+</Callout>
+
+**How it works:**
+- If player has `x` property → clamps to `0` to `worldBounds.width`
+- If player has `y` property → clamps to `0` to `worldBounds.height`
+- Does nothing if player doesn't have position properties
+- Works for both initial setup and late-joining players
+
+**Example - Deterministic spawn with safety:**
+```typescript
+const playerManager = createPlayerManager({
+  worldBounds: { width: 800, height: 600 },
+
+  factory: (playerId, index) => {
+    // Try to space players out, but clamp if too many players
+    const x = 100 + (index * 200);  // Might exceed 800
+    const y = 300;
+
+    return { x, y, health: 100 };
+    // PlayerManager ensures x is clamped to 0-800
+  }
+});
+```
+
 ---
 
 ### Using createHandlers()

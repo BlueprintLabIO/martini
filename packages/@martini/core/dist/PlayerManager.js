@@ -38,7 +38,7 @@
  * @returns PlayerManager instance
  */
 export function createPlayerManager(config) {
-    const { factory, roles, spawnPoints } = config;
+    const { factory, roles, spawnPoints, worldBounds } = config;
     // Track current player count for role/spawn assignment
     let playerCount = 0;
     const createPlayer = (playerId, index) => {
@@ -50,6 +50,16 @@ export function createPlayerManager(config) {
         // Auto-assign role if roles are defined
         if (roles && roles[index]) {
             player = { ...player, role: roles[index] };
+        }
+        // Clamp spawn position to world bounds (if worldBounds provided and player has x/y)
+        if (worldBounds) {
+            const clamped = player;
+            if (typeof clamped.x === 'number') {
+                clamped.x = Math.max(0, Math.min(worldBounds.width, clamped.x));
+            }
+            if (typeof clamped.y === 'number') {
+                clamped.y = Math.max(0, Math.min(worldBounds.height, clamped.y));
+            }
         }
         return player;
     };

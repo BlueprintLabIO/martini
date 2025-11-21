@@ -1,3 +1,7 @@
+<script>
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
+</script>
+
 # Optimization
 
 This guide covers performance optimization techniques for Martini multiplayer games, from state management to rendering and network efficiency.
@@ -139,17 +143,50 @@ runtime.submitAction('combatResult', {
 
 ### 2. Debounce High-Frequency Actions
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using InputManager Helper** - Automatic throttling:
+
 ```typescript
-// BAD - Submit every frame
+import { PhaserAdapter, InputManager } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // InputManager automatically throttles input submissions
+  this.inputManager = new InputManager(this.adapter, this, {
+    type: 'wasd-arrows',
+    actionName: 'move',
+    throttleMs: 50  // Only submit every 50ms (20 updates/second)
+  });
+
+  // That's it! Input is automatically throttled
+}
+```
+
+**Benefits:**
+- ✅ Automatic throttling
+- ✅ No manual timing logic
+- ✅ Optimized for performance
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Throttling** - Custom timing control:
+
+```typescript
+// BAD - Submit every frame (60 times per second!)
 update() {
   const keys = this.input.keyboard.createCursorKeys();
   runtime.submitAction('move', {
     left: keys.left.isDown,
     right: keys.right.isDown
-  }); // 60 times per second!
+  }); // Too many updates!
 }
 
-// GOOD - Throttle submissions
+// GOOD - Throttle submissions manually
 class GameScene extends Phaser.Scene {
   private lastMoveTime = 0;
   private moveDebounce = 50; // 20 updates per second
@@ -171,6 +208,14 @@ class GameScene extends Phaser.Scene {
   }
 }
 ```
+
+**Benefits:**
+- ✅ Precise throttle control
+- ✅ Custom timing logic
+- ✅ Conditional submission
+
+{/snippet}
+</CodeTabs>
 
 ### 3. Use Delta Compression for Movement
 
@@ -302,6 +347,40 @@ this.adapter.onChange((state) => {
 
 ### 1. Use Object Pooling
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using SpriteManager Helper** - Built-in pooling:
+
+```typescript
+import { PhaserAdapter, SpriteManager } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // SpriteManager automatically pools sprites
+  this.spriteManager = new SpriteManager(this.adapter, this, {
+    spriteKey: 'projectile',
+    stateKey: 'projectiles',
+    poolSize: 100  // Pre-allocate 100 sprites
+  });
+
+  // That's it! Pooling is automatic
+  // Sprites are reused as state.projectiles changes
+}
+```
+
+**Benefits:**
+- ✅ Automatic sprite pooling
+- ✅ No manual acquire/release
+- ✅ Optimized for performance
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Pooling** - Custom pool implementation:
+
 ```typescript
 class SpritePool {
   private pool: Phaser.GameObjects.Sprite[] = [];
@@ -355,6 +434,14 @@ update() {
   }
 }
 ```
+
+**Benefits:**
+- ✅ Full control over pooling logic
+- ✅ Custom acquisition strategy
+- ✅ Flexible pool management
+
+{/snippet}
+</CodeTabs>
 
 ### 2. Use Texture Atlases
 

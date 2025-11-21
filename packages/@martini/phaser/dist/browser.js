@@ -2141,6 +2141,30 @@ var PhaserAdapter = class {
     return this.scene;
   }
   /**
+   * Convert pointer screen coordinates to world coordinates
+   *
+   * IMPORTANT: Always use this helper (or pointer.worldX/worldY directly)
+   * when handling pointer input for game logic. Using pointer.x/y will break
+   * when the camera is scrolled/following a player.
+   *
+   * @param pointer - Phaser pointer object from input events
+   * @returns World coordinates { x: number, y: number }
+   *
+   * @example
+   * ```ts
+   * this.input.on('pointerdown', (pointer) => {
+   *   const worldPos = adapter.pointerToWorld(pointer);
+   *   runtime.submitAction('move', { x: worldPos.x, y: worldPos.y });
+   * });
+   * ```
+   */
+  pointerToWorld(pointer) {
+    return {
+      x: pointer.worldX,
+      y: pointer.worldY
+    };
+  }
+  /**
    * FIX #2: Wait for required metadata properties before executing callback
    *
    * This is a shared utility that prevents race conditions when creating UI/sprites
@@ -3132,6 +3156,11 @@ function initializeGame(config) {
         if ("disconnect" in transport && typeof transport.disconnect === "function") {
           transport.disconnect();
         }
+      }
+    });
+    window.addEventListener("beforeunload", () => {
+      if ("disconnect" in transport && typeof transport.disconnect === "function") {
+        transport.disconnect();
       }
     });
   }

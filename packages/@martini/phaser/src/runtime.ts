@@ -122,9 +122,12 @@ export function initializeGame<TState = any>(
     (window as any).__MARTINI_IDE__.registerRuntime(runtime);
   }
 
-  // Listen for transport disconnect message from parent (IDE cleanup)
-  // This ensures proper cleanup when navigating away from preview pages
+  // Auto-cleanup: Disconnect transport when navigating away
+  // Two mechanisms for defense-in-depth:
+  // 1. Message from parent (IDE-initiated cleanup)
+  // 2. beforeunload event (direct browser navigation)
   if (typeof window !== 'undefined') {
+    // Listen for IDE cleanup message
     window.addEventListener('message', (event) => {
       if (event.data?.type === 'martini:transport:disconnect') {
         // Disconnect transport to notify relay and remove stale peers
@@ -132,6 +135,13 @@ export function initializeGame<TState = any>(
         if ('disconnect' in transport && typeof transport.disconnect === 'function') {
           transport.disconnect();
         }
+      }
+    });
+
+    // Fallback: Disconnect on browser navigation/close
+    window.addEventListener('beforeunload', () => {
+      if ('disconnect' in transport && typeof transport.disconnect === 'function') {
+        transport.disconnect();
       }
     });
   }

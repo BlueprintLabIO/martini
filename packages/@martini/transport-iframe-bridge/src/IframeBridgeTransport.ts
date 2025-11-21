@@ -162,12 +162,31 @@ export class IframeBridgeTransport implements Transport {
   private visibilityHandler?: () => void;
 
   constructor(config: IframeBridgeConfig) {
+    // Transport lifecycle guardrail: Prevent double-initialization
+    // This catches bugs where transport is created multiple times without cleanup
+    if (typeof globalThis !== 'undefined' && (globalThis as any).__MARTINI_TRANSPORT__) {
+      throw new Error(
+        '[IframeBridgeTransport] Transport already exists! ' +
+        'Did you forget to call disconnect() before creating a new transport? ' +
+        'Each iframe should only have ONE transport instance. ' +
+        'If you see this error, check for: ' +
+        '1. Multiple initializeGame() calls without cleanup ' +
+        '2. Hot reload without proper transport.disconnect() ' +
+        '3. Navigation without cleanup (should be handled by beforeunload)'
+      );
+    }
+
     this.roomId = config.roomId;
     this.playerId = config.playerId || `player-${Math.random().toString(36).substring(2, 9)}`;
     this._isHost = config.isHost;
 
     // Initialize metrics
     this.metrics = new IframeBridgeTransportMetrics(this);
+
+    // Register this transport globally for guardrail
+    if (typeof globalThis !== 'undefined') {
+      (globalThis as any).__MARTINI_TRANSPORT__ = this;
+    }
 
     this.setupMessageListener();
     this.registerWithRelay();
@@ -387,6 +406,11 @@ export class IframeBridgeTransport implements Transport {
     (this.metrics as IframeBridgeTransportMetrics).setDisconnected();
     this.isDisconnected = true;
     this.stopHeartbeat();
+
+    // Clear global transport reference to allow new instances
+    if (typeof globalThis !== 'undefined' && (globalThis as any).__MARTINI_TRANSPORT__ === this) {
+      delete (globalThis as any).__MARTINI_TRANSPORT__;
+    }
 
     // Notify relay
     if (window.parent && window.parent !== window) {

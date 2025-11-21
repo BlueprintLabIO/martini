@@ -399,6 +399,58 @@ export const game = defineGame({
 
 ### Phaser Scene with Physics
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using InputManager** - Automatic input handling:
+
+```typescript
+import { PhaserAdapter, InputManager, SpriteManager } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Automatic WASD + Arrow + Space input
+  this.inputManager = new InputManager(this.adapter, this, {
+    type: 'platformer',
+    actionName: 'move',
+    jumpKey: 'SPACE',
+  });
+
+  // Create platform
+  const platform = this.add.rectangle(400, 570, 600, 20, 0x8b4513);
+  this.physics.add.existing(platform, true);
+
+  // Auto-sync player sprites
+  this.playerManager = new SpriteManager(this.adapter, this, {
+    collection: 'players',
+    createSprite: (player) => this.add.circle(player.x, player.y, 20, 0x00aaff),
+    updateSprite: (sprite, player) => {
+      sprite.x = player.x;
+      sprite.y = player.y;
+    },
+  });
+}
+
+update(time: number, delta: number) {
+  if (this.adapter.isHost()) {
+    this.runtime.submitAction('tick', { delta });
+  }
+  this.adapter.update(time, delta);
+}
+```
+
+**Benefits:**
+- ✅ Automatic jump key handling
+- ✅ Built-in ground detection support
+- ✅ Less input boilerplate
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Input Handling** - Full control:
+
 ```typescript
 create() {
   this.adapter = new PhaserAdapter(runtime, this);
@@ -426,6 +478,9 @@ update(time: number, delta: number) {
   this.adapter.update(time, delta);
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Gravity
@@ -494,7 +549,39 @@ export const game = defineGame({
 });
 ```
 
-### Phaser Scene
+### Phaser Scene (Input Handling)
+
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using InputManager** - Automatic pointer tracking:
+
+```typescript
+import { PhaserAdapter, InputManager } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Track pointer clicks automatically
+  this.inputManager = new InputManager(this.adapter, this, {
+    type: 'pointer-click',
+    actionName: 'setTarget',
+  });
+
+  // That's it! Clicks are auto-submitted as actions
+}
+```
+
+**Benefits:**
+- ✅ Auto-submits on pointer down
+- ✅ Handles both mouse and touch
+- ✅ Just 3 lines
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Pointer Handling** - Full control:
 
 ```typescript
 create() {
@@ -507,6 +594,9 @@ create() {
   });
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ Click-to-move
@@ -590,7 +680,50 @@ actions: {
 }
 ```
 
-### Phaser Scene
+### Phaser Scene (Rendering Rotation)
+
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using SpriteManager** - Automatic rotation rendering:
+
+```typescript
+import { PhaserAdapter, SpriteManager } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Auto-sync rotation with updateSprite
+  this.playerManager = new SpriteManager(this.adapter, this, {
+    collection: 'players',
+    createSprite: (player) => this.add.triangle(
+      player.x, player.y, 0, -15, -10, 10, 10, 10, 0x00aaff
+    ),
+    updateSprite: (sprite, player) => {
+      sprite.x = player.x;
+      sprite.y = player.y;
+      sprite.rotation = player.rotation; // Auto-updates!
+    },
+  });
+}
+
+update(time: number, delta: number) {
+  // Track mouse cursor
+  const pointer = this.input.activePointer;
+  this.runtime.submitAction('aim', {
+    cursorX: pointer.x,
+    cursorY: pointer.y,
+  });
+
+  this.adapter.update(time, delta);
+}
+```
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Rotation Rendering** - Full control:
 
 ```typescript
 update(time: number, delta: number) {
@@ -609,6 +742,9 @@ update(time: number, delta: number) {
   }
 }
 ```
+
+{/snippet}
+</CodeTabs>
 
 **Features:**
 - ✅ 360° rotation

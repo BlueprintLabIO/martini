@@ -7,6 +7,7 @@ order: 2
 
 <script>
   import Callout from '$lib/components/docs/Callout.svelte';
+  import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
 </script>
 
 # Best Practices
@@ -131,32 +132,75 @@ setup: ({ random }) => ({
 
 **Problem**: Updating state 60 times per second for smooth movement.
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using Phaser Helpers** - Automatic efficient syncing:
+
 ```typescript
-// BAD - State update every frame
+// GOOD - trackSprite() handles efficient updates
+create() {
+  if (this.adapter.isHost()) {
+    const sprite = this.physics.add.sprite(100, 100, 'player');
+
+    // Automatic optimized position syncing
+    this.adapter.trackSprite(sprite, `player-${playerId}`);
+
+    // Martini handles:
+    // - Only syncs when position actually changes
+    // - Throttles updates automatically
+    // - Interpolates on clients for smooth movement
+  }
+}
+```
+
+**Benefits:**
+- ✅ Automatic throttling - only syncs when needed
+- ✅ Built-in interpolation
+- ✅ Zero configuration
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Throttling** - Custom debounce logic:
+
+```typescript
+// BAD - Updates every frame (60 times/second!)
 update() {
   if (this.adapter.isHost()) {
     runtime.submitAction('updatePosition', {
       x: sprite.x,
       y: sprite.y
-    }); // 60 updates/second!
+    }); // Creates 60 state diffs per second!
   }
 }
-```
 
-**Solution**: Use `trackSprite()` for automatic efficient syncing.
+// GOOD - Throttle updates manually
+private lastSyncTime = 0;
+private syncInterval = 100; // Sync every 100ms
 
-```typescript
-// GOOD - Automatic optimized syncing
-create() {
+update(time: number, delta: number) {
   if (this.adapter.isHost()) {
-    const sprite = this.physics.add.sprite(100, 100, 'player');
-    this.adapter.trackSprite(sprite, `player-${playerId}`);
-    // Martini handles efficient position syncing
+    // Only sync every 100ms
+    if (time - this.lastSyncTime > this.syncInterval) {
+      runtime.submitAction('updatePosition', {
+        x: sprite.x,
+        y: sprite.y
+      });
+      this.lastSyncTime = time;
+    }
   }
 }
 ```
 
-`trackSprite()` only sends updates when position actually changes.
+**Benefits:**
+- ✅ Full control over sync frequency
+- ✅ Custom throttling logic
+- ✅ Predictable behavior
+
+{/snippet}
+</CodeTabs>
 
 ### 3. Use `onTick` for Periodic Logic
 
@@ -249,11 +293,47 @@ Logger.setLogLevel('debug');
 
 ### 2. Log State Changes
 
+<CodeTabs tabs={['phaser', 'core']}>
+{#snippet phaser()}
+
+**Using Phaser Helpers** - Built-in debug helpers:
+
+```typescript
+import { PhaserAdapter, enableDebugLogging } from '@martini/phaser';
+
+create() {
+  this.adapter = new PhaserAdapter(runtime, this);
+
+  // Enable debug overlay (shows state changes visually)
+  enableDebugLogging(this.adapter, this, {
+    showStateChanges: true,
+    showPlayerInfo: true,
+    position: { x: 10, y: 10 }
+  });
+
+  // Or use onChange with helper utilities
+  this.adapter.onChange((state, prevState) => {
+    this.adapter.logStateDiff(state, prevState);
+  });
+}
+```
+
+**Benefits:**
+- ✅ Visual debug overlay
+- ✅ Formatted diff display
+- ✅ Player info at a glance
+
+{/snippet}
+
+{#snippet core()}
+
+**Manual Logging** - Full control:
+
 ```typescript
 create() {
   this.adapter = new PhaserAdapter(runtime, this);
 
-  // Log every state change
+  // Log every state change manually
   this.adapter.onChange((state, prevState) => {
     console.log('State updated:', state);
     console.log('Previous:', prevState);
@@ -265,6 +345,14 @@ create() {
   });
 }
 ```
+
+**Benefits:**
+- ✅ Custom logging logic
+- ✅ Fine-grained control
+- ✅ Integration with your logging system
+
+{/snippet}
+</CodeTabs>
 
 ### 3. Inspect Current State
 
@@ -497,6 +585,51 @@ actions: {
   }
 }
 ```
+
+### 5. Pointer Input with Camera Scrolling
+
+<Callout type="warning">
+**Critical:** Always use world coordinates for pointer input, not screen coordinates!
+</Callout>
+
+When your camera follows the player (or scrolls for any reason), `pointer.x/y` gives **screen** coordinates, not **world** coordinates. This causes bugs where clicks appear at the wrong position.
+
+**❌ Wrong - Uses screen coordinates:**
+```typescript
+this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+  runtime.submitAction('move', {
+    x: pointer.x,  // ⚠️ WRONG! Screen position, not world position
+    y: pointer.y
+  });
+});
+```
+
+**✅ Correct - Uses world coordinates:**
+```typescript
+// Option 1: Use pointer.worldX/worldY directly
+this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+  runtime.submitAction('move', {
+    x: pointer.worldX,  // ✅ World position (accounts for camera scroll)
+    y: pointer.worldY
+  });
+});
+
+// Option 2: Use PhaserAdapter helper
+this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+  const worldPos = adapter.pointerToWorld(pointer);
+  runtime.submitAction('move', {
+    x: worldPos.x,
+    y: worldPos.y
+  });
+});
+```
+
+**When does this matter?**
+- ✅ Static camera at (0, 0) → `pointer.x/y` works fine
+- ⚠️ Camera follows player → **Must use `worldX/worldY`**
+- ⚠️ Camera scroll, zoom, or rotation → **Must use `worldX/worldY`**
+
+**Quick test:** If your game spawns entities at the wrong position when you click, you're using screen coordinates instead of world coordinates.
 
 ---
 
