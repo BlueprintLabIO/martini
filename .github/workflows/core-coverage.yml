@@ -1,0 +1,76 @@
+name: Core Coverage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run core coverage
+        run: pnpm --filter @martini-kit/core test:coverage
+
+      - name: Generate coverage badge
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const summaryPath = path.join('@martini-kit', 'core', 'coverage', 'coverage-summary.json');
+          const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+          const pct = summary.total.lines.pct;
+          const color =
+            pct < 80 ? 'red' :
+            pct < 85 ? 'orange' :
+            pct < 90 ? 'yellow' :
+            pct < 95 ? 'yellowgreen' : 'brightgreen';
+          const badge = {
+            schemaVersion: 1,
+            label: 'core coverage',
+            message: `${pct.toFixed(1)}%`,
+            color
+          };
+          fs.mkdirSync('coverage', { recursive: true });
+          fs.writeFileSync('coverage/core-coverage-badge.json', JSON.stringify(badge, null, 2));
+          fs.writeFileSync('coverage/core-coverage-summary.json', JSON.stringify(summary, null, 2));
+          NODE
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-coverage
+          path: |
+            @martini-kit/core/coverage
+            coverage/core-coverage-badge.json
+            coverage/core-coverage-summary.json
+
+      - name: Commit coverage badge to main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update core coverage badge"
+          file_pattern: coverage/*.json

@@ -490,7 +490,7 @@ For dynamic peer joining (using TrysteroTransport), you can start with just the 
 
 If you're still stuck:
 
-1. **Check demo code:** [packages/@martini-kit/demo-vite](../../demo-vite)
+1. **Check demo code:** [@martini-kit/demo-vite](../../demo-vite)
 2. **Search issues:** [GitHub Issues](https://github.com/your-org/martini-kit/issues)
 3. **Ask for help:** Create a new issue with:
    - Minimal reproduction code

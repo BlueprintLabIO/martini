@@ -38,6 +38,6 @@ export type { CameraFollower, CameraFollowerConfig, CameraFollowerTarget } from 
 export { createDualRuntimePreview } from './helpers/DualRuntimeFactory.js';
 export type { DualRuntimePreview, DualRuntimePreviewConfig } from './helpers/DualRuntimeFactory.js';
 export { initializeGame } from './runtime.js';
-export type { martini-kitConfig, GameConfig } from './runtime.js';
+export type { MartiniKitConfig, GameConfig } from './runtime.js';
 export type { GameDefinition, Transport, GameRuntime } from '@martini-kit/core';
 //# sourceMappingURL=index.d.ts.map

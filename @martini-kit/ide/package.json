@@ -1,10 +1,10 @@
 {
-  "name": "@martini-kit/ide",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Embeddable multiplayer game IDE with dual-view local testing",
-  "scripts": {
-    "dev": "vite dev",
+	"name": "@martini-kit/ide",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Embeddable multiplayer game IDE with dual-view local testing",
+	"scripts": {
+		"dev": "vite dev",
     "dev:build": "svelte-package --watch",
     "build": "vite build && npm run prepack",
     "preview": "vite preview",

@@ -9,7 +9,7 @@ import Phaser from 'phaser';
 /**
  * Platform-injected configuration (set by IDE, demos, production runtime)
  */
-export interface martini-kitConfig {
+export interface MartiniKitConfig {
     transport: {
         type: 'local' | 'iframe-bridge' | 'trystero';
         roomId: string;

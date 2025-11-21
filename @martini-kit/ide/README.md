@@ -142,7 +142,7 @@ Each console message includes:
 Run the demo to see it in action:
 
 ```bash
-cd packages/@martini-kit/demos
+cd @martini-kit/demos
 pnpm dev
 ```
 

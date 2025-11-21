@@ -31,7 +31,7 @@
  * });
  * ```
  */
-import type { GameDefinition } from '../src/defineGame.js';
+import type { GameDefinition } from './defineGame.js';
 export interface PlayerFactory<TPlayer = any> {
     /**
      * Creates a player's initial state

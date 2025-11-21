@@ -1,0 +1,164 @@
+{
+  "total": {
+    "lines": {
+      "total": 650,
+      "covered": 582,
+      "skipped": 0,
+      "pct": 89.53
+    },
+    "statements": {
+      "total": 650,
+      "covered": 582,
+      "skipped": 0,
+      "pct": 89.53
+    },
+    "functions": {
+      "total": 60,
+      "covered": 55,
+      "skipped": 0,
+      "pct": 91.66
+    },
+    "branches": {
+      "total": 182,
+      "covered": 167,
+      "skipped": 0,
+      "pct": 91.75
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": "Unknown"
+    }
+  },
+  "/Users/yao/blueprint/martini/@martini-kit/core/src/GameRuntime.ts": {
+    "lines": {
+      "total": 352,
+      "covered": 287,
+      "skipped": 0,
+      "pct": 81.53
+    },
+    "functions": {
+      "total": 23,
+      "covered": 18,
+      "skipped": 0,
+      "pct": 78.26
+    },
+    "statements": {
+      "total": 352,
+      "covered": 287,
+      "skipped": 0,
+      "pct": 81.53
+    },
+    "branches": {
+      "total": 68,
+      "covered": 59,
+      "skipped": 0,
+      "pct": 86.76
+    }
+  },
+  "/Users/yao/blueprint/martini/@martini-kit/core/src/Logger.ts": {
+    "lines": {
+      "total": 163,
+      "covered": 160,
+      "skipped": 0,
+      "pct": 98.15
+    },
+    "functions": {
+      "total": 24,
+      "covered": 24,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 163,
+      "covered": 160,
+      "skipped": 0,
+      "pct": 98.15
+    },
+    "branches": {
+      "total": 48,
+      "covered": 45,
+      "skipped": 0,
+      "pct": 93.75
+    }
+  },
+  "/Users/yao/blueprint/martini/@martini-kit/core/src/SeededRandom.ts": {
+    "lines": {
+      "total": 39,
+      "covered": 39,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 8,
+      "covered": 8,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 39,
+      "covered": 39,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 17,
+      "covered": 16,
+      "skipped": 0,
+      "pct": 94.11
+    }
+  },
+  "/Users/yao/blueprint/martini/@martini-kit/core/src/defineGame.ts": {
+    "lines": {
+      "total": 13,
+      "covered": 13,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 13,
+      "covered": 13,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 5,
+      "covered": 5,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "/Users/yao/blueprint/martini/@martini-kit/core/src/sync.ts": {
+    "lines": {
+      "total": 83,
+      "covered": 83,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 4,
+      "covered": 4,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 83,
+      "covered": 83,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 44,
+      "covered": 42,
+      "skipped": 0,
+      "pct": 95.45
+    }
+  }
+}

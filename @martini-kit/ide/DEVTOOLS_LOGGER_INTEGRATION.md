@@ -167,25 +167,25 @@ pnpm --filter=@martini-kit/ide build
 
 ## Files Modified
 
-1. **`/packages/@martini-kit/ide/static/ide-sandbox.html`**
+1. **`/@martini-kit/ide/static/ide-sandbox.html`**
    - Added console interception IIFE
    - Added channel extraction logic
    - Added error/rejection handlers
 
-2. **`/packages/@martini-kit/ide/src/lib/components/DevToolsPanel.svelte`**
+2. **`/@martini-kit/ide/src/lib/components/DevToolsPanel.svelte`**
    - Added channel property to log type
    - Added channel badge display
    - Added channel styling
 
-3. **`/packages/@martini-kit/ide/src/lib/core/Sandbox.ts`**
+3. **`/@martini-kit/ide/src/lib/core/Sandbox.ts`**
    - Updated onConsoleLog callback type
    - Added channel property to log interface
 
-4. **`/packages/@martini-kit/ide/src/lib/components/GamePreview.svelte`**
+4. **`/@martini-kit/ide/src/lib/components/GamePreview.svelte`**
    - Updated consoleLogs state type
    - Added channel property support
 
-5. **`/packages/@martini-kit/next-steps.md`**
+5. **`/@martini-kit/next-steps.md`**
    - Updated DevTools completion status
    - Marked console integration as complete
 
@@ -210,6 +210,6 @@ The Logger → DevTools integration is complete! The next priorities are:
 
 ## Related Documentation
 
-- [Logger API Documentation](/packages/@martini-kit/core/docs/logger.md)
-- [StateInspector README](/packages/@martini-kit/devtools/README.md)
-- [martini-kit SDK v2 Docs](/packages/@martini-kit/docs/martini-kit-sdk-v2/)
+- [Logger API Documentation](/@martini-kit/core/docs/logger.md)
+- [StateInspector README](/@martini-kit/devtools/README.md)
+- [martini-kit SDK v2 Docs](/@martini-kit/docs/martini-kit-sdk-v2/)

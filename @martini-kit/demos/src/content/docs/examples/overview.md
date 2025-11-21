@@ -83,7 +83,7 @@ export const paddleBattleGame = defineGame({
 
 ### Try It
 - [Play Demo](/demo/paddle-battle)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/packages/@martini-kit/demos/src/lib/games/paddle-battle)
+- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/paddle-battle)
 
 ---
 
@@ -142,7 +142,7 @@ export const fireAndIceGame = defineGame({
 
 ### Try It
 - [Play Demo](/demo/fire-and-ice)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/packages/@martini-kit/demos/src/lib/games/fire-and-ice)
+- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/fire-and-ice)
 
 ---
 
@@ -245,7 +245,7 @@ hit: {
 
 ### Try It
 - [Play Demo](/demo/arena-blaster)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/packages/@martini-kit/demos/src/lib/games/arena-blaster)
+- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/arena-blaster)
 
 ---
 
@@ -271,7 +271,7 @@ A physics-driven multiplayer battle game where players control blobs that can pu
 
 ### Try It
 - [Play Demo](/demo/blob-battle)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/packages/@martini-kit/demos/src/lib/games/blob-battle)
+- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/blob-battle)
 
 ---
 
@@ -298,7 +298,7 @@ A racing game with lap tracking, checkpoints, and competitive leaderboards.
 
 ### Try It
 - [Play Demo](/demo/circuit-racer)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/packages/@martini-kit/demos/src/lib/games/circuit-racer)
+- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/circuit-racer)
 
 ---
 
@@ -324,7 +324,7 @@ A turn-based puzzle game where players take turns matching tiles to score points
 
 ### Try It
 - [Play Demo](/demo/tile-matcher)
-- [View Source](https://github.com/yourusername/martini-kit/tree/main/packages/@martini-kit/demos/src/lib/games/tile-matcher)
+- [View Source](https://github.com/yourusername/martini-kit/tree/main/@martini-kit/demos/src/lib/games/tile-matcher)
 
 ---
 
@@ -362,7 +362,7 @@ A turn-based puzzle game where players take turns matching tiles to score points
 
 All example games are located in:
 ```
-packages/@martini-kit/demos/src/lib/games/
+@martini-kit/demos/src/lib/games/
 ├── paddle-battle/
 │   ├── game.ts          # Game definition
 │   ├── scene.ts         # Phaser scene
@@ -395,8 +395,8 @@ Ready to build your own game? Check out these resources:
 Have an awesome game to share? We'd love to include it!
 
 1. Fork the repository
-2. Create your game in `packages/@martini-kit/demos/src/lib/games/your-game`
-3. Add a demo route in `packages/@martini-kit/demos/src/routes/demo/your-game`
+2. Create your game in `@martini-kit/demos/src/lib/games/your-game`
+3. Add a demo route in `@martini-kit/demos/src/routes/demo/your-game`
 4. Submit a pull request
 
 See [Contributing Guide](/docs/contributing/adding-examples) for details.

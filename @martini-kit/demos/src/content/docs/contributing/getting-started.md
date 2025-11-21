@@ -90,10 +90,10 @@ martini-kit/
 
 ### Key Directories
 
-- **`/packages/@martini-kit/core/src`** - Core engine source code
-- **`/packages/@martini-kit/phaser/src`** - Phaser adapter source code
-- **`/packages/@martini-kit/demos/src/lib/games`** - Example games
-- **`/packages/@martini-kit/demos/src/content/docs`** - Documentation markdown files
+- **`/@martini-kit/core/src`** - Core engine source code
+- **`/@martini-kit/phaser/src`** - Phaser adapter source code
+- **`/@martini-kit/demos/src/lib/games`** - Example games
+- **`/@martini-kit/demos/src/content/docs`** - Documentation markdown files
 
 ## Development Workflow
 

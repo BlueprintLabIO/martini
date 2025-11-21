@@ -57,7 +57,7 @@ export type { DualRuntimePreview, DualRuntimePreviewConfig } from './helpers/Dua
 
 // Runtime initialization (transport abstraction)
 export { initializeGame } from './runtime.js';
-export type { martini-kitConfig, GameConfig } from './runtime.js';
+export type { MartiniKitConfig, GameConfig } from './runtime.js';
 
 // Re-export core types for convenience
 export type { GameDefinition, Transport, GameRuntime } from '@martini-kit/core';

@@ -74,7 +74,7 @@
 
 	<footer class="doc-footer">
 		<div class="footer-actions">
-			<a href={`https://github.com/BlueprintLabIO/martini-kit/edit/main/packages/@martini-kit/demos/src/content/docs/${data.slug}.md`} target="_blank" rel="noopener noreferrer" class="footer-link">
+			<a href={`https://github.com/BlueprintLabIO/martini-kit/edit/main/@martini-kit/demos/src/content/docs/${data.slug}.md`} target="_blank" rel="noopener noreferrer" class="footer-link">
 				<PencilLine size={16} />
 				<span>Edit this page on GitHub</span>
 			</a>

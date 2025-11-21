@@ -15,15 +15,15 @@ Last Updated: 2025-11-21
 **Estimated Time:** 5 minutes
 
 **Issue:** Workspace is misconfigured - looking for packages in wrong location!
-- Actual packages are in: `@martini/*`
-- Workspace expects: `packages/*` and `packages/@martini-kit/*`
+- Actual packages are in: `@martini-kit/*`
+- Workspace expects: `packages/*` and `@martini-kit/*`
 - Result: **`pnpm build` and `pnpm test` find 0 packages!**
 
 **Fix:**
 ```yaml
 # pnpm-workspace.yaml - UPDATE THIS:
 packages:
-  - '@martini/*'      # ADD THIS (actual location)
+  - '@martini-kit/*'      # ADD THIS (actual location)
   # - 'apps/*'        # REMOVE (no apps directory exists)
   # - 'packages/*'    # REMOVE (doesn't exist)
 ```
@@ -46,13 +46,13 @@ packages:
 
 - [ ] Create LICENSE file in root directory (MIT recommended)
 - [ ] Add LICENSE file to each publishable package:
-  - [ ] `packages/@martini-kit/core/LICENSE`
-  - [ ] `packages/@martini-kit/phaser/LICENSE`
-  - [ ] `packages/@martini-kit/transport-local/LICENSE`
-  - [ ] `packages/@martini-kit/transport-trystero/LICENSE`
-  - [ ] `packages/@martini-kit/transport-iframe-bridge/LICENSE`
-  - [ ] `packages/@martini-kit/devtools/LICENSE`
-  - [ ] `packages/@martini-kit/ide/LICENSE`
+  - [ ] `@martini-kit/core/LICENSE`
+  - [ ] `@martini-kit/phaser/LICENSE`
+  - [ ] `@martini-kit/transport-local/LICENSE`
+  - [ ] `@martini-kit/transport-trystero/LICENSE`
+  - [ ] `@martini-kit/transport-iframe-bridge/LICENSE`
+  - [ ] `@martini-kit/devtools/LICENSE`
+  - [ ] `@martini-kit/ide/LICENSE`
 
 **Why Critical:** Without a license, nobody can legally use, modify, or distribute the code.
 
@@ -64,15 +64,15 @@ packages:
 **Estimated Time:** 15 minutes
 
 **Current Status - ALL packages have `"private": true`:**
-- [ ] `@martini/core/package.json` ← BLOCKS NPM PUBLISH
-- [ ] `@martini/phaser/package.json` ← BLOCKS NPM PUBLISH
-- [ ] `@martini/transport-local/package.json` ← BLOCKS NPM PUBLISH
-- [ ] `@martini/transport-trystero/package.json` ← BLOCKS NPM PUBLISH
-- [ ] `@martini/transport-iframe-bridge/package.json` ← BLOCKS NPM PUBLISH
-- [ ] `@martini/transport-ws/package.json` ← BLOCKS NPM PUBLISH
-- [ ] `@martini/devtools/package.json` ← Has MIT license but missing private field
-- [ ] `@martini/ide/package.json` ← BLOCKS NPM PUBLISH
-- [ ] `@martini/demos/package.json` ← Keep private (demo site, not published)
+- [ ] `@martini-kit/core/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini-kit/phaser/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini-kit/transport-local/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini-kit/transport-trystero/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini-kit/transport-iframe-bridge/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini-kit/transport-ws/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini-kit/devtools/package.json` ← Has MIT license but missing private field
+- [ ] `@martini-kit/ide/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini-kit/demos/package.json` ← Keep private (demo site, not published)
 
 **Action Required:** Remove `"private": true` OR set to `"private": false` in all packages except demos.
 
@@ -86,7 +86,7 @@ packages:
 **Estimated Time:** 30 minutes
 
 **Current Status:**
-- ✅ `@martini/devtools` - Has `"license": "MIT"` and keywords
+- ✅ `@martini-kit/devtools` - Has `"license": "MIT"` and keywords
 - ❌ All others - Missing license, repository, author, homepage
 
 Add to each publishable `package.json`:
@@ -97,7 +97,7 @@ Add to each publishable `package.json`:
   "repository": {
     "type": "git",
     "url": "https://github.com/BlueprintLabIO/martini.git",
-    "directory": "@martini/core"  // UPDATE PER PACKAGE
+    "directory": "@martini-kit/core"  // UPDATE PER PACKAGE
   },
   "homepage": "https://martini-kit.dev",  // OR YOUR DEPLOYED DOCS URL
   "bugs": {
@@ -117,14 +117,14 @@ Add to each publishable `package.json`:
 ```
 
 Packages to update:
-- [ ] `@martini/core` - Add all fields
-- [ ] `@martini/phaser` - Add all fields
-- [ ] `@martini/transport-local` - Add all fields
-- [ ] `@martini/transport-trystero` - Add all fields
-- [ ] `@martini/transport-iframe-bridge` - Add all fields
-- [ ] `@martini/transport-ws` - Add all fields
-- [ ] `@martini/devtools` - Add repository, author, homepage (has license)
-- [ ] `@martini/ide` - Add all fields
+- [ ] `@martini-kit/core` - Add all fields
+- [ ] `@martini-kit/phaser` - Add all fields
+- [ ] `@martini-kit/transport-local` - Add all fields
+- [ ] `@martini-kit/transport-trystero` - Add all fields
+- [ ] `@martini-kit/transport-iframe-bridge` - Add all fields
+- [ ] `@martini-kit/transport-ws` - Add all fields
+- [ ] `@martini-kit/devtools` - Add repository, author, homepage (has license)
+- [ ] `@martini-kit/ide` - Add all fields
 
 **Why Critical:** npm requires license field; repository/homepage help users find docs and report issues.
 
@@ -152,7 +152,7 @@ Tests  4 failed | 25 passed (29)
 ```
 
 **Issue:** 4 tests failing in `@martini-kit/phaser`
-- [ ] Run tests: `cd packages/@martini-kit/phaser && pnpm test`
+- [ ] Run tests: `cd @martini-kit/phaser && pnpm test`
 - [ ] Fix failing tests (likely related to `_sprites` property)
 - [ ] Ensure all tests pass
 
@@ -196,8 +196,8 @@ Create comprehensive README with:
 **Current placeholders found:**
 ```
 ✅ GitHub repo exists: https://github.com/BlueprintLabIO/martini.git
-❌ @martini/core/README.md: "https://github.com/your-org/martini-kit/issues"
-❌ @martini/README.md: "https://github.com/your-org/martini-kit/issues"
+❌ @martini-kit/core/README.md: "https://github.com/your-org/martini-kit/issues"
+❌ @martini-kit/README.md: "https://github.com/your-org/martini-kit/issues"
 ❌ Various docs may have "https://github.com/yourusername/martini-kit"
 ```
 
@@ -211,11 +211,11 @@ Create comprehensive README with:
 - [ ] Update homepage URLs to point to deployed demo site
 
 **Files to check:**
-- [ ] `@martini/core/README.md` (has placeholder)
-- [ ] `@martini/README.md` (has placeholder at line 350)
-- [ ] `@martini/demos/src/routes/+page.svelte`
-- [ ] `@martini/demos/src/content/docs/**/*.md`
-- [ ] Search entire codebase: `grep -r "your-org\|yourusername\|your-server" @martini/`
+- [ ] `@martini-kit/core/README.md` (has placeholder)
+- [ ] `@martini-kit/README.md` (has placeholder at line 350)
+- [ ] `@martini-kit/demos/src/routes/+page.svelte`
+- [ ] `@martini-kit/demos/src/content/docs/**/*.md`
+- [ ] Search entire codebase: `grep -r "your-org\|yourusername\|your-server" @martini-kit/`
 
 **Why Critical:** Broken links look unprofessional and confuse users.
 
@@ -280,15 +280,15 @@ sed -i '' 's/"version": "[^"]*"/"version": "0.1.0"/' package.json
 **Estimated Time:** 2 hours
 
 **Current Status:**
-- ✅ `@martini/README.md` - Comprehensive (but needs URL fixes)
-- ✅ `@martini/core/README.md` - Exists (needs URL fixes)
-- ❌ `@martini/phaser/README.md` - MISSING
-- ❌ `@martini/transport-local/README.md` - MISSING
-- ❌ `@martini/transport-trystero/README.md` - MISSING
-- ❌ `@martini/transport-ws/README.md` - MISSING
-- ❌ `@martini/transport-iframe-bridge/README.md` - MISSING
-- ❌ `@martini/devtools/README.md` - MISSING
-- ❌ `@martini/ide/README.md` - MISSING
+- ✅ `@martini-kit/README.md` - Comprehensive (but needs URL fixes)
+- ✅ `@martini-kit/core/README.md` - Exists (needs URL fixes)
+- ❌ `@martini-kit/phaser/README.md` - MISSING
+- ❌ `@martini-kit/transport-local/README.md` - MISSING
+- ❌ `@martini-kit/transport-trystero/README.md` - MISSING
+- ❌ `@martini-kit/transport-ws/README.md` - MISSING
+- ❌ `@martini-kit/transport-iframe-bridge/README.md` - MISSING
+- ❌ `@martini-kit/devtools/README.md` - MISSING
+- ❌ `@martini-kit/ide/README.md` - MISSING
 
 **Why Critical:** npm package page shows README. Empty/missing README = looks abandoned.
 

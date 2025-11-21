@@ -3,7 +3,7 @@
  *
  * Utilities to reduce boilerplate and prevent common mistakes
  */
-import type { ActionDefinition, ActionContext } from '../src/defineGame.js';
+import type { ActionDefinition, ActionContext } from './defineGame.js';
 /**
  * Create a players record from player IDs
  *

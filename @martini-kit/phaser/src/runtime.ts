@@ -15,7 +15,7 @@ import Phaser from 'phaser';
 /**
  * Platform-injected configuration (set by IDE, demos, production runtime)
  */
-export interface martini-kitConfig {
+export interface MartiniKitConfig {
   transport: {
     type: 'local' | 'iframe-bridge' | 'trystero';
     roomId: string;
@@ -70,7 +70,7 @@ export function initializeGame<TState = any>(
   config: GameConfig<TState>
 ): { runtime: GameRuntime<TState>; phaser: Phaser.Game } {
   // Read platform-injected config
-  const platformConfig = (window as any).__martini-kit_CONFIG__ as martini-kitConfig | undefined;
+  const platformConfig = (window as any)['__martini-kit_CONFIG__'] as MartiniKitConfig | undefined;
 
   if (!platformConfig) {
     throw new Error(
@@ -118,8 +118,8 @@ export function initializeGame<TState = any>(
   const phaserGame = new Phaser.Game(phaserConfig);
 
   // Register runtime with IDE sandbox (if present)
-  if (typeof window !== 'undefined' && (window as any).__martini-kit_IDE__) {
-    (window as any).__martini-kit_IDE__.registerRuntime(runtime);
+  if (typeof window !== 'undefined' && (window as any)['__martini-kit_IDE__']) {
+    (window as any)['__martini-kit_IDE__'].registerRuntime(runtime);
   }
 
   // Auto-cleanup: Disconnect transport when navigating away
@@ -153,7 +153,7 @@ export function initializeGame<TState = any>(
  * Create transport from platform configuration
  * @internal
  */
-function createTransport(config: martini-kitConfig['transport']): Transport {
+function createTransport(config: MartiniKitConfig['transport']): Transport {
   switch (config.type) {
     case 'iframe-bridge':
       return new IframeBridgeTransport({

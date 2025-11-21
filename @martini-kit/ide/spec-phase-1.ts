@@ -234,7 +234,7 @@ export interface TypeDiagnostic {
 // ============================================================================
 
 /**
- * packages/@martini-kit/ide/
+ * @martini-kit/ide/
  *   src/
  *     components/
  *       martini-kitIDE.svelte         # Main component

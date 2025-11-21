@@ -133,7 +133,7 @@ Extend the `PhysicsManager` with more profiles:
   - Car physics (drift, acceleration curves)
   - Spaceship physics (inertia, rotation)
 
-**File:** [`packages/@martini-kit/phaser/src/helpers/PhysicsManager.ts`](../../../packages/@martini-kit/phaser/src/helpers/PhysicsManager.ts)
+**File:** [`@martini-kit/phaser/src/helpers/PhysicsManager.ts`](../../../@martini-kit/phaser/src/helpers/PhysicsManager.ts)
 
 ### Create UI Component Library
 
@@ -175,7 +175,7 @@ Improve test coverage:
   - Join during state transition
   - Leave with pending actions
 
-**File location:** `packages/@martini-kit/*/src/__tests__/`
+**File location:** `@martini-kit/*/src/__tests__/`
 
 **Skills needed:** Testing, TypeScript, debugging
 

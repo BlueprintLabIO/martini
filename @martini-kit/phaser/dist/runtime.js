@@ -39,7 +39,7 @@ import Phaser from 'phaser';
  */
 export function initializeGame(config) {
     // Read platform-injected config
-    const platformConfig = window.__martini-kit_CONFIG__;
+    const platformConfig = window['__martini-kit_CONFIG__'];
     if (!platformConfig) {
         throw new Error('Missing __martini-kit_CONFIG__. The platform must inject this before running user code.');
     }
@@ -73,8 +73,8 @@ export function initializeGame(config) {
     };
     const phaserGame = new Phaser.Game(phaserConfig);
     // Register runtime with IDE sandbox (if present)
-    if (typeof window !== 'undefined' && window.__martini-kit_IDE__) {
-        window.__martini-kit_IDE__.registerRuntime(runtime);
+    if (typeof window !== 'undefined' && window['__martini-kit_IDE__']) {
+        window['__martini-kit_IDE__'].registerRuntime(runtime);
     }
     // Auto-cleanup: Disconnect transport when navigating away
     // Two mechanisms for defense-in-depth:

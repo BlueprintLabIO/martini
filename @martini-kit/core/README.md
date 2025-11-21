@@ -291,7 +291,7 @@ Full documentation: [API Reference](../../docs/martini-kit-sdk-v2/api-reference-
 
 ### Fire Boy & Water Girl Demo
 
-See [packages/@martini-kit/demo-vite](../demo-vite) for a complete working example:
+See [@martini-kit/demo-vite](../demo-vite) for a complete working example:
 
 - URL-based host selection (Jackbox-style)
 - Phaser physics integration
@@ -301,7 +301,7 @@ See [packages/@martini-kit/demo-vite](../demo-vite) for a complete working examp
 Run it:
 
 ```bash
-cd packages/@martini-kit/demo-vite
+cd @martini-kit/demo-vite
 pnpm dev
 ```
 
@@ -438,4 +438,4 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md)
 
 - **Documentation:** [martini-kit-sdk-v2](../../docs/martini-kit-sdk-v2/)
 - **Issues:** [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues)
-- **Demo:** [packages/@martini-kit/demo-vite](../demo-vite)
+- **Demo:** [@martini-kit/demo-vite](../demo-vite)

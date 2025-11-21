@@ -156,8 +156,8 @@ class NetworkSimulator {
 - [ ] **Expose `setNetworkMonitor(callback)` API** - Let DevTools subscribe to packets
 
 **Files to modify:**
-- [LocalTransport.ts](packages/@martini-kit/transport-local/src/LocalTransport.ts)
-- [IframeBridgeTransport.ts](packages/@martini-kit/transport-iframe-bridge/src/IframeBridgeTransport.ts)
+- [LocalTransport.ts](@martini-kit/transport-local/src/LocalTransport.ts)
+- [IframeBridgeTransport.ts](@martini-kit/transport-iframe-bridge/src/IframeBridgeTransport.ts)
 
 #### Additional DevTools Ideas
 - [ ] **AI-Powered Suggestions** - Analyze divergences and suggest fixes
@@ -215,7 +215,7 @@ class NetworkSimulator {
 
 **Solution:** Default `syncProperties: ['x', 'y']` in `StateDrivenSpawner` constructor
 
-**Status:** ✅ Implemented in [StateDrivenSpawner.ts:131-138](packages/@martini-kit/phaser/src/helpers/StateDrivenSpawner.ts#L131-L138)
+**Status:** ✅ Implemented in [StateDrivenSpawner.ts:131-138](@martini-kit/phaser/src/helpers/StateDrivenSpawner.ts#L131-L138)
 
 **Impact:** Eliminates 90% of sprite sync bugs, enables "pit of success" pattern
 
@@ -227,7 +227,7 @@ class NetworkSimulator {
 
 **Solution:** Single factory method `createDualRuntimePreview()`
 
-**Status:** ✅ Implemented in [DualRuntimeFactory.ts](packages/@martini-kit/phaser/src/helpers/DualRuntimeFactory.ts)
+**Status:** ✅ Implemented in [DualRuntimeFactory.ts](@martini-kit/phaser/src/helpers/DualRuntimeFactory.ts)
 
 ```typescript
 const preview = createDualRuntimePreview({
@@ -249,9 +249,9 @@ const preview = createDualRuntimePreview({
 
 **Solution:** Add optional physics integration to `StateDrivenSpawner`
 
-**Status:** ✅ Implemented in [StateDrivenSpawner.ts:48-173](packages/@martini-kit/phaser/src/helpers/StateDrivenSpawner.ts#L48-L173)
+**Status:** ✅ Implemented in [StateDrivenSpawner.ts:48-173](@martini-kit/phaser/src/helpers/StateDrivenSpawner.ts#L48-L173)
 
-**Example:** See [physics-integration-example.ts](packages/@martini-kit/phaser/examples/physics-integration-example.ts)
+**Example:** See [physics-integration-example.ts](@martini-kit/phaser/examples/physics-integration-example.ts)
 
 **Usage:**
 
@@ -344,7 +344,7 @@ this.inputManager.bridgeToActions({
 
 **Problem:** No lifecycle hook for post-creation sprite setup
 
-**Status:** ✅ Implemented in [SpriteManager.ts:84-96, 284-286, 387-389](packages/@martini-kit/phaser/src/helpers/SpriteManager.ts#L84-L96)
+**Status:** ✅ Implemented in [SpriteManager.ts:84-96, 284-286, 387-389](@martini-kit/phaser/src/helpers/SpriteManager.ts#L84-L96)
 
 **Solution:** Add `onAdd` callback that fires when sprites are added (both initial and late-joining)
 
@@ -365,7 +365,7 @@ this.spriteManager = this.adapter.createSpriteManager({
 ```
 
 **Files to modify:**
-- [SpriteManager.ts](packages/@martini-kit/phaser/src/helpers/SpriteManager.ts)
+- [SpriteManager.ts](@martini-kit/phaser/src/helpers/SpriteManager.ts)
 
 **Impact:** Enables CollisionManager and PlayerUIManager implementations
 
@@ -375,7 +375,7 @@ this.spriteManager = this.adapter.createSpriteManager({
 
 **Problem:** Developers must manually call `physics.add.collider()` for every sprite pair, and remember to re-add colliders when sprites are created late. Missing a single call = ball passes through paddle.
 
-**Status:** ✅ Implemented in [CollisionManager.ts](packages/@martini-kit/phaser/src/helpers/CollisionManager.ts) and [PhaserAdapter.ts:653](packages/@martini-kit/phaser/src/PhaserAdapter.ts#L653)
+**Status:** ✅ Implemented in [CollisionManager.ts](@martini-kit/phaser/src/helpers/CollisionManager.ts) and [PhaserAdapter.ts:653](@martini-kit/phaser/src/PhaserAdapter.ts#L653)
 
 **Solution:** Declarative collision rules that auto-apply to all sprites regardless of join timing
 
@@ -394,8 +394,8 @@ this.collisionManager.addCollision('bullets', 'enemies', {
 ```
 
 **Files to create:**
-- [CollisionManager.ts](packages/@martini-kit/phaser/src/helpers/CollisionManager.ts) (NEW)
-- Update [PhaserAdapter.ts](packages/@martini-kit/phaser/src/PhaserAdapter.ts) to add `createCollisionManager()`
+- [CollisionManager.ts](@martini-kit/phaser/src/helpers/CollisionManager.ts) (NEW)
+- Update [PhaserAdapter.ts](@martini-kit/phaser/src/PhaserAdapter.ts) to add `createCollisionManager()`
 
 **Impact:** Eliminates 90% of late-join collision bugs, reduces boilerplate by ~30 lines per game
 
@@ -405,7 +405,7 @@ this.collisionManager.addCollision('bullets', 'enemies', {
 
 **Problem:** Every game needs player UI (score, health, name), but developers must create UI in `create()` for initial players, check for new players in `onChange()`, update UI every frame, and clean up on leave. Missing any step = broken UI for late-joining players.
 
-**Status:** ✅ Implemented in [PlayerUIManager.ts](packages/@martini-kit/phaser/src/helpers/PlayerUIManager.ts) and [PhaserAdapter.ts:646](packages/@martini-kit/phaser/src/PhaserAdapter.ts#L646)
+**Status:** ✅ Implemented in [PlayerUIManager.ts](@martini-kit/phaser/src/helpers/PlayerUIManager.ts) and [PhaserAdapter.ts:646](@martini-kit/phaser/src/PhaserAdapter.ts#L646)
 
 **Solution:** Declarative player UI that auto-syncs with `state.players`
 
@@ -433,8 +433,8 @@ this.playerUI = this.adapter.createPlayerUIManager({
 ```
 
 **Files to create:**
-- [PlayerUIManager.ts](packages/@martini-kit/phaser/src/helpers/PlayerUIManager.ts) (NEW)
-- Update [PhaserAdapter.ts](packages/@martini-kit/phaser/src/PhaserAdapter.ts) to add `createPlayerUIManager()`
+- [PlayerUIManager.ts](@martini-kit/phaser/src/helpers/PlayerUIManager.ts) (NEW)
+- Update [PhaserAdapter.ts](@martini-kit/phaser/src/PhaserAdapter.ts) to add `createPlayerUIManager()`
 
 **Impact:** Eliminates UI sync bugs, reduces UI code by 50-70%, ensures late-joining players always have UI
 

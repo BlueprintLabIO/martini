@@ -1,19 +1,25 @@
 {
 	"name": "martini-kit",
 	"private": true,
-	"version": "0.1.0",
-	"packageManager": "pnpm@10.22.0",
-	"engines": {
-		"node": ">=18"
-	},
-	"scripts": {
-		"dev": "turbo run dev --filter=@martini-kit/web",
-		"dev:demos": "turbo watch dev --filter=demos",
-		"build": "turbo run build",
-		"test": "turbo run test",
-		"clean": "turbo run clean && rm -rf node_modules",
-		"upload-starter-assets": "tsx scripts/upload-starter-assets.ts"
-	},
+ "version": "0.1.0",
+ "packageManager": "pnpm@10.22.0",
+ "engines": {
+    "node": ">=18"
+ },
+ "scripts": {
+    "dev": "turbo run dev --filter=demos...",
+    "dev:demos": "turbo watch dev --filter=demos...",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "upload-starter-assets": "tsx scripts/upload-starter-assets.ts",
+    "version:patch": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version patch",
+    "version:minor": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version minor",
+    "version:major": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version major",
+    "publish:all": "pnpm build && pnpm test && pnpm --filter='@martini-kit/*' --filter='!demos' exec npm publish --access public",
+    "publish:dry-run": "pnpm build && pnpm --filter='@martini-kit/*' --filter='!demos' exec npm publish --dry-run --access public",
+    "check:publishable": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm pack --dry-run"
+  },
 	"pnpm": {
 		"overrides": {
 			"@lucide/svelte": "npm:lucide-svelte@^0.553.0"

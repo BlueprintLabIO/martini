@@ -223,7 +223,7 @@ const transport = new WebSocketTransport({ url: 'wss://game.com' });
 Complete 2-player cooperative game:
 
 ```bash
-cd packages/@martini-kit/demo-vite
+cd @martini-kit/demo-vite
 pnpm dev
 ```
 
@@ -348,7 +348,7 @@ We welcome contributions! See [CONTRIBUTING.md](../../CONTRIBUTING.md).
 ## Community & Support
 
 - **Documentation:** You're reading it!
-- **Demo:** [packages/@martini-kit/demo-vite](../demo-vite)
+- **Demo:** [@martini-kit/demo-vite](../demo-vite)
 - **Issues:** [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues)
 - **Tests:** Run `pnpm test` in any package
 

@@ -3113,7 +3113,7 @@ import { LocalTransport as LocalTransport2 } from "@martini-kit/transport-local"
 import { IframeBridgeTransport } from "@martini-kit/transport-iframe-bridge";
 import Phaser from "phaser";
 function initializeGame(config) {
-  const platformConfig = window.__martini-kit_CONFIG__;
+  const platformConfig = window["__martini-kit_CONFIG__"];
   if (!platformConfig) {
     throw new Error(
       "Missing __martini-kit_CONFIG__. The platform must inject this before running user code."
@@ -3147,8 +3147,8 @@ function initializeGame(config) {
     scene: config.scene(runtime)
   };
   const phaserGame = new Phaser.Game(phaserConfig);
-  if (typeof window !== "undefined" && window.__martini-kit_IDE__) {
-    window.__martini-kit_IDE__.registerRuntime(runtime);
+  if (typeof window !== "undefined" && window["__martini-kit_IDE__"]) {
+    window["__martini-kit_IDE__"].registerRuntime(runtime);
   }
   if (typeof window !== "undefined") {
     window.addEventListener("message", (event) => {

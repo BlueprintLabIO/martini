@@ -468,7 +468,7 @@ See [08-platform-comparison.md](../../docs/martini-kit-sdk-v2/08-platform-compar
 **Fix:**
 ```bash
 # Start the example server
-cd packages/@martini-kit/transport-ws
+cd @martini-kit/transport-ws
 pnpm tsx examples/server.ts
 
 # Check server is listening
