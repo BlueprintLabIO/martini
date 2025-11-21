@@ -13,16 +13,16 @@
       "pct": 89.53
     },
     "functions": {
-      "total": 60,
-      "covered": 55,
+      "total": 61,
+      "covered": 56,
       "skipped": 0,
-      "pct": 91.66
+      "pct": 91.8
     },
     "branches": {
-      "total": 182,
-      "covered": 167,
+      "total": 183,
+      "covered": 168,
       "skipped": 0,
-      "pct": 91.75
+      "pct": 91.8
     },
     "branchesTrue": {
       "total": 0,
@@ -31,7 +31,7 @@
       "pct": "Unknown"
     }
   },
-  "/Users/yao/blueprint/martini/@martini-kit/core/src/GameRuntime.ts": {
+  "/home/runner/work/martini/martini/@martini-kit/core/src/GameRuntime.ts": {
     "lines": {
       "total": 352,
       "covered": 287,
@@ -39,10 +39,10 @@
       "pct": 81.53
     },
     "functions": {
-      "total": 23,
-      "covered": 18,
+      "total": 24,
+      "covered": 19,
       "skipped": 0,
-      "pct": 78.26
+      "pct": 79.16
     },
     "statements": {
       "total": 352,
@@ -51,13 +51,13 @@
       "pct": 81.53
     },
     "branches": {
-      "total": 68,
-      "covered": 59,
+      "total": 69,
+      "covered": 60,
       "skipped": 0,
-      "pct": 86.76
+      "pct": 86.95
     }
   },
-  "/Users/yao/blueprint/martini/@martini-kit/core/src/Logger.ts": {
+  "/home/runner/work/martini/martini/@martini-kit/core/src/Logger.ts": {
     "lines": {
       "total": 163,
       "covered": 160,
@@ -83,7 +83,7 @@
       "pct": 93.75
     }
   },
-  "/Users/yao/blueprint/martini/@martini-kit/core/src/SeededRandom.ts": {
+  "/home/runner/work/martini/martini/@martini-kit/core/src/SeededRandom.ts": {
     "lines": {
       "total": 39,
       "covered": 39,
@@ -109,7 +109,7 @@
       "pct": 94.11
     }
   },
-  "/Users/yao/blueprint/martini/@martini-kit/core/src/defineGame.ts": {
+  "/home/runner/work/martini/martini/@martini-kit/core/src/defineGame.ts": {
     "lines": {
       "total": 13,
       "covered": 13,
@@ -135,7 +135,7 @@
       "pct": 100
     }
   },
-  "/Users/yao/blueprint/martini/@martini-kit/core/src/sync.ts": {
+  "/home/runner/work/martini/martini/@martini-kit/core/src/sync.ts": {
     "lines": {
       "total": 83,
       "covered": 83,
