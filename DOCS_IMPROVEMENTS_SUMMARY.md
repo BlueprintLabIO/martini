@@ -87,64 +87,44 @@ Successfully added Phaser helpers vs Core primitives comparison tabs to:
 
 ---
 
-## 📋 Next Steps - Remaining Work
+### 4. Split shooting-mechanics.md into Folder Structure (✅ DONE)
 
-### 1. Break Down Large Code Blocks in Recipes
+**Before:** Single 1,126-line file
+**After:** 3 focused parts in `recipes/shooting-mechanics/` folder
 
-Next priority is to improve code block readability in recipe files:
+- **[01-basics.md](packages/@martini/demos/src/content/docs/recipes/shooting-mechanics/01-basics.md)** (539 lines)
+  - Basic Projectile System (step-by-step breakdown)
+  - Shooting with Cooldowns (state → action → UI)
+  - Directional Shooting (Player Facing)
+  - CodeTabs for SpriteManager helper vs manual sprite management
 
-#### `recipes/shooting-mechanics.md` (1,126 lines)
+- **[02-advanced-aiming.md](packages/@martini/demos/src/content/docs/recipes/shooting-mechanics/02-advanced-aiming.md)** (475 lines)
+  - Aim Toward Cursor (with InputManager helper)
+  - Automatic Firing (client-side rate limiting)
+  - Bullet Patterns (Spread Shot, Circular, Wave)
+  - Step-by-step wave pattern implementation
 
-**Current Issues:**
-- Some code blocks exceed 100 lines
-- Combines multiple concepts in single examples
+- **[03-systems.md](packages/@martini/demos/src/content/docs/recipes/shooting-mechanics/03-systems.md)** (763 lines)
+  - Weapon Switching (configuration-driven)
+  - Ammo Management (with reload mechanics)
+  - Best Practices (DOs and DON'Ts)
+  - Complete production example
 
 **Improvements:**
-```markdown
-## Projectile System
+- ✅ Code blocks broken down (< 50 lines each where possible)
+- ✅ Step-by-step learning progression
+- ✅ CodeTabs comparing Phaser helpers vs Core primitives
+- ✅ Cross-links between parts
+- ✅ Clear "What You've Built" summaries after each section
+- ✅ Original shooting-mechanics.md deleted (replaced by folder structure)
 
-### Step 1: Define Projectile State
-Brief explanation of what state we need...
+---
 
-```typescript
-// Only show the state definition (10-15 lines)
-interface GameState {
-  projectiles: Record<string, Projectile>;
-}
-```
+## 📋 Next Steps - Remaining Work
 
-### Step 2: Add Shooting Action
-Explanation of the shooting action...
+### 1. Break Down health-and-damage.md
 
-```typescript
-// Only show the action (20-25 lines)
-actions: {
-  shoot: {
-    apply(state, context, input) {
-      // Focused implementation
-    }
-  }
-}
-```
-
-### Step 3: Render Projectiles in Phaser
-How to visualize projectiles...
-
-<CodeTabs tabs={['phaser', 'core']}>
-{#snippet phaser()}
-// SpriteManager approach (15-20 lines)
-{/snippet}
-{#snippet core()}
-// Manual pooling approach (25-30 lines)
-{/snippet}
-</CodeTabs>
-```
-
-Apply similar breakdown to:
-- Hitscan vs Projectile weapons
-- Automatic weapons
-- Weapon cooldowns
-- Ammo management
+Next priority is to improve the health and damage recipe:
 
 #### `recipes/health-and-damage.md` (908 lines)
 
