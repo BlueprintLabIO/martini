@@ -1,6 +1,18 @@
 test-results
 node_modules
 
+# Project noise
+DO_NOT_READ.md
+.claude/
+.claude
+.mcp.json
+.pnpm-store/
+.idea/
+.vscode/
+*.log
+*.tmp
+*.swp
+
 # Output
 .turbo
 .turbo/
@@ -25,3 +37,9 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Coverage
+coverage/
+**/coverage/
+!coverage/core-coverage-badge.json
+!coverage/core-coverage-summary.json
