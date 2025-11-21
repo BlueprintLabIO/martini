@@ -59,18 +59,18 @@ importers:
       '@codemirror/view':
         specifier: ^6.38.6
         version: 6.38.6
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
-        version: link:../../packages/@martini/core
-      '@martini/phaser':
+        version: link:../../packages/@martini-kit/core
+      '@martini-kit/phaser':
         specifier: workspace:*
-        version: link:../../packages/@martini/phaser
-      '@martini/transport-local':
+        version: link:../../packages/@martini-kit/phaser
+      '@martini-kit/transport-local':
         specifier: workspace:*
-        version: link:../../packages/@martini/transport-local
-      '@martini/transport-trystero':
+        version: link:../../packages/@martini-kit/transport-local
+      '@martini-kit/transport-trystero':
         specifier: workspace:*
-        version: link:../../packages/@martini/transport-trystero
+        version: link:../../packages/@martini-kit/transport-trystero
       '@supabase/ssr':
         specifier: ^0.7.0
         version: 0.7.0(@supabase/supabase-js@2.80.0)
@@ -226,7 +226,7 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(@vitest/browser@3.2.4)(svelte@5.43.4)(vitest@3.2.4)
 
-  packages/@martini/core:
+  packages/@martini-kit/core:
     devDependencies:
       '@types/node':
         specifier: ^22
@@ -250,27 +250,48 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.19.0)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)
 
-  packages/@martini/demos:
+  packages/@martini-kit/demos:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.20.0
+        version: 6.20.0
+      '@codemirror/commands':
+        specifier: ^6.10.0
+        version: 6.10.0
+      '@codemirror/lang-css':
+        specifier: ^6.3.1
+        version: 6.3.1
+      '@codemirror/lang-html':
+        specifier: ^6.4.11
+        version: 6.4.11
+      '@codemirror/lang-markdown':
+        specifier: ^6.5.0
+        version: 6.5.0
+      '@codemirror/language':
+        specifier: ^6.11.3
+        version: 6.11.3
+      '@codemirror/search':
+        specifier: ^6.5.11
+        version: 6.5.11
       '@codesandbox/sandpack-client':
         specifier: ^2.19.8
         version: 2.19.8
       '@lucide/svelte':
         specifier: npm:lucide-svelte@^0.553.0
         version: lucide-svelte@0.553.0(svelte@5.43.4)
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
-      '@martini/ide':
+      '@martini-kit/ide':
         specifier: workspace:*
         version: link:../ide
-      '@martini/phaser':
+      '@martini-kit/phaser':
         specifier: workspace:*
         version: link:../phaser
-      '@martini/transport-local':
+      '@martini-kit/transport-local':
         specifier: workspace:*
         version: link:../transport-local
-      '@martini/transport-trystero':
+      '@martini-kit/transport-trystero':
         specifier: workspace:*
         version: link:../transport-trystero
       '@sveltejs/adapter-cloudflare':
@@ -338,13 +359,13 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.19.0)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)
 
-  packages/@martini/devtools:
+  packages/@martini-kit/devtools:
     dependencies:
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@martini/transport-local':
+      '@martini-kit/transport-local':
         specifier: workspace:*
         version: link:../transport-local
       '@types/node':
@@ -360,11 +381,32 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.19.0)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)
 
-  packages/@martini/ide:
+  packages/@martini-kit/ide:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.20.0
+        version: 6.20.0
+      '@codemirror/commands':
+        specifier: ^6.10.0
+        version: 6.10.0
+      '@codemirror/lang-css':
+        specifier: ^6.3.1
+        version: 6.3.1
+      '@codemirror/lang-html':
+        specifier: ^6.4.11
+        version: 6.4.11
       '@codemirror/lang-javascript':
         specifier: ^6.2.4
         version: 6.2.4
+      '@codemirror/lang-markdown':
+        specifier: ^6.5.0
+        version: 6.5.0
+      '@codemirror/language':
+        specifier: ^6.11.3
+        version: 6.11.3
+      '@codemirror/search':
+        specifier: ^6.5.11
+        version: 6.5.11
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
@@ -374,19 +416,19 @@ importers:
       '@codesandbox/sandpack-client':
         specifier: ^2.19.8
         version: 2.19.8
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
-      '@martini/devtools':
+      '@martini-kit/devtools':
         specifier: workspace:*
         version: link:../devtools
-      '@martini/phaser':
+      '@martini-kit/phaser':
         specifier: workspace:*
         version: link:../phaser
-      '@martini/transport-iframe-bridge':
+      '@martini-kit/transport-iframe-bridge':
         specifier: workspace:*
         version: link:../transport-iframe-bridge
-      '@martini/transport-local':
+      '@martini-kit/transport-local':
         specifier: workspace:*
         version: link:../transport-local
       '@typescript/vfs':
@@ -466,18 +508,18 @@ importers:
         specifier: ^7.1.10
         version: 7.2.2(@types/node@22.19.0)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)
 
-  packages/@martini/phaser:
+  packages/@martini-kit/phaser:
     dependencies:
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
-      '@martini/transport-iframe-bridge':
+      '@martini-kit/transport-iframe-bridge':
         specifier: workspace:*
         version: link:../transport-iframe-bridge
-      '@martini/transport-local':
+      '@martini-kit/transport-local':
         specifier: workspace:*
         version: link:../transport-local
-      '@martini/transport-trystero':
+      '@martini-kit/transport-trystero':
         specifier: workspace:*
         version: link:../transport-trystero
       phaser:
@@ -503,9 +545,9 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.19.0)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)
 
-  packages/@martini/transport-colyseus:
+  packages/@martini-kit/transport-colyseus:
     dependencies:
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
       colyseus.js:
@@ -522,9 +564,9 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.19.0)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)
 
-  packages/@martini/transport-iframe-bridge:
+  packages/@martini-kit/transport-iframe-bridge:
     dependencies:
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -550,9 +592,9 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@22.19.0)(happy-dom@15.11.7)(lightningcss@1.30.2)
 
-  packages/@martini/transport-local:
+  packages/@martini-kit/transport-local:
     dependencies:
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -578,9 +620,9 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.19.0)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)
 
-  packages/@martini/transport-trystero:
+  packages/@martini-kit/transport-trystero:
     dependencies:
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
       trystero:
@@ -603,9 +645,9 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.19.0)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)
 
-  packages/@martini/transport-ws:
+  packages/@martini-kit/transport-ws:
     dependencies:
-      '@martini/core':
+      '@martini-kit/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -798,8 +840,8 @@ packages:
   '@cloudflare/workers-types@4.20251107.0':
     resolution: {integrity: sha512-4y3U2kDxzAMKthjx6iIlxY2oA3l5FVP1WR2Zkz1j0Cx0RI5P1DZknSV5WP86i2anE5eal+pmtzvCO4oZWgcgtA==}
 
-  '@codemirror/autocomplete@6.19.1':
-    resolution: {integrity: sha512-q6NenYkEy2fn9+JyjIxMWcNjzTL/IhwqfzOut1/G3PrIFkrbl4AL7Wkse5tLrQUUyqGoAKU5+Pi5jnnXxH5HGw==}
+  '@codemirror/autocomplete@6.20.0':
+    resolution: {integrity: sha512-bOwvTOIJcG5FVo5gUUupiwYh8MioPLQ4UcqbcRf7UQ98X90tCa9E1kZ3Z7tqwpZxYyOvh1YTYbmZE9RTfTp5hg==}
 
   '@codemirror/commands@6.10.0':
     resolution: {integrity: sha512-2xUIc5mHXQzT16JnyOFkh8PvfeXuIut3pslWGfsGOhxP/lpgRm9HOl/mpzLErgt5mXDovqA0d11P21gofRLb9w==}
@@ -5518,7 +5560,7 @@ snapshots:
 
   '@cloudflare/workers-types@4.20251107.0': {}
 
-  '@codemirror/autocomplete@6.19.1':
+  '@codemirror/autocomplete@6.20.0':
     dependencies:
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
@@ -5534,7 +5576,7 @@ snapshots:
 
   '@codemirror/lang-css@6.3.1':
     dependencies:
-      '@codemirror/autocomplete': 6.19.1
+      '@codemirror/autocomplete': 6.20.0
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
       '@lezer/common': 1.3.0
@@ -5542,7 +5584,7 @@ snapshots:
 
   '@codemirror/lang-html@6.4.11':
     dependencies:
-      '@codemirror/autocomplete': 6.19.1
+      '@codemirror/autocomplete': 6.20.0
       '@codemirror/lang-css': 6.3.1
       '@codemirror/lang-javascript': 6.2.4
       '@codemirror/language': 6.11.3
@@ -5554,7 +5596,7 @@ snapshots:
 
   '@codemirror/lang-javascript@6.2.4':
     dependencies:
-      '@codemirror/autocomplete': 6.19.1
+      '@codemirror/autocomplete': 6.20.0
       '@codemirror/language': 6.11.3
       '@codemirror/lint': 6.9.2
       '@codemirror/state': 6.5.2
@@ -5564,7 +5606,7 @@ snapshots:
 
   '@codemirror/lang-markdown@6.5.0':
     dependencies:
-      '@codemirror/autocomplete': 6.19.1
+      '@codemirror/autocomplete': 6.20.0
       '@codemirror/lang-html': 6.4.11
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
@@ -7941,7 +7983,7 @@ snapshots:
 
   codemirror@6.0.2:
     dependencies:
-      '@codemirror/autocomplete': 6.19.1
+      '@codemirror/autocomplete': 6.20.0
       '@codemirror/commands': 6.10.0
       '@codemirror/language': 6.11.3
       '@codemirror/lint': 6.9.2

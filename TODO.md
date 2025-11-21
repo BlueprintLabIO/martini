@@ -1,6 +1,39 @@
-# Martini Pre-Launch TODO
+# martini-kit Pre-Launch TODO
 
-Last Updated: 2025-11-18
+Last Updated: 2025-11-21
+
+**NPM Organization:** https://www.npmjs.com/settings/martini-kit/packages ✅ REGISTERED
+**GitHub Repository:** https://github.com/BlueprintLabIO/martini.git ✅ EXISTS
+
+---
+
+## ⚠️ URGENT: Critical Structure Issues Found
+
+### 0. Fix pnpm Workspace Configuration
+**Status:** ❌ BLOCKING - BUILD/TEST COMPLETELY BROKEN
+**Priority:** P0 - MUST FIX IMMEDIATELY
+**Estimated Time:** 5 minutes
+
+**Issue:** Workspace is misconfigured - looking for packages in wrong location!
+- Actual packages are in: `@martini/*`
+- Workspace expects: `packages/*` and `packages/@martini-kit/*`
+- Result: **`pnpm build` and `pnpm test` find 0 packages!**
+
+**Fix:**
+```yaml
+# pnpm-workspace.yaml - UPDATE THIS:
+packages:
+  - '@martini/*'      # ADD THIS (actual location)
+  # - 'apps/*'        # REMOVE (no apps directory exists)
+  # - 'packages/*'    # REMOVE (doesn't exist)
+```
+
+**Verify:**
+- [ ] Update `pnpm-workspace.yaml`
+- [ ] Run `pnpm build` - should build all packages
+- [ ] Run `pnpm test` - should run tests
+
+**Why Critical:** Without this, nothing builds or tests. Publishing is impossible.
 
 ---
 
@@ -13,13 +46,13 @@ Last Updated: 2025-11-18
 
 - [ ] Create LICENSE file in root directory (MIT recommended)
 - [ ] Add LICENSE file to each publishable package:
-  - [ ] `packages/@martini/core/LICENSE`
-  - [ ] `packages/@martini/phaser/LICENSE`
-  - [ ] `packages/@martini/transport-local/LICENSE`
-  - [ ] `packages/@martini/transport-trystero/LICENSE`
-  - [ ] `packages/@martini/transport-iframe-bridge/LICENSE`
-  - [ ] `packages/@martini/devtools/LICENSE`
-  - [ ] `packages/@martini/ide/LICENSE`
+  - [ ] `packages/@martini-kit/core/LICENSE`
+  - [ ] `packages/@martini-kit/phaser/LICENSE`
+  - [ ] `packages/@martini-kit/transport-local/LICENSE`
+  - [ ] `packages/@martini-kit/transport-trystero/LICENSE`
+  - [ ] `packages/@martini-kit/transport-iframe-bridge/LICENSE`
+  - [ ] `packages/@martini-kit/devtools/LICENSE`
+  - [ ] `packages/@martini-kit/ide/LICENSE`
 
 **Why Critical:** Without a license, nobody can legally use, modify, or distribute the code.
 
@@ -30,37 +63,45 @@ Last Updated: 2025-11-18
 **Priority:** P0 - BLOCKING
 **Estimated Time:** 15 minutes
 
-Update `package.json` in each package (remove or set to `false`):
-- [ ] `packages/@martini/core/package.json`
-- [ ] `packages/@martini/phaser/package.json`
-- [ ] `packages/@martini/transport-local/package.json`
-- [ ] `packages/@martini/transport-trystero/package.json`
-- [ ] `packages/@martini/transport-iframe-bridge/package.json`
-- [ ] `packages/@martini/devtools/package.json`
-- [ ] `packages/@martini/ide/package.json`
+**Current Status - ALL packages have `"private": true`:**
+- [ ] `@martini/core/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini/phaser/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini/transport-local/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini/transport-trystero/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini/transport-iframe-bridge/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini/transport-ws/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini/devtools/package.json` ← Has MIT license but missing private field
+- [ ] `@martini/ide/package.json` ← BLOCKS NPM PUBLISH
+- [ ] `@martini/demos/package.json` ← Keep private (demo site, not published)
+
+**Action Required:** Remove `"private": true` OR set to `"private": false` in all packages except demos.
 
 **Why Critical:** npm will reject publication attempts if `private: true` is set.
 
 ---
 
 ### 3. Add Package Metadata (license, author, repository, homepage)
-**Status:** ❌ Not Started
+**Status:** ⚠️ Partially Done
 **Priority:** P0 - BLOCKING
 **Estimated Time:** 30 minutes
+
+**Current Status:**
+- ✅ `@martini/devtools` - Has `"license": "MIT"` and keywords
+- ❌ All others - Missing license, repository, author, homepage
 
 Add to each publishable `package.json`:
 ```json
 {
   "license": "MIT",
-  "author": "Your Name <your.email@example.com>",
+  "author": "Blueprint Lab <contact@blueprintlab.io>",  // UPDATE WITH YOUR INFO
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/martini.git",
-    "directory": "packages/@martini/core"
+    "url": "https://github.com/BlueprintLabIO/martini.git",
+    "directory": "@martini/core"  // UPDATE PER PACKAGE
   },
-  "homepage": "https://martini.dev",
+  "homepage": "https://martini-kit.dev",  // OR YOUR DEPLOYED DOCS URL
   "bugs": {
-    "url": "https://github.com/yourusername/martini/issues"
+    "url": "https://github.com/BlueprintLabIO/martini/issues"
   },
   "keywords": [
     "multiplayer",
@@ -76,13 +117,14 @@ Add to each publishable `package.json`:
 ```
 
 Packages to update:
-- [ ] `@martini/core`
-- [ ] `@martini/phaser`
-- [ ] `@martini/transport-local`
-- [ ] `@martini/transport-trystero`
-- [ ] `@martini/transport-iframe-bridge`
-- [ ] `@martini/devtools`
-- [ ] `@martini/ide`
+- [ ] `@martini/core` - Add all fields
+- [ ] `@martini/phaser` - Add all fields
+- [ ] `@martini/transport-local` - Add all fields
+- [ ] `@martini/transport-trystero` - Add all fields
+- [ ] `@martini/transport-iframe-bridge` - Add all fields
+- [ ] `@martini/transport-ws` - Add all fields
+- [ ] `@martini/devtools` - Add repository, author, homepage (has license)
+- [ ] `@martini/ide` - Add all fields
 
 **Why Critical:** npm requires license field; repository/homepage help users find docs and report issues.
 
@@ -109,8 +151,8 @@ Test Files  1 failed (1)
 Tests  4 failed | 25 passed (29)
 ```
 
-**Issue:** 4 tests failing in `@martini/phaser`
-- [ ] Run tests: `cd packages/@martini/phaser && pnpm test`
+**Issue:** 4 tests failing in `@martini-kit/phaser`
+- [ ] Run tests: `cd packages/@martini-kit/phaser && pnpm test`
 - [ ] Fix failing tests (likely related to `_sprites` property)
 - [ ] Ensure all tests pass
 
@@ -147,53 +189,142 @@ Create comprehensive README with:
 ---
 
 ### 6. Replace Placeholder URLs
-**Status:** ❌ Not Started
+**Status:** ⚠️ Partially Done
 **Priority:** P0 - CRITICAL
 **Estimated Time:** 30 minutes
 
 **Current placeholders found:**
 ```
-- https://github.com/your-org/martini/issues
-- https://github.com/yourusername/martini
-- https://discord.gg/your-server
+✅ GitHub repo exists: https://github.com/BlueprintLabIO/martini.git
+❌ @martini/core/README.md: "https://github.com/your-org/martini-kit/issues"
+❌ @martini/README.md: "https://github.com/your-org/martini-kit/issues"
+❌ Various docs may have "https://github.com/yourusername/martini-kit"
 ```
 
 **Action Required:**
-- [ ] Create actual GitHub repository
-- [ ] Update all GitHub URLs in READMEs
+- [x] GitHub repository created ✅
+- [ ] Update all GitHub URLs in READMEs (replace `your-org/martini-kit` with `BlueprintLabIO/martini`)
 - [ ] Update GitHub URLs in docs
-- [ ] Update GitHub URLs in homepage
-- [ ] Update Discord URL or remove Discord references
-- [ ] Search codebase for "your-org", "yourusername", "your-server" and replace
+- [ ] Search and replace: `your-org` → `BlueprintLabIO`
+- [ ] Search and replace: `yourusername` → `BlueprintLabIO`
+- [ ] Decide on Discord or remove all Discord references
+- [ ] Update homepage URLs to point to deployed demo site
 
 **Files to check:**
-- [ ] `packages/@martini/core/README.md`
-- [ ] `packages/@martini/demos/src/routes/+page.svelte`
-- [ ] `packages/@martini/demos/src/content/docs/index.md`
-- [ ] All other documentation files
+- [ ] `@martini/core/README.md` (has placeholder)
+- [ ] `@martini/README.md` (has placeholder at line 350)
+- [ ] `@martini/demos/src/routes/+page.svelte`
+- [ ] `@martini/demos/src/content/docs/**/*.md`
+- [ ] Search entire codebase: `grep -r "your-org\|yourusername\|your-server" @martini/`
 
 **Why Critical:** Broken links look unprofessional and confuse users.
 
 ---
 
-### 7. Standardize Package Versions
-**Status:** ❌ Not Started
+### 7. Standardize Package Versions to 0.1.0
+**Status:** ❌ Not Started → **DECISION MADE: Use 0.1.0**
 **Priority:** P0 - CRITICAL
 **Estimated Time:** 15 minutes
 
-**Current inconsistent versions:**
-- `@martini/core`: `2.0.0-alpha.1`
-- `@martini/phaser`: `2.0.0-alpha.1`
-- `@martini/transport-local`: `1.0.0`
-- `@martini/transport-trystero`: `0.0.1`
+**Current inconsistent versions → Target:**
+- `@martini-kit/core`: `2.0.0-alpha.1` → **0.1.0**
+- `@martini-kit/phaser`: `2.0.0-alpha.1` → **0.1.0**
+- `@martini-kit/devtools`: `2.0.0-alpha.1` → **0.1.0**
+- `@martini-kit/transport-local`: `1.0.0` → **0.1.0**
+- `@martini-kit/transport-trystero`: `0.0.1` → **0.1.0**
+- `@martini-kit/transport-ws`: unknown → **0.1.0**
+- `@martini-kit/transport-iframe-bridge`: unknown → **0.1.0**
+- `@martini-kit/transport-colyseus`: unknown → **0.1.0**
+- `@martini-kit/ide`: unknown → **0.1.0**
+- Root `package.json`: `0.0.1` → **0.1.0**
 
-**Recommendation:** Use `0.1.0` for initial public release (or `1.0.0` if stable)
+**Target Version:** `0.1.0` (clean, signals initial release ready for early adopters)
 
-- [ ] Update all packages to same version (suggest `0.1.0`)
-- [ ] Update workspace dependencies to use `^0.1.0` instead of `workspace:*`
-- [ ] Add version to changelog
+**Action Required:**
+- [ ] Update `version` field in ALL package.json files to `"0.1.0"`
+- [ ] Keep `workspace:*` for internal dependencies (pnpm converts to `^0.1.0` on publish)
+- [ ] Create CHANGELOG.md in root:
+  ```markdown
+  # Changelog
+
+  ## [0.1.0] - 2025-11-21
+
+  ### Added
+  - Initial public release of martini-kit
+  - Core multiplayer SDK with host-authoritative state sync
+  - Phaser adapter with auto sprite tracking
+  - P2P transport (Trystero WebRTC)
+  - Local transport for testing and demos
+  - WebSocket transport
+  - iframe bridge transport
+  - Development tools and state inspector
+  - Browser-based IDE
+  ```
+- [ ] Update version references in documentation
+
+**Quick command to update all at once:**
+```bash
+# Update all package.json versions
+find @martini -name "package.json" -maxdepth 2 -not -path "*/node_modules/*" -exec sed -i '' 's/"version": "[^"]*"/"version": "0.1.0"/' {} \;
+# Update root package.json
+sed -i '' 's/"version": "[^"]*"/"version": "0.1.0"/' package.json
+```
 
 **Why Critical:** Inconsistent versions confuse dependency management and release process.
+
+---
+
+### 8. Add Missing Package README Files
+**Status:** ❌ Not Started
+**Priority:** P0 - CRITICAL
+**Estimated Time:** 2 hours
+
+**Current Status:**
+- ✅ `@martini/README.md` - Comprehensive (but needs URL fixes)
+- ✅ `@martini/core/README.md` - Exists (needs URL fixes)
+- ❌ `@martini/phaser/README.md` - MISSING
+- ❌ `@martini/transport-local/README.md` - MISSING
+- ❌ `@martini/transport-trystero/README.md` - MISSING
+- ❌ `@martini/transport-ws/README.md` - MISSING
+- ❌ `@martini/transport-iframe-bridge/README.md` - MISSING
+- ❌ `@martini/devtools/README.md` - MISSING
+- ❌ `@martini/ide/README.md` - MISSING
+
+**Why Critical:** npm package page shows README. Empty/missing README = looks abandoned.
+
+**Action Required:**
+- [ ] Create README for each package with:
+  - Package description
+  - Installation instructions
+  - Basic usage example
+  - Link to main docs
+  - Link to GitHub repo
+
+---
+
+### 9. Verify npm Package Names Available
+**Status:** ❌ Not Started
+**Priority:** P0 - BLOCKING
+**Estimated Time:** 10 minutes
+
+**Your npm org:** https://www.npmjs.com/settings/martini-kit/packages
+
+**Packages to verify/reserve:**
+- [ ] Check if `@martini-kit/core` is available on npm
+- [ ] Check if `@martini-kit/phaser` is available
+- [ ] Check if `@martini-kit/transport-local` is available
+- [ ] Check if `@martini-kit/transport-trystero` is available
+- [ ] Check if `@martini-kit/transport-ws` is available
+- [ ] Check if `@martini-kit/transport-iframe-bridge` is available
+- [ ] Check if `@martini-kit/devtools` is available
+- [ ] Check if `@martini-kit/ide` is available
+
+**How to check:**
+```bash
+npm view @martini-kit/core  # If shows error "404", name is available
+```
+
+**Why Critical:** If names are taken, you need to pick different names before publishing.
 
 ---
 
@@ -230,7 +361,7 @@ Add status badges to README:
 Currently demos only run on localhost.
 
 - [ ] Deploy to Vercel/Netlify/Cloudflare Pages
-- [ ] Configure custom domain (e.g., martini.dev or docs.martini.dev)
+- [ ] Configure custom domain (e.g., martini-kit.dev or docs.martini-kit.dev)
 - [ ] Update all documentation links to point to live site
 - [ ] Test all interactive demos work on deployed site
 - [ ] Add deployment status badge to README
@@ -244,7 +375,7 @@ Currently demos only run on localhost.
 **Priority:** P1 - HIGH
 **Estimated Time:** 30 minutes
 
-Currently using `@martini/*` scope.
+Currently using `@martini-kit/*` scope.
 
 - [ ] Create npm organization: https://www.npmjs.com/org/create
 - [ ] Invite team members
@@ -442,7 +573,7 @@ Consider adding opt-in telemetry:
 
 Create CLI templates:
 ```bash
-npm create martini@latest my-game
+npm create martini-kit@latest my-game
 ```
 
 Templates:

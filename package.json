@@ -1,5 +1,5 @@
 {
-	"name": "martini",
+	"name": "martini-kit",
 	"private": true,
 	"version": "0.0.1",
 	"packageManager": "pnpm@10.22.0",
@@ -7,7 +7,7 @@
 		"node": ">=18"
 	},
 	"scripts": {
-		"dev": "turbo run dev --filter=@martini/web",
+		"dev": "turbo run dev --filter=@martini-kit/web",
 		"dev:demos": "turbo watch dev --filter=demos",
 		"build": "turbo run build",
 		"test": "turbo run test",

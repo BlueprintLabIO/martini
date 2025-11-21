@@ -99,7 +99,7 @@ In the bucket settings, ensure:
 ### 3.1 Install Dependencies
 
 ```bash
-cd /Users/yao/blueprint/martini
+cd /Users/yao/blueprint/martini-kit
 pnpm add @supabase/supabase-js tsx
 ```
 
