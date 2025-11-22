@@ -511,8 +511,106 @@ export const game = defineGame({
 
 ---
 
+## Rare/Legendary Items
+
+**Use Case:** Weighted loot tables and special drops
+
+```typescript
+const RARITY_TABLE = [
+  { rarity: 'common', weight: 70, minStat: 1, maxStat: 2 },
+  { rarity: 'rare', weight: 25, minStat: 3, maxStat: 4 },
+  { rarity: 'legendary', weight: 5, minStat: 5, maxStat: 6 },
+];
+
+function rollRarity(random: SeededRandom) {
+  const totalWeight = RARITY_TABLE.reduce((sum, item) => sum + item.weight, 0);
+  let roll = random.range(0, totalWeight);
+
+  for (const item of RARITY_TABLE) {
+    roll -= item.weight;
+    if (roll <= 0) return item;
+  }
+  return RARITY_TABLE[0];
+}
+
+export const game = defineGame({
+  setup: ({ playerIds, random }) => ({
+    players: Object.fromEntries(playerIds.map((id) => [id, { loot: [] as Array<{ rarity: string; stat: number }> }])),
+  }),
+
+  actions: {
+    openChest: {
+      apply: (state, context, input: { chestId: string }) => {
+        const player = state.players[context.targetId];
+        if (!player) return;
+
+        const drop = rollRarity(context.random ?? random);
+        player.loot.push({
+          rarity: drop.rarity,
+          stat: context.random?.range(drop.minStat, drop.maxStat) ?? random.range(drop.minStat, drop.maxStat),
+        });
+
+        console.log(`Player ${context.targetId} found a ${drop.rarity} item`);
+      },
+    },
+  },
+});
+```
+
+**Features:**
+- ✅ Weighted rarity rolls
+- ✅ Deterministic randomness via SeededRandom
+- ✅ Distinct stat ranges per rarity tier
+
+---
+
+## Pickup Zones
+
+**Use Case:** Area-based buffs or healing pads
+
+```typescript
+const ZONES = [
+  { id: 'center', x: 400, y: 300, radius: 120, effect: 'heal' as const },
+  { id: 'power', x: 650, y: 300, radius: 90, effect: 'damage' as const },
+];
+
+export const game = defineGame({
+  setup: ({ playerIds }) => ({
+    players: Object.fromEntries(playerIds.map((id) => [id, { x: 0, y: 0, health: 100, damage: 10 }])),
+  }),
+
+  actions: {
+    tick: {
+      apply: (state, context, input: { delta: number }) => {
+        for (const [playerId, player] of Object.entries(state.players)) {
+          for (const zone of ZONES) {
+            const distance = Math.hypot(player.x - zone.x, player.y - zone.y);
+            const inside = distance <= zone.radius;
+
+            if (!inside) continue;
+
+            if (zone.effect === 'heal') {
+              player.health = Math.min(100, player.health + 0.05 * input.delta);
+            } else if (zone.effect === 'damage') {
+              player.damage = Math.min(50, player.damage + 0.02 * input.delta);
+            }
+          }
+        }
+      },
+    },
+  },
+});
+```
+
+**Features:**
+- ✅ Circular pickup/healing zones
+- ✅ Time-based buff application while inside zone
+- ✅ Easily extensible for more effects
+
+---
+
 ## See Also
 
 - [Health and Damage](/docs/recipes/health-and-damage) - Health pickups
-- [Shooting Mechanics](/docs/recipes/shooting-mechanics) - Weapon power-ups
+- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics/01-basics) - Weapon power-ups
 - [Game Modes](/docs/recipes/game-modes) - Collectible objectives

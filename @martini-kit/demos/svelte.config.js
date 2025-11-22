@@ -14,6 +14,45 @@ const highlighter = await createHighlighter({
 });
 
 /** @type {import('@sveltejs/kit').Config} */
+const cloudflareAdapter = adapter({
+	pages: 'build',
+	assets: 'build',
+	fallback: 'index.html',
+	precompress: false,
+	strict: false
+});
+
+// Miniflare-based platform emulation tries to bind to localhost which isn't
+// permitted in the sandbox. Keep Cloudflare output but stub the emulation
+// layer locally unless explicitly enabled.
+const usePlatformProxy = process.env.ENABLE_CF_PLATFORM_PROXY === 'true';
+const adapterWithSafeEmulation = usePlatformProxy
+	? cloudflareAdapter
+	: {
+			...cloudflareAdapter,
+			emulate() {
+				const waitUntil = () => {};
+				const platform = {
+					env: {},
+					cf: {},
+					caches: {
+						default: {
+							match: async () => undefined,
+							put: async () => {}
+						}
+					},
+					ctx: { waitUntil },
+					context: { waitUntil }
+				};
+				const prerenderPlatform = { env: {} };
+
+				return {
+					platform: async ({ prerender } = { prerender: false }) =>
+						prerender ? prerenderPlatform : platform
+				};
+			}
+		};
+
 const config = {
 	extensions: ['.svelte', '.md', '.svx'],
 
@@ -57,13 +96,7 @@ const config = {
 	],
 
 	kit: {
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: 'index.html',
-			precompress: false,
-			strict: false
-		})
+		adapter: adapterWithSafeEmulation
 	}
 };
 

@@ -934,6 +934,6 @@ const runtime = new GameRuntime(game, transport, {
 ## Examples
 
 Study production-quality examples:
-- [Fire & Ice](../../preview/fire-and-ice) - Cooperative platformer
-- [Blob Battle](../../preview/blob-battle) - Competitive battle game
-- [Paddle Battle](../../preview/paddle-battle) - Classic multiplayer Pong
+- [Fire & Ice](/preview/fire-and-ice) - Cooperative platformer
+- [Blob Battle](/preview/blob-battle) - Competitive battle game
+- [Paddle Battle](/preview/paddle-battle) - Classic multiplayer Pong

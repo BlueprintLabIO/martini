@@ -133,7 +133,7 @@ Extend the `PhysicsManager` with more profiles:
   - Car physics (drift, acceleration curves)
   - Spaceship physics (inertia, rotation)
 
-**File:** [`@martini-kit/phaser/src/helpers/PhysicsManager.ts`](../../../@martini-kit/phaser/src/helpers/PhysicsManager.ts)
+**File:** [`@martini-kit/phaser/src/helpers/PhysicsManager.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/phaser/src/helpers/PhysicsManager.ts)
 
 ### Create UI Component Library
 

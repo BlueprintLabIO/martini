@@ -16,10 +16,11 @@
 		danger: AlertCircle
 	};
 
-	const Icon = $derived(icons[type]);
+	const variant = $derived(type in icons ? type : 'info');
+	const Icon = $derived(icons[variant]);
 </script>
 
-<div class="callout callout-{type}">
+<div class="callout callout-{variant}">
 	<div class="callout-header">
 		<Icon size={20} />
 		{#if title}

@@ -53,7 +53,7 @@ my-game/
 
 ### Step 3: Implement Game Definition
 
-Create [`game.ts`](../../../@martini-kit/demos/src/lib/games) with your game logic:
+Create [`game.ts`](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games) with your game logic:
 
 ```typescript
 // game.ts
@@ -128,7 +128,7 @@ function canJump(player: Player): boolean {
 
 ### Step 4: Create Phaser Scene
 
-Create [`scene.ts`](../../../@martini-kit/demos/src/lib/games) with your Phaser implementation:
+Create [`scene.ts`](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games) with your Phaser implementation:
 
 ```typescript
 // scene.ts
@@ -237,7 +237,7 @@ export class MyGameScene extends Phaser.Scene {
 
 ### Step 5: Create Exports
 
-Create [`index.ts`](../../../@martini-kit/demos/src/lib/games) to export your game:
+Create [`index.ts`](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games) to export your game:
 
 ```typescript
 // index.ts
@@ -248,7 +248,7 @@ export type { MyGameState } from './game';
 
 ### Step 6: Register Game Configuration
 
-Add your game to the IDE configuration in [`src/lib/games/ide-configs-map.ts`](../../../@martini-kit/demos/src/lib/games/ide-configs-map.ts):
+Add your game to the IDE configuration in [`src/lib/games/ide-configs-map.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/demos/src/lib/games/ide-configs-map.ts):
 
 ```typescript
 import { myGameConfig } from './configs/my-game';
@@ -261,7 +261,7 @@ export const ideConfigsMap = {
 };
 ```
 
-Create the config file at [`src/lib/games/configs/my-game.ts`](../../../@martini-kit/demos/src/lib/games/configs):
+Create the config file at [`src/lib/games/configs/my-game.ts`](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/configs):
 
 ```typescript
 import type { IdeGameConfig } from '../types';
@@ -282,7 +282,7 @@ export const myGameConfig: IdeGameConfig = {
 
 ### Step 7: Add to Navigation
 
-Update the navigation in [`src/lib/docs/navigation.ts`](../../../@martini-kit/demos/src/lib/docs/navigation.ts) if you want it in the examples section:
+Update the navigation in [`src/lib/docs/navigation.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/demos/src/lib/docs/navigation.ts) if you want it in the examples section:
 
 ```typescript
 {
@@ -297,7 +297,7 @@ Update the navigation in [`src/lib/docs/navigation.ts`](../../../@martini-kit/de
 
 ### Step 8: Write Documentation
 
-Create documentation at [`src/content/docs/examples/my-game.md`](../../../@martini-kit/demos/src/content/docs/examples):
+Create documentation at [`src/content/docs/examples/my-game.md`](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/content/docs/examples):
 
 ```markdown
 ---
@@ -372,7 +372,7 @@ const playerManager = createPlayerManager({
 
 **Automated testing:**
 
-Create tests at [`src/lib/games/my-game/game.test.ts`](../../../@martini-kit/demos/src/lib/games):
+Create tests at [`src/lib/games/my-game/game.test.ts`](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games):
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -478,10 +478,10 @@ Before finalizing:
 
 Need ideas? Check existing examples:
 
-- **[Fire & Ice](../../../@martini-kit/demos/src/lib/games/fire-and-ice)** - Cooperative gameplay, roles
-- **[Paddle Battle](../../../@martini-kit/demos/src/lib/games/paddle-battle)** - Simple 1v1, physics
-- **[Arena Blaster](../../../@martini-kit/demos/src/lib/games/arena-blaster)** - Combat, projectiles
-- **[Blob Battle](../../../@martini-kit/demos/src/lib/games/blob-battle)** - Physics-based gameplay
+- **[Fire & Ice](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/fire-and-ice)** - Cooperative gameplay, roles
+- **[Paddle Battle](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/paddle-battle)** - Simple 1v1, physics
+- **[Arena Blaster](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/arena-blaster)** - Combat, projectiles
+- **[Blob Battle](https://github.com/BlueprintLabIO/martini/tree/main/@martini-kit/demos/src/lib/games/blob-battle)** - Physics-based gameplay
 
 ## Example Game Ideas
 

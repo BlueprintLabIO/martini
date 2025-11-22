@@ -843,7 +843,7 @@ export const game = defineGame({
 
 ## See Also
 
-- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics) - Projectile movement
+- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics/01-basics) - Projectile movement
 - [Physics Integration](/docs/latest/guides/physics-and-collision) - Advanced physics
 - [Input Manager](/docs/latest/api/phaser/input-manager) - Phaser input utilities
 - [Arena Blaster Example](/docs/latest/examples/overview#arena-blaster) - Complete movement example

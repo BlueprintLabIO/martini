@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Multiplayer without networking. Engine-agnostic multiplayer SDK with host-authoritative state sync.",
   "main": "./dist/index.js",
@@ -32,14 +32,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./sdk-bundle": "./dist/sdk-bundle.json",
-    "./dist/browser.js": "./dist/browser.js"
+    }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc && tsx scripts/build-browser-bundle.ts",
+    "build": "tsc",
     "build:types": "tsc",
-    "build:browser": "tsx scripts/build-browser-bundle.ts",
     "dev": "tsc --watch",
     "dev:build": "tsc --watch --preserveWatchOutput",
     "test": "vitest",

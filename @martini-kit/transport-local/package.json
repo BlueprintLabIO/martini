@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/transport-local",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Local in-memory transport for testing and demos. Part of martini-kit: Multiplayer without networking.",
   "main": "./dist/index.js",
@@ -31,8 +31,11 @@
     "./sdk-bundle": "./dist/sdk-bundle.json",
     "./dist/browser.js": "./dist/browser.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc && tsx scripts/build-browser-bundle.ts",
+    "build": "tsc && node scripts/build-browser-bundle.js",
     "dev": "tsc --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
@@ -40,7 +43,7 @@
     "test:coverage": "vitest --coverage",
     "clean": "rm -rf dist",
     "build:types": "tsc",
-    "build:browser": "tsx scripts/build-browser-bundle.ts"
+    "build:browser": "node scripts/build-browser-bundle.js"
   },
   "dependencies": {
     "@martini-kit/core": "workspace:*"

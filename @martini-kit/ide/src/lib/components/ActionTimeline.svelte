@@ -67,7 +67,8 @@
 		<div class="actions-list">
 			{#each filteredActions.slice().reverse() as action, index}
 				{@const actualIndex = filteredActions.length - 1 - index}
-				<div
+				<button
+					type="button"
 					class="action-entry"
 					class:selected={selectedActionIndex === actualIndex}
 					onclick={() => (selectedActionIndex = actualIndex)}
@@ -102,7 +103,7 @@
 							<pre>{JSON.stringify(action.input, null, 2)}</pre>
 						</div>
 					{/if}
-				</div>
+				</button>
 			{/each}
 		</div>
 	</div>

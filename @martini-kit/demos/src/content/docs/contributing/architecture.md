@@ -31,11 +31,11 @@ martini-kit SDK is built on four key principles:
 - Logging infrastructure
 
 **Main Files:**
-- [`GameRuntime.ts`](../../../@martini-kit/core/src/GameRuntime.ts) - Main runtime that coordinates everything
-- [`sync.ts`](../../../@martini-kit/core/src/sync.ts) - Diff/patch algorithm
-- [`SeededRandom.ts`](../../../@martini-kit/core/src/SeededRandom.ts) - Deterministic RNG
-- [`helpers.ts`](../../../@martini-kit/core/src/helpers.ts) - Helper utilities
-- [`Logger.ts`](../../../@martini-kit/core/src/Logger.ts) - Logging system
+- [`GameRuntime.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/core/src/GameRuntime.ts) - Main runtime that coordinates everything
+- [`sync.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/core/src/sync.ts) - Diff/patch algorithm
+- [`SeededRandom.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/core/src/SeededRandom.ts) - Deterministic RNG
+- [`helpers.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/core/src/helpers.ts) - Helper utilities
+- [`Logger.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/core/src/Logger.ts) - Logging system
 
 ### @martini-kit/phaser
 
@@ -50,11 +50,11 @@ martini-kit SDK is built on four key principles:
 - Scene lifecycle integration
 
 **Main Files:**
-- [`PhaserAdapter.ts`](../../../@martini-kit/phaser/src/PhaserAdapter.ts) - Main adapter class
-- [`SpriteManager.ts`](../../../@martini-kit/phaser/src/helpers/SpriteManager.ts) - Sprite lifecycle management
-- [`InputManager.ts`](../../../@martini-kit/phaser/src/helpers/InputManager.ts) - Input handling
-- [`PhysicsManager.ts`](../../../@martini-kit/phaser/src/helpers/PhysicsManager.ts) - Physics profiles
-- [`CollisionManager.ts`](../../../@martini-kit/phaser/src/helpers/CollisionManager.ts) - Collision rules
+- [`PhaserAdapter.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/phaser/src/PhaserAdapter.ts) - Main adapter class
+- [`SpriteManager.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/phaser/src/helpers/SpriteManager.ts) - Sprite lifecycle management
+- [`InputManager.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/phaser/src/helpers/InputManager.ts) - Input handling
+- [`PhysicsManager.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/phaser/src/helpers/PhysicsManager.ts) - Physics profiles
+- [`CollisionManager.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/phaser/src/helpers/CollisionManager.ts) - Collision rules
 
 ### @martini-kit/transport-*
 
@@ -80,7 +80,7 @@ All transports implement the same `Transport` interface from `@martini-kit/core`
 - Memory usage monitoring
 
 **Main Files:**
-- [`StateInspector.ts`](../../../@martini-kit/devtools/src/StateInspector.ts) - Main inspector class
+- [`StateInspector.ts`](https://github.com/BlueprintLabIO/martini/blob/main/@martini-kit/devtools/src/StateInspector.ts) - Main inspector class
 
 ### @martini-kit/ide
 
@@ -195,7 +195,7 @@ The project uses Turborepo for:
 - **Caching** - Builds are cached and reused
 - **Parallel execution** - Independent tasks run concurrently
 
-Configuration: [`turbo.json`](../../../turbo.json)
+Configuration: [`turbo.json`](https://github.com/BlueprintLabIO/martini/blob/main/turbo.json)
 
 ### TypeScript
 

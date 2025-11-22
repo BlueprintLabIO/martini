@@ -57,7 +57,7 @@ export const docsSections: DocsSection[] = [
 		items: [
 			{ title: 'Examples Overview', href: '/docs/latest/examples/overview' },
 			{ title: 'Player Movement', href: '/docs/latest/recipes/player-movement' },
-			{ title: 'Shooting Mechanics', href: '/docs/latest/recipes/shooting-mechanics' },
+			{ title: 'Shooting Mechanics', href: '/docs/latest/recipes/shooting-mechanics/01-basics' },
 			{ title: 'Health & Damage', href: '/docs/latest/recipes/health-and-damage' },
 			{ title: 'Power-ups', href: '/docs/latest/recipes/power-ups' },
 			{ title: 'Game Modes', href: '/docs/latest/recipes/game-modes' }

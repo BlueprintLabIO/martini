@@ -10,6 +10,7 @@
     "dev": "turbo run dev --filter=demos...",
     "dev:demos": "turbo watch dev --filter=demos...",
     "build": "turbo run build",
+    "build:demos": "pnpm --filter=demos run build",
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
     "upload-starter-assets": "tsx scripts/upload-starter-assets.ts",

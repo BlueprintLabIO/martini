@@ -384,7 +384,7 @@ When reviewing others' PRs:
 - **Focus on code, not the person**
 
 **Good review comment:**
-> "Great work on this feature! I noticed that we're using `playerId` here instead of `targetId`. This could cause issues when one player affects another. Could we update this to use `targetId`? See [this example](link) for reference."
+> "Great work on this feature! I noticed that we're using `playerId` here instead of `targetId`. This could cause issues when one player affects another. Could we update this to use `targetId`? See [this example](/docs/latest/concepts/actions) for reference."
 
 **Bad review comment:**
 > "This is wrong. Use `targetId` not `playerId`."

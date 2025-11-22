@@ -808,7 +808,7 @@ Before releasing:
 
 ## See Also
 
-- [Best Practices](./best-practices.md) - Development patterns
-- [Physics and Collision](./physics-and-collision.md) - Physics optimization
-- [Deployment](./deployment.md) - Production deployment
-- [Testing](./testing.md) - Performance testing
+- [Best Practices](/docs/latest/guides/best-practices) - Development patterns
+- [Physics and Collision](/docs/latest/guides/physics-and-collision) - Physics optimization
+- [Deployment](/docs/latest/guides/deployment) - Production deployment
+- [Testing](/docs/latest/guides/testing) - Performance testing

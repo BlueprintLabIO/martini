@@ -125,16 +125,19 @@ export class SandpackManager {
 		for (const path of vfs.getFilePaths()) {
 			let content = vfs.readFile(path);
 			if (content !== undefined) {
-				// Inject __MARTINI_KIT_CONFIG__ and DevTools bridge at the top of the entry file
+				// Inject __martini-kit_CONFIG__ and DevTools bridge at the top of the entry file
 				if (path === entryPoint) {
 					const configSetup = `// Injected by martini-kit IDE - setup config before any imports
-window.__MARTINI_KIT_CONFIG__ = ${JSON.stringify({
+const __martiniKitConfig = ${JSON.stringify({
 	transport: {
 		type: this.options.transportType,
 		roomId: this.options.roomId,
 		isHost: this.options.role === 'host'
 	}
 })};
+// Support both legacy and current config keys
+window['__martini-kit_CONFIG__'] = __martiniKitConfig;
+window['__MARTINI_KIT_CONFIG__'] = __martiniKitConfig;
 
 `;
 					const devtoolsBridge = this.createDevToolsBridge();
@@ -144,26 +147,30 @@ window.__MARTINI_KIT_CONFIG__ = ${JSON.stringify({
 			}
 		}
 
-		// 2. Add root package.json (required by Sandpack)
-		files['/package.json'] = {
-			code: JSON.stringify({
-				name: 'martini-kit-game',
-				version: '1.0.0',
-				dependencies: {
-					'@martini-kit/core': '^0.1.0',
-					'@martini-kit/phaser': '^0.1.0',
-					'@martini-kit/devtools': '^0.1.0',
-					'@martini-kit/transport-local': '^0.1.0',
-					'@martini-kit/transport-iframe-bridge': '^0.1.0',
-					phaser: '^3.80.1'
-				}
-			})
-		};
+			// 2. Add root package.json (required by Sandpack)
+			files['/package.json'] = {
+				code: JSON.stringify({
+					name: 'martini-kit-game',
+					version: '1.0.0',
+					dependencies: {
+						'@martini-kit/core': '0.1.1',
+						'@martini-kit/phaser': '0.1.1',
+						'@martini-kit/devtools': '0.1.1',
+						'@martini-kit/transport-local': '0.1.1',
+						'@martini-kit/transport-iframe-bridge': '0.1.1',
+						'phaser': '3.80.1'
+					}
+				})
+			};
 
-		// 3. Add custom HTML template (Phaser pulled from npm dependency)
-		files['/index.html'] = {
-			code: this.createHTMLTemplate()
-		};
+			// 3. Provide a local Phaser module shim that proxies the global (loaded via CDN)
+			// This avoids failures when the bundler cannot fetch phaser from npm
+			files['/node_modules/phaser/index.js'] = { code: this.createPhaserModuleShim() };
+
+			// 3. Add custom HTML template (Phaser pulled from npm dependency)
+			files['/index.html'] = {
+				code: this.createHTMLTemplate()
+			};
 
 		// Load Sandpack client
 		try {
@@ -223,18 +230,21 @@ window.__MARTINI_KIT_CONFIG__ = ${JSON.stringify({
 		for (const path of vfs.getFilePaths()) {
 			let content = vfs.readFile(path);
 			if (content !== undefined) {
-				// Inject __MARTINI_KIT_CONFIG__ and DevTools bridge at the top of the entry file
+				// Inject __martini-kit_CONFIG__ and DevTools bridge at the top of the entry file
 				if (path === entryPoint) {
 					const configSetup = `// Injected by martini-kit IDE - setup config before any imports
-	window.__MARTINI_KIT_CONFIG__ = ${JSON.stringify({
-		transport: {
-			type: this.options.transportType,
-			roomId: this.options.roomId,
-			isHost: this.options.role === 'host'
-		}
+const __martiniKitConfig = ${JSON.stringify({
+	transport: {
+		type: this.options.transportType,
+		roomId: this.options.roomId,
+		isHost: this.options.role === 'host'
+	}
 })};
+// Support both legacy and current config keys
+window['__martini-kit_CONFIG__'] = __martiniKitConfig;
+window['__MARTINI_KIT_CONFIG__'] = __martiniKitConfig;
 
-`;
+	`;
 					const devtoolsBridge = this.createDevToolsBridge();
 					content = configSetup + devtoolsBridge + content;
 				}
@@ -248,15 +258,18 @@ window.__MARTINI_KIT_CONFIG__ = ${JSON.stringify({
 				name: 'martini-kit-game',
 				version: '1.0.0',
 				dependencies: {
-					'@martini-kit/core': '^0.1.0',
-					'@martini-kit/phaser': '^0.1.0',
-					'@martini-kit/devtools': '^0.1.0',
-					'@martini-kit/transport-local': '^0.1.0',
-					'@martini-kit/transport-iframe-bridge': '^0.1.0',
-					phaser: '^3.80.1'
+					'@martini-kit/core': '0.1.1',
+					'@martini-kit/phaser': '0.1.1',
+					'@martini-kit/devtools': '0.1.1',
+					'@martini-kit/transport-local': '0.1.1',
+					'@martini-kit/transport-iframe-bridge': '0.1.1',
+					'phaser': '3.80.1'
 				}
 			})
 		};
+
+		// Add Phaser module shim
+		files['/node_modules/phaser/index.js'] = { code: this.createPhaserModuleShim() };
 
 		files['/index.html'] = { code: this.createHTMLTemplate() };
 
@@ -387,7 +400,6 @@ window.__MARTINI_KIT_CONFIG__ = ${JSON.stringify({
 // ===== martini-kit DevTools Bridge =====
 // Auto-injected by martini-kit IDE - forwards runtime data to parent window
 import { StateInspector } from '@martini-kit/devtools';
-import * as MartiniKitPhaser from '@martini-kit/phaser';
 
 let devToolsEnabled = ${initiallyEnabled};
 let capturedRuntime = null;
@@ -423,54 +435,53 @@ window.addEventListener('message', (event) => {
   }
 });
 
-const originalInitializeGame = MartiniKitPhaser.initializeGame;
-MartiniKitPhaser.initializeGame = function(...args) {
-  const result = originalInitializeGame.apply(this, args);
-  capturedRuntime = result.runtime;
+// Register runtime hook (called by initializeGame)
+window['__martini-kit_IDE__'] = {
+  registerRuntime: (runtime) => {
+    capturedRuntime = runtime;
 
-  if (devToolsEnabled) {
-    window.__MARTINI_KIT_INSPECTOR__.attach(result.runtime);
-  }
+    if (devToolsEnabled) {
+      window.__MARTINI_KIT_INSPECTOR__.attach(runtime);
+    }
 
-  const stateSnapshotBatch = [];
-  const actionBatch = [];
-  let flushScheduled = false;
+    const stateSnapshotBatch = [];
+    const actionBatch = [];
+    let flushScheduled = false;
 
-  function scheduleFlush() {
-    if (flushScheduled) return;
-    flushScheduled = true;
-    requestAnimationFrame(() => {
-      if (stateSnapshotBatch.length > 0) {
-        window.parent.postMessage({
-          type: 'martini-kit:devtools:state:batch',
-          snapshots: stateSnapshotBatch.splice(0)
-        }, '*');
+    function scheduleFlush() {
+      if (flushScheduled) return;
+      flushScheduled = true;
+      requestAnimationFrame(() => {
+        if (stateSnapshotBatch.length > 0) {
+          window.parent.postMessage({
+            type: 'martini-kit:devtools:state:batch',
+            snapshots: stateSnapshotBatch.splice(0)
+          }, '*');
+        }
+        if (actionBatch.length > 0) {
+          window.parent.postMessage({
+            type: 'martini-kit:devtools:action:batch',
+            actions: actionBatch.splice(0)
+          }, '*');
+        }
+        flushScheduled = false;
+      });
+    }
+
+    window.__MARTINI_KIT_INSPECTOR__.onStateChange((snapshot) => {
+      if (devToolsEnabled) {
+        stateSnapshotBatch.push(snapshot);
+        scheduleFlush();
       }
-      if (actionBatch.length > 0) {
-        window.parent.postMessage({
-          type: 'martini-kit:devtools:action:batch',
-          actions: actionBatch.splice(0)
-        }, '*');
+    });
+
+    window.__MARTINI_KIT_INSPECTOR__.onAction((action) => {
+      if (devToolsEnabled) {
+        actionBatch.push(action);
+        scheduleFlush();
       }
-      flushScheduled = false;
     });
   }
-
-  window.__MARTINI_KIT_INSPECTOR__.onStateChange((snapshot) => {
-    if (devToolsEnabled) {
-      stateSnapshotBatch.push(snapshot);
-      scheduleFlush();
-    }
-  });
-
-  window.__MARTINI_KIT_INSPECTOR__.onAction((action) => {
-    if (devToolsEnabled) {
-      actionBatch.push(action);
-      scheduleFlush();
-    }
-  });
-
-  return result;
 };
 `;
 	}
@@ -503,6 +514,9 @@ MartiniKitPhaser.initializeGame = function(...args) {
       outline: none !important;
     }
   </style>
+  <script>
+    // Config injected via entry point
+  </script>
   <!-- Load Phaser from CDN as a global -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
@@ -510,6 +524,26 @@ MartiniKitPhaser.initializeGame = function(...args) {
   <div id="game"></div>
 </body>
 </html>`;
+	}
+
+	/**
+	 * Shim module that maps the phaser import to the global Phaser loaded via CDN.
+	 * Sandpack can fail to pull phaser from npm; this keeps the runtime stable.
+	 */
+	private createPhaserModuleShim(): string {
+		return `
+// Phaser shim: export the global Phaser injected via CDN
+const PhaserGlobal = typeof window !== 'undefined' ? window.Phaser : undefined;
+if (!PhaserGlobal) {
+  throw new Error('Phaser global is not available. Ensure CDN script is loaded.');
+}
+
+export default PhaserGlobal;
+export const Scene = PhaserGlobal.Scene;
+export const Game = PhaserGlobal.Game;
+export const AUTO = PhaserGlobal.AUTO;
+export const Scale = PhaserGlobal.Scale;
+`;
 	}
 
 }

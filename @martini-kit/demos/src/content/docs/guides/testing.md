@@ -743,6 +743,6 @@ describe('Game Runtime', () => {
 
 ## See Also
 
-- [Best Practices](./best-practices.md) - General development patterns
-- [Core API - GameRuntime](../api/core/game-runtime.md) - GameRuntime reference
-- [Transport - Local](../api/transports/local.md) - LocalTransport for testing
+- [Best Practices](/docs/latest/guides/best-practices) - General development patterns
+- [Core API - GameRuntime](../api/core/game-runtime) - GameRuntime reference
+- [Transport - Local](/docs/latest/api/transports/local) - LocalTransport for testing

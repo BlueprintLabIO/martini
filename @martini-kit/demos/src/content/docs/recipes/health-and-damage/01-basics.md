@@ -429,4 +429,4 @@ create() {
 
 - [Advanced Health Systems](/docs/latest/recipes/health-and-damage/02-advanced) - Death, respawn, regeneration
 - [Complex Systems](/docs/latest/recipes/health-and-damage/03-systems) - Team damage, damage numbers
-- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics) - Dealing damage with projectiles
+- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics/01-basics) - Dealing damage with projectiles

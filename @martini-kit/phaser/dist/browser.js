@@ -3128,9 +3128,13 @@ function initializeGame(config) {
       playerIds: [transport.getPlayerId()]
     }
   );
+  const PhaserLib = Phaser ?? (typeof window !== "undefined" ? window.Phaser : void 0);
+  if (!PhaserLib) {
+    throw new Error("Phaser failed to load. Ensure the Phaser script is available in the sandbox.");
+  }
   const defaultScale = {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    mode: PhaserLib.Scale.FIT,
+    autoCenter: PhaserLib.Scale.CENTER_BOTH,
     width: config.phaserConfig?.width || 800,
     height: config.phaserConfig?.height || 600
   };
@@ -3139,14 +3143,14 @@ function initializeGame(config) {
     // Enable mouse + 2 touch pointers by default
   };
   const phaserConfig = {
-    type: Phaser.AUTO,
+    type: PhaserLib.AUTO,
     parent: "game",
     scale: defaultScale,
     input: defaultInput,
     ...config.phaserConfig,
     scene: config.scene(runtime)
   };
-  const phaserGame = new Phaser.Game(phaserConfig);
+  const phaserGame = new PhaserLib.Game(phaserConfig);
   if (typeof window !== "undefined" && window["__martini-kit_IDE__"]) {
     window["__martini-kit_IDE__"].registerRuntime(runtime);
   }

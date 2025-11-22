@@ -775,6 +775,6 @@ jobs:
 
 ## See Also
 
-- [Optimization](./optimization.md) - Performance optimization guide
-- [Best Practices](./best-practices.md) - Development patterns
-- [Testing](./testing.md) - Testing strategies
+- [Optimization](/docs/latest/guides/optimization) - Performance optimization guide
+- [Best Practices](/docs/latest/guides/best-practices) - Development patterns
+- [Testing](/docs/latest/guides/testing) - Testing strategies

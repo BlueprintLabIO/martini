@@ -274,7 +274,7 @@ metrics?: TransportMetrics
 
 See [TransportMetrics](#transportmetrics) below.
 
-## TransportMetrics Interface
+## TransportMetrics
 
 Optional interface for transport observability.
 

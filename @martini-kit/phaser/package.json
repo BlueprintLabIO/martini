@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/phaser",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Multiplayer without networking. Phaser 3 adapter with automatic sprite synchronization.",
   "main": "./dist/index.js",
@@ -34,10 +34,13 @@
     "./sdk-bundle": "./dist/sdk-bundle.json",
     "./dist/browser.js": "./dist/browser.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc && tsx scripts/build-browser-bundle.ts",
+    "build": "tsc && node scripts/build-browser-bundle.js",
     "build:types": "tsc",
-    "build:browser": "tsx scripts/build-browser-bundle.ts",
+    "build:browser": "node scripts/build-browser-bundle.js",
     "dev": "tsc --watch",
     "test": "vitest",
     "test:coverage": "vitest --coverage",

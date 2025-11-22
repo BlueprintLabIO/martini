@@ -734,7 +734,7 @@ describe('Physics', () => {
 
 ## See Also
 
-- [Best Practices](./best-practices.md) - Performance optimization
-- [Phaser Adapter API](../api/phaser/adapter.md) - PhaserAdapter reference
-- [State Management](../concepts/state-management.md) - Understanding state sync
-- [Actions](../concepts/actions.md) - Writing action handlers
+- [Best Practices](/docs/latest/guides/best-practices) - Performance optimization
+- [Phaser Adapter API](/docs/latest/api/phaser/adapter) - PhaserAdapter reference
+- [State Management](/docs/latest/concepts/state-management) - Understanding state sync
+- [Actions](/docs/latest/concepts/actions) - Writing action handlers

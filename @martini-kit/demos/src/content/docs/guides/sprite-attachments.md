@@ -336,7 +336,7 @@ sprite.rotation += Math.PI / 2;  // manual offset (don't do this!)
 
 ## Creating Custom Attachments (Advanced)
 
-For building your own attachment types, see the [SpriteAttachment API reference](../../api/phaser/sprite-attachment) which provides:
+For building your own attachment types, see the [SpriteAttachment API reference](/docs/latest/api/phaser/sprite-attachment) which provides:
 
 - Generic `createSpriteAttachment()` function
 - `createSpriteAttachments()` for multiple attachments
@@ -346,7 +346,7 @@ For building your own attachment types, see the [SpriteAttachment API reference]
 
 ## See Also
 
-- [SpriteAttachment API](../../api/phaser/sprite-attachment) - Generic attachment system
-- [Phaser Helpers](../../api/phaser/helpers) - All available helpers
-- [SpriteManager](../../api/phaser/sprite-manager) - Sprite lifecycle management
+- [SpriteAttachment API](/docs/latest/api/phaser/sprite-attachment) - Generic attachment system
+- [Phaser Helpers](/docs/latest/api/phaser/helpers) - All available helpers
+- [SpriteManager](/docs/latest/api/phaser/sprite-manager) - Sprite lifecycle management
 - [UI and HUD Guide](./ui-and-hud) - General UI patterns

@@ -1,96 +1,96 @@
 {
 	"name": "@martini-kit/ide",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Embeddable multiplayer game IDE with dual-view local testing",
 	"scripts": {
 		"dev": "vite dev",
-    "dev:build": "svelte-package --watch",
-    "build": "vite build && npm run prepack",
-    "preview": "vite preview",
-    "prepare": "svelte-kit sync || echo ''",
-    "prepack": "svelte-kit sync && svelte-package && publint",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "format": "prettier --write .",
-    "lint": "prettier --check . && eslint ."
-  },
-  "files": [
-    "dist",
-    "!dist/**/*.test.*",
-    "!dist/**/*.spec.*"
-  ],
-  "sideEffects": [
-    "**/*.css"
-  ],
-  "svelte": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "svelte": "./dist/index.js"
-    }
-  },
-  "peerDependencies": {
-    "phaser": "^3.80.0",
-    "svelte": "^5.0.0"
-  },
-  "devDependencies": {
-    "@eslint/compat": "^1.4.0",
-    "@eslint/js": "^9.38.0",
-    "@sveltejs/adapter-auto": "^7.0.0",
-    "@sveltejs/kit": "^2.47.1",
-    "@sveltejs/package": "^2.5.4",
-    "@sveltejs/vite-plugin-svelte": "^6.2.1",
-    "@types/node": "^22",
-    "eslint": "^9.38.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-svelte": "^3.12.4",
-    "globals": "^16.4.0",
-    "prettier": "^3.6.2",
-    "prettier-plugin-svelte": "^3.4.0",
-    "publint": "^0.3.14",
-    "svelte": "^5.41.0",
-    "svelte-check": "^4.3.3",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.1",
-    "vite": "^7.1.10"
-  },
-  "keywords": [
-    "svelte"
-  ],
-  "dependencies": {
-    "@codemirror/autocomplete": "^6.20.0",
-    "@codemirror/commands": "^6.10.0",
-    "@codemirror/lang-css": "^6.3.1",
-    "@codemirror/lang-html": "^6.4.11",
-    "@codemirror/lang-javascript": "^6.2.4",
-    "@codemirror/lang-markdown": "^6.5.0",
-    "@codemirror/language": "^6.11.3",
-    "@codemirror/search": "^6.5.11",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.6",
-    "@codesandbox/sandpack-client": "^2.19.8",
-    "@martini-kit/core": "workspace:*",
-    "@martini-kit/devtools": "workspace:*",
-    "@martini-kit/phaser": "workspace:*",
-    "@martini-kit/transport-iframe-bridge": "workspace:*",
-    "@martini-kit/transport-local": "workspace:*",
-    "@typescript/vfs": "^1.6.2",
-    "codemirror": "^6.0.2",
-    "esbuild-wasm": "^0.27.0",
-    "paneforge": "^1.0.2"
-  },
-  "license": "Apache-2.0",
-  "author": "Yao <yao@blueprintlab.io>",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/BlueprintLabIO/martini.git",
-    "directory": "@martini-kit/ide"
-  },
-  "homepage": "https://github.com/BlueprintLabIO/martini",
-  "bugs": {
-    "url": "https://github.com/BlueprintLabIO/martini/issues"
-  }
+		"dev:build": "svelte-package --watch",
+		"build": "vite build && npm run prepack",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"prepack": "svelte-kit sync && svelte-package && publint",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && eslint ."
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*"
+	],
+	"sideEffects": [
+		"**/*.css"
+	],
+	"svelte": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	},
+	"peerDependencies": {
+		"phaser": "^3.80.0",
+		"svelte": "^5.0.0"
+	},
+	"devDependencies": {
+		"@eslint/compat": "^1.4.0",
+		"@eslint/js": "^9.38.0",
+		"@sveltejs/adapter-auto": "^7.0.0",
+		"@sveltejs/kit": "^2.47.1",
+		"@sveltejs/package": "^2.5.4",
+		"@sveltejs/vite-plugin-svelte": "^6.2.1",
+		"@types/node": "^22",
+		"eslint": "^9.38.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.12.4",
+		"globals": "^16.4.0",
+		"prettier": "^3.6.2",
+		"prettier-plugin-svelte": "^3.4.0",
+		"publint": "^0.3.14",
+		"svelte": "^5.41.0",
+		"svelte-check": "^4.3.3",
+		"tsx": "^4.20.6",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.46.1",
+		"vite": "^7.1.10"
+	},
+	"keywords": [
+		"svelte"
+	],
+	"dependencies": {
+		"@codemirror/autocomplete": "^6.20.0",
+		"@codemirror/commands": "^6.10.0",
+		"@codemirror/lang-css": "^6.3.1",
+		"@codemirror/lang-html": "^6.4.11",
+		"@codemirror/lang-javascript": "^6.2.4",
+		"@codemirror/lang-markdown": "^6.5.0",
+		"@codemirror/language": "^6.11.3",
+		"@codemirror/search": "^6.5.11",
+		"@codemirror/state": "^6.5.2",
+		"@codemirror/view": "^6.38.6",
+		"@codesandbox/sandpack-client": "^2.19.8",
+		"@martini-kit/core": "workspace:*",
+		"@martini-kit/devtools": "workspace:*",
+		"@martini-kit/phaser": "workspace:*",
+		"@martini-kit/transport-iframe-bridge": "workspace:*",
+		"@martini-kit/transport-local": "workspace:*",
+		"@typescript/vfs": "^1.6.2",
+		"codemirror": "^6.0.2",
+		"esbuild-wasm": "^0.27.0",
+		"paneforge": "^1.0.2"
+	},
+	"license": "Apache-2.0",
+	"author": "Yao <yao@blueprintlab.io>",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/BlueprintLabIO/martini.git",
+		"directory": "@martini-kit/ide"
+	},
+	"homepage": "https://github.com/BlueprintLabIO/martini",
+	"bugs": {
+		"url": "https://github.com/BlueprintLabIO/martini/issues"
+	}
 }

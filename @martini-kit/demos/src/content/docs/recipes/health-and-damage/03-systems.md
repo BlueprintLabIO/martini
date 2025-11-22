@@ -630,6 +630,6 @@ export const game = defineGame({
 
 - [Basics](/docs/latest/recipes/health-and-damage/01-basics) - Health tracking fundamentals
 - [Advanced](/docs/latest/recipes/health-and-damage/02-advanced) - Death, respawn, regeneration
-- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics) - Dealing damage with projectiles
+- [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics/01-basics) - Dealing damage with projectiles
 - [Game Modes](/docs/latest/recipes/game-modes) - Victory conditions
 - [Arena Blaster Example](/docs/latest/examples/overview#arena-blaster) - Full health/damage implementation

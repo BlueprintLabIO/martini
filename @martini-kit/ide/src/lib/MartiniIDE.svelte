@@ -28,7 +28,7 @@
 	let { config }: Props = $props();
 
 	// Core systems
-	let vfs: VirtualFileSystem;
+	let vfs = $state<VirtualFileSystem>(new VirtualFileSystem(config.files));
 	let relay: IframeBridgeRelay | null = null;
 
 	// State
@@ -44,8 +44,8 @@
 	let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// GamePreview component refs
-	let hostPreviewRef: any;
-	let clientPreviewRef: any;
+	let hostPreviewRef = $state<any>(null);
+	let clientPreviewRef = $state<any>(null);
 
 	// DevTools state (shared between both previews)
 	let showDevTools = $state(false);
@@ -87,9 +87,6 @@
 				showDevTools = storedPreference === 'true';
 			}
 		}
-
-		// Initialize core systems
-		vfs = new VirtualFileSystem(config.files);
 
 		// Get file list
 		filePaths = vfs.getFilePaths();
@@ -833,12 +830,6 @@
 		margin: 0 0 0.75rem 0;
 		flex: 1;
 		overflow-y: auto;
-	}
-
-	.file-tree ul {
-		list-style: none;
-		padding-left: 0.75rem;
-		margin: 0;
 	}
 
 	.tree-node {

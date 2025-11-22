@@ -50,11 +50,16 @@ export function initializeGame(config) {
         isHost: platformConfig.transport.isHost,
         playerIds: [transport.getPlayerId()]
     });
+    // Resolve Phaser from import or global (Sandpack can fail to hydrate default import)
+    const PhaserLib = Phaser ?? (typeof window !== 'undefined' ? window.Phaser : undefined);
+    if (!PhaserLib) {
+        throw new Error('Phaser failed to load. Ensure the Phaser script is available in the sandbox.');
+    }
     // Create Phaser game with user's scene and config
     // Default scale configuration ensures canvas fits container properly
     const defaultScale = {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
+        mode: PhaserLib.Scale.FIT,
+        autoCenter: PhaserLib.Scale.CENTER_BOTH,
         width: config.phaserConfig?.width || 800,
         height: config.phaserConfig?.height || 600
     };
@@ -64,14 +69,14 @@ export function initializeGame(config) {
         activePointers: 3 // Enable mouse + 2 touch pointers by default
     };
     const phaserConfig = {
-        type: Phaser.AUTO,
+        type: PhaserLib.AUTO,
         parent: 'game',
         scale: defaultScale,
         input: defaultInput,
         ...config.phaserConfig,
         scene: config.scene(runtime)
     };
-    const phaserGame = new Phaser.Game(phaserConfig);
+    const phaserGame = new PhaserLib.Game(phaserConfig);
     // Register runtime with IDE sandbox (if present)
     if (typeof window !== 'undefined' && window['__martini-kit_IDE__']) {
         window['__martini-kit_IDE__'].registerRuntime(runtime);

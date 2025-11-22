@@ -60,7 +60,7 @@ const hud = createPlayerHUD(adapter, this, {
 - Backward compatible - works with both action and turn-based games
 - No manual `onChange` subscriptions needed
 
-[Full guide →](../../guides/ui-and-hud#using-createplayerhud-helper)
+[Full guide →](../../guides/ui-and-hud/01-basics#using-createplayerhud-helper)
 
 ### PlayerUIManager
 

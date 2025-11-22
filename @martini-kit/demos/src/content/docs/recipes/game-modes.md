@@ -610,7 +610,7 @@ create() {
 
 ## See Also
 
-- [Health and Damage](/docs/recipes/health-and-damage) - Elimination mechanics
+- [Health and Damage](/docs/latest/recipes/health-and-damage) - Elimination mechanics
 - [Player Movement](/docs/recipes/player-movement) - Zone control
 - [Arena Blaster Example](/docs/examples/overview#arena-blaster) - Score-based victory
 - [Fire & Ice Example](/docs/examples/overview#fire--ice) - Cooperative mode

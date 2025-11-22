@@ -570,7 +570,7 @@ actions.forEach(action => {
 
 ## See Also
 
-- [Core API - GameRuntime](../core/game-runtime.md) - The runtime that StateInspector attaches to
-- [Core API - Sync](../core/sync.md) - Understanding diffs and patches
-- [Guides - Testing](../../guides/testing.md) - Using StateInspector for debugging tests
-- [Guides - Optimization](../../guides/optimization.md) - Performance monitoring techniques
+- [Core API - GameRuntime](../core/game-runtime) - The runtime that StateInspector attaches to
+- [Core API - Sync](../core/sync) - Understanding diffs and patches
+- [Guides - Testing](../../guides/testing) - Using StateInspector for debugging tests
+- [Guides - Optimization](../../guides/optimization) - Performance monitoring techniques

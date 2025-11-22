@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/transport-iframe-bridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Iframe-based transport for sandboxed multiplayer testing",
   "type": "module",
   "main": "./dist/index.js",
@@ -17,12 +17,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && tsx scripts/build-browser-bundle.ts",
+    "build": "tsc && node scripts/build-browser-bundle.js",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "build:types": "tsc",
-    "build:browser": "tsx scripts/build-browser-bundle.ts"
+    "build:browser": "node scripts/build-browser-bundle.js"
   },
   "keywords": [
     "martini-kit",

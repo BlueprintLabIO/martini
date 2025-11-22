@@ -1,10 +1,13 @@
 {
   "name": "@martini-kit/transport-colyseus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Colyseus transport adapter for martini-kit multiplayer SDK",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest",
@@ -31,6 +34,9 @@
   "peerDependencies": {
     "@martini-kit/core": "workspace:*",
     "colyseus.js": "^0.15.0"
+  },
+  "dependencies": {
+    "@martini-kit/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

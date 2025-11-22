@@ -3,12 +3,15 @@ node_modules
 
 # Project noise
 DO_NOT_READ.md
+CLAUDE.md
+
 .claude/
 .claude
 .mcp.json
 .pnpm-store/
 .idea/
 .vscode/
+*.tsbuildinfo
 *.log
 *.tmp
 *.swp

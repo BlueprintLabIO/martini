@@ -547,5 +547,5 @@ const transport = new WebSocketTransport({ url: 'wss://server.com' });
 
 - **[defineGame API →](/docs/api/core/define-game)** - Full API reference
 - **[GameRuntime API →](/docs/api/core/game-runtime)** - Runtime methods
-- **[Core Concepts Guide →](/docs/guides/core-concepts)** - Deep dive
+- **[Core Concepts Guide →](/docs/latest/concepts/architecture)** - Deep dive
 - **[Quick Start →](/docs/getting-started/quick-start)** - Build your first game

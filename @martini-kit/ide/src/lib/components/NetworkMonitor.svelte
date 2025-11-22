@@ -103,7 +103,8 @@
 		<div class="packets-list">
 			{#each filteredPackets.slice().reverse() as packet, index}
 				{@const actualIndex = filteredPackets.length - 1 - index}
-				<div
+				<button
+					type="button"
 					class="packet-entry"
 					class:selected={selectedPacketIndex === actualIndex}
 					onclick={() => (selectedPacketIndex = actualIndex)}
@@ -123,7 +124,7 @@
 							<pre>{JSON.stringify(packet.payload, null, 2)}</pre>
 						</div>
 					{/if}
-				</div>
+				</button>
 			{/each}
 		</div>
 	</div>

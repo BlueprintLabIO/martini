@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/devtools",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Development tools for martini-kit - state inspector, action history, network monitor",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,6 +12,9 @@
     },
     "./dist/martini-kit-devtools.browser.js": "./dist/martini-kit-devtools.browser.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc && pnpm build:browser",
     "test": "vitest",
