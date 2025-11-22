@@ -8,10 +8,9 @@ export { default } from './lib/MartiniIDE.svelte'; // Default export for conveni
 export { default as CodeEditor } from './lib/components/CodeEditor.svelte';
 export { default as GamePreview } from './lib/components/GamePreview.svelte';
 
-// Core (Phase 1 exports)
+// Core
 export { VirtualFileSystem } from './lib/core/VirtualFS';
-export { SandpackManager as Bundler } from './lib/core/SandpackManager';
-export { TypeScriptEnvironment } from './lib/core/TypeScriptEnv';
+export { SandpackManager } from './lib/core/SandpackManager';
 
 // Types
-export type { MartiniKitIDEConfig, GameError, TypeDiagnostic } from './lib/types';
+export type { MartiniKitIDEConfig, GameError } from './lib/types';

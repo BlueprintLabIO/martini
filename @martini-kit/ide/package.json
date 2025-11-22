@@ -77,9 +77,8 @@
 		"@martini-kit/phaser": "workspace:*",
 		"@martini-kit/transport-iframe-bridge": "workspace:*",
 		"@martini-kit/transport-local": "workspace:*",
-		"@typescript/vfs": "^1.6.2",
 		"codemirror": "^6.0.2",
-		"esbuild-wasm": "^0.27.0",
+		"esbuild-wasm": "0.20.2",
 		"paneforge": "^1.0.2"
 	},
 	"license": "Apache-2.0",

@@ -11,7 +11,7 @@ export { default as GamePreview } from './components/GamePreview.svelte';
 // Core
 export { VirtualFileSystem } from './core/VirtualFS';
 export { SandpackManager } from './core/SandpackManager';
-export { TypeScriptEnvironment } from './core/TypeScriptEnv';
+export { ESBuildManager } from './core/ESBuildManager';
 
 // Types
-export type { MartiniKitIDEConfig, GameError, TypeDiagnostic } from './types';
+export type { MartiniKitIDEConfig, GameError } from './types';

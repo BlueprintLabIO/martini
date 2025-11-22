@@ -6,14 +6,14 @@ Embeddable multiplayer game IDE with dual-view local testing.
 
 - ✅ **Dual-view local testing** - See two players side-by-side in the same browser
 - ✅ **CodeMirror editor** - Syntax highlighting for TypeScript/JavaScript
-- ✅ **esbuild bundler** - Fast in-browser TS→JS compilation
+- ✅ **Sandpack bundler** - In-browser bundling using CodeSandbox's Sandpack
 - ✅ **Sandbox execution** - Isolated iframe for safe code execution
 - ✅ **Local transport** - Test multiplayer without network
 - ✅ **Phaser engine** - Built for Phaser 3 games
 - ✅ **File management** - Virtual file system with multiple files
 - ✅ **DevTools overlay** - Per-player debugging with console logs, state inspection, and action history
 
-**Note:** TypeScript type checking (@typescript/vfs) is deferred to Phase 2 (requires loading lib.d.ts files from CDN)
+**Note:** TypeScript type checking is deferred to Phase 2
 
 ## Installation
 
@@ -123,18 +123,14 @@ Each console message includes:
 @martini-kit/ide/
   src/
     lib/
-      martini-kitIDE.svelte          # Main IDE component
+      MartiniIDE.svelte            # Main IDE component
       components/
-        CodeEditor.svelte        # CodeMirror wrapper
-        GamePreview.svelte       # Dual-view game preview
-        DevToolsPanel.svelte     # Per-game debugging overlay
-    core/
-      VirtualFS.ts               # In-memory file system
-      Bundler.ts                 # esbuild-wasm wrapper
-      TypeScriptEnv.ts           # @typescript/vfs wrapper
-      Sandbox.ts                 # iframe manager
-    adapters/
-      PhaserEngine.ts            # Phaser configuration
+        CodeEditor.svelte          # CodeMirror wrapper
+        GamePreview.svelte         # Dual-view game preview
+        DevToolsPanel.svelte       # Per-game debugging overlay
+      core/
+        VirtualFS.ts               # In-memory file system
+        SandpackManager.ts         # Sandpack integration & DevTools bridge
 ```
 
 ## Demo

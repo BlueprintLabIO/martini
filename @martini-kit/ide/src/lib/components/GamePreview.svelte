@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { SandpackManager } from '../core/SandpackManager';
+	import { ESBuildManager } from '../core/ESBuildManager';
 	import type { VirtualFileSystem } from '../core/VirtualFS';
 	import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
+
+	// Feature flag to switch between bundlers
+	const USE_ESBUILD = import.meta.env.VITE_USE_ESBUILD !== 'false';
 
 	interface Props {
 		vfs: VirtualFileSystem;
@@ -50,6 +54,7 @@
 
 	let container: HTMLDivElement;
 	let sandpackManager: SandpackManager | null = null;
+	let esbuildManager: ESBuildManager | null = null;
 	let status = $state<'initializing' | 'ready' | 'running' | 'error'>('initializing');
 	let error = $state<{ type: 'runtime' | 'syntax'; message: string; stack?: string } | null>(null);
 	let isReady = $state(false);
@@ -58,14 +63,22 @@
 	 * Dynamically enable or disable DevTools
 	 */
 	export function setDevToolsEnabled(enabled: boolean): void {
-		sandpackManager?.setDevToolsEnabled(enabled);
+		if (USE_ESBUILD) {
+			esbuildManager?.setDevToolsEnabled(enabled);
+		} else {
+			sandpackManager?.setDevToolsEnabled(enabled);
+		}
 	}
 
 	/**
 	 * Pause/resume Inspector capturing
 	 */
 	export function setInspectorPaused(paused: boolean): void {
-		sandpackManager?.setInspectorPaused(paused);
+		if (USE_ESBUILD) {
+			esbuildManager?.setInspectorPaused(paused);
+		} else {
+			sandpackManager?.setInspectorPaused(paused);
+		}
 	}
 
 	function generateRoomId() {
@@ -98,13 +111,13 @@
 	const sessionRoomId = roomId ?? generateRoomId();
 
 	onMount(async () => {
-		// Create Sandpack manager
-		sandpackManager = new SandpackManager({
+		// Common options for both managers
+		const commonOptions = {
 			container,
 			role,
 			roomId: sessionRoomId,
 			transportType,
-			enableDevTools, // Use initial prop value
+			enableDevTools,
 			onError: (err) => {
 				status = 'error';
 				error = err;
@@ -139,46 +152,60 @@
 					networkPackets.shift();
 				}
 			}
-		});
+		};
 
 		try {
-			// Initialize and run Sandpack once
-			await sandpackManager.initialize();
-			await sandpackManager.run(vfs, entryPoint);
-
-			// Sandpack will handle HMR automatically from here
+			if (USE_ESBUILD) {
+				// Use ESBuild-WASM
+				console.log('[GamePreview] Using ESBuild-WASM bundler');
+				esbuildManager = new ESBuildManager(commonOptions);
+				await esbuildManager.initialize();
+				await esbuildManager.run(vfs, entryPoint);
+			} else {
+				// Use Sandpack (fallback)
+				console.log('[GamePreview] Using Sandpack bundler');
+				sandpackManager = new SandpackManager(commonOptions);
+				await sandpackManager.initialize();
+				await sandpackManager.run(vfs, entryPoint);
+			}
 		} catch (err) {
 			status = 'error';
 			error = {
 				type: 'runtime',
-				message: err instanceof Error ? err.message : 'Failed to initialize Sandpack',
+				message: err instanceof Error ? err.message : `Failed to initialize ${USE_ESBUILD ? 'ESBuild' : 'Sandpack'}`,
 				stack: err instanceof Error ? err.stack : undefined
 			};
 		}
 
 		return () => {
-			sandpackManager?.destroy();
+			if (USE_ESBUILD) {
+				esbuildManager?.destroy();
+			} else {
+				sandpackManager?.destroy();
+			}
 		};
 	});
 
-	// Push code updates into Sandpack when files change (HMR-style)
+	// Push code updates when files change
 	$effect(() => {
-		if (!sandpackManager || !isReady) return;
+		const manager = USE_ESBUILD ? esbuildManager : sandpackManager;
+		if (!manager || !isReady) return;
 		if (status === 'initializing' || status === 'error') return;
 
 		// Touch dependency to trigger on version bump
 		const version = vfsVersion;
 		if (version >= 0) {
-			sandpackManager.updateCode(vfs, entryPoint).catch((err) => {
-				console.error('[GamePreview] Failed to update sandbox', err);
+			manager.updateCode(vfs, entryPoint).catch((err) => {
+				console.error('[GamePreview] Failed to update code', err);
 			});
 		}
 	});
 
-	// Sync enableDevTools prop changes to SandpackManager
+	// Sync enableDevTools prop changes to manager
 	$effect(() => {
-		if (sandpackManager) {
-			sandpackManager.setDevToolsEnabled(enableDevTools);
+		const manager = USE_ESBUILD ? esbuildManager : sandpackManager;
+		if (manager) {
+			manager.setDevToolsEnabled(enableDevTools);
 		}
 	});
 </script>

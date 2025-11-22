@@ -3112,7 +3112,37 @@ import { GameRuntime as GameRuntime2 } from "@martini-kit/core";
 import { LocalTransport as LocalTransport2 } from "@martini-kit/transport-local";
 import { IframeBridgeTransport } from "@martini-kit/transport-iframe-bridge";
 import Phaser from "phaser";
+var GLOBAL_GAME_KEY = "__martini-kit_CURRENT_GAME__";
+function getExistingCleanup() {
+  if (typeof globalThis === "undefined") return null;
+  const existing = globalThis[GLOBAL_GAME_KEY];
+  return typeof existing?.cleanup === "function" ? existing.cleanup : null;
+}
+function setGlobalCleanup(cleanup) {
+  if (typeof globalThis === "undefined") return;
+  globalThis[GLOBAL_GAME_KEY] = { cleanup };
+}
+function clearGlobalCleanup() {
+  if (typeof globalThis === "undefined") return;
+  delete globalThis[GLOBAL_GAME_KEY];
+}
 function initializeGame(config) {
+  const hot = typeof import.meta !== "undefined" ? import.meta.hot : void 0;
+  const previousCleanup = getExistingCleanup();
+  if (previousCleanup) {
+    previousCleanup();
+  }
+  const leakedTransport = globalThis["__martini-kit_TRANSPORT__"];
+  if (leakedTransport) {
+    console.debug("[Martini] Found leaked transport, cleaning up...", leakedTransport);
+    if (typeof leakedTransport.disconnect === "function") {
+      leakedTransport.disconnect();
+    } else if (typeof leakedTransport.destroy === "function") {
+      leakedTransport.destroy();
+    }
+    delete globalThis["__martini-kit_TRANSPORT__"];
+    console.debug("[Martini] Transport cleanup complete, global cleared");
+  }
   const platformConfig = window["__martini-kit_CONFIG__"];
   if (!platformConfig) {
     throw new Error(
@@ -3154,18 +3184,42 @@ function initializeGame(config) {
   if (typeof window !== "undefined" && window["__martini-kit_IDE__"]) {
     window["__martini-kit_IDE__"].registerRuntime(runtime);
   }
+  const disconnectTransport = () => {
+    if ("disconnect" in transport && typeof transport.disconnect === "function") {
+      transport.disconnect();
+    } else if ("destroy" in transport && typeof transport.destroy === "function") {
+      transport.destroy();
+    }
+  };
+  const handleIdeDisconnect = (event) => {
+    if (event.data?.type === "martini-kit:transport:disconnect") {
+      disconnectTransport();
+    }
+  };
+  const handleBeforeUnload = () => {
+    disconnectTransport();
+  };
   if (typeof window !== "undefined") {
-    window.addEventListener("message", (event) => {
-      if (event.data?.type === "martini-kit:transport:disconnect") {
-        if ("disconnect" in transport && typeof transport.disconnect === "function") {
-          transport.disconnect();
-        }
-      }
-    });
-    window.addEventListener("beforeunload", () => {
-      if ("disconnect" in transport && typeof transport.disconnect === "function") {
-        transport.disconnect();
-      }
+    window.addEventListener("message", handleIdeDisconnect);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+  }
+  let cleanedUp = false;
+  const cleanup = () => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+    clearGlobalCleanup();
+    if (typeof window !== "undefined") {
+      window.removeEventListener("message", handleIdeDisconnect);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    }
+    runtime.destroy();
+    disconnectTransport();
+    phaserGame.destroy(true);
+  };
+  setGlobalCleanup(cleanup);
+  if (hot?.dispose) {
+    hot.dispose(() => {
+      cleanup();
     });
   }
   return { runtime, phaser: phaserGame };

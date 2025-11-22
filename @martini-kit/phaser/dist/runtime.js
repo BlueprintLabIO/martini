@@ -9,6 +9,23 @@ import { LocalTransport } from '@martini-kit/transport-local';
 // import { TrysteroTransport } from '@martini-kit/transport-trystero'; // Disabled for IDE
 import { IframeBridgeTransport } from '@martini-kit/transport-iframe-bridge';
 import Phaser from 'phaser';
+const GLOBAL_GAME_KEY = '__martini-kit_CURRENT_GAME__';
+function getExistingCleanup() {
+    if (typeof globalThis === 'undefined')
+        return null;
+    const existing = globalThis[GLOBAL_GAME_KEY];
+    return typeof existing?.cleanup === 'function' ? existing.cleanup : null;
+}
+function setGlobalCleanup(cleanup) {
+    if (typeof globalThis === 'undefined')
+        return;
+    globalThis[GLOBAL_GAME_KEY] = { cleanup };
+}
+function clearGlobalCleanup() {
+    if (typeof globalThis === 'undefined')
+        return;
+    delete globalThis[GLOBAL_GAME_KEY];
+}
 /**
  * Initialize a multiplayer Phaser game.
  *
@@ -38,6 +55,26 @@ import Phaser from 'phaser';
  * ```
  */
 export function initializeGame(config) {
+    const hot = typeof import.meta !== 'undefined' ? import.meta.hot : undefined;
+    // During HMR, ensure any prior game instance is cleaned up before creating a new one
+    const previousCleanup = getExistingCleanup();
+    if (previousCleanup) {
+        previousCleanup();
+    }
+    // Fallback: if a transport is still registered globally (e.g., HMR edge), disconnect it
+    const leakedTransport = globalThis['__martini-kit_TRANSPORT__'];
+    if (leakedTransport) {
+        console.debug('[Martini] Found leaked transport, cleaning up...', leakedTransport);
+        if (typeof leakedTransport.disconnect === 'function') {
+            leakedTransport.disconnect();
+        }
+        else if (typeof leakedTransport.destroy === 'function') {
+            leakedTransport.destroy();
+        }
+        // Force clear the global to ensure it's gone
+        delete globalThis['__martini-kit_TRANSPORT__'];
+        console.debug('[Martini] Transport cleanup complete, global cleared');
+    }
     // Read platform-injected config
     const platformConfig = window['__martini-kit_CONFIG__'];
     if (!platformConfig) {
@@ -81,26 +118,50 @@ export function initializeGame(config) {
     if (typeof window !== 'undefined' && window['__martini-kit_IDE__']) {
         window['__martini-kit_IDE__'].registerRuntime(runtime);
     }
+    const disconnectTransport = () => {
+        if ('disconnect' in transport && typeof transport.disconnect === 'function') {
+            transport.disconnect();
+        }
+        else if ('destroy' in transport && typeof transport.destroy === 'function') {
+            transport.destroy();
+        }
+    };
+    const handleIdeDisconnect = (event) => {
+        if (event.data?.type === 'martini-kit:transport:disconnect') {
+            disconnectTransport();
+        }
+    };
+    const handleBeforeUnload = () => {
+        disconnectTransport();
+    };
     // Auto-cleanup: Disconnect transport when navigating away
     // Two mechanisms for defense-in-depth:
     // 1. Message from parent (IDE-initiated cleanup)
     // 2. beforeunload event (direct browser navigation)
     if (typeof window !== 'undefined') {
         // Listen for IDE cleanup message
-        window.addEventListener('message', (event) => {
-            if (event.data?.type === 'martini-kit:transport:disconnect') {
-                // Disconnect transport to notify relay and remove stale peers
-                // Only IframeBridgeTransport has disconnect() method
-                if ('disconnect' in transport && typeof transport.disconnect === 'function') {
-                    transport.disconnect();
-                }
-            }
-        });
+        window.addEventListener('message', handleIdeDisconnect);
         // Fallback: Disconnect on browser navigation/close
-        window.addEventListener('beforeunload', () => {
-            if ('disconnect' in transport && typeof transport.disconnect === 'function') {
-                transport.disconnect();
-            }
+        window.addEventListener('beforeunload', handleBeforeUnload);
+    }
+    let cleanedUp = false;
+    const cleanup = () => {
+        if (cleanedUp)
+            return;
+        cleanedUp = true;
+        clearGlobalCleanup();
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('message', handleIdeDisconnect);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        }
+        runtime.destroy();
+        disconnectTransport();
+        phaserGame.destroy(true);
+    };
+    setGlobalCleanup(cleanup);
+    if (hot?.dispose) {
+        hot.dispose(() => {
+            cleanup();
         });
     }
     return { runtime, phaser: phaserGame };

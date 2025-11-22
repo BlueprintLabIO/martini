@@ -80,10 +80,20 @@ var IframeBridgeTransport = class {
     this.messageHandler = null;
     this.isDisconnected = false;
     this.heartbeatInterval = null;
-    if (typeof globalThis !== "undefined" && globalThis["__martini-kit_TRANSPORT__"]) {
-      throw new Error(
-        "[IframeBridgeTransport] Transport already exists! Did you forget to call disconnect() before creating a new transport? Each iframe should only have ONE transport instance. If you see this error, check for: 1. Multiple initializeGame() calls without cleanup 2. Hot reload without proper transport.disconnect() 3. Navigation without cleanup (should be handled by beforeunload)"
-      );
+    const existingTransport = typeof globalThis !== "undefined" ? globalThis["__martini-kit_TRANSPORT__"] : null;
+    if (existingTransport && existingTransport !== this) {
+      try {
+        if (typeof existingTransport.disconnect === "function") {
+          existingTransport.disconnect();
+        } else if (typeof existingTransport.destroy === "function") {
+          existingTransport.destroy();
+        }
+      } catch (error) {
+        console.warn("[IframeBridgeTransport] Failed to cleanup existing transport", error);
+      }
+      if (typeof globalThis !== "undefined") {
+        delete globalThis["__martini-kit_TRANSPORT__"];
+      }
     }
     this.roomId = config.roomId;
     this.playerId = config.playerId || `player-${Math.random().toString(36).substring(2, 9)}`;

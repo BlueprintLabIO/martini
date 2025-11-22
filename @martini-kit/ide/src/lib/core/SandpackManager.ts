@@ -7,6 +7,8 @@
 import { loadSandpackClient, type SandpackClient, type SandpackMessage } from '@codesandbox/sandpack-client';
 import type { VirtualFileSystem } from './VirtualFS';
 import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
+// @ts-ignore - Import raw content of local build
+import martiniPhaserBuild from '@martini-kit/phaser/dist/browser.js?raw';
 
 export interface SandpackManagerOptions {
 	/** Container element for the Sandpack iframe */
@@ -147,30 +149,46 @@ window['__MARTINI_KIT_CONFIG__'] = __martiniKitConfig;
 			}
 		}
 
-			// 2. Add root package.json (required by Sandpack)
-			files['/package.json'] = {
-				code: JSON.stringify({
-					name: 'martini-kit-game',
-					version: '1.0.0',
-					dependencies: {
-						'@martini-kit/core': '0.1.1',
-						'@martini-kit/phaser': '0.1.1',
-						'@martini-kit/devtools': '0.1.1',
-						'@martini-kit/transport-local': '0.1.1',
-						'@martini-kit/transport-iframe-bridge': '0.1.1',
-						'phaser': '3.80.1'
-					}
-				})
-			};
+		// 2. Add root package.json (required by Sandpack)
+		const useLocalPackages = import.meta.env.DEV;
+		let dependencies: Record<string, string> = {
+			'phaser': '3.80.1'
+		};
 
-			// 3. Provide a local Phaser module shim that proxies the global (loaded via CDN)
-			// This avoids failures when the bundler cannot fetch phaser from npm
-			files['/node_modules/phaser/index.js'] = { code: this.createPhaserModuleShim() };
-
-			// 3. Add custom HTML template (Phaser pulled from npm dependency)
-			files['/index.html'] = {
-				code: this.createHTMLTemplate()
+		if (useLocalPackages) {
+			// In development, load local packages via import.meta.glob and inject them as files
+			// This avoids network requests and ensures all files (including nested ones) are available
+			const localPackageFiles = await this.loadLocalPackages();
+			Object.assign(files, localPackageFiles);
+		} else {
+			// Production: use npm packages
+			dependencies = {
+				...dependencies,
+				'@martini-kit/core': '0.1.1',
+				'@martini-kit/phaser': '0.1.1',
+				'@martini-kit/devtools': '0.1.1',
+				'@martini-kit/transport-local': '0.1.1',
+				'@martini-kit/transport-iframe-bridge': '0.1.1',
+				'@martini-kit/transport-trystero': '0.1.1',
 			};
+		}
+
+		files['/package.json'] = {
+			code: JSON.stringify({
+				name: 'martini-kit-game',
+				version: '1.0.0',
+				dependencies
+			})
+		};
+
+		// 3. Provide a local Phaser module shim that proxies the global (loaded via CDN)
+		// This avoids failures when the bundler cannot fetch phaser from npm
+		files['/node_modules/phaser/index.js'] = { code: this.createPhaserModuleShim() };
+
+		// 3. Add custom HTML template (Phaser pulled from npm dependency)
+		files['/index.html'] = {
+			code: this.createHTMLTemplate()
+		};
 
 		// Load Sandpack client
 		try {
@@ -252,19 +270,32 @@ window['__MARTINI_KIT_CONFIG__'] = __martiniKitConfig;
 			}
 		}
 
-		// Add root package.json
+		// Add root package.json (use same logic as run())
+		const useLocalPackages = import.meta.env.DEV;
+		let dependencies: Record<string, string> = {
+			'phaser': '3.80.1'
+		};
+
+		if (useLocalPackages) {
+			const localPackageFiles = await this.loadLocalPackages();
+			Object.assign(files, localPackageFiles);
+		} else {
+			dependencies = {
+				...dependencies,
+				'@martini-kit/core': '0.1.1',
+				'@martini-kit/phaser': '0.1.1',
+				'@martini-kit/devtools': '0.1.1',
+				'@martini-kit/transport-local': '0.1.1',
+				'@martini-kit/transport-iframe-bridge': '0.1.1',
+				'@martini-kit/transport-trystero': '0.1.1',
+			};
+		}
+
 		files['/package.json'] = {
 			code: JSON.stringify({
 				name: 'martini-kit-game',
 				version: '1.0.0',
-				dependencies: {
-					'@martini-kit/core': '0.1.1',
-					'@martini-kit/phaser': '0.1.1',
-					'@martini-kit/devtools': '0.1.1',
-					'@martini-kit/transport-local': '0.1.1',
-					'@martini-kit/transport-iframe-bridge': '0.1.1',
-					'phaser': '3.80.1'
-				}
+				dependencies
 			})
 		};
 
@@ -284,6 +315,86 @@ window['__MARTINI_KIT_CONFIG__'] = __martiniKitConfig;
 			console.warn('[SandpackManager] Hot update failed, marking bundler unhealthy:', err);
 			this.bundlerHealthy = false;
 		}
+	}
+
+	/**
+	 * Load local packages by fetching all files from dev server
+	 */
+	private async loadLocalPackages(): Promise<Record<string, { code: string }>> {
+		const files: Record<string, { code: string }> = {};
+		const devOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+
+		const packages = [
+			'@martini-kit/core',
+			'@martini-kit/phaser',
+			'@martini-kit/devtools',
+			'@martini-kit/transport-local',
+			'@martini-kit/transport-iframe-bridge',
+			'@martini-kit/transport-trystero'
+		];
+
+		for (const pkgName of packages) {
+			const baseUrl = devOrigin ? `${devOrigin}/dev-packages/${pkgName}` : `/dev-packages/${pkgName}`;
+
+			try {
+				// Fetch package.json
+				const pkgJsonRes = await fetch(`${baseUrl}/package.json`);
+				if (!pkgJsonRes.ok) {
+					console.warn(`[SandpackManager] Failed to fetch package.json for ${pkgName}`);
+					continue;
+				}
+
+				const pkgJsonText = await pkgJsonRes.text();
+				let pkgJson;
+				try {
+					pkgJson = JSON.parse(pkgJsonText);
+					// Keep essential fields, remove workspace dependencies
+					const cleanedPkg = {
+						name: pkgJson.name,
+						version: pkgJson.version,
+						main: pkgJson.main || './dist/index.js',
+						type: pkgJson.type,
+						exports: pkgJson.exports
+					};
+					pkgJson = cleanedPkg;
+				} catch (e) {
+					console.warn(`[SandpackManager] Failed to parse package.json for ${pkgName}`, e);
+					pkgJson = { name: pkgName, version: '0.0.0', main: './dist/index.js', type: 'module' };
+				}
+
+				files[`/node_modules/${pkgName}/package.json`] = { code: JSON.stringify(pkgJson) };
+
+				// Fetch file list from server
+				const listUrl = devOrigin ? `${devOrigin}/dev-packages-list/${pkgName}` : `/dev-packages-list/${pkgName}`;
+				const listRes = await fetch(listUrl);
+				
+				if (listRes.ok) {
+					const { files: pkgFiles } = await listRes.json();
+					
+					// Fetch all files in parallel
+					const fetchPromises = pkgFiles.map(async (file: string) => {
+						try {
+							const res = await fetch(`${baseUrl}/${file}`);
+							if (res.ok) {
+								const content = await res.text();
+								files[`/node_modules/${pkgName}/${file}`] = { code: content };
+							}
+						} catch (e) {
+							console.warn(`[SandpackManager] Failed to fetch ${file} from ${pkgName}`, e);
+						}
+					});
+					
+					await Promise.all(fetchPromises);
+				} else {
+					console.warn(`[SandpackManager] Failed to fetch file list for ${pkgName}`);
+				}
+
+			} catch (error) {
+				console.warn(`[SandpackManager] Error loading package ${pkgName}:`, error);
+			}
+		}
+
+		return files;
 	}
 
 	/**
@@ -315,21 +426,22 @@ window['__MARTINI_KIT_CONFIG__'] = __martiniKitConfig;
 	// ============================================================================
 
 	private handleSandpackMessage(message: SandpackMessage): void {
-		switch (message.type) {
+		const msg = message as any;
+		switch (msg.type) {
 			case 'done':
 				break;
 
 			case 'action':
-				if (message.action === 'show-error') {
+				if (msg.action === 'show-error') {
 					// Sandpack error overlay is shown automatically
-					console.error('[SandpackManager] Error:', message);
+					console.error('[SandpackManager] Error:', msg);
 				}
 				break;
 
 			case 'console':
 				// Forward console logs
 				this.options.onConsoleLog?.({
-					message: message.log?.map(arg => {
+					message: msg.log?.map((arg: any) => {
 						if (typeof arg === 'object') {
 							try {
 								return JSON.stringify(arg);
@@ -339,7 +451,7 @@ window['__MARTINI_KIT_CONFIG__'] = __martiniKitConfig;
 						}
 						return String(arg);
 					}).join(' ') || '',
-					level: message.method as 'log' | 'warn' | 'error',
+					level: msg.method as 'log' | 'warn' | 'error',
 					timestamp: Date.now()
 				});
 				break;
@@ -348,8 +460,8 @@ window['__MARTINI_KIT_CONFIG__'] = __martiniKitConfig;
 				// Runtime error
 				this.options.onError?.({
 					type: 'runtime',
-					message: message.message || 'Unknown error',
-					stack: message.stack
+					message: msg.message || 'Unknown error',
+					stack: msg.stack
 				});
 				break;
 		}
@@ -544,6 +656,13 @@ export const Game = PhaserGlobal.Game;
 export const AUTO = PhaserGlobal.AUTO;
 export const Scale = PhaserGlobal.Scale;
 `;
+	}
+
+	/**
+	 * Returns the local build of @martini-kit/phaser
+	 */
+	private createMartiniPhaserLib(): string {
+		return martiniPhaserBuild;
 	}
 
 }

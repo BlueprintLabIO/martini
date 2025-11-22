@@ -7,8 +7,10 @@
     "node": ">=18"
  },
  "scripts": {
-    "dev": "turbo run dev --filter=demos...",
-    "dev:demos": "turbo watch dev --filter=demos...",
+    "dev": "pnpm run build:sdk && pnpm --filter=demos run dev",
+    "dev:watch": "turbo watch dev --filter=demos",
+    "dev:demos": "pnpm --filter=demos run dev",
+    "build:sdk": "pnpm --filter=demos run build:sdk",
     "build": "turbo run build",
     "build:demos": "pnpm --filter=demos run build",
     "test": "turbo run test",
