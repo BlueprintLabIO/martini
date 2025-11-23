@@ -53,6 +53,7 @@
 	let status = $state<'initializing' | 'ready' | 'running' | 'error'>('initializing');
 	let error = $state<{ type: 'runtime' | 'syntax'; message: string; stack?: string } | null>(null);
 	let isReady = $state(false);
+	let isPointerOver = $state(false);
 
 	/**
 	 * Dynamically enable or disable DevTools
@@ -98,6 +99,30 @@
 	const sessionRoomId = roomId ?? generateRoomId();
 
 	onMount(async () => {
+		const preventScroll = (event: Event) => {
+			if (isPointerOver) {
+				event.preventDefault();
+			}
+		};
+
+		const blockScrollKeys = (event: KeyboardEvent) => {
+			if (!isPointerOver) return;
+			const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'PageUp', 'PageDown'];
+			if (keys.includes(event.key)) {
+				event.preventDefault();
+			}
+		};
+
+		const onEnter = () => (isPointerOver = true);
+		const onLeave = () => (isPointerOver = false);
+
+		// Lock scroll interactions around the preview container
+		container?.addEventListener('wheel', preventScroll, { passive: false });
+		container?.addEventListener('touchmove', preventScroll, { passive: false });
+		container?.addEventListener('mouseenter', onEnter);
+		container?.addEventListener('mouseleave', onLeave);
+		window.addEventListener('keydown', blockScrollKeys, { passive: false });
+
 		// Common options for both managers
 		const commonOptions = {
 			container,
@@ -157,6 +182,11 @@
 
 		return () => {
 			esbuildManager?.destroy();
+			container?.removeEventListener('wheel', preventScroll);
+			container?.removeEventListener('touchmove', preventScroll);
+			container?.removeEventListener('mouseenter', onEnter);
+			container?.removeEventListener('mouseleave', onLeave);
+			window.removeEventListener('keydown', blockScrollKeys);
 		};
 	});
 

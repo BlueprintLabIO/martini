@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '../app.css';
+	import '../../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
@@ -11,3 +11,8 @@
 
 {@render children()}
 
+<style>
+	:global(body) {
+		padding-top: 0;
+	}
+</style>

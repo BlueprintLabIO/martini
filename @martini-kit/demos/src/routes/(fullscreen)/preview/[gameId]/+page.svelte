@@ -135,14 +135,8 @@
 				</div>
 
 				<div class="actions">
-					<button class="btn btn-secondary" onclick={resetToOriginal} title="Reset to original">
-						↻ Reset
-					</button>
 					<button class="btn btn-secondary" onclick={downloadCode} title="Download as ZIP">
 						↓ Download
-					</button>
-					<button class="btn btn-primary" onclick={handleShare} title="Share this code">
-						↗ Share
 					</button>
 				</div>
 			</div>
@@ -190,6 +184,7 @@
 		flex-direction: column;
 		background: #0a0a0a;
 		color: #fff;
+		overflow: hidden;
 	}
 
 	header {
@@ -348,7 +343,6 @@
 	.ide-container {
 		flex: 1;
 		min-height: 0;
-		padding: 1rem;
 	}
 
 	.error-page {

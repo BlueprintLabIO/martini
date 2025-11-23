@@ -11,6 +11,7 @@
 	import { IframeBridgeRelay } from '@martini-kit/transport-iframe-bridge';
 	import type { MartiniKitIDEConfig } from './types';
 	import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
+	import './styles/ide.css';
 
 	type FileNode = {
 		name: string;
@@ -33,15 +34,27 @@
 
 	// State
 	let activeFile = $state<string>('/src/game.ts');
+	let selectedPath = $state<string | null>(null);
 	let activeFileContent = $state<string>('');
 	let isInitializing = $state(true);
 	let entryPoint = $state<string>('/src/main.ts');
 	let filePaths = $state<string[]>([]);
+	let folderPaths = $state<string[]>([]);
 	let vfsVersion = $state(0);
 	let searchQuery = $state('');
 	let expandedNodes = $state<Record<string, boolean>>({});
 	let saveState = $state<'idle' | 'saving' | 'saved'>('saved');
 	let saveTimer: ReturnType<typeof setTimeout> | null = null;
+	let theme = $state<'light' | 'dark'>(config.editor?.theme === 'dark' ? 'dark' : 'light');
+
+	// File tree UX
+	let inlineEdit = $state<{ mode: 'create-file' | 'create-folder' | 'rename'; path?: string; parent?: string; name: string } | null>(null);
+	let contextMenu = $state<{ x: number; y: number; target: { path: string; isDir: boolean } | null } | null>(null);
+	let treeFocused = $state(false);
+	let inlineError = $state<string | null>(null);
+
+	// Derived
+	const treePaths = $derived([...folderPaths, ...filePaths]);
 
 	// GamePreview component refs
 	let hostPreviewRef = $state<any>(null);
@@ -75,6 +88,50 @@
 				JSON.stringify(clientStateSnapshots[clientStateSnapshots.length - 1]?.state)
 	);
 
+	function refreshPaths() {
+		filePaths = vfs.getFilePaths().sort();
+		folderPaths = vfs.getFolderPaths().sort();
+	}
+
+	function basename(path: string) {
+		const parts = path.split('/').filter(Boolean);
+		return parts[parts.length - 1] ?? '';
+	}
+
+	function dirname(path: string) {
+		const normalized = path.startsWith('/') ? path : `/${path}`;
+		const parts = normalized.split('/').filter(Boolean);
+		if (parts.length <= 1) return '/';
+		return `/${parts.slice(0, parts.length - 1).join('/')}`;
+	}
+
+	function joinPath(parent: string, name: string) {
+		if (!parent || parent === '/') {
+			return `/${name}`;
+		}
+		return `${parent}/${name}`;
+	}
+
+	function currentFolderForCreate() {
+		if (!selectedPath) return '/';
+		const isDir = folderPaths.includes(selectedPath);
+		return isDir ? selectedPath : dirname(selectedPath);
+	}
+
+	function rebasePath(current: string, from: string, to: string) {
+		if (!current) return current;
+		if (current === from) return to;
+		if (current.startsWith(from + '/')) {
+			return current.replace(from, to);
+		}
+		return current;
+	}
+
+	function getDepth(path: string) {
+		const clean = path.replace(/^\/|\/$/g, '');
+		return clean ? clean.split('/').length : 0;
+	}
+
 	onMount(async () => {
 		// Initialize IframeBridgeRelay if using iframe-bridge transport
 		if (config.transport.type === 'iframe-bridge') {
@@ -88,16 +145,18 @@
 			}
 		}
 
-		// Get file list
-		filePaths = vfs.getFilePaths();
+		// Get file + folder list
+		refreshPaths();
 
 		// Determine entry point
 		entryPoint = vfs.exists('/src/main.ts') ? '/src/main.ts' : '/src/game.ts';
 
 		// Open first file
-		if (filePaths.length > 0) {
-			activeFile = filePaths[0];
+		const firstFile = filePaths[0];
+		if (firstFile) {
+			activeFile = firstFile;
 			activeFileContent = vfs.readFile(activeFile) || '';
+			selectedPath = firstFile;
 		}
 
 		isInitializing = false;
@@ -161,6 +220,7 @@
 	function selectFile(path: string) {
 		activeFile = path;
 		activeFileContent = vfs.readFile(path) || '';
+		selectedPath = path;
 	}
 
 	/**
@@ -168,16 +228,208 @@
 	 */
 	async function runGame() {
 		// Trigger re-run via reactive update
-		vfs = new VirtualFileSystem(vfs.getAllFiles());
+		vfs = vfs.clone();
 		vfsVersion += 1;
 		config.onRun?.();
 	}
 
-	function buildFileTree(paths: string[]): FileNode[] {
-		const root: FileNode = { name: '', path: '/', isDir: true, children: [] };
-		const sorted = [...paths].sort();
+	function startCreate(type: 'file' | 'folder', parent = currentFolderForCreate()) {
+		inlineEdit = { mode: type === 'file' ? 'create-file' : 'create-folder', parent, name: '' };
+		inlineError = null;
+		contextMenu = null;
+	}
 
-		for (const fullPath of sorted) {
+	function startRename(path: string, isDir: boolean) {
+		inlineEdit = { mode: 'rename', path, parent: dirname(path), name: basename(path) || (isDir ? 'untitled' : 'untitled.ts') };
+		inlineError = null;
+		contextMenu = null;
+	}
+
+	function cancelInlineEdit() {
+		inlineEdit = null;
+		inlineError = null;
+	}
+
+	function commitInlineEdit() {
+		if (!inlineEdit) return;
+		const name = inlineEdit.name.trim();
+		if (!name) {
+			inlineError = 'Name cannot be empty';
+			return;
+		}
+
+		try {
+			if (inlineEdit.mode === 'create-file') {
+				const target = joinPath(inlineEdit.parent ?? '/', name);
+				vfs.createFile(target, '');
+				selectedPath = target;
+				activeFile = target;
+				activeFileContent = '';
+			} else if (inlineEdit.mode === 'create-folder') {
+				const target = joinPath(inlineEdit.parent ?? '/', name);
+				vfs.createFolder(target);
+				selectedPath = target;
+				expandedNodes = { ...expandedNodes, [target]: true };
+			} else if (inlineEdit.mode === 'rename' && inlineEdit.path) {
+				const target = joinPath(inlineEdit.parent ?? dirname(inlineEdit.path), name);
+				const original = inlineEdit.path;
+				const isDir = folderPaths.includes(original);
+				vfs.renamePath(original, target);
+				selectedPath = target;
+				if (!isDir) {
+					activeFile = rebasePath(activeFile, original, target);
+					activeFileContent = vfs.readFile(activeFile) || '';
+				} else {
+					activeFile = rebasePath(activeFile, original, target);
+					selectedPath = rebasePath(selectedPath ?? '', original, target);
+				}
+			}
+
+			refreshPaths();
+			vfsVersion += 1;
+			config.onChange?.(vfs.getAllFiles());
+			inlineEdit = null;
+			inlineError = null;
+		} catch (err) {
+			inlineError = err instanceof Error ? err.message : 'Unable to apply change';
+		}
+	}
+
+	function deletePath(path: string) {
+		if (!path) return;
+		vfs.deletePath(path);
+		refreshPaths();
+
+		if (activeFile && (activeFile === path || activeFile.startsWith(path + '/'))) {
+			activeFile = filePaths[0] ?? '';
+			activeFileContent = activeFile ? vfs.readFile(activeFile) || '' : '';
+		}
+
+		if (selectedPath && (selectedPath === path || selectedPath.startsWith(path + '/'))) {
+			selectedPath = filePaths[0] ?? folderPaths[0] ?? null;
+		}
+
+		inlineEdit = null;
+		inlineError = null;
+		contextMenu = null;
+
+		vfsVersion += 1;
+		config.onChange?.(vfs.getAllFiles());
+	}
+
+	function duplicateFile(path: string) {
+		if (!path || !vfs.exists(path) || folderPaths.includes(path)) return;
+		const base = basename(path);
+		const dir = dirname(path);
+		let copyName = `${base}-copy`;
+		let attempt = 1;
+		let target = joinPath(dir, copyName);
+		while (vfs.exists(target)) {
+			copyName = `${base}-copy-${attempt}`;
+			target = joinPath(dir, copyName);
+			attempt += 1;
+		}
+		const content = vfs.readFile(path) ?? '';
+		vfs.createFile(target, content);
+		refreshPaths();
+		selectedPath = target;
+		activeFile = target;
+		activeFileContent = content;
+		vfsVersion += 1;
+		config.onChange?.(vfs.getAllFiles());
+	}
+
+	function handleContextAction(
+		action: 'new-file' | 'new-folder' | 'rename' | 'delete' | 'duplicate'
+	) {
+		const target = contextMenu?.target;
+		if (action === 'new-file') {
+			const parent = target?.isDir ? target.path : target ? dirname(target.path) : '/';
+			startCreate('file', parent);
+		} else if (action === 'new-folder') {
+			const parent = target?.isDir ? target.path : target ? dirname(target.path) : '/';
+			startCreate('folder', parent);
+		} else if (action === 'rename' && target) {
+			startRename(target.path, target.isDir);
+		} else if (action === 'delete' && target) {
+			deletePath(target.path);
+		} else if (action === 'duplicate' && target && !target.isDir) {
+			duplicateFile(target.path);
+		}
+
+		contextMenu = null;
+	}
+
+	function openContextMenu(event: MouseEvent, target: { path: string; isDir: boolean } | null) {
+		event.preventDefault();
+		contextMenu = {
+			x: event.clientX,
+			y: event.clientY,
+			target
+		};
+	}
+
+	function handleTreeKeydown(event: KeyboardEvent) {
+		if (!treeFocused) return;
+		const key = event.key;
+		const meta = event.metaKey || event.ctrlKey;
+		const shift = event.shiftKey;
+		const targetPath = selectedPath ?? activeFile;
+		const isDir = targetPath ? folderPaths.includes(targetPath) : false;
+
+		if (meta && key.toLowerCase() === 'n' && shift) {
+			event.preventDefault();
+			startCreate('folder');
+		} else if (meta && key.toLowerCase() === 'n') {
+			event.preventDefault();
+			startCreate('file');
+		} else if (meta && key.toLowerCase() === 'd' && targetPath && !isDir) {
+			event.preventDefault();
+			duplicateFile(targetPath);
+		} else if ((key === 'Delete' || key === 'Backspace') && targetPath) {
+			event.preventDefault();
+			deletePath(targetPath);
+		} else if (key === 'F2' && targetPath) {
+			event.preventDefault();
+			startRename(targetPath, isDir);
+		}
+	}
+
+	function buildFileTree(files: string[], folders: string[]): FileNode[] {
+		const root: FileNode = { name: '', path: '/', isDir: true, children: [] };
+		const sortedFolders = [...folders].sort();
+		const sortedFiles = [...files].sort();
+
+		// Seed known folders (including empty)
+		for (const folderPath of sortedFolders) {
+			const cleanPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath;
+			if (!cleanPath) continue;
+			const segments = cleanPath.split('/');
+			let current = root;
+			let currentPath = '';
+
+			for (let i = 0; i < segments.length; i++) {
+				const segment = segments[i];
+				currentPath += '/' + segment;
+				const isDir = true;
+
+				if (!current.children) current.children = [];
+				let child = current.children.find((c) => c.name === segment && c.isDir === isDir);
+
+				if (!child) {
+					child = {
+						name: segment,
+						path: currentPath,
+						isDir,
+						children: []
+					};
+					current.children.push(child);
+				}
+				current = child;
+			}
+		}
+
+		for (const fullPath of sortedFiles) {
 			const cleanPath = fullPath.startsWith('/') ? fullPath.slice(1) : fullPath;
 			if (!cleanPath) continue;
 			const segments = cleanPath.split('/');
@@ -236,7 +488,7 @@
 			.filter((node): node is FileNode => node !== null);
 	}
 
-	const fileTree = $derived(buildFileTree(filePaths));
+	const fileTree = $derived(buildFileTree(filePaths, folderPaths));
 	const filteredFileTree = $derived(filterTree(fileTree, searchQuery));
 
 	function collectVisibleNodes(
@@ -290,6 +542,10 @@
 							<h3>Files</h3>
 							<p class="sidebar-subtitle">Live reload</p>
 						</div>
+						<div class="sidebar-actions">
+							<button class="ghost-button" onclick={() => startCreate('file')}>+ File</button>
+							<button class="ghost-button" onclick={() => startCreate('folder')}>+ Folder</button>
+						</div>
 						{#if saveState !== 'saved'}
 							<span class="badge" class:saving={saveState === 'saving'}>
 								{saveState === 'saving' ? 'Saving…' : 'Edited'}
@@ -305,29 +561,104 @@
 						/>
 					</div>
 
+					{#if inlineError}
+						<div class="inline-error">{inlineError}</div>
+					{/if}
+
 					{#if filteredFileTree.length === 0}
 						<p class="empty-files">No files found</p>
 					{:else}
-						<ul class="file-tree">
+						<ul
+							class="file-tree"
+							tabindex="0"
+							onfocus={() => (treeFocused = true)}
+							onblur={() => (treeFocused = false)}
+							onkeydown={handleTreeKeydown}
+							onclick={() => (contextMenu = null)}
+							oncontextmenu={(event) => openContextMenu(event, null)}
+						>
+							{#if inlineEdit && inlineEdit.mode !== 'rename'}
+								<li class="inline-row">
+									<div
+										class="tree-row inline-editor"
+										style={`padding-left:${(inlineEdit.parent ? getDepth(inlineEdit.parent) + 1 : 1) * 12 + 4}px`}
+									>
+										<span class="chevron">•</span>
+										<input
+											autofocus
+											placeholder={inlineEdit.mode === 'create-folder' ? 'New folder' : 'New file'}
+											bind:value={inlineEdit.name}
+											onkeydown={(event) => {
+												if (event.key === 'Enter') commitInlineEdit();
+												if (event.key === 'Escape') cancelInlineEdit();
+											}}
+											onblur={commitInlineEdit}
+										/>
+									</div>
+								</li>
+							{/if}
+
 							{#each visibleNodes as node (node.path)}
-								<li class:active={node.path === activeFile}>
+								<li
+									class:selected={selectedPath === node.path}
+									class:active={node.path === activeFile}
+									oncontextmenu={(event) => openContextMenu(event, { path: node.path, isDir: node.isDir })}
+								>
 									{#if node.isDir}
-										<button
-											class="tree-row"
-											style={`padding-left:${node.depth * 12 + 4}px`}
-											onclick={() => toggleNode(node.path)}
-										>
-											<span class="chevron">{isExpanded(node.path) ? '▾' : '▸'}</span>
-											<span class="folder">{node.name}</span>
-										</button>
+										{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
+											<div
+												class="tree-row inline-editor"
+												style={`padding-left:${node.depth * 12 + 4}px`}
+											>
+												<span class="chevron">{isExpanded(node.path) ? '▾' : '▸'}</span>
+												<input
+													autofocus
+													bind:value={inlineEdit.name}
+													onkeydown={(event) => {
+														if (event.key === 'Enter') commitInlineEdit();
+														if (event.key === 'Escape') cancelInlineEdit();
+													}}
+													onblur={commitInlineEdit}
+												/>
+											</div>
+										{:else}
+											<button
+												class="tree-row"
+												style={`padding-left:${node.depth * 12 + 4}px`}
+												onclick={() => {
+													selectedPath = node.path;
+													toggleNode(node.path);
+												}}
+											>
+												<span class="chevron">{isExpanded(node.path) ? '▾' : '▸'}</span>
+												<span class="folder">{node.name}</span>
+											</button>
+										{/if}
 									{:else}
-										<button
-											class="file-row"
-											style={`padding-left:${node.depth * 12 + 20}px`}
-											onclick={() => selectFile(node.path)}
-										>
-											{node.name}
-										</button>
+										{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
+											<div
+												class="file-row inline-editor"
+												style={`padding-left:${node.depth * 12 + 20}px`}
+											>
+												<input
+													autofocus
+													bind:value={inlineEdit.name}
+													onkeydown={(event) => {
+														if (event.key === 'Enter') commitInlineEdit();
+														if (event.key === 'Escape') cancelInlineEdit();
+													}}
+													onblur={commitInlineEdit}
+												/>
+											</div>
+										{:else}
+											<button
+												class="file-row"
+												style={`padding-left:${node.depth * 12 + 20}px`}
+												onclick={() => selectFile(node.path)}
+											>
+												{node.name}
+											</button>
+										{/if}
 									{/if}
 								</li>
 							{/each}
@@ -711,522 +1042,24 @@
 			</Pane>
 		</PaneGroup>
 	{/if}
+
+	{#if contextMenu}
+		<div class="context-menu-overlay" onclick={() => (contextMenu = null)}></div>
+		<div
+			class="context-menu"
+			style={`left:${contextMenu.x}px; top:${contextMenu.y}px`}
+			onclick={(event) => event.stopPropagation()}
+		>
+			<button onclick={() => handleContextAction('new-file')}>New File</button>
+			<button onclick={() => handleContextAction('new-folder')}>New Folder</button>
+			{#if contextMenu.target}
+				<hr />
+				<button onclick={() => handleContextAction('rename')}>Rename</button>
+				{#if !contextMenu.target.isDir}
+					<button onclick={() => handleContextAction('duplicate')}>Duplicate</button>
+				{/if}
+				<button class="danger" onclick={() => handleContextAction('delete')}>Delete</button>
+			{/if}
+		</div>
+	{/if}
 </div>
-
-<style>
-	.martini-kit-ide {
-		width: 100%;
-		height: 100%;
-		background: #ffffff;
-		color: #1f2937;
-		font-family: system-ui, -apple-system, sans-serif;
-		overflow: hidden;
-	}
-
-	/* Paneforge overrides */
-	:global(.ide-pane-group) {
-		height: 100%;
-	}
-
-	:global(.sidebar-pane),
-	:global(.editor-pane),
-	:global(.preview-pane) {
-		height: 100%;
-		overflow: hidden;
-	}
-
-	:global(.resizer) {
-		width: 1px;
-		background: #e5e7eb;
-		cursor: col-resize;
-		transition: background 0.2s;
-	}
-
-	:global(.resizer:hover),
-	:global(.resizer[data-state='drag']) {
-		background: #3b82f6;
-	}
-
-	.loading {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 100%;
-		font-size: 1.25rem;
-		color: #6b7280;
-	}
-
-	/* Sidebar */
-	.sidebar {
-		height: 100%;
-		background: #f9fafb;
-		padding: 0.75rem;
-		border-right: 1px solid #e5e7eb;
-		overflow-y: auto;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.sidebar h3 {
-		margin: 0 0 0.5rem 0;
-		font-size: 0.625rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		color: #6b7280;
-		letter-spacing: 0.05em;
-	}
-
-	.sidebar-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 0.5rem;
-	}
-
-	.sidebar-subtitle {
-		margin: 0.1rem 0 0 0;
-		font-size: 0.6875rem;
-		color: #9ca3af;
-	}
-
-	.badge {
-		padding: 0.15rem 0.5rem;
-		border-radius: 999px;
-		background: #fbbf24;
-		color: #92400e;
-		font-size: 0.6875rem;
-		font-weight: 700;
-	}
-
-	.badge.saving {
-		background: #bfdbfe;
-		color: #1d4ed8;
-	}
-
-	.search-bar {
-		margin: 0 0 0.5rem 0;
-	}
-
-	.search-bar input {
-		width: 100%;
-		padding: 0.4rem 0.5rem;
-		border: 1px solid #e5e7eb;
-		border-radius: 4px;
-		font-size: 0.8125rem;
-		background: #ffffff;
-	}
-
-	.search-bar input:focus {
-		outline: none;
-		border-color: #3b82f6;
-		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
-	}
-
-	.file-tree {
-		list-style: none;
-		padding: 0;
-		margin: 0 0 0.75rem 0;
-		flex: 1;
-		overflow-y: auto;
-	}
-
-	.tree-node {
-		margin-bottom: 0.125rem;
-	}
-
-	.tree-row,
-	.file-row {
-		width: 100%;
-		padding: 0.375rem 0.5rem;
-		background: transparent;
-		border: none;
-		color: #374151;
-		text-align: left;
-		cursor: pointer;
-		border-radius: 4px;
-		font-size: 0.75rem;
-		transition: all 0.15s;
-		display: flex;
-		align-items: center;
-		gap: 0.35rem;
-	}
-
-	.tree-row:hover,
-	.file-row:hover {
-		background: #f3f4f6;
-	}
-
-	.file-tree li.active > .file-row {
-		background: #3b82f6;
-		color: #ffffff;
-	}
-
-	.chevron {
-		width: 1rem;
-		color: #9ca3af;
-		font-size: 0.75rem;
-	}
-
-	.folder {
-		font-weight: 600;
-		color: #374151;
-	}
-
-	.empty-files {
-		color: #9ca3af;
-		font-size: 0.8125rem;
-		padding: 0.5rem 0.25rem;
-	}
-
-	.run-button {
-		width: 100%;
-		padding: 0.5rem;
-		background: #3b82f6;
-		color: #ffffff;
-		border: none;
-		border-radius: 4px;
-		font-size: 0.75rem;
-		font-weight: 600;
-		cursor: pointer;
-		margin-bottom: 0.75rem;
-		transition: background 0.15s;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-	}
-
-	.run-button:hover:not(:disabled) {
-		background: #2563eb;
-	}
-
-	.run-button:disabled {
-		background: #d1d5db;
-		cursor: not-allowed;
-	}
-
-	/* Editor Panel */
-	.editor-panel {
-		display: flex;
-		flex-direction: column;
-		height: 100%;
-		background: #ffffff;
-	}
-
-	.editor-header {
-		padding: 0.75rem 1rem;
-		background: #f9fafb;
-		border-bottom: 1px solid #e5e7eb;
-		font-size: 0.875rem;
-		color: #6b7280;
-		font-weight: 500;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.status-dot {
-		font-size: 0.75rem;
-		border-radius: 999px;
-		padding: 0.25rem 0.5rem;
-		background: #e5e7eb;
-		color: #374151;
-	}
-
-	.status-dot.saving {
-		background: #bfdbfe;
-		color: #1d4ed8;
-	}
-
-	.status-dot.saved {
-		background: #ecfdf3;
-		color: #15803d;
-	}
-
-	/* Preview Layout */
-	.preview-pane-content {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-
-	:global(.preview-group) {
-		height: 100%;
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-	}
-
-	:global(.games-pane),
-	:global(.devtools-pane) {
-		overflow: hidden;
-	}
-
-	:global(.resizer-horizontal) {
-		height: 1px;
-		background: #e5e7eb;
-		cursor: row-resize;
-		transition: background 0.2s;
-	}
-
-	:global(.resizer-horizontal:hover),
-	:global(.resizer-horizontal[data-state='drag']) {
-		background: #3b82f6;
-	}
-
-	.dual-preview {
-		display: flex;
-		height: 100%;
-		gap: 1px;
-		background: #e5e7eb;
-	}
-
-	.dual-preview > :global(*) {
-		flex: 1;
-		min-width: 0;
-	}
-
-	/* DevTools Container */
-	.devtools-container {
-		height: 100%;
-		background: #1e1e1e;
-		color: #d4d4d4;
-		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-		font-size: 0.6875rem;
-		overflow: hidden;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.devtools-tabs {
-		display: flex;
-		gap: 0.25rem;
-		padding: 0.5rem 0.75rem;
-		background: #252526;
-		border-bottom: 1px solid #3e3e42;
-		align-items: center;
-	}
-
-	.devtools-tab {
-		padding: 0.25rem 0.5rem;
-		background: transparent;
-		border: none;
-		color: #969696;
-		cursor: pointer;
-		border-radius: 3px;
-		font-size: 0.625rem;
-		font-weight: 500;
-		transition: all 0.15s;
-	}
-
-	.devtools-tab:hover {
-		background: rgba(90, 93, 94, 0.31);
-		color: #d4d4d4;
-	}
-
-	.devtools-tab.active {
-		background: #1e1e1e;
-		color: #ffffff;
-		border: 1px solid #3e3e42;
-	}
-
-	.devtools-tab.disabled {
-		color: #4d4d4d;
-		cursor: not-allowed;
-		opacity: 0.5;
-	}
-
-	.devtools-tab.disabled:hover {
-		background: transparent;
-		color: #4d4d4d;
-	}
-
-	/* DevTools Toggle Switch */
-	.devtools-toggle-container {
-		margin-left: auto;
-		display: flex;
-		align-items: center;
-	}
-
-	.devtools-toggle-label {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		cursor: pointer;
-		user-select: none;
-	}
-
-	.devtools-toggle-text {
-		font-size: 0.625rem;
-		color: #969696;
-		font-weight: 500;
-	}
-
-	.devtools-toggle-checkbox {
-		position: absolute;
-		opacity: 0;
-		pointer-events: none;
-	}
-
-	.devtools-toggle-switch {
-		position: relative;
-		width: 32px;
-		height: 18px;
-		background: #3e3e42;
-		border-radius: 9px;
-		transition: background 0.2s;
-	}
-
-	.devtools-toggle-switch::after {
-		content: '';
-		position: absolute;
-		top: 2px;
-		left: 2px;
-		width: 14px;
-		height: 14px;
-		background: #969696;
-		border-radius: 50%;
-		transition: all 0.2s;
-	}
-
-	.devtools-toggle-checkbox:checked + .devtools-toggle-switch {
-		background: #0e639c;
-	}
-
-	.devtools-toggle-checkbox:checked + .devtools-toggle-switch::after {
-		left: 16px;
-		background: #ffffff;
-	}
-
-	.devtools-toggle-label:hover .devtools-toggle-switch {
-		background: #4d4d4d;
-	}
-
-	.devtools-toggle-checkbox:checked + .devtools-toggle-switch:hover {
-		background: #1177bb;
-	}
-
-	.devtools-dual {
-		display: flex;
-		height: 100%;
-		gap: 1px;
-		background: #2d2d30;
-	}
-
-	.devtools-diff-full {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-		background: #1e1e1e;
-		padding: 0.5rem;
-	}
-
-	.devtools-section {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-		background: #1e1e1e;
-	}
-
-	.devtools-section-header {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0.75rem;
-		background: #252526;
-		border-bottom: 1px solid #3e3e42;
-	}
-
-	.role-badge {
-		padding: 0.125rem 0.5rem;
-		border-radius: 3px;
-		font-size: 0.625rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-
-	.role-host {
-		background: rgba(78, 201, 176, 0.2);
-		color: #4ec9b0;
-		border: 1px solid rgba(78, 201, 176, 0.3);
-	}
-
-	.role-client {
-		background: rgba(206, 145, 120, 0.2);
-		color: #ce9178;
-		border: 1px solid rgba(206, 145, 120, 0.3);
-	}
-
-	.status-indicator {
-		font-size: 0.625rem;
-		color: #6e6e6e;
-		text-transform: capitalize;
-	}
-
-	.status-indicator.connected {
-		color: #10b981;
-	}
-
-	.devtools-logs {
-		flex: 1;
-		overflow-y: auto;
-		overflow-x: hidden;
-		padding: 0.5rem;
-	}
-
-	.devtools-content {
-		flex: 1;
-		overflow: hidden;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.snapshot-count,
-	.action-count {
-		font-size: 0.625rem;
-		color: #6e6e6e;
-		text-transform: capitalize;
-	}
-
-	.empty-logs {
-		color: #6e6e6e;
-		text-align: center;
-		padding: 2rem 1rem;
-		margin: 0;
-	}
-
-	.log-entry {
-		display: flex;
-		gap: 0.375rem;
-		padding: 0.1875rem 0.25rem;
-		font-size: 0.625rem;
-		line-height: 1.3;
-		border-radius: 3px;
-		margin-bottom: 1px;
-	}
-
-	.log-entry:hover {
-		background: rgba(42, 42, 42, 0.8);
-	}
-
-	.log-time {
-		color: #6e6e6e;
-		flex-shrink: 0;
-		font-size: 0.5625rem;
-	}
-
-	.log-message {
-		flex: 1;
-		word-break: break-word;
-		color: #d4d4d4;
-	}
-
-	.log-error .log-message {
-		color: #f48771;
-	}
-
-	.log-warn .log-message {
-		color: #dcdcaa;
-	}
-</style>

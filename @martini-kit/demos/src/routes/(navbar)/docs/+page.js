@@ -1,8 +1,8 @@
 export async function load() {
 	try {
 		// Import the index markdown file
-		const module = await import('../../content/docs/index.md');
-		const rawModule = await import('../../content/docs/index.md?raw');
+		const module = await import('../../../content/docs/index.md');
+		const rawModule = await import('../../../content/docs/index.md?raw');
 
 		return {
 			component: module.default,
