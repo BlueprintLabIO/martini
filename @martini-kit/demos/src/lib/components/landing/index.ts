@@ -1,0 +1,9 @@
+export { default as BackgroundEffects } from './BackgroundEffects.svelte';
+export { default as MouseEffects } from './MouseEffects.svelte';
+export { default as HeroSection } from './HeroSection.svelte';
+export { default as QuickStartSection } from './QuickStartSection.svelte';
+export { default as HowItWorksSection } from './HowItWorksSection.svelte';
+export { default as DemoGallerySection } from './DemoGallerySection.svelte';
+export { default as ComparisonSection } from './ComparisonSection.svelte';
+export { default as CTASection } from './CTASection.svelte';
+export { default as LandingFooter } from './LandingFooter.svelte';
