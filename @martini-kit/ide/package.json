@@ -71,7 +71,6 @@
 		"@codemirror/search": "^6.5.11",
 		"@codemirror/state": "^6.5.2",
 		"@codemirror/view": "^6.38.6",
-		"@codesandbox/sandpack-client": "^2.19.8",
 		"@martini-kit/core": "workspace:*",
 		"@martini-kit/devtools": "workspace:*",
 		"@martini-kit/phaser": "workspace:*",

@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { SandpackManager } from '../core/SandpackManager';
 	import { ESBuildManager } from '../core/ESBuildManager';
 	import type { VirtualFileSystem } from '../core/VirtualFS';
 	import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
-
-	// Feature flag to switch between bundlers
-	const USE_ESBUILD = import.meta.env.VITE_USE_ESBUILD !== 'false';
 
 	interface Props {
 		vfs: VirtualFileSystem;
@@ -53,7 +49,6 @@
 	}: Props = $props();
 
 	let container: HTMLDivElement;
-	let sandpackManager: SandpackManager | null = null;
 	let esbuildManager: ESBuildManager | null = null;
 	let status = $state<'initializing' | 'ready' | 'running' | 'error'>('initializing');
 	let error = $state<{ type: 'runtime' | 'syntax'; message: string; stack?: string } | null>(null);
@@ -63,22 +58,14 @@
 	 * Dynamically enable or disable DevTools
 	 */
 	export function setDevToolsEnabled(enabled: boolean): void {
-		if (USE_ESBUILD) {
-			esbuildManager?.setDevToolsEnabled(enabled);
-		} else {
-			sandpackManager?.setDevToolsEnabled(enabled);
-		}
+		esbuildManager?.setDevToolsEnabled(enabled);
 	}
 
 	/**
 	 * Pause/resume Inspector capturing
 	 */
 	export function setInspectorPaused(paused: boolean): void {
-		if (USE_ESBUILD) {
-			esbuildManager?.setInspectorPaused(paused);
-		} else {
-			sandpackManager?.setInspectorPaused(paused);
-		}
+		esbuildManager?.setInspectorPaused(paused);
 	}
 
 	function generateRoomId() {
@@ -155,47 +142,33 @@
 		};
 
 		try {
-			if (USE_ESBUILD) {
-				// Use ESBuild-WASM
-				console.log('[GamePreview] Using ESBuild-WASM bundler');
-				esbuildManager = new ESBuildManager(commonOptions);
-				await esbuildManager.initialize();
-				await esbuildManager.run(vfs, entryPoint);
-			} else {
-				// Use Sandpack (fallback)
-				console.log('[GamePreview] Using Sandpack bundler');
-				sandpackManager = new SandpackManager(commonOptions);
-				await sandpackManager.initialize();
-				await sandpackManager.run(vfs, entryPoint);
-			}
+			console.log('[GamePreview] Using ESBuild-WASM bundler');
+			esbuildManager = new ESBuildManager(commonOptions);
+			await esbuildManager.initialize();
+			await esbuildManager.run(vfs, entryPoint);
 		} catch (err) {
 			status = 'error';
 			error = {
 				type: 'runtime',
-				message: err instanceof Error ? err.message : `Failed to initialize ${USE_ESBUILD ? 'ESBuild' : 'Sandpack'}`,
+				message: err instanceof Error ? err.message : 'Failed to initialize ESBuild',
 				stack: err instanceof Error ? err.stack : undefined
 			};
 		}
 
 		return () => {
-			if (USE_ESBUILD) {
-				esbuildManager?.destroy();
-			} else {
-				sandpackManager?.destroy();
-			}
+			esbuildManager?.destroy();
 		};
 	});
 
 	// Push code updates when files change
 	$effect(() => {
-		const manager = USE_ESBUILD ? esbuildManager : sandpackManager;
-		if (!manager || !isReady) return;
+		if (!esbuildManager || !isReady) return;
 		if (status === 'initializing' || status === 'error') return;
 
 		// Touch dependency to trigger on version bump
 		const version = vfsVersion;
 		if (version >= 0) {
-			manager.updateCode(vfs, entryPoint).catch((err) => {
+			esbuildManager.updateCode(vfs, entryPoint).catch((err) => {
 				console.error('[GamePreview] Failed to update code', err);
 			});
 		}
@@ -203,9 +176,8 @@
 
 	// Sync enableDevTools prop changes to manager
 	$effect(() => {
-		const manager = USE_ESBUILD ? esbuildManager : sandpackManager;
-		if (manager) {
-			manager.setDevToolsEnabled(enableDevTools);
+		if (esbuildManager) {
+			esbuildManager.setDevToolsEnabled(enableDevTools);
 		}
 	});
 </script>

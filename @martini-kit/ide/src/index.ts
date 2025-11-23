@@ -10,7 +10,6 @@ export { default as GamePreview } from './lib/components/GamePreview.svelte';
 
 // Core
 export { VirtualFileSystem } from './lib/core/VirtualFS';
-export { SandpackManager } from './lib/core/SandpackManager';
 
 // Types
 export type { MartiniKitIDEConfig, GameError } from './lib/types';

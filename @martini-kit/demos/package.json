@@ -5,8 +5,6 @@
 	"type": "module",
 	"scripts": {
 		"dev": "npm run build:sdk && vite dev",
-		"dev:sync-packages": "node scripts/sync-dev-packages.js",
-		"dev:with-sync": "pnpm dev:sync-packages && vite dev",
 		"dev:build-sdk": "tsx scripts/build-sdk.ts --watch",
 		"build": "npm run build:sdk && vite build",
 		"build:sdk": "tsx scripts/build-sdk.ts",
@@ -46,7 +44,6 @@
 		"@codemirror/lang-markdown": "^6.5.0",
 		"@codemirror/language": "^6.11.3",
 		"@codemirror/search": "^6.5.11",
-		"@codesandbox/sandpack-client": "^2.19.8",
 		"@lucide/svelte": "npm:lucide-svelte@^0.553.0",
 		"@martini-kit/core": "workspace:*",
 		"@martini-kit/ide": "workspace:*",

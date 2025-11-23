@@ -23,7 +23,7 @@ const canvas = document.querySelector('canvas');
 
 // Check scale mode via Phaser game instance
 // The game instance might be stored globally or in iframe
-// For Sandpack iframe:
+// For preview iframe:
 const iframe = document.querySelector('iframe');
 const iframeWindow = iframe?.contentWindow;
 const game = iframeWindow?.game;

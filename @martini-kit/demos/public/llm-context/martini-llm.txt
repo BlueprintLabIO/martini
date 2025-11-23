@@ -313,7 +313,7 @@ const transport = new IframeBridgeRelay({
 });
 ```
 
-**Use case:** Embedding games in websites (Sandpack, Codepen style)
+**Use case:** Embedding games in websites (iframe/Codepen style)
 
 ### Custom Transport
 
