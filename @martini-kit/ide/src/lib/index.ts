@@ -10,7 +10,6 @@ export { default as GamePreview } from './components/GamePreview.svelte';
 
 // Core
 export { VirtualFileSystem } from './core/VirtualFS';
-export { SandpackManager } from './core/SandpackManager';
 export { ESBuildManager } from './core/ESBuildManager';
 
 // Types

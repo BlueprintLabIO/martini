@@ -153,8 +153,6 @@
 		saveTimer = setTimeout(() => {
 			saveState = 'saved';
 		}, 450);
-
-		// Sandpack will handle HMR automatically via $effect in GamePreview
 	}
 
 	/**

@@ -1,138 +1,46 @@
 # Local Development Workflow
 
-This document explains how to work on `@martini-kit` packages with fast local iteration in the IDE.
+This is the ESBuild-powered workflow for hacking on `@martini-kit` packages inside the IDE.
 
 ## Quick Start
 
 ```bash
-# 1. Build all packages (first time)
-pnpm build
+# 1) Build the SDK bundle once (import-map shims + martini-kit.js)
+pnpm --filter=demos run build:sdk
 
-# 2. Sync packages to static directory
-cd @martini-kit/demos
-pnpm dev:sync-packages
-
-# 3. Start dev server
-pnpm dev
-```
-
-The IDE will now use your local package builds from `/dev-packages/` instead of npm!
-
-## How It Works
-
-### Development Mode
-- SandpackManager detects `import.meta.env.DEV = true` (Vite dev mode)
-- Package dependencies point to `/dev-packages/@martini-kit/*/dist/index.js`
-- Vite serves these files from `static/dev-packages/`
-- Changes to packages are reflected after rebuild + refresh
-
-### Production Mode
-- `import.meta.env.DEV = false` (Vite build mode)
-- Package dependencies use npm versions (`0.1.1`)
-- Normal CDN/npm resolution
-
-## Fast Iteration Workflow
-
-### Option 1: Manual Sync (Recommended for occasional changes)
-
-```bash
-# 1. Make changes to a package (e.g., @martini-kit/phaser)
-cd @martini-kit/phaser
-# edit src/runtime.ts
-
-# 2. Rebuild that package
-pnpm build
-
-# 3. Sync to static directory
-cd ../demos
-pnpm dev:sync-packages
-
-# 4. Refresh browser - changes are live!
-```
-
-### Option 2: Watch Mode (Best for active development)
-
-Terminal 1 - Watch and rebuild packages:
-```bash
-cd @martini-kit/phaser
-pnpm build --watch
-```
-
-Terminal 2 - Auto-sync on changes (requires chokidar-cli):
-```bash
-cd @martini-kit/demos
-
-# Install if needed
-pnpm add -D chokidar-cli
-
-# Watch and sync
-pnpm dlx chokidar '../*/dist/**' -c 'pnpm dev:sync-packages'
-```
-
-Terminal 3 - Dev server:
-```bash
+# 2) Start the IDE + demos (runs a fresh SDK build automatically)
 cd @martini-kit/demos
 pnpm dev
 ```
 
-Now any change to package source → auto rebuild → auto sync → browser refresh!
+Open `http://localhost:5173/ide` to verify the previews load.
 
-## Package Scripts
+## How It Works (no Sandpack)
 
-In `@martini-kit/demos/package.json`:
+- `scripts/build-sdk.ts` prebuilds the martini SDK into `static/sdk/`
+- The preview iframes load that SDK via import maps
+- User code is bundled in-browser with `esbuild-wasm` (fast rebuilds, no dev-packages)
+- When the SDK changes, you just rebuild it; no file syncing or npm proxying
 
-- `dev:sync-packages` - Copy dist files to static/dev-packages
-- `dev:with-sync` - Sync packages then start dev server
-- `dev` - Start dev server (assumes packages already synced)
+## Iterating on packages
+
+**Active package work**
+1. Terminal A: `cd @martini-kit/demos && pnpm dev:build-sdk` (watch SDK)
+2. Terminal B: `cd @martini-kit/demos && pnpm dev` (Vite dev server)
+3. Edit package sources (e.g., `@martini-kit/phaser/src/**`) → SDK rebuilds in 1-2s → refresh browser
+
+**Occasional tweaks**
+1. Edit a package
+2. `pnpm --filter <package> run build`
+3. `pnpm --filter=demos run build:sdk`
+4. Refresh the IDE
 
 ## Troubleshooting
 
-### Error: "Cannot find module '@martini-kit/phaser'"
-**Solution:** Run `pnpm dev:sync-packages` to copy packages to static directory
+- **Missing imports or 404s for `/sdk/*`** → `pnpm --filter=demos run build:sdk`
+- **Changes not visible** → ensure `pnpm dev:build-sdk` is running, then hard refresh
+- **Slow first load** → esbuild-wasm downloads once (~8MB). Subsequent loads are cached.
 
-### Changes not reflecting in IDE
-**Solution:**
-1. Rebuild the package: `pnpm build`
-2. Re-sync: `pnpm dev:sync-packages`
-3. Hard refresh browser (Cmd+Shift+R / Ctrl+Shift+F5)
+## Outputs
 
-### "Transport already exists" error persists
-**Solution:**
-1. The self-healing fix is in `@martini-kit/transport-iframe-bridge`
-2. Rebuild it: `cd @martini-kit/transport-iframe-bridge && pnpm build`
-3. Sync: `cd ../demos && pnpm dev:sync-packages`
-4. Refresh IDE
-
-## Files Created
-
-- `scripts/sync-dev-packages.js` - Copies dist files to static
-- `static/dev-packages/@martini-kit/` - Local package builds (gitignored)
-- `.gitignore` entry for `**/static/dev-packages/`
-
-## Production Deployment
-
-The local packages setup only affects development:
-
-- Production builds use `import.meta.env.DEV = false`
-- Sandpack resolves packages from npm
-- No changes needed for deployment
-
-## Publishing to npm
-
-When you're happy with changes:
-
-```bash
-# From workspace root
-pnpm build  # Rebuild all packages
-
-# Publish (in each package dir)
-cd @martini-kit/phaser
-npm publish
-
-cd ../transport-iframe-bridge
-npm publish
-
-# etc.
-```
-
-After publishing, update version numbers in SandpackManager.ts if needed.
+- `@martini-kit/demos/static/sdk/` – generated import-map shims and bundled SDK (gitignored locally)

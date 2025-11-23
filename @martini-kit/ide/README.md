@@ -6,7 +6,7 @@ Embeddable multiplayer game IDE with dual-view local testing.
 
 - ✅ **Dual-view local testing** - See two players side-by-side in the same browser
 - ✅ **CodeMirror editor** - Syntax highlighting for TypeScript/JavaScript
-- ✅ **Sandpack bundler** - In-browser bundling using CodeSandbox's Sandpack
+- ✅ **ESBuild-WASM bundler** - In-browser bundling with cached SDK + import maps
 - ✅ **Sandbox execution** - Isolated iframe for safe code execution
 - ✅ **Local transport** - Test multiplayer without network
 - ✅ **Phaser engine** - Built for Phaser 3 games
@@ -130,7 +130,7 @@ Each console message includes:
         DevToolsPanel.svelte       # Per-game debugging overlay
       core/
         VirtualFS.ts               # In-memory file system
-        SandpackManager.ts         # Sandpack integration & DevTools bridge
+        ESBuildManager.ts          # ESBuild-powered preview runtime
 ```
 
 ## Demo

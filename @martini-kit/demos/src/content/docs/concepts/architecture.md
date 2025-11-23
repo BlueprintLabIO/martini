@@ -140,7 +140,7 @@ PhysicsManager      // Behavior profiles
 **Role**: In-browser code editor
 
 **Responsibilities**:
-- Live code editing with Sandpack
+- Live code editing with ESBuild-WASM + import maps
 - Instant preview with iframe transport
 - Example game templates
 - Learning environment

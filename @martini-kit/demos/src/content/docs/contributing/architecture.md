@@ -95,7 +95,7 @@ All transports implement the same `Transport` interface from `@martini-kit/core`
 **Built With:**
 - Svelte for UI
 - CodeMirror for code editing
-- Sandpack for code execution
+- ESBuild-WASM + import maps for code execution
 
 ### @martini-kit/demos
 
