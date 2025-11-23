@@ -12,7 +12,11 @@
 {@render children()}
 
 <style>
+	:global(html),
 	:global(body) {
-		padding-top: 0;
+		padding: 0;
+		margin: 0;
+		height: 100%;
+		overflow: hidden;
 	}
 </style>

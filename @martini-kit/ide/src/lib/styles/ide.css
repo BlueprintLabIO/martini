@@ -8,26 +8,26 @@
 }
 
 /* Paneforge overrides */
-:global(.ide-pane-group) {
+.ide-pane-group {
 	height: 100%;
 }
 
-:global(.sidebar-pane),
-:global(.editor-pane),
-:global(.preview-pane) {
+.sidebar-pane,
+.editor-pane,
+.preview-pane {
 	height: 100%;
 	overflow: hidden;
 }
 
-:global(.resizer) {
+.resizer {
 	width: 1px;
 	background: #e5e7eb;
 	cursor: col-resize;
 	transition: background 0.2s;
 }
 
-:global(.resizer:hover),
-:global(.resizer[data-state='drag']) {
+.resizer:hover,
+.resizer[data-state='drag'] {
 	background: #3b82f6;
 }
 
@@ -322,27 +322,27 @@
 	flex-direction: column;
 }
 
-:global(.preview-group) {
+.preview-group {
 	height: 100%;
 	flex: 1;
 	display: flex;
 	flex-direction: column;
 }
 
-:global(.games-pane),
-:global(.devtools-pane) {
+.games-pane,
+.devtools-pane {
 	overflow: hidden;
 }
 
-:global(.resizer-horizontal) {
+.resizer-horizontal {
 	height: 1px;
 	background: #e5e7eb;
 	cursor: row-resize;
 	transition: background 0.2s;
 }
 
-:global(.resizer-horizontal:hover),
-:global(.resizer-horizontal[data-state='drag']) {
+.resizer-horizontal:hover,
+.resizer-horizontal[data-state='drag'] {
 	background: #3b82f6;
 }
 
@@ -353,7 +353,7 @@
 	background: #e5e7eb;
 }
 
-.dual-preview > :global(*) {
+.dual-preview > * {
 	flex: 1;
 	min-width: 0;
 }

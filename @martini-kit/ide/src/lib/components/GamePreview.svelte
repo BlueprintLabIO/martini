@@ -116,12 +116,46 @@
 		const onEnter = () => (isPointerOver = true);
 		const onLeave = () => (isPointerOver = false);
 
+		// Global error handler to catch unhandled errors
+		const handleGlobalError = (event: ErrorEvent) => {
+			const errorMessage = event.message || event.error?.message || 'Unknown error occurred';
+			const errorStack = event.error?.stack;
+
+			console.error('[GamePreview] Global error:', errorMessage);
+			if (errorStack) console.error(errorStack);
+
+			status = 'error';
+			error = {
+				type: 'runtime',
+				message: errorMessage,
+				stack: errorStack
+			};
+		};
+
+		const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+			const reason = event.reason;
+			const errorMessage = reason?.message || String(reason) || 'Unhandled promise rejection';
+			const errorStack = reason?.stack;
+
+			console.error('[GamePreview] Unhandled rejection:', errorMessage);
+			if (errorStack) console.error(errorStack);
+
+			status = 'error';
+			error = {
+				type: 'runtime',
+				message: errorMessage,
+				stack: errorStack
+			};
+		};
+
 		// Lock scroll interactions around the preview container
 		container?.addEventListener('wheel', preventScroll, { passive: false });
 		container?.addEventListener('touchmove', preventScroll, { passive: false });
 		container?.addEventListener('mouseenter', onEnter);
 		container?.addEventListener('mouseleave', onLeave);
 		window.addEventListener('keydown', blockScrollKeys, { passive: false });
+		window.addEventListener('error', handleGlobalError);
+		window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
 		// Common options for both managers
 		const commonOptions = {
@@ -131,6 +165,9 @@
 			transportType,
 			enableDevTools,
 			onError: (err) => {
+				console.error(`[GamePreview] ${err.type} error:`, err.message);
+				if (err.stack) console.error(err.stack);
+
 				status = 'error';
 				error = err;
 				onError?.(err);
@@ -167,11 +204,15 @@
 		};
 
 		try {
-			console.log('[GamePreview] Using ESBuild-WASM bundler');
 			esbuildManager = new ESBuildManager(commonOptions);
 			await esbuildManager.initialize();
 			await esbuildManager.run(vfs, entryPoint);
 		} catch (err) {
+			console.error('[GamePreview] Initialization failed:', err instanceof Error ? err.message : String(err));
+			if (err instanceof Error && err.stack) {
+				console.error(err.stack);
+			}
+
 			status = 'error';
 			error = {
 				type: 'runtime',
@@ -187,6 +228,8 @@
 			container?.removeEventListener('mouseenter', onEnter);
 			container?.removeEventListener('mouseleave', onLeave);
 			window.removeEventListener('keydown', blockScrollKeys);
+			window.removeEventListener('error', handleGlobalError);
+			window.removeEventListener('unhandledrejection', handleUnhandledRejection);
 		};
 	});
 
@@ -199,7 +242,15 @@
 		const version = vfsVersion;
 		if (version >= 0) {
 			esbuildManager.updateCode(vfs, entryPoint).catch((err) => {
-				console.error('[GamePreview] Failed to update code', err);
+				console.error('[GamePreview] Code update failed:', err?.message || err);
+				if (err?.stack) console.error(err.stack);
+
+				status = 'error';
+				error = {
+					type: 'runtime',
+					message: err instanceof Error ? err.message : 'Failed to update code',
+					stack: err instanceof Error ? err.stack : undefined
+				};
 			});
 		}
 	});
@@ -236,7 +287,23 @@
 		bind:this={container}
 		class="preview-container"
 		class:full-height={hideDevTools}
-	></div>
+	>
+		{#if error}
+			<div class="error-overlay">
+				<div class="error-content">
+					<div class="error-icon">⚠️</div>
+					<h3 class="error-title">{error.type === 'syntax' ? 'Syntax Error' : 'Runtime Error'}</h3>
+					<div class="error-message">{error.message}</div>
+					{#if error.stack}
+						<details class="error-stack">
+							<summary>Stack Trace</summary>
+							<pre>{error.stack}</pre>
+						</details>
+					{/if}
+				</div>
+			</div>
+		{/if}
+	</div>
 
 	{#if !hideDevTools}
 		<div class="controls-hint">
@@ -334,5 +401,88 @@
 		color: #6b7280;
 		font-size: 0.75rem;
 		text-align: center;
+	}
+
+	.error-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.9);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 2rem;
+		z-index: 1000;
+		backdrop-filter: blur(4px);
+	}
+
+	.error-content {
+		background: #1f2937;
+		border: 2px solid #ef4444;
+		border-radius: 12px;
+		padding: 2rem;
+		max-width: 600px;
+		width: 100%;
+		box-shadow: 0 20px 60px rgba(239, 68, 68, 0.3);
+	}
+
+	.error-icon {
+		font-size: 3rem;
+		text-align: center;
+		margin-bottom: 1rem;
+	}
+
+	.error-title {
+		margin: 0 0 1rem 0;
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: #fca5a5;
+		text-align: center;
+	}
+
+	.error-message {
+		color: #f3f4f6;
+		font-size: 1rem;
+		line-height: 1.6;
+		margin-bottom: 1.5rem;
+		padding: 1rem;
+		background: rgba(0, 0, 0, 0.3);
+		border-radius: 6px;
+		border-left: 4px solid #ef4444;
+		font-family: 'Consolas', 'Monaco', monospace;
+		word-break: break-word;
+	}
+
+	.error-stack {
+		margin-top: 1rem;
+		border-top: 1px solid #374151;
+		padding-top: 1rem;
+	}
+
+	.error-stack summary {
+		cursor: pointer;
+		font-size: 0.875rem;
+		color: #9ca3af;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+		user-select: none;
+	}
+
+	.error-stack summary:hover {
+		color: #d1d5db;
+	}
+
+	.error-stack pre {
+		background: rgba(0, 0, 0, 0.4);
+		padding: 1rem;
+		border-radius: 6px;
+		overflow-x: auto;
+		font-size: 0.75rem;
+		line-height: 1.5;
+		color: #fca5a5;
+		font-family: 'Consolas', 'Monaco', monospace;
+		margin: 0;
 	}
 </style>

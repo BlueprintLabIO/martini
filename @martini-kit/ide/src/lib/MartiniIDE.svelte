@@ -1063,3 +1063,52 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	/* Baseline layout stays co-located to guarantee sizing even if external CSS is skipped */
+	.martini-kit-ide {
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
+
+	:global(.ide-pane-group),
+	:global(.sidebar-pane),
+	:global(.editor-pane),
+	:global(.preview-pane) {
+		height: 100%;
+	}
+
+	:global(.sidebar-pane),
+	:global(.editor-pane),
+	:global(.preview-pane) {
+		overflow: hidden;
+	}
+
+	:global(.resizer) {
+		width: 1px;
+		cursor: col-resize;
+	}
+
+	:global(.resizer-horizontal) {
+		height: 1px;
+		cursor: row-resize;
+	}
+
+	.preview-pane-content,
+	:global(.preview-group) {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.dual-preview {
+		display: flex;
+		height: 100%;
+	}
+
+	.dual-preview > * {
+		flex: 1;
+		min-width: 0;
+	}
+</style>
