@@ -102,10 +102,14 @@ export class SpriteManager {
         // Track for automatic sync (host only)
         const syncProperties = this.config.sync?.properties || ['x', 'y', 'rotation', 'alpha'];
         const syncInterval = this.config.sync?.interval;
+        const adaptiveSync = this.config.sync?.adaptive;
+        const adaptiveSyncThreshold = this.config.sync?.adaptiveThreshold;
         this.adapter.trackSprite(sprite, key, {
             properties: syncProperties,
             syncInterval: syncInterval,
-            namespace: this.namespace
+            namespace: this.namespace,
+            adaptiveSync: adaptiveSync,
+            adaptiveSyncThreshold: adaptiveSyncThreshold
         });
         // Call onAdd hook (if provided)
         if (this.config.onAdd) {

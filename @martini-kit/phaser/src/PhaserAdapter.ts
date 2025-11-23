@@ -27,6 +27,12 @@ export interface SpriteTrackingOptions {
 
   /** Namespace to write sprite data to (default: uses adapter's spriteNamespace) */
   namespace?: string;
+
+  /** Enable adaptive sync rate (default: false) - syncs faster when moving, slower when idle */
+  adaptiveSync?: boolean;
+
+  /** Movement threshold for adaptive sync (default: 1 pixel/frame) */
+  adaptiveSyncThreshold?: number;
 }
 
 export interface PhaserAdapterConfig {
@@ -48,6 +54,37 @@ export interface PhaserAdapterConfig {
    * Range: 0.1 (very smooth) to 0.5 (very snappy)
    */
   lerpFactor?: number;
+
+  /**
+   * Interpolation mode (default: 'lerp')
+   * - 'lerp': Exponential smoothing (frame-rate dependent, legacy)
+   * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
+   * - 'snapshot-buffer': Render past with buffered snapshots (smoothest, adds 50-100ms latency)
+   */
+  interpolationMode?: 'lerp' | 'time-based' | 'snapshot-buffer';
+
+  /**
+   * Interpolation speed in pixels per second (for 'time-based' mode, default: 400)
+   */
+  interpolationSpeed?: number;
+
+  /**
+   * Snapshot buffer size (for 'snapshot-buffer' mode, default: 3)
+   * Higher = smoother but more latency
+   */
+  snapshotBufferSize?: number;
+
+  /**
+   * Enable dead reckoning/extrapolation (default: true)
+   * Continues movement based on velocity during packet loss
+   */
+  enableDeadReckoning?: boolean;
+
+  /**
+   * Dead reckoning max duration in ms (default: 200)
+   * Maximum time to extrapolate without new data
+   */
+  deadReckoningMaxDuration?: number;
 }
 
 /**
@@ -64,14 +101,44 @@ export interface PhaserAdapterConfig {
  * // That's it! Sprite automatically syncs across network
  * ```
  */
+/** Snapshot for buffered interpolation */
+interface SpriteSnapshot {
+  x: number;
+  y: number;
+  rotation?: number;
+  timestamp: number;
+}
+
+/** Enhanced remote sprite data with interpolation state */
+interface RemoteSpriteData {
+  sprite: any;
+  namespace: string;
+  // Legacy lerp targets
+  _targetX?: number;
+  _targetY?: number;
+  _targetRotation?: number;
+  // Snapshot buffer for snapshot-buffer mode
+  snapshots?: SpriteSnapshot[];
+  // Dead reckoning state
+  velocityX?: number;
+  velocityY?: number;
+  lastUpdateTime?: number;
+}
+
 export class PhaserAdapter<TState = any> {
-  private trackedSprites: Map<string, { sprite: any; options: SpriteTrackingOptions }> = new Map();
-  private remoteSprites: Map<string, { sprite: any; namespace: string }> = new Map(); // Sprites created for remote players with their namespace
+  private trackedSprites: Map<string, { sprite: any; options: SpriteTrackingOptions; lastPosition?: { x: number; y: number } }> = new Map();
+  private remoteSprites: Map<string, RemoteSpriteData> = new Map();
   private syncIntervalId: any = null;
   private readonly spriteNamespace: string;
   private readonly autoInterpolate: boolean;
   private readonly lerpFactor: number;
+  private readonly interpolationMode: 'lerp' | 'time-based' | 'snapshot-buffer';
+  private readonly interpolationSpeed: number;
+  private readonly snapshotBufferSize: number;
+  private readonly enableDeadReckoning: boolean;
+  private readonly deadReckoningMaxDuration: number;
   private spriteManagers: Set<{ namespace: string }> = new Set(); // Track all registered SpriteManagers
+  private lastUpdateTime: number = Date.now();
 
   constructor(
     private runtime: GameRuntime<TState>,
@@ -81,6 +148,11 @@ export class PhaserAdapter<TState = any> {
     this.spriteNamespace = config.spriteNamespace || '_sprites';
     this.autoInterpolate = config.autoInterpolate !== false; // default true
     this.lerpFactor = config.lerpFactor ?? 0.3;
+    this.interpolationMode = config.interpolationMode || 'time-based';
+    this.interpolationSpeed = config.interpolationSpeed ?? 400; // pixels per second
+    this.snapshotBufferSize = config.snapshotBufferSize ?? 3;
+    this.enableDeadReckoning = config.enableDeadReckoning !== false; // default true
+    this.deadReckoningMaxDuration = config.deadReckoningMaxDuration ?? 200; // ms
 
     // Ensure state has sprites object
     this.runtime.mutateState((state: any) => {
@@ -357,7 +429,7 @@ export class PhaserAdapter<TState = any> {
    * ```
    */
   trackSprite(sprite: any, key: string, options: SpriteTrackingOptions = {}): void {
-    this.trackedSprites.set(key, { sprite, options });
+    this.trackedSprites.set(key, { sprite, options, lastPosition: { x: sprite.x, y: sprite.y } });
 
     // Start sync loop if not already running (host only)
     if (this.isHost() && !this.syncIntervalId) {
@@ -444,8 +516,26 @@ export class PhaserAdapter<TState = any> {
   private syncAllSprites(): void {
     if (!this.isHost()) return;
 
-    for (const [key, { sprite, options }] of this.trackedSprites.entries()) {
+    for (const [key, tracked] of this.trackedSprites.entries()) {
+      const { sprite, options, lastPosition } = tracked;
+
+      // Adaptive sync: skip if sprite hasn't moved much
+      if (options.adaptiveSync && lastPosition) {
+        const threshold = options.adaptiveSyncThreshold ?? 1;
+        const dx = Math.abs(sprite.x - lastPosition.x);
+        const dy = Math.abs(sprite.y - lastPosition.y);
+
+        if (dx < threshold && dy < threshold) {
+          continue; // Skip sync for idle sprite
+        }
+      }
+
       this.syncSpriteToState(key, sprite, options);
+
+      // Update last position for adaptive sync
+      if (options.adaptiveSync) {
+        tracked.lastPosition = { x: sprite.x, y: sprite.y };
+      }
     }
   }
 
@@ -532,6 +622,7 @@ export class PhaserAdapter<TState = any> {
 
       // Update remote sprites (sprites from other players)
       // Store target positions for interpolation
+      const now = Date.now();
       for (const [key, spriteData] of Object.entries(sprites)) {
         // Skip if this is our own sprite
         if (this.trackedSprites.has(key)) continue;
@@ -540,18 +631,57 @@ export class PhaserAdapter<TState = any> {
         const remoteSpriteData = this.remoteSprites.get(key);
         if (remoteSpriteData && remoteSpriteData.namespace === namespace) {
           const sprite = remoteSpriteData.sprite;
+          const data = spriteData as any;
 
-          // Store target position for smooth interpolation
-          sprite._targetX = (spriteData as any).x;
-          sprite._targetY = (spriteData as any).y;
-          sprite._targetRotation = (spriteData as any).rotation;
-
-          // First update - snap to position immediately
-          if (sprite._targetX !== undefined && sprite.x === undefined) {
-            sprite.x = sprite._targetX;
-            sprite.y = sprite._targetY;
-            sprite.rotation = sprite._targetRotation || 0;
+          // Calculate velocity for dead reckoning
+          if (this.enableDeadReckoning && remoteSpriteData.lastUpdateTime) {
+            const dt = (now - remoteSpriteData.lastUpdateTime) / 1000; // seconds
+            if (dt > 0 && sprite._targetX !== undefined) {
+              remoteSpriteData.velocityX = (data.x - sprite._targetX) / dt;
+              remoteSpriteData.velocityY = (data.y - sprite._targetY) / dt;
+            }
           }
+
+          // Snapshot buffer mode: Store snapshot instead of direct target
+          if (this.interpolationMode === 'snapshot-buffer') {
+            if (!remoteSpriteData.snapshots) {
+              remoteSpriteData.snapshots = [];
+            }
+
+            // Add new snapshot
+            remoteSpriteData.snapshots.push({
+              x: data.x,
+              y: data.y,
+              rotation: data.rotation,
+              timestamp: now
+            });
+
+            // Keep only last N snapshots
+            if (remoteSpriteData.snapshots.length > this.snapshotBufferSize) {
+              remoteSpriteData.snapshots.shift();
+            }
+
+            // First update - snap to position immediately
+            if (sprite.x === undefined) {
+              sprite.x = data.x;
+              sprite.y = data.y;
+              sprite.rotation = data.rotation || 0;
+            }
+          } else {
+            // Legacy lerp / time-based mode: Store target positions
+            sprite._targetX = data.x;
+            sprite._targetY = data.y;
+            sprite._targetRotation = data.rotation;
+
+            // First update - snap to position immediately
+            if (sprite._targetX !== undefined && sprite.x === undefined) {
+              sprite.x = sprite._targetX;
+              sprite.y = sprite._targetY;
+              sprite.rotation = sprite._targetRotation || 0;
+            }
+          }
+
+          remoteSpriteData.lastUpdateTime = now;
         }
       }
     }
@@ -602,21 +732,145 @@ export class PhaserAdapter<TState = any> {
    * This should be called every frame (60 FPS) for smooth movement
    *
    * Note: If autoInterpolate is enabled in config, you don't need to call this manually.
+   *
+   * Supports three interpolation modes:
+   * - 'lerp': Exponential smoothing (legacy, frame-rate dependent)
+   * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
+   * - 'snapshot-buffer': Buffered interpolation (smoothest, adds latency)
    */
-  updateInterpolation(): void {
+  updateInterpolation(delta?: number): void {
     if (this.isHost()) return; // Only clients interpolate
+
+    const now = Date.now();
+    const dt = delta ? delta / 1000 : (now - this.lastUpdateTime) / 1000; // Convert to seconds
+    this.lastUpdateTime = now;
 
     for (const [key, remoteSpriteData] of this.remoteSprites.entries()) {
       const sprite = remoteSpriteData.sprite;
-      if (sprite._targetX !== undefined) {
-        // Lerp towards target position
-        sprite.x += (sprite._targetX - sprite.x) * this.lerpFactor;
-        sprite.y += (sprite._targetY - sprite.y) * this.lerpFactor;
 
-        if (sprite._targetRotation !== undefined) {
-          sprite.rotation += (sprite._targetRotation - sprite.rotation) * this.lerpFactor;
-        }
+      if (this.interpolationMode === 'snapshot-buffer') {
+        // Snapshot buffer mode: Interpolate between buffered snapshots
+        this.updateSnapshotBufferInterpolation(sprite, remoteSpriteData, now);
+      } else if (this.interpolationMode === 'time-based') {
+        // Time-based mode: Linear interpolation at constant speed
+        this.updateTimeBasedInterpolation(sprite, remoteSpriteData, dt, now);
+      } else {
+        // Legacy lerp mode: Exponential smoothing
+        this.updateLerpInterpolation(sprite, remoteSpriteData);
       }
+    }
+  }
+
+  /**
+   * Legacy exponential lerp interpolation (frame-rate dependent)
+   */
+  private updateLerpInterpolation(sprite: any, remoteSpriteData: RemoteSpriteData): void {
+    if (sprite._targetX !== undefined) {
+      sprite.x += (sprite._targetX - sprite.x) * this.lerpFactor;
+      sprite.y += (sprite._targetY - sprite.y) * this.lerpFactor;
+
+      if (sprite._targetRotation !== undefined) {
+        sprite.rotation += (sprite._targetRotation - sprite.rotation) * this.lerpFactor;
+      }
+    }
+  }
+
+  /**
+   * Time-based linear interpolation (frame-rate independent)
+   */
+  private updateTimeBasedInterpolation(
+    sprite: any,
+    remoteSpriteData: RemoteSpriteData,
+    dt: number,
+    now: number
+  ): void {
+    if (sprite._targetX === undefined) return;
+
+    // Calculate distance to target
+    const dx = sprite._targetX - sprite.x;
+    const dy = sprite._targetY - sprite.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 0.1) {
+      // Snap to target if very close
+      sprite.x = sprite._targetX;
+      sprite.y = sprite._targetY;
+      if (sprite._targetRotation !== undefined) {
+        sprite.rotation = sprite._targetRotation;
+      }
+      return;
+    }
+
+    // Dead reckoning: Extrapolate if no recent updates
+    const timeSinceUpdate = now - (remoteSpriteData.lastUpdateTime || now);
+    if (
+      this.enableDeadReckoning &&
+      timeSinceUpdate > 0 &&
+      timeSinceUpdate < this.deadReckoningMaxDuration &&
+      remoteSpriteData.velocityX !== undefined
+    ) {
+      // Use velocity to extrapolate position
+      sprite.x += remoteSpriteData.velocityX * dt;
+      sprite.y += remoteSpriteData.velocityY! * dt;
+    } else {
+      // Normal interpolation: Move at constant speed towards target
+      const moveDistance = this.interpolationSpeed * dt;
+      const t = Math.min(moveDistance / distance, 1); // Clamp to 1 to prevent overshoot
+
+      sprite.x += dx * t;
+      sprite.y += dy * t;
+
+      // Rotation interpolation
+      if (sprite._targetRotation !== undefined) {
+        const dr = sprite._targetRotation - sprite.rotation;
+        sprite.rotation += dr * t;
+      }
+    }
+  }
+
+  /**
+   * Snapshot buffer interpolation (smoothest, renders in the past)
+   */
+  private updateSnapshotBufferInterpolation(
+    sprite: any,
+    remoteSpriteData: RemoteSpriteData,
+    now: number
+  ): void {
+    const snapshots = remoteSpriteData.snapshots;
+    if (!snapshots || snapshots.length < 2) return;
+
+    // Render 100ms in the past (or buffer size * sync interval)
+    const renderTime = now - 100;
+
+    // Find two snapshots to interpolate between
+    let snapshot0: SpriteSnapshot | null = null;
+    let snapshot1: SpriteSnapshot | null = null;
+
+    for (let i = 0; i < snapshots.length - 1; i++) {
+      if (snapshots[i].timestamp <= renderTime && snapshots[i + 1].timestamp >= renderTime) {
+        snapshot0 = snapshots[i];
+        snapshot1 = snapshots[i + 1];
+        break;
+      }
+    }
+
+    // Fallback to latest two snapshots
+    if (!snapshot0 || !snapshot1) {
+      snapshot0 = snapshots[snapshots.length - 2];
+      snapshot1 = snapshots[snapshots.length - 1];
+    }
+
+    // Interpolate between snapshots
+    const t0 = snapshot0.timestamp;
+    const t1 = snapshot1.timestamp;
+    const t = (renderTime - t0) / (t1 - t0);
+    const clamped = Math.max(0, Math.min(1, t));
+
+    sprite.x = snapshot0.x + (snapshot1.x - snapshot0.x) * clamped;
+    sprite.y = snapshot0.y + (snapshot1.y - snapshot0.y) * clamped;
+
+    if (snapshot0.rotation !== undefined && snapshot1.rotation !== undefined) {
+      sprite.rotation = snapshot0.rotation + (snapshot1.rotation - snapshot0.rotation) * clamped;
     }
   }
 

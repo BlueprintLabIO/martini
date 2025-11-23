@@ -237,10 +237,14 @@ var SpriteManager = class {
     }
     const syncProperties = this.config.sync?.properties || ["x", "y", "rotation", "alpha"];
     const syncInterval = this.config.sync?.interval;
+    const adaptiveSync = this.config.sync?.adaptive;
+    const adaptiveSyncThreshold = this.config.sync?.adaptiveThreshold;
     this.adapter.trackSprite(sprite, key, {
       properties: syncProperties,
       syncInterval,
-      namespace: this.namespace
+      namespace: this.namespace,
+      adaptiveSync,
+      adaptiveSyncThreshold
     });
     if (this.config.onAdd) {
       this.config.onAdd(sprite, key, data, {
@@ -1996,21 +2000,31 @@ var GridClickHelper = class {
 
 // src/PhaserAdapter.ts
 var PhaserAdapter = class {
-  // Track all registered SpriteManagers
   constructor(runtime, scene, config = {}) {
     this.runtime = runtime;
     this.scene = scene;
     __publicField(this, "trackedSprites", /* @__PURE__ */ new Map());
     __publicField(this, "remoteSprites", /* @__PURE__ */ new Map());
-    // Sprites created for remote players with their namespace
     __publicField(this, "syncIntervalId", null);
     __publicField(this, "spriteNamespace");
     __publicField(this, "autoInterpolate");
     __publicField(this, "lerpFactor");
+    __publicField(this, "interpolationMode");
+    __publicField(this, "interpolationSpeed");
+    __publicField(this, "snapshotBufferSize");
+    __publicField(this, "enableDeadReckoning");
+    __publicField(this, "deadReckoningMaxDuration");
     __publicField(this, "spriteManagers", /* @__PURE__ */ new Set());
+    // Track all registered SpriteManagers
+    __publicField(this, "lastUpdateTime", Date.now());
     this.spriteNamespace = config.spriteNamespace || "_sprites";
     this.autoInterpolate = config.autoInterpolate !== false;
     this.lerpFactor = config.lerpFactor ?? 0.3;
+    this.interpolationMode = config.interpolationMode || "time-based";
+    this.interpolationSpeed = config.interpolationSpeed ?? 400;
+    this.snapshotBufferSize = config.snapshotBufferSize ?? 3;
+    this.enableDeadReckoning = config.enableDeadReckoning !== false;
+    this.deadReckoningMaxDuration = config.deadReckoningMaxDuration ?? 200;
     this.runtime.mutateState((state) => {
       if (!state[this.spriteNamespace]) {
         state[this.spriteNamespace] = {};
@@ -2240,7 +2254,7 @@ var PhaserAdapter = class {
    * ```
    */
   trackSprite(sprite, key, options = {}) {
-    this.trackedSprites.set(key, { sprite, options });
+    this.trackedSprites.set(key, { sprite, options, lastPosition: { x: sprite.x, y: sprite.y } });
     if (this.isHost() && !this.syncIntervalId) {
       const interval = options.syncInterval || 50;
       this.syncIntervalId = setInterval(() => this.syncAllSprites(), interval);
@@ -2302,8 +2316,20 @@ var PhaserAdapter = class {
    */
   syncAllSprites() {
     if (!this.isHost()) return;
-    for (const [key, { sprite, options }] of this.trackedSprites.entries()) {
+    for (const [key, tracked] of this.trackedSprites.entries()) {
+      const { sprite, options, lastPosition } = tracked;
+      if (options.adaptiveSync && lastPosition) {
+        const threshold = options.adaptiveSyncThreshold ?? 1;
+        const dx = Math.abs(sprite.x - lastPosition.x);
+        const dy = Math.abs(sprite.y - lastPosition.y);
+        if (dx < threshold && dy < threshold) {
+          continue;
+        }
+      }
       this.syncSpriteToState(key, sprite, options);
+      if (options.adaptiveSync) {
+        tracked.lastPosition = { x: sprite.x, y: sprite.y };
+      }
     }
   }
   /**
@@ -2368,19 +2394,49 @@ var PhaserAdapter = class {
           this.applySpriteData(tracked.sprite, spriteData);
         }
       }
+      const now = Date.now();
       for (const [key, spriteData] of Object.entries(sprites)) {
         if (this.trackedSprites.has(key)) continue;
         const remoteSpriteData = this.remoteSprites.get(key);
         if (remoteSpriteData && remoteSpriteData.namespace === namespace) {
           const sprite = remoteSpriteData.sprite;
-          sprite._targetX = spriteData.x;
-          sprite._targetY = spriteData.y;
-          sprite._targetRotation = spriteData.rotation;
-          if (sprite._targetX !== void 0 && sprite.x === void 0) {
-            sprite.x = sprite._targetX;
-            sprite.y = sprite._targetY;
-            sprite.rotation = sprite._targetRotation || 0;
+          const data = spriteData;
+          if (this.enableDeadReckoning && remoteSpriteData.lastUpdateTime) {
+            const dt = (now - remoteSpriteData.lastUpdateTime) / 1e3;
+            if (dt > 0 && sprite._targetX !== void 0) {
+              remoteSpriteData.velocityX = (data.x - sprite._targetX) / dt;
+              remoteSpriteData.velocityY = (data.y - sprite._targetY) / dt;
+            }
           }
+          if (this.interpolationMode === "snapshot-buffer") {
+            if (!remoteSpriteData.snapshots) {
+              remoteSpriteData.snapshots = [];
+            }
+            remoteSpriteData.snapshots.push({
+              x: data.x,
+              y: data.y,
+              rotation: data.rotation,
+              timestamp: now
+            });
+            if (remoteSpriteData.snapshots.length > this.snapshotBufferSize) {
+              remoteSpriteData.snapshots.shift();
+            }
+            if (sprite.x === void 0) {
+              sprite.x = data.x;
+              sprite.y = data.y;
+              sprite.rotation = data.rotation || 0;
+            }
+          } else {
+            sprite._targetX = data.x;
+            sprite._targetY = data.y;
+            sprite._targetRotation = data.rotation;
+            if (sprite._targetX !== void 0 && sprite.x === void 0) {
+              sprite.x = sprite._targetX;
+              sprite.y = sprite._targetY;
+              sprite.rotation = sprite._targetRotation || 0;
+            }
+          }
+          remoteSpriteData.lastUpdateTime = now;
         }
       }
     }
@@ -2428,18 +2484,99 @@ var PhaserAdapter = class {
    * This should be called every frame (60 FPS) for smooth movement
    *
    * Note: If autoInterpolate is enabled in config, you don't need to call this manually.
+   *
+   * Supports three interpolation modes:
+   * - 'lerp': Exponential smoothing (legacy, frame-rate dependent)
+   * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
+   * - 'snapshot-buffer': Buffered interpolation (smoothest, adds latency)
    */
-  updateInterpolation() {
+  updateInterpolation(delta) {
     if (this.isHost()) return;
+    const now = Date.now();
+    const dt = delta ? delta / 1e3 : (now - this.lastUpdateTime) / 1e3;
+    this.lastUpdateTime = now;
     for (const [key, remoteSpriteData] of this.remoteSprites.entries()) {
       const sprite = remoteSpriteData.sprite;
-      if (sprite._targetX !== void 0) {
-        sprite.x += (sprite._targetX - sprite.x) * this.lerpFactor;
-        sprite.y += (sprite._targetY - sprite.y) * this.lerpFactor;
-        if (sprite._targetRotation !== void 0) {
-          sprite.rotation += (sprite._targetRotation - sprite.rotation) * this.lerpFactor;
-        }
+      if (this.interpolationMode === "snapshot-buffer") {
+        this.updateSnapshotBufferInterpolation(sprite, remoteSpriteData, now);
+      } else if (this.interpolationMode === "time-based") {
+        this.updateTimeBasedInterpolation(sprite, remoteSpriteData, dt, now);
+      } else {
+        this.updateLerpInterpolation(sprite, remoteSpriteData);
       }
+    }
+  }
+  /**
+   * Legacy exponential lerp interpolation (frame-rate dependent)
+   */
+  updateLerpInterpolation(sprite, remoteSpriteData) {
+    if (sprite._targetX !== void 0) {
+      sprite.x += (sprite._targetX - sprite.x) * this.lerpFactor;
+      sprite.y += (sprite._targetY - sprite.y) * this.lerpFactor;
+      if (sprite._targetRotation !== void 0) {
+        sprite.rotation += (sprite._targetRotation - sprite.rotation) * this.lerpFactor;
+      }
+    }
+  }
+  /**
+   * Time-based linear interpolation (frame-rate independent)
+   */
+  updateTimeBasedInterpolation(sprite, remoteSpriteData, dt, now) {
+    if (sprite._targetX === void 0) return;
+    const dx = sprite._targetX - sprite.x;
+    const dy = sprite._targetY - sprite.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance < 0.1) {
+      sprite.x = sprite._targetX;
+      sprite.y = sprite._targetY;
+      if (sprite._targetRotation !== void 0) {
+        sprite.rotation = sprite._targetRotation;
+      }
+      return;
+    }
+    const timeSinceUpdate = now - (remoteSpriteData.lastUpdateTime || now);
+    if (this.enableDeadReckoning && timeSinceUpdate > 0 && timeSinceUpdate < this.deadReckoningMaxDuration && remoteSpriteData.velocityX !== void 0) {
+      sprite.x += remoteSpriteData.velocityX * dt;
+      sprite.y += remoteSpriteData.velocityY * dt;
+    } else {
+      const moveDistance = this.interpolationSpeed * dt;
+      const t = Math.min(moveDistance / distance, 1);
+      sprite.x += dx * t;
+      sprite.y += dy * t;
+      if (sprite._targetRotation !== void 0) {
+        const dr = sprite._targetRotation - sprite.rotation;
+        sprite.rotation += dr * t;
+      }
+    }
+  }
+  /**
+   * Snapshot buffer interpolation (smoothest, renders in the past)
+   */
+  updateSnapshotBufferInterpolation(sprite, remoteSpriteData, now) {
+    const snapshots = remoteSpriteData.snapshots;
+    if (!snapshots || snapshots.length < 2) return;
+    const renderTime = now - 100;
+    let snapshot0 = null;
+    let snapshot1 = null;
+    for (let i = 0; i < snapshots.length - 1; i++) {
+      if (snapshots[i].timestamp <= renderTime && snapshots[i + 1].timestamp >= renderTime) {
+        snapshot0 = snapshots[i];
+        snapshot1 = snapshots[i + 1];
+        break;
+      }
+    }
+    if (!snapshot0 || !snapshot1) {
+      snapshot0 = snapshots[snapshots.length - 2];
+      snapshot1 = snapshots[snapshots.length - 1];
+    }
+    const t0 = snapshot0.timestamp;
+    const t1 = snapshot1.timestamp;
+    const t = (renderTime - t0) / (t1 - t0);
+    const clamped = Math.max(0, Math.min(1, t));
+    sprite.x = snapshot0.x + (snapshot1.x - snapshot0.x) * clamped;
+    sprite.y = snapshot0.y + (snapshot1.y - snapshot0.y) * clamped;
+    if (snapshot0.rotation !== void 0 && snapshot1.rotation !== void 0) {
+      sprite.rotation = snapshot0.rotation + (snapshot1.rotation - snapshot0.rotation) * clamped;
     }
   }
   /**

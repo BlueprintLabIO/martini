@@ -108,6 +108,13 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
      *   interval: 50  // ms, default
      * }
      *
+     * // Adaptive sync: Only sync when sprite moves
+     * sync: {
+     *   properties: ['x', 'y'],
+     *   adaptive: true,  // Skip sync for idle sprites
+     *   adaptiveThreshold: 1  // pixels per frame
+     * }
+     *
      * // State-driven: Sync state → sprite (rare, use StateDrivenSpawner instead)
      * sync: {
      *   properties: ['x', 'y'],
@@ -130,6 +137,16 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
          * Sync interval in milliseconds (default: 50ms / 20 FPS)
          */
         interval?: number;
+        /**
+         * Enable adaptive sync (default: false)
+         * When true, skips sync for idle sprites (reduces bandwidth)
+         */
+        adaptive?: boolean;
+        /**
+         * Movement threshold for adaptive sync (default: 1 pixel/frame)
+         * Only syncs if sprite moved more than this distance
+         */
+        adaptiveThreshold?: number;
     };
     /**
      * Optional label configuration. When provided, SpriteManager renders labels above sprites.

@@ -104,7 +104,11 @@ export function createScene(runtime: GameRuntime) {
 		}
 
 		create() {
-			this.adapter = new PhaserAdapter(runtime, this);
+			// Enable snapshot-buffer interpolation for smoothest ball movement
+			this.adapter = new PhaserAdapter(runtime, this, {
+				interpolationMode: 'snapshot-buffer',
+				snapshotBufferSize: 3
+			});
 			(this as any).debugLog = (event: string, payload?: any) => {
 				const role = this.adapter.isHost() ? 'HOST' : 'CLIENT';
 				console.log('[PaddleBattle][' + role + '] ' + event, payload ?? '');
@@ -192,6 +196,13 @@ export function createScene(runtime: GameRuntime) {
 				ballBody.setCollideWorldBounds(false); // Disable - we check manually
 				ballBody.setVelocity(initialState.ball.velocityX, initialState.ball.velocityY);
 
+				// Track ball for automatic sync with high update rate
+				this.adapter.trackSprite(this.ball, 'ball', {
+					properties: ['x', 'y'],
+					syncInterval: 16, // 60 FPS sync for fast-moving ball
+					namespace: '_sprites'
+				});
+
 				// CollisionManager - Declare collision rules ONCE
 				// Automatically handles collisions for ALL paddles (early and late-joining!)
 				this.collisionManager = this.adapter.createCollisionManager();
@@ -199,15 +210,16 @@ export function createScene(runtime: GameRuntime) {
 				this.collisionManager.addCollision('ball', this.spriteManager);
 			}
 
-			// CLIENT: Mirror ball using state (no sprite manager entry)
+			// CLIENT: Mirror ball using adapter's interpolation system
 			this.adapter.onChange((state: any) => {
 				if (this.adapter.isHost()) return;
 				if (!state.ball) return;
 
+				// Create ball sprite once
 				if (!this.ball) {
 					this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
-				} else {
-					this.ball.setPosition(state.ball.x, state.ball.y);
+					// Register as remote sprite for smooth interpolation
+					this.adapter.registerRemoteSprite('ball', this.ball);
 				}
 			});
 		}

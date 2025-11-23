@@ -122,6 +122,13 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
    *   interval: 50  // ms, default
    * }
    *
+   * // Adaptive sync: Only sync when sprite moves
+   * sync: {
+   *   properties: ['x', 'y'],
+   *   adaptive: true,  // Skip sync for idle sprites
+   *   adaptiveThreshold: 1  // pixels per frame
+   * }
+   *
    * // State-driven: Sync state → sprite (rare, use StateDrivenSpawner instead)
    * sync: {
    *   properties: ['x', 'y'],
@@ -146,6 +153,18 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
      * Sync interval in milliseconds (default: 50ms / 20 FPS)
      */
     interval?: number;
+
+    /**
+     * Enable adaptive sync (default: false)
+     * When true, skips sync for idle sprites (reduces bandwidth)
+     */
+    adaptive?: boolean;
+
+    /**
+     * Movement threshold for adaptive sync (default: 1 pixel/frame)
+     * Only syncs if sprite moved more than this distance
+     */
+    adaptiveThreshold?: number;
   };
 
 
@@ -274,11 +293,15 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
     // Track for automatic sync (host only)
     const syncProperties = this.config.sync?.properties || ['x', 'y', 'rotation', 'alpha'];
     const syncInterval = this.config.sync?.interval;
+    const adaptiveSync = this.config.sync?.adaptive;
+    const adaptiveSyncThreshold = this.config.sync?.adaptiveThreshold;
 
     this.adapter.trackSprite(sprite, key, {
       properties: syncProperties,
       syncInterval: syncInterval,
-      namespace: this.namespace
+      namespace: this.namespace,
+      adaptiveSync: adaptiveSync,
+      adaptiveSyncThreshold: adaptiveSyncThreshold
     });
 
     // Call onAdd hook (if provided)

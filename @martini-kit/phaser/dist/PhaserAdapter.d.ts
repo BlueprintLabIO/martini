@@ -22,6 +22,10 @@ export interface SpriteTrackingOptions {
     interpolate?: boolean;
     /** Namespace to write sprite data to (default: uses adapter's spriteNamespace) */
     namespace?: string;
+    /** Enable adaptive sync rate (default: false) - syncs faster when moving, slower when idle */
+    adaptiveSync?: boolean;
+    /** Movement threshold for adaptive sync (default: 1 pixel/frame) */
+    adaptiveSyncThreshold?: number;
 }
 export interface PhaserAdapterConfig {
     /**
@@ -40,21 +44,33 @@ export interface PhaserAdapterConfig {
      * Range: 0.1 (very smooth) to 0.5 (very snappy)
      */
     lerpFactor?: number;
+    /**
+     * Interpolation mode (default: 'lerp')
+     * - 'lerp': Exponential smoothing (frame-rate dependent, legacy)
+     * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
+     * - 'snapshot-buffer': Render past with buffered snapshots (smoothest, adds 50-100ms latency)
+     */
+    interpolationMode?: 'lerp' | 'time-based' | 'snapshot-buffer';
+    /**
+     * Interpolation speed in pixels per second (for 'time-based' mode, default: 400)
+     */
+    interpolationSpeed?: number;
+    /**
+     * Snapshot buffer size (for 'snapshot-buffer' mode, default: 3)
+     * Higher = smoother but more latency
+     */
+    snapshotBufferSize?: number;
+    /**
+     * Enable dead reckoning/extrapolation (default: true)
+     * Continues movement based on velocity during packet loss
+     */
+    enableDeadReckoning?: boolean;
+    /**
+     * Dead reckoning max duration in ms (default: 200)
+     * Maximum time to extrapolate without new data
+     */
+    deadReckoningMaxDuration?: number;
 }
-/**
- * Phaser Adapter - Auto-syncs sprites via GameRuntime
- *
- * Usage:
- * ```ts
- * const adapter = new PhaserAdapter(runtime, scene, {
- *   spriteNamespace: 'gameSprites', // optional, defaults to '_sprites'
- *   autoInterpolate: true,           // optional, defaults to true
- *   lerpFactor: 0.3                  // optional, defaults to 0.3
- * });
- * adapter.trackSprite(playerSprite, `player-${playerId}`);
- * // That's it! Sprite automatically syncs across network
- * ```
- */
 export declare class PhaserAdapter<TState = any> {
     private runtime;
     private scene;
@@ -64,7 +80,13 @@ export declare class PhaserAdapter<TState = any> {
     private readonly spriteNamespace;
     private readonly autoInterpolate;
     private readonly lerpFactor;
+    private readonly interpolationMode;
+    private readonly interpolationSpeed;
+    private readonly snapshotBufferSize;
+    private readonly enableDeadReckoning;
+    private readonly deadReckoningMaxDuration;
     private spriteManagers;
+    private lastUpdateTime;
     constructor(runtime: GameRuntime<TState>, scene: any, // Phaser.Scene
     config?: PhaserAdapterConfig);
     /**
@@ -295,8 +317,25 @@ export declare class PhaserAdapter<TState = any> {
      * This should be called every frame (60 FPS) for smooth movement
      *
      * Note: If autoInterpolate is enabled in config, you don't need to call this manually.
+     *
+     * Supports three interpolation modes:
+     * - 'lerp': Exponential smoothing (legacy, frame-rate dependent)
+     * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
+     * - 'snapshot-buffer': Buffered interpolation (smoothest, adds latency)
      */
-    updateInterpolation(): void;
+    updateInterpolation(delta?: number): void;
+    /**
+     * Legacy exponential lerp interpolation (frame-rate dependent)
+     */
+    private updateLerpInterpolation;
+    /**
+     * Time-based linear interpolation (frame-rate independent)
+     */
+    private updateTimeBasedInterpolation;
+    /**
+     * Snapshot buffer interpolation (smoothest, renders in the past)
+     */
+    private updateSnapshotBufferInterpolation;
     /**
      * Unregister a remote sprite
      */

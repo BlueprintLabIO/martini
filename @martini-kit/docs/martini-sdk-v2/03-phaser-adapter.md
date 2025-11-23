@@ -275,8 +275,54 @@ You can configure the adapter behavior:
 ```ts
 this.adapter = new PhaserAdapter(runtime, this, {
   spriteNamespace: 'gameSprites',  // Custom state property (default: '_sprites')
-  autoInterpolate: true,            // Auto-lerp on clients (default: true)
-  lerpFactor: 0.3                   // Smoothness: 0.1 = smooth, 0.5 = snappy
+  
+  // Interpolation & Lag Reduction
+  interpolationMode: 'time-based', // 'time-based' (default), 'snapshot-buffer', or 'lerp'
+  interpolationSpeed: 400,         // Pixels per second (for time-based)
+  snapshotBufferSize: 3,           // Number of snapshots (for snapshot-buffer)
+  
+  // Dead Reckoning (Packet Loss Handling)
+  enableDeadReckoning: true,       // Continue moving during packet loss
+  deadReckoningMaxDuration: 200    // Max extrapolation time in ms
+});
+```
+
+---
+
+## Interpolation & Lag Reduction
+
+The adapter supports three interpolation modes to handle network lag and jitter:
+
+### 1. Time-Based Interpolation (Default)
+Frame-rate independent movement. Sprites move at a constant speed regardless of the client's refresh rate (60Hz vs 144Hz).
+- **Best for:** Most games, especially fast-paced ones.
+- **Config:** `interpolationMode: 'time-based'`, `interpolationSpeed: 400`
+
+### 2. Snapshot Buffer Interpolation
+Smoothest possible movement. Renders the world slightly in the past by interpolating between buffered snapshots. Eliminates jitter but adds small latency.
+- **Best for:** Co-op games where smoothness is more important than instant reactions.
+- **Config:** `interpolationMode: 'snapshot-buffer'`, `snapshotBufferSize: 3`
+
+### 3. Lerp (Legacy)
+Simple exponential smoothing. Dependent on frame rate.
+- **Best for:** Backward compatibility.
+- **Config:** `interpolationMode: 'lerp'`, `lerpFactor: 0.3`
+
+### Dead Reckoning
+When packets are lost or late, dead reckoning automatically continues moving sprites based on their last known velocity. This prevents "freezing" during network hiccups.
+- Enabled by default (`enableDeadReckoning: true`).
+
+---
+
+## Adaptive Sync (Bandwidth Optimization)
+
+For games with many idle objects, you can enable **Adaptive Sync** to reduce network usage. This skips updates for sprites that haven't moved significantly.
+
+```ts
+this.adapter.trackSprite(this.npc, 'npc-1', {
+  syncInterval: 50,
+  adaptiveSync: true,          // Enable adaptive sync
+  adaptiveSyncThreshold: 1     // Only sync if moved > 1px
 });
 ```
 

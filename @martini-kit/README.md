@@ -308,30 +308,6 @@ Developers shouldn't write networking logic:
 
 ---
 
-## Roadmap
-
-### v2.0 (Current)
-- [x] Host-authoritative mode
-- [x] @martini-kit/core with 96%+ test coverage
-- [x] Phaser adapter with auto sprite sync
-- [x] P2P transport (Trystero)
-- [x] Complete V2 documentation
-- [x] Fire Boy & Water Girl demo
-
-### v2.1 (Next)
-- [ ] WebSocket transport
-- [ ] Improved developer tools (state inspector)
-- [ ] More example games
-- [ ] Performance optimizations
-
-### v2.2+
-- [ ] Unity C# bindings
-- [ ] Godot GDScript bindings
-- [ ] Client prediction (optional)
-- [ ] Three.js adapter
-
----
-
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](../../CONTRIBUTING.md).
