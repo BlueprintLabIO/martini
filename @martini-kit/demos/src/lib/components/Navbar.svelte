@@ -15,7 +15,7 @@
 		{ label: 'Home', href: '/' },
 		{ label: 'Games', href: '/preview' },
 		{ label: 'Docs', href: '/docs' },
-		{ label: 'GitHub', href: 'https://github.com/anthropics/martini-kit', external: true }
+		{ label: 'GitHub', href: 'https://github.com/BlueprintLabIO/martini', external: true }
 	];
 
 	function closeMobileMenu() {
