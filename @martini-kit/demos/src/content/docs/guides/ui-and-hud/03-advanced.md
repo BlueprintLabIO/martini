@@ -2,7 +2,9 @@
 title: "UI & HUD - Part 3: Advanced"
 description: Minimaps, performance optimization, and advanced UI patterns
 section: guides
+subsection: ui-and-hud
 order: 6
+scope: agnostic
 ---
 
 # UI and HUD: Advanced
@@ -541,8 +543,8 @@ class ProductionHUD {
 
 You've completed the UI & HUD guide series! Here's what to explore next:
 
-- [Best Practices](/docs/guides/best-practices) - Overall optimization strategies
-- [Phaser Integration](/docs/guides/phaser-integration) - Deep dive into Phaser patterns
+- [Best Practices](/docs/guides/optimization) - Overall optimization strategies
+- [Phaser Integration Guide](/docs/guides/phaser/index) - Deep dive into Phaser patterns
 - [Examples](/docs/examples/overview) - See production UI implementations
 
 ## See Also

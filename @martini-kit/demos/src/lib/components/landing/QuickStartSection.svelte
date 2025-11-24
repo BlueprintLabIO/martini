@@ -7,7 +7,7 @@
   <div class="section-container">
     <h2 class="section-title" data-text="Quick Start">Quick Start</h2>
     <p class="section-intro">
-      Unlike Colyseus (~100 lines of server + client) or Unity Netcode (manual RPC wiring), Martini gets you running in 15 lines—works everywhere.
+      Go from idea to synced multiplayer in minutes. No server boilerplate, no RPC wiring, just a tiny game definition that runs in browser or native.
     </p>
 
     <div class="quickstart-main-grid">
@@ -24,13 +24,13 @@
 
       <QuickStartStep number={3} title="Connect Your Engine">
         <p class="qs-main-text">
-          Phaser, PixiJS, Three.js, or vanilla JavaScript. Martini syncs data, not rendering.
+          Plug in Phaser, PixiJS, Three.js, or vanilla JavaScript. Martini syncs data and lets your renderer stay yours.
         </p>
       </QuickStartStep>
 
       <QuickStartStep number={4} title="Test & Ship">
         <p class="qs-main-text">
-          Open two browser tabs to test P2P. Deploy as static files—no backend required.
+          Open two tabs, watch them stay in lockstep. Ship as static files—no backend or ops to babysit.
         </p>
       </QuickStartStep>
     </div>
@@ -39,7 +39,7 @@
 
 <style>
   .quickstart-main-section {
-    padding: 6rem 0;
+    padding: 5rem 0;
   }
 
   .quickstart-main-grid {
@@ -50,19 +50,20 @@
 
   .qs-main-code {
     display: block;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.9rem;
-    color: #00ffff;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 0.875rem 1.25rem;
-    border-radius: 0.5rem;
-    border: 1px solid rgba(0, 255, 255, 0.3);
+    color: var(--code);
+    background: #f5f7fb;
+    padding: 1rem 1.25rem;
+    border-radius: 0.65rem;
+    border: 1px solid var(--border-strong);
     overflow-x: auto;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   }
 
   .qs-main-text {
     font-size: 1rem;
-    color: rgba(224, 224, 255, 0.7);
+    color: var(--muted);
     line-height: 1.6;
     margin: 0;
   }

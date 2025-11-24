@@ -8,6 +8,16 @@
 	let copiedMarkdown = $state(false);
 	let copyButtonContainer = $state<HTMLElement | null>(null);
 	let articleElement = $state<HTMLElement | null>(null);
+	let versionNotice = $derived.by(() => {
+		if (!data.versionFallback) return null;
+		return `Showing latest docs because ${data.requestedVersion} is not available for this page.`;
+	});
+	let scopeLabel = $derived.by(() => {
+		const scope = data.metadata.scope;
+		if (scope === 'phaser') return 'Phaser';
+		if (scope === 'agnostic') return 'Engine-agnostic';
+		return null;
+	});
 
 	async function copyAsMarkdown() {
 		try {
@@ -67,6 +77,12 @@
 	</div>
 
 	<article class="doc-content" bind:this={articleElement}>
+		{#if scopeLabel}
+			<div class="scope-badge">{scopeLabel}</div>
+		{/if}
+		{#if versionNotice}
+			<div class="version-notice">{versionNotice}</div>
+		{/if}
 		{@render data.component()}
 	</article>
 
@@ -175,6 +191,31 @@
 	.footer-link:hover {
 		color: #111827;
 		background: rgba(0, 0, 0, 0.05);
+	}
+
+	.scope-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.2rem 0.6rem;
+		margin-bottom: 0.5rem;
+		border-radius: 999px;
+		background: #eef2ff;
+		color: #312e81;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+	}
+
+	.version-notice {
+		display: inline-block;
+		margin-bottom: 0.75rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: 8px;
+		background: #fef3c7;
+		color: #92400e;
+		font-size: 0.875rem;
 	}
 
 	@media (max-width: 640px) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge';
 	import CodeEditor from './components/CodeEditor.svelte';
 	import GamePreview from './components/GamePreview.svelte';
@@ -181,6 +181,40 @@
 		}
 	});
 
+	// React to config.files changes (e.g. reset or show solution)
+	$effect(() => {
+		console.log('[ide] config.files changed', Object.keys(config.files));
+
+		const newFiles = config.files;
+		untrack(() => {
+			// Only update if files have actually changed content-wise to avoid loops
+			// Simple check: if we just wrote to VFS, vfsVersion incremented.
+			// But here we want to catch external updates.
+			// We'll trust the parent to only pass new objects when intended.
+			vfs = new VirtualFileSystem(newFiles);
+			refreshPaths();
+			
+			// Refresh active file content if it exists in new VFS
+			if (vfs.exists(activeFile)) {
+				activeFileContent = vfs.readFile(activeFile) || '';
+			} else {
+				// Fallback to entry point or first file
+				const first = vfs.getFilePaths()[0];
+				if (first) {
+					activeFile = first;
+					activeFileContent = vfs.readFile(activeFile) || '';
+					selectedPath = activeFile;
+				}
+			}
+			console.log('[ide] active file content updated', {
+				activeFile,
+				length: activeFileContent.length,
+				preview: activeFileContent.slice(0, 80)
+			});
+			vfsVersion += 1;
+		});
+	});
+
 	// Pause Inspector when not viewing relevant tabs
 	$effect(() => {
 		// Only run Inspector when viewing tabs that need it
@@ -197,6 +231,7 @@
 	 * Handle file content change
 	 */
 	async function handleFileChange(newContent: string) {
+		console.log('[ide] handleFileChange', activeFile, 'length', newContent.length);
 		saveState = 'saving';
 		if (saveTimer) {
 			clearTimeout(saveTimer);
@@ -684,7 +719,13 @@
 							<span class="status-dot saved">Saved</span>
 						{/if}
 					</div>
-					<CodeEditor bind:content={activeFileContent} filePath={activeFile} onChange={handleFileChange} />
+					{#key `${activeFile}-${vfsVersion}`}
+						<CodeEditor
+							bind:content={activeFileContent}
+							filePath={activeFile}
+							onChange={handleFileChange}
+						/>
+					{/key}
 				</div>
 			</Pane>
 
@@ -1077,6 +1118,7 @@
 	:global(.editor-pane),
 	:global(.preview-pane) {
 		height: 100%;
+		min-height: 0;
 	}
 
 	:global(.sidebar-pane),

@@ -33,17 +33,17 @@
   }
 
   .mouse-spotlight {
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(0, 255, 255, 0.08) 0%, transparent 70%);
+    width: 380px;
+    height: 380px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 65%);
     transition: all 0.8s ease-out;
   }
 
   .mouse-glow {
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, transparent 70%);
-    mix-blend-mode: screen;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 70%);
+    mix-blend-mode: soft-light;
     z-index: 9;
     transition: opacity 0.3s ease;
   }

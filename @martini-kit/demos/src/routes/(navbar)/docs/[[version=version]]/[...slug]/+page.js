@@ -28,14 +28,22 @@ export async function load({ params, url }) {
 	const path = slug ? `/${slug}` : '/index';
 
 	try {
-		// Try to find version-specific content first, then fall back to current docs
+		// Normalize path and generate candidates for both direct file and index fallback
+		const normalizedPath = path.replace(/\/+$/, '');
+		const isIndex = normalizedPath.endsWith('/index');
+
 		/** @type {string[]} */
-		const possiblePaths = [
-			// Try versioned docs first (if not default version)
-			versionToLoad !== defaultVersion ? `/src/content/versioned_docs/${versionToLoad}${path}.md` : null,
-			// Always try current docs as fallback
-			`/src/content/docs${path}.md`
-		].filter(/** @returns {x is string} */ (x) => x !== null);
+		const possiblePaths = [];
+
+		// Versioned candidates (if not default)
+		if (versionToLoad !== defaultVersion) {
+			possiblePaths.push(`/src/content/versioned_docs/${versionToLoad}${normalizedPath}.md`);
+			if (!isIndex) possiblePaths.push(`/src/content/versioned_docs/${versionToLoad}${normalizedPath}/index.md`);
+		}
+
+		// Current docs candidates
+		possiblePaths.push(`/src/content/docs${normalizedPath}.md`);
+		if (!isIndex) possiblePaths.push(`/src/content/docs${normalizedPath}/index.md`);
 
 		/** @type {string | null} */
 		let matchingPath = null;
@@ -59,11 +67,19 @@ export async function load({ params, url }) {
 		const currentPath = url.pathname;
 		const { prev, next } = getPrevNext(currentPath);
 
+		// Determine if we fell back to default docs instead of a versioned file
+		const resolvedVersion = matchingPath.includes('/versioned_docs/')
+			? versionToLoad
+			: defaultVersion;
+		const versionFallback = versionToLoad !== resolvedVersion;
+
 		return {
 			component: module.default,
 			metadata: module.metadata || {},
 			slug: slug || 'index',
-			version: versionToLoad,
+			version: resolvedVersion,
+			versionFallback,
+			requestedVersion: versionToLoad,
 			rawMarkdown: rawMarkdown,
 			prev,
 			next

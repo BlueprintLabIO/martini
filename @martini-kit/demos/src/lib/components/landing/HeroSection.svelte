@@ -14,8 +14,8 @@
 
 <section class="hero-section" id="top">
   <div class="hero-content">
-    <h1 class="hero-headline gradient-text">Build multiplayer like single-player.</h1>
-    <p class="hero-subheadline glow-text">Declarative state. Instant sync. No servers.</p>
+    <h1 class="hero-headline gradient-text">Multiplayer without networking.</h1>
+    <p class="hero-subheadline glow-text">Ship real-time games in an afternoon—Martini handles sync, transport, and hosting.</p>
 
     <div class="hero-buttons">
       <a href="#demos" class="btn-primary">
@@ -60,20 +60,23 @@
   .hero-content {
     max-width: 900px;
     text-align: center;
+    color: var(--text);
   }
 
   .hero-headline {
-    font-family: 'Orbitron', sans-serif;
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    margin: 0 0 1rem;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: clamp(3rem, 6.8vw, 4.8rem);
+    margin: 0 0 1.1rem;
     line-height: 1.1;
+    letter-spacing: -0.03em;
   }
 
   .hero-subheadline {
-    font-size: clamp(1.25rem, 3vw, 1.8rem);
-    margin: 0 auto 2.5rem;
-    color: rgba(224, 224, 255, 0.8);
+    font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+    margin: 0 auto 2.25rem;
+    color: var(--muted);
     max-width: 520px;
+    font-weight: 500;
   }
 
   .hero-buttons {
@@ -95,23 +98,22 @@
     min-height: 48px;
     font-weight: 600;
     line-height: 1;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #00ffff, #0080ff);
-    color: #000;
+    background: linear-gradient(135deg, #6bdad7, #6ea8ff);
+    color: #04101d;
     text-decoration: none;
-    box-shadow:
-      0 0 30px rgba(0, 255, 255, 0.45),
-      0 10px 30px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   }
 
   .btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow:
-      0 0 40px rgba(0, 255, 255, 0.65),
-      0 15px 30px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4);
+    opacity: 0.95;
   }
 
   .btn-icon {
@@ -120,15 +122,16 @@
   }
 
   .btn-code {
-    border: 1px solid rgba(0, 255, 255, 0.4);
-    background: rgba(0, 0, 0, 0.6);
-    color: #00ffff;
-    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid var(--border);
+    background: #f5f7fb;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
     cursor: pointer;
     position: relative;
     font-size: 0.9rem;
     line-height: 1;
     white-space: nowrap;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
   }
 
   .copy-icon,
@@ -142,8 +145,9 @@
   }
 
   .btn-code:hover {
-    border-color: rgba(0, 255, 255, 0.7);
-    background: rgba(0, 0, 0, 0.8);
+    border-color: var(--border-strong);
+    background: #eef2fb;
+    transform: translateY(-2px);
   }
 
   .copy-icon,
@@ -153,7 +157,7 @@
 
   .copy-feedback {
     font-size: 0.85rem;
-    color: #fff;
+    color: var(--accent);
   }
 
   .microproof {
@@ -161,57 +165,20 @@
     justify-content: center;
     gap: 0.75rem;
     font-size: 0.95rem;
-    color: rgba(224, 224, 255, 0.7);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+    text-transform: none;
+    font-weight: 500;
   }
 
   .gradient-text {
-    background: linear-gradient(
-      90deg,
-      #00ffff 0%,
-      #00d4ff 20%,
-      #00a8ff 40%,
-      #ff00ff 60%,
-      #00ffff 80%,
-      #00ffff 100%
-    );
-    background-size: 200% auto;
+    background: linear-gradient(120deg, #0b1220, #1a2c4a 45%, #2b6f88 90%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: gradient-shift 8s ease-in-out infinite;
-  }
-
-  @keyframes gradient-shift {
-    0%, 100% {
-      background-position: 0% center;
-    }
-    50% {
-      background-position: 200% center;
-    }
   }
 
   .glow-text {
-    text-shadow:
-      0 0 20px rgba(0, 255, 255, 0.5),
-      0 0 40px rgba(0, 255, 255, 0.3),
-      0 0 60px rgba(0, 255, 255, 0.2);
-    animation: text-glow-pulse 3s ease-in-out infinite;
-  }
-
-  @keyframes text-glow-pulse {
-    0%, 100% {
-      text-shadow:
-        0 0 20px rgba(0, 255, 255, 0.5),
-        0 0 40px rgba(0, 255, 255, 0.3),
-        0 0 60px rgba(0, 255, 255, 0.2);
-    }
-    50% {
-      text-shadow:
-        0 0 30px rgba(0, 255, 255, 0.8),
-        0 0 60px rgba(0, 255, 255, 0.5),
-        0 0 90px rgba(0, 255, 255, 0.3);
-    }
+    color: var(--muted);
   }
 </style>

@@ -606,4 +606,4 @@ class GameScene extends Phaser.Scene {
 
 - [PhaserAdapter](./adapter) - Creating sprite managers
 - [InputManager](./input-manager) - Handling input
-- [Phaser Integration Guide](/docs/guides/phaser-integration) - Full guide
+- [Phaser Integration Guide](/docs/guides/phaser/index) - Full guide

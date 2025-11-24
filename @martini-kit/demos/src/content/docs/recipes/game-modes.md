@@ -1,3 +1,10 @@
+---
+title: Game Modes Recipes
+description: Common game mode patterns for multiplayer games
+section: recipes
+order: 1
+---
+
 <script>
   import CodeTabs from '$lib/components/docs/CodeTabs.svelte';
 </script>

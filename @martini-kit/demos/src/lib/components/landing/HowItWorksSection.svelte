@@ -3,19 +3,19 @@
     {
       badge: 'defineGame()',
       title: 'Describe your game',
-      text: 'Plain objects for state. No classes or networking code.',
+      text: 'Plain objects for state. No custom classes, no sockets.',
       code: "setup: () => ({ paddles: [], ball: { x, y, dx, dy } })"
     },
     {
       badge: 'submitAction()',
       title: 'Players interact',
-      text: 'Call actions from player input. Martini syncs instantly.',
+      text: 'Call actions from input. Martini handles validation and sync.',
       code: 'actions: { move: (state, id, y) => ... }'
     },
     {
       badge: 'onChange()',
       title: 'Render updates',
-      text: 'React to state changes. Draw with any engine you want.',
+      text: 'React to state changes. Render with any engine or stack you like.',
       code: 'onChange(state => sprite.x = state.ball.x)'
     }
   ];
@@ -25,7 +25,7 @@
   <div class="section-container">
     <h2 class="section-title" data-text="How It Works">How It Works</h2>
     <p class="section-intro">
-      Three simple APIs. That's it. Here's how you'd build a multiplayer paddle game:
+      Three simple APIs give you declarative multiplayer. Here's how you'd build a paddle game:
     </p>
 
     <div class="how-works-scroll-container">
@@ -55,13 +55,13 @@
       </div>
     </div>
 
-    <div class="how-result">
-      <div class="result-icon">🎮</div>
-      <h3 class="result-title">You've got multiplayer</h3>
-      <p class="result-text">
-        Open two browser tabs. Both see the same game. One moves a paddle, the other sees it instantly. No backend, no deployment, no DevOps nightmares.
-      </p>
-    </div>
+  <div class="how-result">
+    <div class="result-icon">🎮</div>
+    <h3 class="result-title">You've got multiplayer</h3>
+    <p class="result-text">
+      Open two tabs and they stay in sync. One moves a paddle, the other sees it instantly. No servers to provision, no custom protocols, no DevOps to maintain.
+    </p>
+  </div>
   </div>
 </section>
 
@@ -81,6 +81,7 @@
     overflow-x: auto;
     padding-bottom: 1.5rem;
     scroll-snap-type: x mandatory;
+    padding-inline: 0.25rem;
   }
 
   .how-works-cards::-webkit-scrollbar {
@@ -95,11 +96,11 @@
   .how-card {
     flex: 0 0 auto;
     min-width: clamp(320px, 60vw, 820px);
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(0, 255, 255, 0.3);
-    border-radius: 0.75rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
     padding: 2rem;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.32);
     scroll-snap-align: center;
   }
 
@@ -115,22 +116,24 @@
   .how-card-badge {
     display: inline-flex;
     align-items: center;
-    border: 1px solid rgba(0, 255, 255, 0.4);
+    border: 1px solid var(--border-strong);
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 999px;
-    padding: 0.35rem 1rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
+    padding: 0.35rem 0.9rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
     margin-bottom: 1rem;
   }
 
   .how-card-title {
     margin: 0 0 0.5rem;
-    font-size: 1.35rem;
+    font-size: 1.25rem;
+    font-weight: 700;
   }
 
   .how-card-text {
     margin: 0;
-    color: rgba(224, 224, 255, 0.7);
+    color: var(--muted);
   }
 
   .how-card-right {
@@ -140,19 +143,19 @@
   }
 
   .how-code-snippet {
-    background: rgba(5, 10, 20, 0.75);
-    border: 1px solid rgba(0, 255, 255, 0.4);
-    border-radius: 0.75rem;
-    padding: 1.75rem;
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.15);
+    background: var(--panel-strong);
+    border: 1px solid var(--border-strong);
+    border-radius: 0.85rem;
+    padding: 1.5rem;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     width: 100%;
     text-align: center;
   }
 
   .inline-code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1rem;
-    color: #e0e0ff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--code);
   }
 
   .scroll-indicators {
@@ -166,22 +169,23 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: rgba(0, 255, 255, 0.2);
-    border: 1px solid rgba(0, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
   }
 
   .scroll-dot.active {
-    background: #00ffff;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    background: var(--accent);
+    box-shadow: 0 0 15px rgba(124, 231, 207, 0.35);
   }
 
   .how-result {
-    background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.05));
-    border: 2px solid rgba(0, 255, 255, 0.3);
-    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(124, 231, 207, 0.08), rgba(110, 168, 255, 0.1));
+    border: 1px solid var(--border-strong);
+    border-radius: 0.9rem;
     padding: 2.5rem;
     text-align: center;
     margin-top: 2rem;
+    box-shadow: 0 22px 45px rgba(0, 0, 0, 0.35);
   }
 
   .result-icon {
@@ -190,15 +194,15 @@
   }
 
   .result-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2rem;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 1.8rem;
     margin: 0 0 1rem;
-    color: #00ffff;
+    color: var(--text);
   }
 
   .result-text {
     font-size: 1.125rem;
-    color: rgba(224, 224, 255, 0.8);
+    color: var(--muted);
     line-height: 1.6;
     max-width: 600px;
     margin: 0 auto;

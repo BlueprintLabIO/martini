@@ -1,54 +1,77 @@
 <footer class="footer">
-  <div class="footer-content">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <p class="footer-title">martini-kit</p>
+      <p class="footer-copy">Multiplayer without networking.</p>
+    </div>
     <div class="footer-links">
       <a href="https://github.com/martini-game-framework/martini" target="_blank" rel="noopener noreferrer">GitHub</a>
-      <span class="footer-divider">•</span>
       <a href="#quickstart">Quick Start</a>
-      <span class="footer-divider">•</span>
       <a href="#demos">Demos</a>
-      <span class="footer-divider">•</span>
-      <span class="footer-license">MIT License</span>
+      <span class="footer-license">Apache 2.0 License</span>
     </div>
   </div>
 </footer>
 
 <style>
   .footer {
-    padding: 3rem 2rem;
-    border-top: 1px solid rgba(0, 255, 255, 0.1);
-    background: #000;
+    padding: 2.5rem 2rem 3rem;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(180deg, #f7f9ff, #ffffff);
     z-index: 10;
   }
 
-  .footer-content {
+  .footer-container {
     max-width: 1200px;
     margin: 0 auto;
-    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1.25rem;
+    align-items: center;
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .footer-title {
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .footer-copy {
+    margin: 0;
+    color: var(--muted);
   }
 
   .footer-links {
     display: flex;
-    justify-content: center;
     align-items: center;
     gap: 1rem;
     flex-wrap: wrap;
   }
 
   .footer-links a {
-    color: rgba(224, 224, 255, 0.6);
+    color: var(--text);
     text-decoration: none;
-    transition: color 0.2s;
+    font-weight: 600;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
+    transition: color 0.2s, border-color 0.2s;
   }
 
   .footer-links a:hover {
-    color: #00ffff;
-  }
-
-  .footer-divider {
-    color: rgba(0, 255, 255, 0.2);
+    color: var(--accent);
+    border-color: var(--accent);
   }
 
   .footer-license {
-    color: rgba(224, 224, 255, 0.4);
+    color: var(--muted-2);
+    font-weight: 600;
   }
 </style>

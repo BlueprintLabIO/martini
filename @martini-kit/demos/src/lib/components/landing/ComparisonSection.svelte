@@ -2,10 +2,14 @@
   const competitors = ['Martini', 'Colyseus', 'Photon', 'Rune'];
 
   const rows = [
-    { feature: 'Declarative API', values: ['✓', '✗', '✗', '~'] },
-    { feature: 'Zero Server', values: ['✓', '✗', '✗', '✗'] },
-    { feature: 'P2P Support', values: ['✓', '✗', '✗', '✗'] },
-    { feature: 'Patch Efficiency', values: ['✓', '✗', '✓', '✓'] }
+    { feature: 'Declarative game logic', values: ['✓', 'RPC heavy', 'RPC heavy', '~'] },
+    { feature: 'Transport: P2P + server', values: ['✓', 'Server only', 'Server only', 'P2P only'] },
+    { feature: 'Automatic conflict handling', values: ['✓', 'Manual locks', 'Manual locks', 'Manual'] },
+    { feature: 'Tiny sync payloads', values: ['✓', 'Bulk state', 'Bulk state', 'Batched RPCs'] },
+    { feature: 'Open source (Apache 2.0)', values: ['✓', 'Varies', 'No', 'No'] },
+    { feature: 'Works offline / static deploy', values: ['✓', 'No', 'No', 'No'] },
+    { feature: 'Engine agnostic (Phaser/JS/TS)', values: ['✓', '~', '~', '~'] },
+    { feature: 'Host-authoritative ready', values: ['✓', '~', 'Manual', 'Manual'] }
   ];
 </script>
 
@@ -51,9 +55,10 @@
   table {
     width: 100%;
     border-collapse: collapse;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(0, 255, 255, 0.2);
-    border-radius: 0.75rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
   }
 
   th,
@@ -66,7 +71,7 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-size: 0.85rem;
-    color: rgba(224, 224, 255, 0.7);
+    color: var(--muted-2);
   }
 
   tbody tr:nth-child(even) {
@@ -79,7 +84,7 @@
   }
 
   .highlight-col {
-    color: #00ffff;
+    color: var(--accent);
     font-weight: 700;
   }
 </style>

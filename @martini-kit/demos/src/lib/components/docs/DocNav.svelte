@@ -2,19 +2,19 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { ChevronDown, ChevronRight } from '@lucide/svelte';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import SearchBar from '$lib/components/docs/SearchBar.svelte';
 	import SDKSelector from '$lib/components/docs/SDKSelector.svelte';
 	import { versions, defaultVersion } from '$lib/docs/versions';
 	import { docsSections, type DocsPage, type DocsSubsection } from '$lib/docs/navigation';
 	import { selectedSDK, type SDK } from '$lib/stores/sdkPreference';
 
-	interface NavItem {
-		title: string;
-		href: string;
-		sdks?: SDK[];
-		external?: boolean;
-	}
+interface NavItem {
+	title: string;
+	href: string;
+	sdks?: SDK[];
+	external?: boolean;
+	scope?: string;
+}
 
 	interface NavSubsection {
 		title: string;
@@ -60,7 +60,8 @@
 					title: item.title,
 					href: versionHref(item.href),
 					sdks: item.sdks,
-					external: item.external
+					external: item.external,
+					scope: item.scope
 				})),
 				comingSoon: sub.comingSoon
 			}))
@@ -103,12 +104,18 @@
 
 		goto(newPath);
 	}
+
+	function scopeLabel(scope?: string | null): string | null {
+		if (!scope) return null;
+		if (scope === 'phaser') return 'Phaser';
+		if (scope === 'agnostic') return 'Agnostic';
+		return null;
+	}
 </script>
 
 <nav class="doc-nav">
 	<div class="nav-header">
 		<a href="/docs" class="nav-home">Documentation</a>
-		<ThemeToggle />
 	</div>
 
 	<!-- Version Selector -->
@@ -165,6 +172,9 @@
 									rel={item.external ? 'noopener noreferrer' : undefined}
 								>
 									{item.title}
+									{#if scopeLabel(item.scope)}
+										<span class="nav-scope">{scopeLabel(item.scope)}</span>
+									{/if}
 								</a>
 							</li>
 						{/each}
@@ -414,8 +424,21 @@
 		cursor: default;
 	}
 
-	.subsection-items a.dimmed:hover {
-		background: transparent;
-		color: var(--text-tertiary, #737373);
-	}
+.subsection-items a.dimmed:hover {
+	background: transparent;
+	color: var(--text-tertiary, #737373);
+}
+
+.nav-scope {
+	display: inline-flex;
+	margin-left: 0.5rem;
+	padding: 0.1rem 0.45rem;
+	border-radius: 999px;
+	background: #eef2ff;
+	color: #312e81;
+	font-size: 0.65rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
 </style>

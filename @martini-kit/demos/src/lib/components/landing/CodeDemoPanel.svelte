@@ -38,6 +38,47 @@
   function hideTooltip() {
     tooltip = null;
   }
+
+  const escapeHtml = (code: string) =>
+    code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const highlightCode = (code: string) => {
+    const escaped = escapeHtml(code);
+
+    return escaped
+      .replace(/('[^']*'|`[^`]*`)/g, '<span class="token string">$1</span>')
+      .replace(
+        /\b(import|from|const|return|=>)\b/g,
+        '<span class="token keyword">$1</span>'
+      )
+      .replace(/\b(setup|actions|tick)\b/g, '<span class="token function">$1</span>')
+      .replace(/(\b\d+(\.\d+)?\b)/g, '<span class="token number">$1</span>');
+  };
+
+  const codeSample = `
+import { defineGame } from '@martini/core';
+
+const game = defineGame({
+  setup: () => ({
+    players: [],
+    ball: { x: 400, y: 300, dx: 2, dy: 2 }
+  }),
+
+  actions: {
+    move: (state, playerId, y) => {
+      const player = state.players.find(p => p.id === playerId);
+      if (player) player.y = y;
+    }
+  },
+
+  tick: (state, dt) => {
+    state.ball.x += state.ball.dx;
+    state.ball.y += state.ball.dy;
+  }
+});
+`.trim();
+
+  const highlightedCode = highlightCode(codeSample);
 </script>
 
 <div class="code-demo" bind:this={codeDemoEl}>
@@ -47,25 +88,9 @@
     </div>
     <span class="code-filename">game.ts</span>
   </div>
-  <pre class="code-demo-content"><code>
-<span class="code-line"><span class="code-keyword">import</span> <span class="code-bracket">{'{'}</span> <span class="code-function">defineGame</span> <span class="code-bracket">{'}'}</span> <span class="code-keyword">from</span> <span class="code-string">'@martini/core'</span>;</span>
-<span class="code-line"><span class="code-keyword">const</span> <span class="code-variable">game</span> <span class="code-operator">=</span> <span class="code-function">defineGame</span>(<span class="code-bracket">{'{'}</span></span>
-<span class="code-line code-hover-line" on:mouseenter={(event) => showTooltip(event, 'setup')} on:mouseleave={hideTooltip}>  <span class="code-property">setup</span><span class="code-operator">:</span> () <span class="code-operator">=></span> (<span class="code-bracket">{'{'}</span></span>
-<span class="code-line code-hover-line" on:mouseenter={(event) => showTooltip(event, 'state')} on:mouseleave={hideTooltip}>    <span class="code-property">players</span><span class="code-operator">:</span> [],</span>
-<span class="code-line">    <span class="code-property">ball</span><span class="code-operator">:</span> <span class="code-bracket">{'{'}</span> <span class="code-property">x</span><span class="code-operator">:</span> <span class="code-number">400</span>, <span class="code-property">y</span><span class="code-operator">:</span> <span class="code-number">300</span>, <span class="code-property">dx</span><span class="code-operator">:</span> <span class="code-number">2</span>, <span class="code-property">dy</span><span class="code-operator">:</span> <span class="code-number">2</span> <span class="code-bracket">{'}'}</span></span>
-<span class="code-line">  <span class="code-bracket">{'}'}</span>),</span>
-<span class="code-line code-hover-line" on:mouseenter={(event) => showTooltip(event, 'actions')} on:mouseleave={hideTooltip}>  <span class="code-property">actions</span><span class="code-operator">:</span> <span class="code-bracket">{'{'}</span></span>
-<span class="code-line code-hover-line" on:mouseenter={(event) => showTooltip(event, 'action')} on:mouseleave={hideTooltip}>    <span class="code-function">move</span><span class="code-operator">:</span> (<span class="code-variable">state</span>, <span class="code-variable">playerId</span>, <span class="code-variable">y</span>) <span class="code-operator">=></span> <span class="code-bracket">{'{'}</span></span>
-<span class="code-line">      <span class="code-keyword">const</span> <span class="code-variable">player</span> <span class="code-operator">=</span> <span class="code-variable">state</span>.<span class="code-property">players</span>.<span class="code-function">find</span>(<span class="code-variable">p</span> <span class="code-operator">=></span> <span class="code-variable">p</span>.<span class="code-property">id</span> <span class="code-operator">===</span> <span class="code-variable">playerId</span>);</span>
-<span class="code-line">      <span class="code-keyword">if</span> (<span class="code-variable">player</span>) <span class="code-variable">player</span>.<span class="code-property">y</span> <span class="code-operator">=</span> <span class="code-variable">y</span>;</span>
-<span class="code-line">    <span class="code-bracket">{'}'}</span></span>
-<span class="code-line">  <span class="code-bracket">{'}'}</span>,</span>
-<span class="code-line code-hover-line" on:mouseenter={(event) => showTooltip(event, 'tick')} on:mouseleave={hideTooltip}>  <span class="code-property">tick</span><span class="code-operator">:</span> (<span class="code-variable">state</span>, <span class="code-variable">dt</span>) <span class="code-operator">=></span> <span class="code-bracket">{'{'}</span></span>
-<span class="code-line">    <span class="code-variable">state</span>.<span class="code-property">ball</span>.<span class="code-property">x</span> <span class="code-operator">+=</span> <span class="code-variable">state</span>.<span class="code-property">ball</span>.<span class="code-property">dx</span>;</span>
-<span class="code-line">    <span class="code-variable">state</span>.<span class="code-property">ball</span>.<span class="code-property">y</span> <span class="code-operator">+=</span> <span class="code-variable">state</span>.<span class="code-property">ball</span>.<span class="code-property">dy</span>;</span>
-<span class="code-line">  <span class="code-bracket">{'}'}</span></span>
-<span class="code-line"><span class="code-bracket">{'}'}</span>);</span>
-</code></pre>
+  <div class="code-demo-content">
+    <pre class="code-block"><code class="code-highlight" aria-label="Martini game definition">{@html highlightedCode}</code></pre>
+  </div>
 
   {#if tooltip}
     <div class="code-tooltip" style={`left:${tooltip.left}px;top:${tooltip.top}px;`}>
@@ -98,16 +123,12 @@
 <style>
   .code-demo {
     position: relative;
-    background: linear-gradient(135deg, rgba(10, 10, 20, 0.75), rgba(5, 5, 15, 0.7));
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 255, 255, 0.4);
-    border-radius: 0.75rem;
+    background: linear-gradient(180deg, #f7faff, #ffffff);
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
     overflow: visible;
     margin-bottom: 1.5rem;
-    box-shadow:
-      0 0 40px rgba(0, 255, 255, 0.15),
-      0 10px 40px rgba(0, 0, 0, 0.5),
-      inset 0 0 60px rgba(0, 255, 255, 0.03);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
   }
 
   .code-demo-header {
@@ -115,8 +136,8 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1.25rem;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(10, 10, 20, 0.8));
-    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+    background: rgba(15, 23, 42, 0.03);
+    border-bottom: 1px solid var(--border-strong);
   }
 
   .code-dots {
@@ -128,75 +149,45 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(15, 23, 42, 0.12);
   }
 
   .code-filename {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.875rem;
-    color: #00ffff;
+    color: var(--muted);
   }
 
   .code-demo-content {
     padding: 1.5rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.875rem;
-    color: #e0e0ff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--code);
     margin: 0;
     overflow-x: auto;
+    background: #f9fbff;
   }
 
-  .code-line {
-    display: block;
+  .code-block {
+    margin: 0;
+    white-space: pre;
     line-height: 1.6;
-  }
-
-  .code-keyword { color: #ff79c6; }
-  .code-function { color: #50fa7b; }
-  .code-operator { color: #f8f8f2; }
-  .code-string { color: #f1fa8c; }
-  .code-variable { color: #8be9fd; }
-  .code-property { color: #bd93f9; }
-  .code-number { color: #ffb86c; }
-
-  .code-hover-line {
-    position: relative;
-    cursor: help;
-    z-index: 0;
-  }
-
-  .code-hover-line::after {
-    content: '';
-    position: absolute;
-    inset: -2px 0;
-    border-radius: 6px;
-    background: rgba(0, 255, 255, 0.08);
-    box-shadow:
-      0 0 10px rgba(0, 255, 255, 0.4),
-      0 0 20px rgba(0, 255, 255, 0.25);
-    border: 1px solid rgba(0, 255, 255, 0.45);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  .code-hover-line:hover::after {
-    opacity: 1;
+    color: var(--code);
   }
 
   .code-tooltip {
     position: absolute;
     transform: translate(-50%, -100%);
     padding: 0.5rem 0.75rem;
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid rgba(0, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid var(--border);
     border-radius: 0.5rem;
     font-size: 0.85rem;
-    color: #e0e0ff;
+    color: var(--text);
     pointer-events: none;
     z-index: 1000;
     white-space: nowrap;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
   }
 
   .example-features {
@@ -211,10 +202,10 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.625rem 1.25rem;
-    background: rgba(0, 255, 255, 0.05);
-    border: 1px solid rgba(0, 255, 255, 0.2);
+    background: #f5f7fb;
+    border: 1px solid var(--border);
     border-radius: 2rem;
-    color: #00ffff;
+    color: var(--text);
     font-size: 0.875rem;
     font-weight: 600;
   }
@@ -224,4 +215,13 @@
     height: 16px;
     stroke-width: 3;
   }
+
+  .code-highlight {
+    display: block;
+  }
+
+  .token.keyword { color: #1d4ed8; font-weight: 700; }
+  .token.string { color: #0f766e; }
+  .token.function { color: #0ea5e9; font-weight: 700; }
+  .token.number { color: #c026d3; }
 </style>

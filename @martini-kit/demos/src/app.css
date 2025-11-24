@@ -2,37 +2,33 @@
 
 /* CSS Variables for theming */
 :root {
-	--bg-primary: #ffffff;
-	--bg-secondary: #f9fafb;
-	--bg-tertiary: #f5f5f5;
-	--text-primary: #0b0a08;
-	--text-secondary: #525252;
-	--text-tertiary: #737373;
-	--border-color: #e5e5e5;
-	--code-bg: #f6f8fa;
-	--link-color: #3b82f6;
-	--link-hover: #2563eb;
-}
-
-[data-theme='dark'] {
-	--bg-primary: #0d1117;
-	--bg-secondary: #161b22;
-	--bg-tertiary: #21262d;
-	--text-primary: #e6edf3;
-	--text-secondary: #c9d1d9;
-	--text-tertiary: #8b949e;
-	--border-color: #30363d;
-	--code-bg: #161b22;
-	--link-color: #58a6ff;
-	--link-hover: #79c0ff;
+	--bg-page: radial-gradient(circle at 18% 18%, #f3f6ff 0, transparent 30%),
+		radial-gradient(circle at 82% 12%, #eef7ff 0, transparent 30%), #fbfcff;
+	--panel: #ffffff;
+	--panel-strong: #f6f8fc;
+	--border: rgba(15, 23, 42, 0.06);
+	--border-strong: rgba(15, 23, 42, 0.12);
+	--text: #0b1220;
+	--muted: #334155;
+	--muted-2: #4b5565;
+	--accent: #2563eb;
+	--accent-2: #0ea5e9;
+	--code: #0b1220;
 }
 
 /* Smooth scrolling for anchor links */
 html {
 	scroll-behavior: smooth;
-	background: var(--bg-primary);
-	color: var(--text-primary);
+	background: var(--bg-page);
+	color: var(--text);
 	transition: background-color 0.3s, color 0.3s;
+	font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+}
+
+body {
+	margin: 0;
+	background: var(--bg-page);
+	color: var(--text);
 }
 
 /* Respect user's motion preferences for accessibility */

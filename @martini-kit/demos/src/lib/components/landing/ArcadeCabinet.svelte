@@ -53,27 +53,26 @@
     position: relative;
     width: 280px;
     flex: 0 0 auto;
-    background: linear-gradient(180deg, #1a1a1f, #0a0a0f);
+    background: linear-gradient(180deg, #0f1423, #0a0d18);
     border-radius: 1rem;
-    border: 2px solid rgba(0, 255, 255, 0.15);
-    box-shadow:
-      0 15px 35px rgba(0, 0, 0, 0.6),
-      0 0 30px var(--game-color);
+    border: 1px solid var(--border);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.02);
     overflow: hidden;
     text-decoration: none;
     color: inherit;
-    transition: transform 0.25s ease, border-color 0.25s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .arcade-cabinet:hover {
-    transform: translateY(-6px);
-    border-color: rgba(0, 255, 255, 0.5);
+    transform: translateY(-4px);
+    border-color: var(--border-strong);
+    box-shadow: 0 22px 44px rgba(0, 0, 0, 0.45);
   }
 
   .cabinet-marquee {
-    background: linear-gradient(180deg, var(--game-color) 0%, rgba(0, 0, 0, 0.8) 100%);
+    background: linear-gradient(180deg, var(--game-color), #0b0f1b);
     padding: 0.75rem;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .marquee-lights {
@@ -86,13 +85,13 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #ffff00;
-    box-shadow: 0 0 8px #ffff00;
-    animation: marquee-blink 1.5s ease-in-out infinite;
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.45);
+    animation: marquee-blink 2.4s ease-in-out infinite;
   }
 
-  .marquee-light:nth-child(2) { animation-delay: 0.3s; }
-  .marquee-light:nth-child(3) { animation-delay: 0.6s; }
+  .marquee-light:nth-child(2) { animation-delay: 0.5s; }
+  .marquee-light:nth-child(3) { animation-delay: 1s; }
 
   @keyframes marquee-blink {
     0%, 100% { opacity: 1; }
@@ -101,14 +100,14 @@
 
   .screen-bezel {
     padding: 1.25rem;
-    background: linear-gradient(135deg, #2a2a2f, #19191d);
+    background: linear-gradient(135deg, #161b2a, #0f1321);
   }
 
   .screen-inner {
     aspect-ratio: 3 / 4;
-    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.9), #000);
+    background: radial-gradient(circle at center, rgba(4, 8, 16, 0.9), #05070f);
     border-radius: 12px;
-    border: 4px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     position: relative;
     overflow: hidden;
     display: flex;
@@ -128,9 +127,7 @@
 
   .game-emoji {
     font-size: 2.5rem;
-    filter:
-      drop-shadow(0 0 12px var(--game-color))
-      drop-shadow(0 0 24px var(--game-color));
+    filter: drop-shadow(0 0 10px var(--game-color));
     animation: emoji-float 3s ease-in-out infinite;
   }
 
@@ -141,21 +138,21 @@
 
   .game-title {
     margin: 0;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.03em;
   }
 
   .game-description {
     margin: 0;
     font-size: 0.9rem;
-    color: rgba(224, 224, 255, 0.75);
+    color: var(--muted);
+    text-align: center;
   }
 
   .control-panel {
     padding: 1.2rem;
-    background: linear-gradient(180deg, #181820, #0b0b10);
+    background: linear-gradient(180deg, #0d111d, #0b0f1a);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
@@ -167,11 +164,11 @@
     display: flex;
     gap: 0.4rem;
     align-items: center;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    color: #ffff00;
-    animation: coin-blink 2s ease-in-out infinite;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 1px;
+    color: var(--muted-2);
+    animation: coin-blink 3s ease-in-out infinite;
   }
 
   @keyframes coin-blink {
@@ -186,17 +183,17 @@
   .start-button {
     width: 100%;
     text-align: center;
-    background: linear-gradient(135deg, var(--game-color), #ffffff);
-    color: #000;
+    background: linear-gradient(135deg, var(--game-color), #d6eaff);
+    color: #0b0f1a;
     font-weight: 700;
     padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+    border-radius: 0.65rem;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   }
 
   .cabinet-bottom {
     height: 12px;
-    background: #050505;
+    background: #07090f;
   }
 
   .badge {

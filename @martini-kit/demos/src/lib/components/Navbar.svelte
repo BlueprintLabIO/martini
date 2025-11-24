@@ -12,10 +12,10 @@
 	}
 
 	const navLinks: NavLink[] = [
-		{ label: 'Home', href: '/' },
 		{ label: 'Games', href: '/preview' },
 		{ label: 'Docs', href: '/docs' },
-		{ label: 'GitHub', href: 'https://github.com/BlueprintLabIO/martini', external: true }
+		{ label: 'GitHub', href: 'https://github.com/BlueprintLabIO/martini', external: true },
+		{ label: 'NPM', href: 'https://www.npmjs.com/package/@martini-kit/core', external: true }
 	];
 
 	function closeMobileMenu() {
@@ -33,42 +33,42 @@
 
 <nav class="navbar">
 	<div class="nav-container">
-		<!-- Logo / Branding -->
-		<a href="/" class="nav-brand">
-			<span class="brand-text">martini-kit</span>
-		</a>
+		<div class="nav-surface">
+			<!-- Logo / Branding -->
+			<a href="/" class="nav-brand">
+				<span class="brand-text">martini-kit</span>
+			</a>
 
-		<!-- Desktop Navigation Links -->
-		<div class="nav-links-desktop">
-			{#each navLinks as link}
-				<a
-					href={link.href}
-					class="nav-link"
-					class:active={isActive(link.href)}
-					target={link.external ? '_blank' : undefined}
-					rel={link.external ? 'noopener noreferrer' : undefined}
+			<!-- Desktop Navigation Links -->
+			<div class="nav-links-desktop">
+				{#each navLinks as link}
+					<a
+						href={link.href}
+						class="nav-link"
+						class:active={isActive(link.href)}
+						target={link.external ? '_blank' : undefined}
+						rel={link.external ? 'noopener noreferrer' : undefined}
+					>
+						{link.label}
+					</a>
+				{/each}
+
+			</div>
+
+			<!-- Mobile Menu Button -->
+			<div class="nav-mobile-controls">
+				<button
+					class="mobile-menu-button"
+					onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+					aria-label="Toggle mobile menu"
 				>
-					{link.label}
-				</a>
-			{/each}
-
-			<ThemeToggle />
-		</div>
-
-		<!-- Mobile Menu Button -->
-		<div class="nav-mobile-controls">
-			<ThemeToggle />
-			<button
-				class="mobile-menu-button"
-				onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
-				aria-label="Toggle mobile menu"
-			>
-				{#if mobileMenuOpen}
-					<X size={24} />
-				{:else}
-					<Menu size={24} />
-				{/if}
-			</button>
+					{#if mobileMenuOpen}
+						<X size={24} />
+					{:else}
+						<Menu size={24} />
+					{/if}
+				</button>
+			</div>
 		</div>
 	</div>
 
@@ -94,43 +94,54 @@
 
 <style>
 	.navbar {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		background: var(--bg-primary, #ffffff);
-		border-bottom: 1px solid var(--border-color, #e5e5e5);
-		z-index: 1000;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		/* position: fixed; -- Removed for App Shell */
+		/* top: 0; */
+		/* left: 0; */
+		/* right: 0; */
+		/* z-index: 1000; */
+		background: transparent;
+		padding: 0.65rem 0;
+		/* pointer-events: none; -- Removed */
+		width: 100%;
 	}
 
 	.nav-container {
 		max-width: 1600px;
 		margin: 0 auto;
 		padding: 0 2rem;
+		pointer-events: auto;
+	}
+
+	.nav-surface {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		height: 64px;
+		gap: 1.5rem;
+		padding: 0.6rem 1.1rem;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.85);
+		border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
+		backdrop-filter: blur(14px);
+		box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 	}
 
 	.nav-brand {
 		display: flex;
 		align-items: center;
 		font-weight: 700;
-		font-size: 1.5rem;
-		color: var(--text-primary, #0b0a08);
+		font-size: 1.3rem;
+		color: var(--text, #0f172a);
 		text-decoration: none;
 		transition: color 0.2s;
 		flex-shrink: 0;
 	}
 
 	.nav-brand:hover {
-		color: var(--link-color, #3b82f6);
+		color: var(--accent, #2563eb);
 	}
 
 	.brand-text {
-		background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+		background: linear-gradient(135deg, #2563eb, #0ea5e9);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
@@ -151,20 +162,17 @@
 	.nav-link {
 		font-size: 0.95rem;
 		font-weight: 500;
-		color: var(--text-secondary, #525252);
+		color: var(--muted, #475569);
 		text-decoration: none;
 		transition: color 0.2s;
-		border-bottom: 2px solid transparent;
-		padding-bottom: 2px;
 	}
 
 	.nav-link:hover {
-		color: var(--text-primary, #0b0a08);
+		color: var(--text, #0f172a);
 	}
 
 	.nav-link.active {
-		color: var(--link-color, #3b82f6);
-		border-bottom-color: var(--link-color, #3b82f6);
+		color: var(--accent, #2563eb);
 	}
 
 	.nav-mobile-controls {
@@ -186,18 +194,18 @@
 		width: 40px;
 		height: 40px;
 		padding: 0.5rem;
-		background: var(--bg-tertiary, #f5f5f5);
-		border: 1px solid var(--border-color, #e5e5e5);
-		border-radius: 8px;
-		color: var(--text-primary, #0b0a08);
+		background: rgba(255, 255, 255, 0.7);
+		border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
+		border-radius: 12px;
+		color: var(--text, #0f172a);
 		cursor: pointer;
 		transition: all 0.2s;
 	}
 
 	.mobile-menu-button:hover {
-		background: var(--bg-secondary, #fafafa);
+		background: rgba(255, 255, 255, 0.9);
 		transform: translateY(-1px);
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
 	}
 
 	.mobile-menu-button:active {
@@ -217,11 +225,11 @@
 		display: flex;
 		flex-direction: column;
 		position: fixed;
-		top: 64px;
+		top: 72px;
 		left: 0;
 		right: 0;
-		background: var(--bg-primary, #ffffff);
-		border-bottom: 1px solid var(--border-color, #e5e5e5);
+		background: rgba(255, 255, 255, 0.96);
+		border-bottom: 1px solid var(--border, rgba(15, 23, 42, 0.08));
 		z-index: 1000;
 		padding: 1rem 0;
 		animation: slideDown 0.2s;
@@ -237,19 +245,19 @@
 		padding: 0.75rem 2rem;
 		font-size: 0.95rem;
 		font-weight: 500;
-		color: var(--text-secondary, #525252);
+		color: var(--muted, #475569);
 		text-decoration: none;
 		transition: all 0.2s;
 	}
 
 	.mobile-nav-link:hover {
-		background: var(--bg-secondary, #fafafa);
-		color: var(--text-primary, #0b0a08);
+		background: rgba(37, 99, 235, 0.08);
+		color: var(--text, #0f172a);
 	}
 
 	.mobile-nav-link.active {
-		background: #3b82f6;
-		color: white;
+		background: rgba(37, 99, 235, 0.12);
+		color: var(--text, #0f172a);
 	}
 
 	@keyframes fadeIn {
@@ -263,7 +271,7 @@
 
 	@keyframes slideDown {
 		from {
-			transform: translateY(-10px);
+			transform: translateY(-8px);
 			opacity: 0;
 		}
 		to {

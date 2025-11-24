@@ -2,7 +2,9 @@
 title: "UI & HUD - Part 1: Basics"
 description: Build reactive user interfaces, HUDs, and health bars for multiplayer games
 section: guides
+subsection: ui-and-hud
 order: 4
+scope: agnostic
 ---
 
 <script>
@@ -514,4 +516,4 @@ Now that you understand the basics, continue to:
 ## See Also
 
 - [Phaser Adapter API](/docs/api/phaser/adapter) - Reactive API methods
-- [Best Practices](/docs/guides/best-practices) - UI performance optimization
+- [Best Practices](/docs/guides/optimization) - UI performance optimization

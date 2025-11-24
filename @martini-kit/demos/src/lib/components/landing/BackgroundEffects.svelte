@@ -11,17 +11,14 @@
     color: string;
   }
 
-  const PARTICLE_COUNT = 40;
+  const PARTICLE_COUNT = 18;
   const particleColors = [
-    'rgba(0, 255, 255, 0.4)',
-    'rgba(255, 0, 255, 0.4)',
-    'rgba(255, 105, 180, 0.4)',
-    'rgba(138, 43, 226, 0.4)',
-    'rgba(255, 215, 0, 0.4)',
-    'rgba(0, 255, 127, 0.4)'
+    'rgba(124, 231, 207, 0.22)',
+    'rgba(140, 184, 255, 0.18)',
+    'rgba(255, 255, 255, 0.18)'
   ];
 
-  const particleShapes = ['◆', '▲', '●', '■', '✦', '✧', '◈', '▼', '◀', '▶'];
+  const particleShapes = ['•', '•', '◦', '∙', '•', '•'];
 
   let particles: Particle[] = [];
 
@@ -40,9 +37,7 @@
 
 <div class="cyber-background">
   <div class="grid-pattern"></div>
-  <div class="grid-surge"></div>
-  <div class="diagonal-stripes"></div>
-  <div class="arcade-bars"></div>
+  <div class="gradient-wash"></div>
   <div class="particle-container">
     {#each particles as particle (particle.id)}
       <div
@@ -53,43 +48,18 @@
       </div>
     {/each}
   </div>
-  <div class="arcade-lights">
-    <div class="arcade-light" style="left: 10%; top: 15%;"></div>
-    <div class="arcade-light" style="left: 25%; top: 35%;"></div>
-    <div class="arcade-light" style="left: 70%; top: 25%;"></div>
-    <div class="arcade-light" style="left: 85%; top: 55%;"></div>
-    <div class="arcade-light" style="left: 15%; top: 75%;"></div>
-    <div class="arcade-light" style="left: 60%; top: 80%;"></div>
-    <div class="arcade-light" style="left: 40%; top: 10%;"></div>
-    <div class="arcade-light" style="left: 90%; top: 90%;"></div>
-  </div>
   <div class="glow-orb orb-1"></div>
   <div class="glow-orb orb-2"></div>
-  <div class="glow-orb orb-3"></div>
-  <div class="glow-orb orb-4"></div>
-
-  <div class="planets-container">
-    <div class="planet planet-1">
-      <div class="planet-ring"></div>
-    </div>
-    <div class="planet planet-2"></div>
-    <div class="planet planet-3">
-      <div class="planet-moon"></div>
-    </div>
-    <div class="planet planet-4"></div>
-  </div>
 </div>
-<div class="scanlines"></div>
-<div class="film-grain"></div>
 <div class="vignette"></div>
 
 <style>
   :global(body) {
     margin: 0;
     padding: 0;
-    background: #000;
-    color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: transparent;
+    color: var(--text);
+    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
   }
 
   .cyber-background {
@@ -103,49 +73,19 @@
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(to right, rgba(0, 255, 255, 0.08) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 255, 255, 0.08) 1px, transparent 1px);
-    background-size: 60px 60px;
+      linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+    background-size: 70px 70px;
+    mask-image: radial-gradient(circle at 50% 30%, rgba(15, 23, 42, 0.35), transparent 70%);
+    opacity: 0.6;
   }
 
-  .grid-surge {
+  .gradient-wash {
     position: absolute;
     inset: 0;
-    background-image:
-      linear-gradient(to right, transparent 0%, rgba(0, 255, 255, 0.6) 50%, transparent 100%),
-      linear-gradient(to bottom, transparent 0%, rgba(0, 255, 255, 0.6) 50%, transparent 100%);
-    background-size: 300px 300px;
-    opacity: 0;
-    animation: surge-pulse 8s ease-in-out infinite;
-  }
-
-  @keyframes surge-pulse {
-    0%, 90% {
-      opacity: 0;
-    }
-    92%, 94% {
-      opacity: 0.4;
-    }
-    93% {
-      opacity: 0.8;
-    }
-    95%, 100% {
-      opacity: 0;
-    }
-  }
-
-  .diagonal-stripes,
-  .arcade-bars {
-    position: absolute;
-    inset: 0;
-    opacity: 0.08;
-    background: repeating-linear-gradient(
-      135deg,
-      rgba(0, 255, 255, 0.08) 0,
-      rgba(0, 255, 255, 0.08) 10px,
-      transparent 10px,
-      transparent 20px
-    );
+    background: radial-gradient(circle at 18% 22%, rgba(37, 99, 235, 0.07), transparent 42%),
+      radial-gradient(circle at 82% 24%, rgba(14, 165, 233, 0.06), transparent 40%);
+    filter: blur(1px);
   }
 
   .particle-container {
@@ -156,13 +96,11 @@
 
   .particle {
     position: absolute;
-    font-size: clamp(14px, 1.8vw, 28px);
-    animation: float-particle 20s linear infinite;
+    font-size: clamp(12px, 1.6vw, 22px);
+    animation: float-particle 16s linear infinite;
     pointer-events: none;
-    text-shadow:
-      0 0 10px currentColor,
-      0 0 20px currentColor;
-    filter: drop-shadow(0 0 5px currentColor);
+    text-shadow: 0 0 12px currentColor;
+    letter-spacing: 0.06em;
   }
 
   @keyframes float-particle {
@@ -179,183 +117,26 @@
     }
   }
 
-  .arcade-lights {
-    position: absolute;
-    inset: 0;
-  }
-
-  .arcade-light {
-    position: absolute;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 255, 255, 0.6), transparent 70%);
-    filter: blur(20px);
-    animation: light-pulse 6s ease-in-out infinite;
-  }
-
-  @keyframes light-pulse {
-    0%, 100% {
-      opacity: 0.4;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.2);
-    }
-  }
-
   .glow-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px);
-    animation: pulse-orb 10s ease-in-out infinite;
+    filter: blur(90px);
+    animation: pulse-orb 12s ease-in-out infinite;
     opacity: 0.1;
   }
 
-  .orb-1 { top: 10%; left: 10%; width: 500px; height: 500px; background: #00ffff; }
-  .orb-2 { top: 50%; right: 10%; width: 600px; height: 600px; background: #ff00ff; animation-delay: 2s; }
-  .orb-3 { bottom: 10%; left: 30%; width: 550px; height: 550px; background: #ff69b4; animation-delay: 4s; }
-  .orb-4 { top: 70%; right: 40%; width: 450px; height: 450px; background: #8a2be2; animation-delay: 6s; }
+  .orb-1 { top: 14%; left: 18%; width: 420px; height: 420px; background: #d8e8ff; }
+  .orb-2 { bottom: 12%; right: 16%; width: 520px; height: 520px; background: #d4f4ff; animation-delay: 2s; }
 
   @keyframes pulse-orb {
     0%, 100% { opacity: 0.12; transform: scale(1); }
     50% { opacity: 0.2; transform: scale(1.15); }
   }
 
-  .planets-container {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  .planet {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.4;
-    animation: planet-float 20s ease-in-out infinite;
-  }
-
-  @keyframes planet-float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-30px) rotate(180deg); }
-  }
-
-  .planet-1 {
-    width: 120px;
-    height: 120px;
-    top: 15%;
-    right: 12%;
-    background: radial-gradient(circle at 30% 30%, #00ffff, #0080ff, #000080);
-    box-shadow:
-      0 0 40px rgba(0, 255, 255, 0.4),
-      inset -10px -10px 30px rgba(0, 0, 0, 0.5),
-      inset 5px 5px 20px rgba(255, 255, 255, 0.1);
-    animation-duration: 25s;
-  }
-
-  .planet-ring {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 180px;
-    height: 60px;
-    border: 3px solid rgba(0, 255, 255, 0.3);
-    border-radius: 50%;
-    transform: translate(-50%, -50%) rotateX(75deg);
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-  }
-
-  .planet-2 {
-    width: 80px;
-    height: 80px;
-    top: 60%;
-    left: 8%;
-    background: radial-gradient(circle at 35% 35%, #ff00ff, #8b008b, #4b0082);
-    box-shadow:
-      0 0 30px rgba(255, 0, 255, 0.4),
-      inset -8px -8px 25px rgba(0, 0, 0, 0.5),
-      inset 5px 5px 15px rgba(255, 255, 255, 0.1);
-    animation-duration: 30s;
-    animation-delay: -5s;
-  }
-
-  .planet-3 {
-    width: 100px;
-    height: 100px;
-    bottom: 20%;
-    right: 20%;
-    background: radial-gradient(circle at 30% 30%, #ff69b4, #ff1493, #8b0045);
-    box-shadow:
-      0 0 35px rgba(255, 105, 180, 0.4),
-      inset -10px -10px 28px rgba(0, 0, 0, 0.5),
-      inset 5px 5px 18px rgba(255, 255, 255, 0.1);
-    animation-duration: 28s;
-    animation-delay: -10s;
-  }
-
-  .planet-moon {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    top: -10px;
-    right: -20px;
-    background: radial-gradient(circle at 30% 30%, #fff, #bbb);
-    border-radius: 50%;
-    box-shadow:
-      0 0 10px rgba(255, 255, 255, 0.4),
-      inset -4px -4px 10px rgba(0, 0, 0, 0.4);
-  }
-
-  .planet-4 {
-    width: 60px;
-    height: 60px;
-    top: 25%;
-    left: 30%;
-    background: radial-gradient(circle at 35% 35%, #8a2be2, #4b0082, #2b004b);
-    box-shadow:
-      0 0 25px rgba(138, 43, 226, 0.4),
-      inset -6px -6px 18px rgba(0, 0, 0, 0.5),
-      inset 4px 4px 12px rgba(255, 255, 255, 0.1);
-    animation-duration: 35s;
-    animation-delay: -8s;
-  }
-
-  .film-grain {
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 101;
-    animation: grain-flicker 0.3s steps(2) infinite;
-    opacity: 0.4;
-  }
-
-  @keyframes grain-flicker {
-    0%, 100% { opacity: 0.35; }
-    50% { opacity: 0.45; }
-  }
-
-  .scanlines {
-    position: fixed;
-    inset: 0;
-    background-image: linear-gradient(transparent 50%, rgba(0, 255, 255, 0.025) 50%);
-    background-size: 100% 4px;
-    pointer-events: none;
-    z-index: 100;
-    opacity: 0.4;
-    animation: scanline-flicker 0.15s infinite;
-  }
-
-  @keyframes scanline-flicker {
-    0%, 100% { opacity: 0.35; }
-    50% { opacity: 0.45; }
-  }
-
   .vignette {
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
+    background: radial-gradient(circle at center, transparent 0%, rgba(15, 23, 42, 0.08) 100%);
     pointer-events: none;
     z-index: 1;
   }
