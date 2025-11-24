@@ -139,27 +139,27 @@
 						↓ Download
 					</button>
 				</div>
-			</div>
 
-			{#if showShareMenu}
-				<div class="share-menu">
-					<div class="share-content">
-						<h3>Share Your Code</h3>
-						<div class="share-input-group">
-							<input type="text" value={shareUrl} readonly class="share-input" />
-							<button class="btn btn-small" onclick={copyToClipboard}>
-								{copied ? '✓ Copied' : 'Copy'}
+				{#if showShareMenu}
+					<div class="share-menu">
+						<div class="share-content">
+							<h3>Share Your Code</h3>
+							<div class="share-input-group">
+								<input type="text" value={shareUrl} readonly class="share-input" />
+								<button class="btn btn-small" onclick={copyToClipboard}>
+									{copied ? '✓ Copied' : 'Copy'}
+								</button>
+							</div>
+							<p class="share-hint">
+								Share this link to let others see and modify your code. Changes won't affect your original.
+							</p>
+							<button class="btn btn-close" onclick={() => (showShareMenu = false)}>
+								Close
 							</button>
 						</div>
-						<p class="share-hint">
-							Share this link to let others see and modify your code. Changes won't affect your original.
-						</p>
-						<button class="btn btn-close" onclick={() => (showShareMenu = false)}>
-							Close
-						</button>
 					</div>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</header>
 
 		<div class="ide-container">
@@ -188,21 +188,28 @@
 	}
 
 	header {
-		padding: 1.25rem 1.5rem;
-		background: var(--panel);
-		border-bottom: 1px solid var(--border);
+		padding: 1rem 1.25rem 0.75rem;
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(245, 249, 255, 0.85));
+		border-bottom: 1px solid transparent;
 		position: relative;
 		z-index: 100;
-		box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+		box-shadow: none;
 	}
 
 	.header-content {
+		position: relative;
 		max-width: 1600px;
 		margin: 0 auto;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		gap: 2rem;
+		padding: 1rem 1.25rem;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 246, 255, 0.9));
+		border: 1px solid var(--border-strong);
+		border-radius: 16px;
+		backdrop-filter: blur(12px);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 	}
 
 	.title-section {
@@ -231,27 +238,32 @@
 	}
 
 	.btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
 		padding: 0.5rem 1rem;
-		border-radius: 10px;
+		border-radius: 12px;
 		font-weight: 600;
-		border: none;
+		border: 1px solid var(--border-strong);
 		cursor: pointer;
 		transition: all 0.2s;
 		font-size: 0.9rem;
-		background: rgba(255, 255, 255, 0.05);
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(245, 248, 255, 0.9));
 		color: var(--text);
-		border: 1px solid var(--border);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+		text-decoration: none;
 	}
 
 	.btn-secondary {
-		background: rgba(255, 255, 255, 0.05);
-		color: var(--text);
-		border: 1px solid var(--border-strong);
+		background: linear-gradient(135deg, #2563eb, #0ea5e9);
+		color: #fff;
+		border-color: transparent;
+		box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22);
 	}
 
 	.btn-secondary:hover {
-		background: rgba(255, 255, 255, 0.1);
-		border-color: var(--border-strong);
+		transform: translateY(-1px);
+		box-shadow: 0 16px 28px rgba(37, 99, 235, 0.24);
 	}
 
 	.btn-small {
@@ -281,16 +293,15 @@
 
 	.share-menu {
 		position: absolute;
-		top: 100%;
-		right: 0;
-		background: var(--panel-strong);
+		top: calc(100% + 0.65rem);
+		right: 1.25rem;
+		background: rgba(255, 255, 255, 0.96);
 		border: 1px solid var(--border-strong);
-		border-radius: 10px;
-		margin-top: 0.5rem;
+		border-radius: 12px;
 		padding: 1.5rem;
-		width: 100%;
-		max-width: 500px;
-		box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+		width: min(520px, calc(100% - 2.5rem));
+		box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+		backdrop-filter: blur(10px);
 		z-index: 1000;
 	}
 
@@ -368,7 +379,7 @@
 		margin: 0 0 2rem 0;
 	}
 
-	.btn {
+	.error-page .btn {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -401,12 +412,13 @@
 			width: 100%;
 		}
 
-		.btn {
+		.actions .btn {
 			flex: 1;
 		}
 
 		.share-menu {
-			max-width: calc(100vw - 2rem);
+			max-width: calc(100vw - 2.5rem);
+			right: 1rem;
 		}
 	}
 </style>

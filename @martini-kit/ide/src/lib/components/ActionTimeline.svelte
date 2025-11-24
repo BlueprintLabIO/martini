@@ -26,6 +26,28 @@
 			: actions
 	);
 
+	function formatInput(input: any): string {
+		if (input === undefined) return 'undefined';
+		if (typeof input === 'string') return input;
+
+		const seen = new WeakSet();
+		try {
+			return JSON.stringify(
+				input,
+				(key, value) => {
+					if (typeof value === 'object' && value !== null) {
+						if (seen.has(value)) return '[Circular]';
+						seen.add(value);
+					}
+					return value;
+				},
+				2
+			);
+		} catch (err) {
+			return String(input);
+		}
+	}
+
 	function formatTimestamp(timestamp: number): string {
 		const date = new Date(timestamp);
 		return date.toLocaleTimeString('en-US', {
@@ -98,9 +120,9 @@
 						{/if}
 					</div>
 
-					{#if action.input && Object.keys(action.input).length > 0}
+					{#if action.input !== undefined}
 						<div class="action-input">
-							<pre>{JSON.stringify(action.input, null, 2)}</pre>
+							<pre>{formatInput(action.input)}</pre>
 						</div>
 					{/if}
 				</button>
@@ -258,6 +280,7 @@
 		background: rgba(20, 20, 20, 0.5);
 		border-radius: 3px;
 		border: 1px solid rgba(62, 62, 66, 0.3);
+		text-align: left;
 	}
 
 	.action-input pre {
@@ -266,6 +289,10 @@
 		font-size: 0.625rem;
 		line-height: 1.4;
 		color: #d4d4d4;
+		white-space: pre-wrap;
+		word-break: break-word;
+		display: block;
+		width: 100%;
 	}
 
 	.empty-state {

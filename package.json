@@ -1,28 +1,28 @@
 {
 	"name": "martini-kit",
 	"private": true,
- "version": "0.1.0",
- "packageManager": "pnpm@10.22.0",
- "engines": {
-    "node": ">=18"
- },
- "scripts": {
-    "dev": "turbo run build --filter=demos^... && pnpm run build:sdk && pnpm --filter=demos run dev",
-    "dev:watch": "turbo watch dev --filter=demos",
-    "dev:demos": "pnpm --filter=demos run dev",
-    "build:sdk": "pnpm --filter=demos run build:sdk",
-    "build": "turbo run build",
-    "build:demos": "pnpm --filter=demos run build",
-    "test": "turbo run test",
-    "clean": "turbo run clean && rm -rf node_modules",
-    "upload-starter-assets": "tsx scripts/upload-starter-assets.ts",
-    "version:patch": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version patch",
-    "version:minor": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version minor",
-    "version:major": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version major",
-    "publish:all": "pnpm build && pnpm test && pnpm --filter='@martini-kit/*' --filter='!demos' exec npm publish --access public",
-    "publish:dry-run": "pnpm build && pnpm --filter='@martini-kit/*' --filter='!demos' exec npm publish --dry-run --access public",
-    "check:publishable": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm pack --dry-run"
-  },
+	"version": "0.1.0",
+	"packageManager": "pnpm@10.23.0",
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"dev": "turbo run build --filter=demos^... && pnpm run build:sdk && pnpm --filter=demos run dev",
+		"dev:watch": "turbo watch dev --filter=demos",
+		"dev:demos": "pnpm --filter=demos run dev",
+		"build:sdk": "pnpm --filter=demos run build:sdk",
+		"build": "turbo run build",
+		"build:demos": "pnpm --filter=demos run build",
+		"test": "turbo run test",
+		"clean": "turbo run clean && rm -rf node_modules",
+		"upload-starter-assets": "tsx scripts/upload-starter-assets.ts",
+		"version:patch": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version patch",
+		"version:minor": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version minor",
+		"version:major": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm version major",
+		"publish:all": "pnpm build && pnpm test && pnpm --filter='@martini-kit/*' --filter='!demos' exec npm publish --access public",
+		"publish:dry-run": "pnpm build && pnpm --filter='@martini-kit/*' --filter='!demos' exec npm publish --dry-run --access public",
+		"check:publishable": "pnpm --filter='@martini-kit/*' --filter='!demos' exec npm pack --dry-run"
+	},
 	"pnpm": {
 		"overrides": {
 			"@lucide/svelte": "npm:lucide-svelte@^0.553.0"

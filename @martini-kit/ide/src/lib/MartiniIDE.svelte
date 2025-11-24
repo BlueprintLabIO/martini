@@ -7,6 +7,17 @@
 	import ActionTimeline from './components/ActionTimeline.svelte';
 	import StateDiffViewer from './components/StateDiffViewer.svelte';
 	import NetworkMonitor from './components/NetworkMonitor.svelte';
+	import {
+		FilePlus,
+		FolderPlus,
+		ChevronDown,
+		ChevronRight,
+		Folder,
+		FileText,
+		Play,
+		PanelLeftOpen,
+		PanelLeftClose
+	} from '@lucide/svelte';
 	import { VirtualFileSystem } from './core/VirtualFS';
 	import { IframeBridgeRelay } from '@martini-kit/transport-iframe-bridge';
 	import type { MartiniKitIDEConfig } from './types';
@@ -46,6 +57,7 @@
 	let saveState = $state<'idle' | 'saving' | 'saved'>('saved');
 	let saveTimer: ReturnType<typeof setTimeout> | null = null;
 	let theme = $state<'light' | 'dark'>(config.editor?.theme === 'dark' ? 'dark' : 'light');
+	let sidebarVisible = $state(true);
 
 	// File tree UX
 	let inlineEdit = $state<{ mode: 'create-file' | 'create-folder' | 'rename'; path?: string; parent?: string; name: string } | null>(null);
@@ -570,148 +582,184 @@
 	{:else}
 		<PaneGroup direction="horizontal" class="ide-pane-group">
 			<!-- Sidebar -->
-			<Pane defaultSize={10} minSize={10} class="sidebar-pane">
-				<div class="sidebar">
-					<div class="sidebar-header">
-						<div>
-							<h3>Files</h3>
-							<p class="sidebar-subtitle">Live reload</p>
-						</div>
-						<div class="sidebar-actions">
-							<button class="ghost-button" onclick={() => startCreate('file')}>+ File</button>
-							<button class="ghost-button" onclick={() => startCreate('folder')}>+ Folder</button>
-						</div>
-						{#if saveState !== 'saved'}
-							<span class="badge" class:saving={saveState === 'saving'}>
-								{saveState === 'saving' ? 'Saving…' : 'Edited'}
-							</span>
-						{/if}
-					</div>
-
-					<div class="search-bar">
-						<input
-							type="text"
-							placeholder="Search files"
-							bind:value={searchQuery}
-						/>
-					</div>
-
-					{#if inlineError}
-						<div class="inline-error">{inlineError}</div>
-					{/if}
-
-					{#if filteredFileTree.length === 0}
-						<p class="empty-files">No files found</p>
-					{:else}
-						<ul
-							class="file-tree"
-							tabindex="0"
-							onfocus={() => (treeFocused = true)}
-							onblur={() => (treeFocused = false)}
-							onkeydown={handleTreeKeydown}
-							onclick={() => (contextMenu = null)}
-							oncontextmenu={(event) => openContextMenu(event, null)}
-						>
-							{#if inlineEdit && inlineEdit.mode !== 'rename'}
-								<li class="inline-row">
-									<div
-										class="tree-row inline-editor"
-										style={`padding-left:${(inlineEdit.parent ? getDepth(inlineEdit.parent) + 1 : 1) * 12 + 4}px`}
-									>
-										<span class="chevron">•</span>
-										<input
-											autofocus
-											placeholder={inlineEdit.mode === 'create-folder' ? 'New folder' : 'New file'}
-											bind:value={inlineEdit.name}
-											onkeydown={(event) => {
-												if (event.key === 'Enter') commitInlineEdit();
-												if (event.key === 'Escape') cancelInlineEdit();
-											}}
-											onblur={commitInlineEdit}
-										/>
-									</div>
-								</li>
+			{#if sidebarVisible}
+				<Pane defaultSize={10} minSize={12} class="sidebar-pane">
+					<div class="sidebar">
+						<div class="sidebar-header">
+							<div class="sidebar-actions">
+								<button class="ghost-button" onclick={() => startCreate('file')} aria-label="New file">
+									<FilePlus size={16} />
+								</button>
+								<button class="ghost-button" onclick={() => startCreate('folder')} aria-label="New folder">
+									<FolderPlus size={16} />
+								</button>
+							</div>
+							{#if saveState !== 'saved'}
+								<span class="badge" class:saving={saveState === 'saving'}>
+									{saveState === 'saving' ? 'Saving…' : 'Edited'}
+								</span>
 							{/if}
+						</div>
 
-							{#each visibleNodes as node (node.path)}
-								<li
-									class:selected={selectedPath === node.path}
-									class:active={node.path === activeFile}
-									oncontextmenu={(event) => openContextMenu(event, { path: node.path, isDir: node.isDir })}
-								>
-									{#if node.isDir}
-										{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
-											<div
-												class="tree-row inline-editor"
-												style={`padding-left:${node.depth * 12 + 4}px`}
-											>
-												<span class="chevron">{isExpanded(node.path) ? '▾' : '▸'}</span>
-												<input
-													autofocus
-													bind:value={inlineEdit.name}
-													onkeydown={(event) => {
-														if (event.key === 'Enter') commitInlineEdit();
-														if (event.key === 'Escape') cancelInlineEdit();
-													}}
-													onblur={commitInlineEdit}
-												/>
-											</div>
-										{:else}
-											<button
-												class="tree-row"
-												style={`padding-left:${node.depth * 12 + 4}px`}
-												onclick={() => {
-													selectedPath = node.path;
-													toggleNode(node.path);
+						<div class="search-bar">
+							<input
+								type="text"
+								placeholder="Search files"
+								bind:value={searchQuery}
+							/>
+						</div>
+
+						{#if inlineError}
+							<div class="inline-error">{inlineError}</div>
+						{/if}
+
+						{#if filteredFileTree.length === 0}
+							<p class="empty-files">No files found</p>
+						{:else}
+							<ul
+								class="file-tree"
+								tabindex="0"
+								onfocus={() => (treeFocused = true)}
+								onblur={() => (treeFocused = false)}
+								onkeydown={handleTreeKeydown}
+								onclick={() => (contextMenu = null)}
+								oncontextmenu={(event) => openContextMenu(event, null)}
+							>
+								{#if inlineEdit && inlineEdit.mode !== 'rename'}
+									<li class="inline-row">
+										<div
+											class="tree-row inline-editor"
+											style={`padding-left:${(inlineEdit.parent ? getDepth(inlineEdit.parent) + 1 : 1) * 12 + 4}px`}
+										>
+											<span class="chevron-icon">
+												{#if inlineEdit.mode === 'create-folder'}
+													<Folder size={14} />
+												{:else}
+													<FileText size={14} />
+												{/if}
+											</span>
+											<input
+												autofocus
+												placeholder={inlineEdit.mode === 'create-folder' ? 'New folder' : 'New file'}
+												bind:value={inlineEdit.name}
+												onkeydown={(event) => {
+													if (event.key === 'Enter') commitInlineEdit();
+													if (event.key === 'Escape') cancelInlineEdit();
 												}}
-											>
-												<span class="chevron">{isExpanded(node.path) ? '▾' : '▸'}</span>
-												<span class="folder">{node.name}</span>
-											</button>
-										{/if}
-									{:else}
-										{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
-											<div
-												class="file-row inline-editor"
-												style={`padding-left:${node.depth * 12 + 20}px`}
-											>
-												<input
-													autofocus
-													bind:value={inlineEdit.name}
-													onkeydown={(event) => {
-														if (event.key === 'Enter') commitInlineEdit();
-														if (event.key === 'Escape') cancelInlineEdit();
+												onblur={commitInlineEdit}
+											/>
+										</div>
+									</li>
+								{/if}
+
+								{#each visibleNodes as node (node.path)}
+									<li
+										class:selected={selectedPath === node.path}
+										class:active={node.path === activeFile}
+										oncontextmenu={(event) => openContextMenu(event, { path: node.path, isDir: node.isDir })}
+									>
+										{#if node.isDir}
+											{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
+												<div
+													class="tree-row inline-editor"
+													style={`padding-left:${node.depth * 12 + 4}px`}
+												>
+													<span class="chevron-icon">
+														{#if isExpanded(node.path)}
+															<ChevronDown size={14} />
+														{:else}
+															<ChevronRight size={14} />
+														{/if}
+													</span>
+													<span class="node-icon"><Folder size={14} /></span>
+													<input
+														autofocus
+														bind:value={inlineEdit.name}
+														onkeydown={(event) => {
+															if (event.key === 'Enter') commitInlineEdit();
+															if (event.key === 'Escape') cancelInlineEdit();
+														}}
+														onblur={commitInlineEdit}
+													/>
+												</div>
+											{:else}
+												<button
+													class="tree-row"
+													style={`padding-left:${node.depth * 12 + 4}px`}
+													onclick={() => {
+														selectedPath = node.path;
+														toggleNode(node.path);
 													}}
-													onblur={commitInlineEdit}
-												/>
-											</div>
+												>
+													<span class="chevron-icon">
+														{#if isExpanded(node.path)}
+															<ChevronDown size={14} />
+														{:else}
+															<ChevronRight size={14} />
+														{/if}
+													</span>
+													<span class="node-icon"><Folder size={14} /></span>
+													<span class="folder">{node.name}</span>
+												</button>
+											{/if}
 										{:else}
-											<button
-												class="file-row"
-												style={`padding-left:${node.depth * 12 + 20}px`}
-												onclick={() => selectFile(node.path)}
-											>
-												{node.name}
-											</button>
+											{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
+												<div
+													class="file-row inline-editor"
+													style={`padding-left:${node.depth * 12 + 20}px`}
+												>
+													<span class="node-icon"><FileText size={14} /></span>
+													<input
+														autofocus
+														bind:value={inlineEdit.name}
+														onkeydown={(event) => {
+															if (event.key === 'Enter') commitInlineEdit();
+															if (event.key === 'Escape') cancelInlineEdit();
+														}}
+														onblur={commitInlineEdit}
+													/>
+												</div>
+											{:else}
+												<button
+													class="file-row"
+													style={`padding-left:${node.depth * 12 + 20}px`}
+													onclick={() => selectFile(node.path)}
+												>
+													<span class="node-icon"><FileText size={14} /></span>
+													{node.name}
+												</button>
+											{/if}
 										{/if}
-									{/if}
-								</li>
-							{/each}
-						</ul>
-					{/if}
+									</li>
+								{/each}
+							</ul>
+						{/if}
 
-					<button class="run-button" onclick={runGame}>
-						Run Game
-					</button>
-				</div>
-			</Pane>
+						<button class="run-button" onclick={runGame}>
+							<Play size={16} />
+							Run Game
+						</button>
+					</div>
+				</Pane>
 
-			<PaneResizer class="resizer" />
+				<PaneResizer class="resizer" />
+			{/if}
 
 			<!-- Editor -->
-					<Pane defaultSize={25} minSize={20} class="editor-pane">
+					<Pane defaultSize={sidebarVisible ? 25 : 35} minSize={30} class="editor-pane">
 				<div class="editor-panel">
 					<div class="editor-header">
+						<button
+							class="sidebar-toggle"
+							onclick={() => (sidebarVisible = !sidebarVisible)}
+							aria-label={sidebarVisible ? 'Hide file explorer' : 'Show file explorer'}
+						>
+							{#if sidebarVisible}
+								<PanelLeftClose size={16} />
+							{:else}
+								<PanelLeftOpen size={16} />
+							{/if}
+						</button>
 						<span>{activeFile}</span>
 						{#if saveState === 'saving'}
 							<span class="status-dot saving">Saving…</span>
@@ -754,7 +802,7 @@
 									bind:actionExcludedCount={hostActionsExcluded}
 									bind:networkPackets={hostNetworkPackets}
 									hideDevTools={true}
-									enableDevTools={showDevTools}
+									enableDevTools={true}
 									onReady={config.onReady}
 									onError={config.onError}
 								/>
@@ -773,7 +821,7 @@
 									bind:actionExcludedCount={clientActionsExcluded}
 									bind:networkPackets={clientNetworkPackets}
 									hideDevTools={true}
-									enableDevTools={showDevTools}
+									enableDevTools={true}
 								/>
 							</div>
 						{:else}
@@ -792,7 +840,7 @@
 								bind:actionExcludedCount={hostActionsExcluded}
 								bind:networkPackets={hostNetworkPackets}
 								hideDevTools={true}
-								enableDevTools={showDevTools}
+								enableDevTools={true}
 								onReady={config.onReady}
 								onError={config.onError}
 							/>
