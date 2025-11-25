@@ -4,6 +4,7 @@ node_modules
 # Project noise
 DO_NOT_READ.md
 CLAUDE.md
+reddit.md
 
 .claude/
 .claude
