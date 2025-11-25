@@ -173,14 +173,6 @@ describe('Multiplayer Integration', () => {
 });
 ```
 
-## Testing Guides
-
-For detailed testing patterns and examples, see:
-
-- **[Unit Tests](/docs/latest/guides/testing/01-unit-tests)** - Testing actions, determinism, and player lifecycle
-- **[Integration Tests](/docs/latest/guides/testing/02-integration-tests)** - Multi-player scenarios with LocalTransport
-- **[Test Helpers](/docs/latest/guides/testing/03-helpers)** - Mock contexts, custom matchers, and performance testing
-
 ## Best Practices
 
 ### DO ✅
@@ -247,6 +239,6 @@ jobs:
 
 ## See Also
 
-- [Best Practices](/docs/guides/patterns) - General development patterns
+- [Best Practices](/docs/latest/guides/optimization) - General development patterns
 - [Core API - GameRuntime](/docs/latest/api/core/game-runtime) - GameRuntime reference
 - [Transport - Local](/docs/latest/api/transports/local) - LocalTransport for testing

@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { Menu, X } from '@lucide/svelte';
-	import ThemeToggle from './ThemeToggle.svelte';
+	import { page } from "$app/stores";
+	import { Menu, X } from "@lucide/svelte";
+	import ThemeToggle from "./ThemeToggle.svelte";
+	import logo from "/image.png";
 
 	let mobileMenuOpen = $state(false);
 
@@ -12,10 +13,18 @@
 	}
 
 	const navLinks: NavLink[] = [
-		{ label: 'Games', href: '/preview' },
-		{ label: 'Docs', href: '/docs' },
-		{ label: 'GitHub', href: 'https://github.com/BlueprintLabIO/martini', external: true },
-		{ label: 'NPM', href: 'https://www.npmjs.com/package/@martini-kit/core', external: true }
+		{ label: "Games", href: "/preview" },
+		{ label: "Docs", href: "/docs" },
+		{
+			label: "GitHub",
+			href: "https://github.com/BlueprintLabIO/martini",
+			external: true,
+		},
+		{
+			label: "NPM",
+			href: "https://www.npmjs.com/package/@martini-kit/core",
+			external: true,
+		},
 	];
 
 	function closeMobileMenu() {
@@ -24,8 +33,8 @@
 
 	function isActive(href: string): boolean {
 		const currentPath = $page.url.pathname;
-		if (href === '/') {
-			return currentPath === '/';
+		if (href === "/") {
+			return currentPath === "/";
 		}
 		return currentPath.startsWith(href);
 	}
@@ -36,6 +45,7 @@
 		<div class="nav-surface">
 			<!-- Logo / Branding -->
 			<a href="/" class="nav-brand">
+				<img src={logo} alt="martini-kit logo" class="brand-logo" />
 				<span class="brand-text">martini-kit</span>
 			</a>
 
@@ -46,13 +56,12 @@
 						href={link.href}
 						class="nav-link"
 						class:active={isActive(link.href)}
-						target={link.external ? '_blank' : undefined}
-						rel={link.external ? 'noopener noreferrer' : undefined}
+						target={link.external ? "_blank" : undefined}
+						rel={link.external ? "noopener noreferrer" : undefined}
 					>
 						{link.label}
 					</a>
 				{/each}
-
 			</div>
 
 			<!-- Mobile Menu Button -->
@@ -74,7 +83,13 @@
 
 	<!-- Mobile Menu -->
 	{#if mobileMenuOpen}
-		<div class="mobile-menu-backdrop" onclick={closeMobileMenu} role="button" tabindex="0" onkeydown={(e) => e.key === 'Escape' && closeMobileMenu()}></div>
+		<div
+			class="mobile-menu-backdrop"
+			onclick={closeMobileMenu}
+			role="button"
+			tabindex="0"
+			onkeydown={(e) => e.key === "Escape" && closeMobileMenu()}
+		></div>
 		<div class="mobile-menu">
 			{#each navLinks as link}
 				<a
@@ -82,8 +97,8 @@
 					class="mobile-nav-link"
 					class:active={isActive(link.href)}
 					onclick={closeMobileMenu}
-					target={link.external ? '_blank' : undefined}
-					rel={link.external ? 'noopener noreferrer' : undefined}
+					target={link.external ? "_blank" : undefined}
+					rel={link.external ? "noopener noreferrer" : undefined}
 				>
 					{link.label}
 				</a>
@@ -122,7 +137,9 @@
 		background: rgba(255, 255, 255, 0.85);
 		border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
 		backdrop-filter: blur(14px);
-		box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+		box-shadow:
+			0 12px 28px rgba(15, 23, 42, 0.12),
+			inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 	}
 
 	.nav-brand {
@@ -138,6 +155,15 @@
 
 	.nav-brand:hover {
 		color: var(--accent, #2563eb);
+	}
+
+	.brand-logo {
+		width: 28px;
+		height: 28px;
+		border-radius: 8px;
+		object-fit: cover;
+		margin-right: 0.5rem;
+		box-shadow: none;
 	}
 
 	.brand-text {

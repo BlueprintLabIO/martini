@@ -35,7 +35,7 @@ const transport = new LocalTransport({
 - ❌ Only works on same machine
 - ❌ Not for production
 
-[Learn more →](./local-testing)
+[Learn more →](/docs/latest/guides/networking/local-testing)
 
 ---
 
@@ -135,7 +135,7 @@ Do you need production deployment?
 | **NAT issues** | ❌ | ⚠️ Sometimes | ❌ |
 | **Setup** | Easy | Easy | Complex |
 
-[Detailed comparison →](./choosing-transport)
+[Detailed comparison →](/docs/latest/guides/networking/choosing-transport)
 
 ## Key Concepts
 
@@ -170,7 +170,6 @@ You never call `transport.send()` directly - martini-kit handles it.
 
 ## Next Steps
 
-- **[Choosing a Transport →](./choosing-transport)** - Detailed comparison
-- **[Local Testing →](./local-testing)** - Development workflow
-- **[Production Deployment →](./production)** - Hosting and deployment
-- **[Security →](./security)** - Best practices for production
+- **[Choosing a Transport →](/docs/latest/guides/networking/choosing-transport)** - Detailed comparison
+- **[Local Testing →](/docs/latest/guides/networking/local-testing)** - Development workflow
+- **[Security →](/docs/latest/guides/networking/security)** - Best practices for production

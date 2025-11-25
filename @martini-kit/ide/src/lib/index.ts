@@ -2,15 +2,18 @@
  * @martini-kit/ide - Main exports
  */
 
+import MartiniIDEComponent from './MartiniIDE.svelte';
+import CodeEditor from './components/CodeEditor.svelte';
+import GamePreview from './components/GamePreview.svelte';
+import { VirtualFileSystem } from './core/VirtualFS.js';
+import { ESBuildManager } from './core/ESBuildManager.js';
+
 // Components
-export { default as MartiniIDE } from './MartiniIDE.svelte';
-export { default } from './MartiniIDE.svelte'; // Default export for convenience
-export { default as CodeEditor } from './components/CodeEditor.svelte';
-export { default as GamePreview } from './components/GamePreview.svelte';
+export { MartiniIDEComponent as MartiniIDE, CodeEditor, GamePreview };
+export default MartiniIDEComponent; // Default export for convenience
 
 // Core
-export { VirtualFileSystem } from './core/VirtualFS';
-export { ESBuildManager } from './core/ESBuildManager';
+export { VirtualFileSystem, ESBuildManager };
 
 // Types
-export type { MartiniKitIDEConfig, GameError } from './types';
+export type { MartiniKitIDEConfig, GameError } from './types.js';

@@ -515,5 +515,5 @@ Now that you understand the basics, continue to:
 
 ## See Also
 
-- [Phaser Adapter API](/docs/api/phaser/adapter) - Reactive API methods
-- [Best Practices](/docs/guides/optimization) - UI performance optimization
+- [Phaser Adapter API](/docs/latest/api/phaser/adapter) - Reactive API methods
+- [Best Practices](/docs/latest/guides/optimization) - UI performance optimization

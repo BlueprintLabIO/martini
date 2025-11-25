@@ -372,5 +372,5 @@ export const game = defineGame({
 - [Top-Down Movement](/docs/latest/guides/movement/01-top-down) - Basic movement patterns
 - [Platformer Movement](/docs/latest/guides/movement/02-platformer) - Gravity and jumping
 - [Shooting Mechanics](/docs/latest/recipes/shooting-mechanics/01-basics) - Projectile movement
-- [Physics Integration](/docs/latest/guides/physics-and-collision) - Advanced physics
+- [Physics Integration](/docs/latest/guides/physics-and-collisions) - Advanced physics
 - [Input Manager API](/docs/latest/api/phaser/input-manager) - Phaser input utilities

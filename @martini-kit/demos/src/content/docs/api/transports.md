@@ -297,8 +297,8 @@ Game code stays identical - just swap the transport.
 
 ## Next Steps
 
-- **[@martini-kit/core](/docs/api/core)** - Core runtime and game definition
-- **[@martini-kit/phaser](/docs/api/phaser)** - Phaser integration
+- **[@martini-kit/core](/docs/latest/api/core)** - Core runtime and game definition
+- **[@martini-kit/phaser](/docs/latest/api/phaser)** - Phaser integration
 - **[Quick Start](/docs/getting-started/quick-start)** - Build your first game
 
 ## Examples

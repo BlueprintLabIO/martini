@@ -1,8 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ESBuildManager } from '../core/ESBuildManager';
-	import type { VirtualFileSystem } from '../core/VirtualFS';
+	import { ESBuildManager } from '../core/ESBuildManager.js';
+	import type { VirtualFileSystem } from '../core/VirtualFS.js';
 	import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
+	import type { GameError } from '../types.js';
+
+	type NetworkPacket = {
+		timestamp: number;
+		direction: 'send' | 'receive';
+		type: string;
+		size: number;
+		payload: unknown;
+	};
+
+	type LogEntry = { message: string; timestamp: number; level: 'log' | 'warn' | 'error' };
+	type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
 
 	interface Props {
 		vfs: VirtualFileSystem;
@@ -10,20 +22,14 @@
 		entryPoint: string;
 		role: 'host' | 'client';
 		transportType: 'local' | 'iframe-bridge';
-		onError?: (error: { type: 'runtime' | 'syntax'; message: string; stack?: string }) => void;
+		onError?: (error: GameError) => void;
 		onReady?: () => void;
-		consoleLogs?: Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error' }>;
-		connectionStatus?: 'disconnected' | 'connecting' | 'connected';
+		consoleLogs?: Array<LogEntry>;
+		connectionStatus?: ConnectionStatus;
 		stateSnapshots?: StateSnapshot[];
 		actionHistory?: ActionRecord[];
 		actionExcludedCount?: number;
-		networkPackets?: Array<{
-			timestamp: number;
-			direction: 'send' | 'receive';
-			type: string;
-			size: number;
-			payload: any;
-		}>;
+		networkPackets?: Array<NetworkPacket>;
 		hideDevTools?: boolean;
 		roomId?: string;
 		enableDevTools?: boolean;
@@ -49,11 +55,11 @@
 	}: Props = $props();
 
 	let container: HTMLDivElement;
-	let esbuildManager: ESBuildManager | null = null;
-	let status = $state<'initializing' | 'ready' | 'running' | 'error'>('initializing');
-	let error = $state<{ type: 'runtime' | 'syntax'; message: string; stack?: string } | null>(null);
-	let isReady = $state(false);
-	let isPointerOver = $state(false);
+		let esbuildManager: ESBuildManager | null = null;
+		let status = $state<'initializing' | 'ready' | 'running' | 'error'>('initializing');
+		let error = $state<GameError | null>(null);
+		let isReady = $state(false);
+		let isPointerOver = $state(false);
 
 	/**
 	 * Dynamically enable or disable DevTools
@@ -98,7 +104,9 @@
 
 	const sessionRoomId = roomId ?? generateRoomId();
 
-	onMount(async () => {
+	onMount(() => {
+		let destroyed = false;
+
 		const preventScroll = (event: Event) => {
 			if (isPointerOver) {
 				event.preventDefault();
@@ -164,7 +172,9 @@
 			roomId: sessionRoomId,
 			transportType,
 			enableDevTools,
-			onError: (err) => {
+			onError: (err: GameError) => {
+				if (destroyed) return;
+
 				console.error(`[GamePreview] ${err.type} error:`, err.message);
 				if (err.stack) console.error(err.stack);
 
@@ -173,27 +183,34 @@
 				onError?.(err);
 			},
 			onReady: () => {
+				if (destroyed) return;
+
 				status = 'running';
 				isReady = true;
 				error = null;
 				onReady?.();
 			},
-			onConsoleLog: (log) => {
+			onConsoleLog: (log: LogEntry) => {
+				if (destroyed) return;
 				consoleLogs = [...consoleLogs, log];
 			},
-			onConnectionStatus: (newStatus) => {
+			onConnectionStatus: (newStatus: ConnectionStatus) => {
+				if (destroyed) return;
 				connectionStatus = newStatus;
 			},
-			onStateSnapshot: (snapshot) => {
+			onStateSnapshot: (snapshot: StateSnapshot) => {
+				if (destroyed) return;
 				stateSnapshots = upsertById(stateSnapshots, snapshot, 500);
 			},
-			onAction: (action) => {
+			onAction: (action: ActionRecord) => {
+				if (destroyed) return;
 				actionHistory = upsertById(actionHistory, action, 2000);
 				if (typeof action.excludedActionsTotal === 'number') {
 					actionExcludedCount = action.excludedActionsTotal;
 				}
 			},
-			onNetworkPacket: (packet) => {
+			onNetworkPacket: (packet: NetworkPacket) => {
+				if (destroyed) return;
 				networkPackets = [...networkPackets, packet];
 
 				// Enforce max packets limit
@@ -203,25 +220,30 @@
 			}
 		};
 
-		try {
-			esbuildManager = new ESBuildManager(commonOptions);
-			await esbuildManager.initialize();
-			await esbuildManager.run(vfs, entryPoint);
-		} catch (err) {
-			console.error('[GamePreview] Initialization failed:', err instanceof Error ? err.message : String(err));
-			if (err instanceof Error && err.stack) {
-				console.error(err.stack);
-			}
+		(async () => {
+			try {
+				esbuildManager = new ESBuildManager(commonOptions);
+				await esbuildManager.initialize();
+				await esbuildManager.run(vfs, entryPoint);
+			} catch (err) {
+				console.error('[GamePreview] Initialization failed:', err instanceof Error ? err.message : String(err));
+				if (err instanceof Error && err.stack) {
+					console.error(err.stack);
+				}
 
-			status = 'error';
-			error = {
-				type: 'runtime',
-				message: err instanceof Error ? err.message : 'Failed to initialize ESBuild',
-				stack: err instanceof Error ? err.stack : undefined
-			};
-		}
+				if (destroyed) return;
+
+				status = 'error';
+				error = {
+					type: 'runtime',
+					message: err instanceof Error ? err.message : 'Failed to initialize ESBuild',
+					stack: err instanceof Error ? err.stack : undefined
+				};
+			}
+		})();
 
 		return () => {
+			destroyed = true;
 			esbuildManager?.destroy();
 			container?.removeEventListener('wheel', preventScroll);
 			container?.removeEventListener('touchmove', preventScroll);
@@ -234,26 +256,28 @@
 	});
 
 	// Push code updates when files change
-	$effect(() => {
-		if (!esbuildManager || !isReady) return;
-		if (status === 'initializing' || status === 'error') return;
+		$effect(() => {
+			if (!esbuildManager || !isReady) return;
+			if (status === 'initializing' || status === 'error') return;
 
-		// Touch dependency to trigger on version bump
-		const version = vfsVersion;
-		if (version >= 0) {
-			esbuildManager.updateCode(vfs, entryPoint).catch((err) => {
-				console.error('[GamePreview] Code update failed:', err?.message || err);
-				if (err?.stack) console.error(err.stack);
+			// Touch dependency to trigger on version bump
+			const version = vfsVersion;
+			if (version >= 0) {
+				esbuildManager.updateCode(vfs, entryPoint).catch((err: unknown) => {
+					const message = err instanceof Error ? err.message : String(err);
+					const stack = err instanceof Error ? err.stack : undefined;
+					console.error('[GamePreview] Code update failed:', message);
+					if (stack) console.error(stack);
 
-				status = 'error';
-				error = {
-					type: 'runtime',
-					message: err instanceof Error ? err.message : 'Failed to update code',
-					stack: err instanceof Error ? err.stack : undefined
-				};
-			});
-		}
-	});
+					status = 'error';
+					error = {
+						type: 'runtime',
+						message,
+						stack
+					};
+				});
+			}
+		});
 
 	// Sync enableDevTools prop changes to manager
 	$effect(() => {

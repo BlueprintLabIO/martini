@@ -304,4 +304,4 @@ export const game = defineGame({
 
 - [Platformer Movement](/docs/latest/guides/movement/02-platformer) - Side-scrolling movement with gravity
 - [Advanced Movement](/docs/latest/guides/movement/03-advanced) - Mouse/pointer and rotation
-- [Physics & Collision](/docs/latest/guides/physics-and-collision) - Physics integration
+- [Physics & Collision](/docs/latest/guides/physics-and-collisions) - Physics integration

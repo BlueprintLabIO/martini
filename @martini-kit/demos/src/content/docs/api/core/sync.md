@@ -542,4 +542,4 @@ deepClone(obj);  // ❌ Stack overflow
 
 - [GameRuntime](./game-runtime) - Automatic state sync
 - [Transport](./transport) - Network layer
-- [State Management](/docs/concepts/state-management) - State best practices
+- [State Management](/docs/latest/concepts/state-management) - State best practices

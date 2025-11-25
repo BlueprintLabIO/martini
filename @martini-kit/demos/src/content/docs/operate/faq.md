@@ -65,7 +65,7 @@ Use `@martini-kit/transport-local` - see [Testing guide](/docs/latest/guides/tes
 
 ### How do I debug state sync issues?
 
-Use `StateInspector` from `@martini-kit/devtools` - see [Troubleshooting](/docs/latest/troubleshooting/debugging).
+Use `StateInspector` from `@martini-kit/devtools` - see [Troubleshooting](/docs/latest/operate/troubleshooting/debugging).
 
 ### What's the recommended state sync rate?
 

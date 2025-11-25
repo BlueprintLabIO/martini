@@ -458,4 +458,4 @@ update() {
 
 - [PhaserAdapter](./adapter) - Creating input managers
 - [Helpers (Core)](../core/helpers) - `createInputAction()`
-- [Actions](/docs/concepts/actions) - Action system
+- [Actions](/docs/latest/concepts/actions) - Action system

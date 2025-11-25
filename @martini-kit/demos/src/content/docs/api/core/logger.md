@@ -531,4 +531,4 @@ gameLogger.onLog((entry) => {
 ## See Also
 
 - [GameRuntime](./game-runtime) - Using logger in runtime
-- [DevTools](/docs/api/devtools/state-inspector) - DevTools integration
+- [DevTools](/docs/latest/api/devtools/state-inspector) - DevTools integration

@@ -429,6 +429,6 @@ canHighlight: (col, row) => {
 
 ## See Also
 
-- [PhaserAdapter](/docs/api/phaser/adapter) - Main adapter class
-- [InputManager](/docs/api/phaser/input-manager) - Keyboard input handling
+- [PhaserAdapter](/docs/latest/api/phaser/adapter) - Main adapter class
+- [InputManager](/docs/latest/api/phaser/input-manager) - Keyboard input handling
 - [Tile Matcher Demo](/preview/tile-matcher) - Live example using GridClickHelper

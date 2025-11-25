@@ -20,8 +20,8 @@ In this tutorial, we will build a complete multiplayer game from scratch. We'll 
 
 ## Steps
 
-1. [Project Setup](./01-setup) - Initialize the project and install dependencies
-2. [Gameplay Logic](./02-gameplay) - Implement the core game loop and mechanics
-3. [Finishing Touches](./03-finishing) - Add polish and scoring
+1. [Project Setup](/docs/latest/getting-started/first-game/01-setup) - Initialize the project and install dependencies
+2. [Gameplay Logic](/docs/latest/getting-started/first-game/02-gameplay) - Implement the core game loop and mechanics
+3. [Finishing Touches](/docs/latest/getting-started/first-game/03-finishing) - Add polish and scoring
 
-Ready? Let's [get started](./01-setup)!
+Ready? Let's [get started](/docs/latest/getting-started/first-game/01-setup)!

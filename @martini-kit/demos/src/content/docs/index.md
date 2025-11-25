@@ -57,11 +57,13 @@ martini-kit is a multiplayer game framework that handles all the networking comp
 
 ```typescript
 // Manual networking - hundreds of lines of boilerplate
+// Total chaos: parsing, routing, reconnection, and race conditions everywhere
 socket.on('player-moved', (data) => {
   players[data.id].x = data.x;
   players[data.id].y = data.y;
 });
 
+// And you repeat this for every message type...
 socket.emit('move-player', { id: playerId, x: newX, y: newY });
 ```
 
@@ -121,13 +123,13 @@ State inspection, action history, and debugging tools for development. [Learn mo
 
 - [Core Concepts](/docs/latest/concepts/architecture) - Understand martini-kit's architecture
 - [Actions Guide](/docs/latest/concepts/actions) - Learn how to define and use actions
-- [Phaser Integration Guide](/docs/guides/phaser/index) - Deep dive into Phaser + martini-kit
-- [Examples](/docs/latest/examples/overview) - Explore complete game examples
+- [Phaser Integration Guide](/docs/latest/engine-tracks/phaser) - Deep dive into Phaser + martini-kit
+- [Examples](/preview) - Explore complete game examples
 - [Contributing](/docs/latest/contributing/getting-started) - Help improve martini-kit
 
 ## Need Help?
 
-- [Troubleshooting](/docs/latest/troubleshooting/common-issues) - Common issues and solutions
-- [FAQ](/docs/latest/faq) - Frequently asked questions
+- [Troubleshooting](/docs/latest/operate/troubleshooting/common-issues) - Common issues and solutions
+- [FAQ](/docs/latest/operate/faq) - Frequently asked questions
 - [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues) - Report bugs or request features
-- [Discord](https://discord.gg/your-server) - Join the community
+- [Discord](https://discord.gg/aT2mYAVVzk) - Join the community

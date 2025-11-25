@@ -634,6 +634,6 @@ const game = defineGame<GameState>({
 
 ## See Also
 
-- [Determinism Concepts](/docs/concepts/determinism) - Why determinism matters
+- [Determinism Concepts](/docs/latest/concepts/determinism) - Why determinism matters
 - [defineGame](./define-game) - Using random in game definition
-- [Actions](/docs/concepts/actions) - Using random in actions
+- [Actions](/docs/latest/concepts/actions) - Using random in actions

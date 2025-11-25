@@ -10,11 +10,11 @@ const SECTION_TITLES: Record<string, string> = {
   'recipes': 'Recipes',
   'api': 'API Reference',
   'contributing': 'Contributing',
-  'troubleshooting': 'Operate',
-  'faq': 'Operate',
-  'help': 'Operate',
-  'changelog': 'Operate',
-  'operate': 'Operate'
+  'troubleshooting': 'Help',
+  'faq': 'Help',
+  'help': 'Help',
+  'changelog': 'Help',
+  'operate': 'Help'
 };
 
 // Map subdirectory names to subsection titles (if needed)
@@ -170,7 +170,7 @@ function getSectionOrder(title: string): number {
     'Examples',
     'Recipes',
     'API Reference',
-    'Operate',
+    'Help',
     'Contributing',
     'Changelog'
   ];

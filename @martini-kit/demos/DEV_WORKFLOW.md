@@ -17,7 +17,7 @@ Open `http://localhost:5173/ide` to verify the previews load.
 
 ## How It Works (no Sandpack)
 
-- `scripts/build-sdk.ts` prebuilds the martini SDK into `static/sdk/`
+- `scripts/build-sdk.mjs` prebuilds the martini SDK into `static/sdk/`
 - The preview iframes load that SDK via import maps
 - User code is bundled in-browser with `esbuild-wasm` (fast rebuilds, no dev-packages)
 - When the SDK changes, you just rebuild it; no file syncing or npm proxying

@@ -206,6 +206,5 @@ const transport = new TrysteroTransport({
 ## Next Steps
 
 - **[Local Testing →](./local-testing)** - Development workflow
-- **[Production Deployment →](./production)** - Hosting options
 - **[Security →](./security)** - Best practices
 - **[Custom Transports →](/docs/latest/api/transports/custom)** - Build your own

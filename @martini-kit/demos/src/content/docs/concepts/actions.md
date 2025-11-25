@@ -467,6 +467,5 @@ actions: {
 
 ## Next Steps
 
-- **[Best Practices →](./best-practices)** - Patterns and debugging
 - **[defineGame() API →](/docs/latest/api/core/define-game)** - Full reference
 - **[Helpers API →](/docs/latest/api/core/helpers)** - createInputAction(), createTickAction()

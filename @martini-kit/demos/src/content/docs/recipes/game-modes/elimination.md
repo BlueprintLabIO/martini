@@ -180,5 +180,5 @@ function getPlacement(state: GameState, playerId: string): number {
 ## See Also
 
 - **[Team-Based →](./team-based)** - Team elimination
-- **[Health and Damage →](/docs/latest/recipes/combat/health-and-damage)** - Damage system
+- **[Health and Damage →](/docs/latest/recipes/health-and-damage)** - Damage system
 - **[Player Lifecycle →](/docs/latest/concepts/player-lifecycle)** - Player management

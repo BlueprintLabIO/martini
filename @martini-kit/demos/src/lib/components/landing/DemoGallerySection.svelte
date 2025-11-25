@@ -38,9 +38,6 @@
 <section id="demos" class="demos-section">
   <div class="section-container">
     <h2 class="section-title" data-text="Interactive Code Previews">Interactive Code Previews</h2>
-    <p class="section-intro">
-      Launch the martini-kit IDE with two synced instances. Edit code, test multiplayer locally, and hand off a shareable preview link—no servers or setup.
-    </p>
 
     <div class="demos-grid">
       {#each demos as demo (demo.id)}
@@ -70,7 +67,7 @@
 
 <style>
   .demos-section {
-    padding: 6rem 0;
+    padding: 5rem 0;
   }
 
   .demos-grid {

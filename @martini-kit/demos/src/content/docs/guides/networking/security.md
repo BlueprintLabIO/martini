@@ -305,6 +305,5 @@ Before deploying to production:
 
 ## See Also
 
-- **[Production Deployment →](./production)** - Hosting and deployment
-- **[Choosing a Transport →](./choosing-transport)** - Transport options
-- **[Testing →](/docs/guides/testing)** - Security testing
+- **[Choosing a Transport →](/docs/latest/guides/networking/choosing-transport)** - Transport options
+- **[Testing →](/docs/latest/guides/testing)** - Security testing

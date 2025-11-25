@@ -6,6 +6,7 @@
     </div>
     <div class="footer-links">
       <a href="https://github.com/martini-game-framework/martini" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://discord.gg/aT2mYAVVzk" target="_blank" rel="noopener noreferrer">Discord</a>
       <a href="#quickstart">Quick Start</a>
       <a href="#demos">Demos</a>
       <span class="footer-license">Apache 2.0 License</span>

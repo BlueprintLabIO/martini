@@ -1,12 +1,12 @@
 <script lang="ts">
-  type TooltipKey = 'setup' | 'state' | 'actions' | 'action' | 'tick';
+  type TooltipKey = "setup" | "state" | "actions" | "action" | "tick";
 
   const tooltipCopy: Record<TooltipKey, string> = {
-    setup: 'setup() — Initialize your game state with plain objects',
-    state: 'State — Just vanilla JS objects, no magic classes',
-    actions: 'actions — Define how players can modify the game',
-    action: 'Mutate directly — No RPC wrappers, just plain functions',
-    tick: 'tick() — Game loop runs on host, synced automatically'
+    setup: "setup() — Initialize your game state with plain objects",
+    state: "State — Just vanilla JS objects, no magic classes",
+    actions: "actions — Define how players can modify the game",
+    action: "Mutate directly — No RPC wrappers, just plain functions",
+    tick: "tick() — Game loop runs on host, synced automatically",
   };
 
   interface TooltipInfo {
@@ -31,7 +31,7 @@
     tooltip = {
       text: tooltipCopy[key],
       left: lineRect.left - containerRect.left + lineRect.width / 2,
-      top: lineRect.top - containerRect.top - 12
+      top: lineRect.top - containerRect.top - 12,
     };
   }
 
@@ -40,7 +40,7 @@
   }
 
   const escapeHtml = (code: string) =>
-    code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   const highlightCode = (code: string) => {
     const escaped = escapeHtml(code);
@@ -49,9 +49,12 @@
       .replace(/('[^']*'|`[^`]*`)/g, '<span class="token string">$1</span>')
       .replace(
         /\b(import|from|const|return|=>)\b/g,
-        '<span class="token keyword">$1</span>'
+        '<span class="token keyword">$1</span>',
       )
-      .replace(/\b(setup|actions|tick)\b/g, '<span class="token function">$1</span>')
+      .replace(
+        /\b(setup|actions|tick)\b/g,
+        '<span class="token function">$1</span>',
+      )
       .replace(/(\b\d+(\.\d+)?\b)/g, '<span class="token number">$1</span>');
   };
 
@@ -89,35 +92,20 @@ const game = defineGame({
     <span class="code-filename">game.ts</span>
   </div>
   <div class="code-demo-content">
-    <pre class="code-block"><code class="code-highlight" aria-label="Martini game definition">{@html highlightedCode}</code></pre>
+    <pre class="code-block"><code
+        class="code-highlight"
+        aria-label="Martini game definition">{@html highlightedCode}</code
+      ></pre>
   </div>
 
   {#if tooltip}
-    <div class="code-tooltip" style={`left:${tooltip.left}px;top:${tooltip.top}px;`}>
+    <div
+      class="code-tooltip"
+      style={`left:${tooltip.left}px;top:${tooltip.top}px;`}
+    >
       {tooltip.text}
     </div>
   {/if}
-
-  <div class="example-features">
-    <div class="feature-tag">
-      <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-      <span>Automatic sync</span>
-    </div>
-    <div class="feature-tag">
-      <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-      <span>P2P by default</span>
-    </div>
-    <div class="feature-tag">
-      <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-      <span>Join/leave handled</span>
-    </div>
-  </div>
 </div>
 
 <style>
@@ -153,14 +141,14 @@ const game = defineGame({
   }
 
   .code-filename {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: "IBM Plex Mono", monospace;
     font-size: 0.875rem;
     color: var(--muted);
   }
 
   .code-demo-content {
     padding: 1.5rem;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: "IBM Plex Mono", monospace;
     font-size: 0.95rem;
     color: var(--code);
     margin: 0;
@@ -190,38 +178,7 @@ const game = defineGame({
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
   }
 
-  .example-features {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    padding: 0 1.5rem 1.5rem;
-  }
-
-  .feature-tag {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background: #f5f7fb;
-    border: 1px solid var(--border);
-    border-radius: 2rem;
-    color: var(--text);
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-
-  .check-icon {
-    width: 16px;
-    height: 16px;
-    stroke-width: 3;
-  }
-
   .code-highlight {
     display: block;
   }
-
-  .token.keyword { color: #1d4ed8; font-weight: 700; }
-  .token.string { color: #0f766e; }
-  .token.function { color: #0ea5e9; font-weight: 700; }
-  .token.number { color: #c026d3; }
 </style>

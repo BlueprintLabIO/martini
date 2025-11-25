@@ -431,7 +431,7 @@ const transport = new LocalTransport({
 - Same page only
 - No real network conditions
 
-[Full docs →](/docs/api/transports/local)
+[Full docs →](/docs/latest/api/transports/local)
 
 ### IframeBridgeTransport
 
@@ -466,7 +466,7 @@ relay.registerIframe(iframeElement, 'client');
 - Requires parent-iframe setup
 - Same origin policy applies
 
-[Full docs →](/docs/api/transports/iframe-bridge)
+[Full docs →](/docs/latest/api/transports/iframe-bridge)
 
 ### TrysteroTransport
 
@@ -497,7 +497,7 @@ const transport = new TrysteroTransport({
 - NAT traversal issues
 - Limited to 8-10 players
 
-[Full docs →](/docs/api/transports/trystero)
+[Full docs →](/docs/latest/api/transports/trystero)
 
 ## Implementing a Custom Transport
 
@@ -720,8 +720,8 @@ describe('MyCustomTransport', () => {
 
 ## See Also
 
-- [LocalTransport](/docs/api/transports/local) - In-memory transport
-- [IframeBridgeTransport](/docs/api/transports/iframe-bridge) - Iframe transport
-- [TrysteroTransport](/docs/api/transports/trystero) - P2P WebRTC transport
-- [Transport Layer Concepts](/docs/concepts/transport-layer) - Deep dive
+- [LocalTransport](/docs/latest/api/transports/local) - In-memory transport
+- [IframeBridgeTransport](/docs/latest/api/transports/iframe-bridge) - Iframe transport
+- [TrysteroTransport](/docs/latest/api/transports/trystero) - P2P WebRTC transport
+- [Transport Layer Concepts](/docs/latest/concepts/transport-layer) - Deep dive
 - [GameRuntime](./game-runtime) - Using transports with runtime

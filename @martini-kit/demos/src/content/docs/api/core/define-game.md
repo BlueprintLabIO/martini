@@ -436,7 +436,7 @@ const playerManager = createPlayerManager({
 ## See Also
 
 - [GameRuntime](./game-runtime) - Running your game
-- [Actions Guide](/docs/concepts/actions) - Deep dive into actions
-- [State Management](/docs/concepts/state-management) - State best practices
+- [Actions Guide](/docs/latest/concepts/actions) - Deep dive into actions
+- [State Management](/docs/latest/concepts/state-management) - State best practices
 - [SeededRandom](./seeded-random) - Deterministic randomness
 - [Helper Functions](./helpers) - Utility functions

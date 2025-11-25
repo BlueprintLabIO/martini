@@ -130,6 +130,4 @@ actions: {
 
 ## See Also
 
-- **[Temporary Buffs →](./temporary-buffs)** - Time-limited power-ups
-- **[Spawning Systems →](./spawning-systems)** - Advanced spawning
 - **[Determinism →](/docs/latest/concepts/determinism)** - Using seeded random

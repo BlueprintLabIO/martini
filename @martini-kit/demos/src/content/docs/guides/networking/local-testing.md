@@ -169,6 +169,5 @@ describe('Multiplayer game', () => {
 
 ## Next Steps
 
-- **[Choosing a Transport →](./choosing-transport)** - Production options
-- **[Production Deployment →](./production)** - Deploy your game
-- **[Testing Guide →](/docs/guides/testing)** - Comprehensive testing strategies
+- **[Choosing a Transport →](/docs/latest/guides/networking/choosing-transport)** - Production options
+- **[Testing Guide →](/docs/latest/guides/testing)** - Comprehensive testing strategies

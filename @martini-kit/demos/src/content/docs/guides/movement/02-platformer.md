@@ -201,4 +201,4 @@ update(time: number, delta: number) {
 
 - [Top-Down Movement](/docs/latest/guides/movement/01-top-down) - Arena shooter and RPG movement
 - [Advanced Movement](/docs/latest/guides/movement/03-advanced) - Mouse/pointer and rotation
-- [Physics & Collision](/docs/latest/guides/physics-and-collision) - Physics integration
+- [Physics & Collision](/docs/latest/guides/physics-and-collisions) - Physics integration

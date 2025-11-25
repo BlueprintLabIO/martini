@@ -232,12 +232,12 @@ actions: {
 
 Once you have your core logic, integrate with a rendering engine:
 
-- **[Phaser Integration →](/docs/guides/phaser)** - Phaser 3 adapter
-- **[Godot Integration →](/docs/guides/godot)** - Coming soon
+- **[Phaser Integration →](/docs/latest/engine-tracks/phaser)** - Phaser 3 adapter
+- **[Godot Integration →](/docs/engine-tracks/godot)** - Coming soon
 - **[Custom Integration →](/docs/latest/api/core)** - Build your own adapter
 
 ## See Also
 
 - **[State Management →](/docs/latest/concepts/state-management)** - Structuring state
 - **[Actions →](/docs/latest/concepts/actions)** - Action patterns
-- **[Testing →](/docs/guides/testing)** - Testing game logic
+- **[Testing →](/docs/latest/guides/testing)** - Testing game logic

@@ -4,12 +4,13 @@
     MouseEffects,
     HeroSection,
     QuickStartSection,
-    HowItWorksSection,
     DemoGallerySection,
     ComparisonSection,
+    PillarsSection,
+    BeforeAfterSection,
     CTASection,
-    LandingFooter
-  } from '$lib/components/landing';
+    LandingFooter,
+  } from "$lib/components/landing";
 </script>
 
 <svelte:head>
@@ -19,7 +20,11 @@
     content="Multiplayer without networking. Martini handles sync, transport, and infra so you ship real-time games with minimal code."
   />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin="anonymous"
+  />
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=IBM+Plex+Mono:wght@400;600&display=swap"
     rel="stylesheet"
@@ -30,8 +35,9 @@
   <BackgroundEffects />
   <MouseEffects />
   <HeroSection />
+  <PillarsSection />
+  <BeforeAfterSection />
   <QuickStartSection />
-  <HowItWorksSection />
   <DemoGallerySection />
   <ComparisonSection />
   <CTASection />
@@ -61,11 +67,6 @@
     overflow-x: hidden;
   }
 
-  section {
-    position: relative;
-    z-index: 5;
-  }
-
   :global(.section-container) {
     max-width: 1200px;
     margin: 0 auto;
@@ -73,7 +74,11 @@
   }
 
   :global(.section-title) {
-    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    font-family:
+      "Space Grotesk",
+      system-ui,
+      -apple-system,
+      sans-serif;
     letter-spacing: -0.02em;
     font-size: clamp(2rem, 4vw, 2.5rem);
     font-weight: 700;

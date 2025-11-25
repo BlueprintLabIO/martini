@@ -1,19 +1,19 @@
 <script lang="ts">
-  import { gameMetadata } from '$lib/games/ide-configs-map';
+  import { gameMetadata } from "$lib/games/ide-configs-map";
 
   const shortTaglines: Record<string, string> = {
-    'fire-and-ice': 'Dash, solve, and sync co-op',
-    'paddle-battle': 'A sharper, faster Pong',
-    'blob-battle': 'Grow, chase, outmaneuver',
-    'arena-blaster': 'Twin-stick chaos in sync',
-    'circuit-racer': 'Tight top-down racing',
-    'tile-matcher': 'Connect Four with friends'
+    "fire-and-ice": "Dash, solve, and sync co-op",
+    "paddle-battle": "A sharper, faster Pong",
+    "blob-battle": "Grow, chase, outmaneuver",
+    "arena-blaster": "Twin-stick chaos in sync",
+    "circuit-racer": "Tight top-down racing",
+    "tile-matcher": "Connect Four with friends",
   };
 
   const games = Object.entries(gameMetadata).map(([id, meta]) => ({
     id,
     ...meta,
-    tagline: shortTaglines[id] ?? meta.tagline ?? meta.description
+    tagline: shortTaglines[id] ?? meta.tagline ?? meta.description,
   }));
 </script>
 
@@ -26,29 +26,28 @@
     <div class="container">
       <p class="eyebrow">Live demos</p>
       <h1>Preview every martini game instantly.</h1>
-      <p class="subhead">Launch, tweak, and share dual-player demos—no servers, no setup.</p>
+      <p class="subhead">
+        Launch, tweak, and share dual-player demos—no servers, no setup.
+      </p>
     </div>
   </header>
 
   <main class="container">
     <section class="section">
-      <div class="section-header">
-        <h2>Game gallery</h2>
-        <p>Pick a demo and see it sync across two tabs.</p>
-      </div>
-
       <div class="games-grid">
         {#each games as game (game.id)}
           <a
             class="game-card"
             href={`/preview/${game.id}`}
-            style={`--accent:${game.theme?.primary ?? '#7ce7cf'}`}
+            style={`--accent:${game.theme?.primary ?? "#7ce7cf"}`}
             data-sveltekit-preload-data="off"
           >
             <div class="card-top">
               <h3>{game.title}</h3>
               {#if game.difficulty}
-                <span class={`badge badge-${game.difficulty}`}>{game.difficulty}</span>
+                <span class={`badge badge-${game.difficulty}`}
+                  >{game.difficulty}</span
+                >
               {/if}
             </div>
             <p class="description">{game.tagline}</p>
@@ -60,14 +59,14 @@
         {/each}
       </div>
     </section>
-
   </main>
 </div>
 
 <style>
   .preview-page {
     min-height: 100vh;
-    background: var(--bg-page);
+    background: radial-gradient(circle at 18% 18%, #f3f6ff 0, transparent 30%),
+      radial-gradient(circle at 82% 12%, #eef7ff 0, transparent 30%), #fbfcff;
     color: var(--text);
   }
 
@@ -83,10 +82,19 @@
   }
 
   .preview-hero::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 25% 25%, rgba(124, 231, 207, 0.12), transparent 45%), radial-gradient(circle at 75% 20%, rgba(140, 184, 255, 0.1), transparent 40%);
+    background: radial-gradient(
+        circle at 25% 25%,
+        rgba(124, 231, 207, 0.12),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 75% 20%,
+        rgba(140, 184, 255, 0.1),
+        transparent 40%
+      );
     pointer-events: none;
     filter: blur(1px);
   }
@@ -115,25 +123,6 @@
     line-height: 1.6;
   }
 
-  .section {
-    margin: 3rem 0 3.25rem;
-  }
-
-  .section-header {
-    margin-bottom: 1.75rem;
-  }
-
-  .section-header h2 {
-    margin: 0 0 0.35rem 0;
-    font-size: 1.6rem;
-    font-weight: 700;
-  }
-
-  .section-header p {
-    margin: 0;
-    color: var(--muted);
-  }
-
   .games-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -151,7 +140,11 @@
     text-decoration: none;
     color: inherit;
     box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
   .game-card:hover {
@@ -210,9 +203,15 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  .badge-beginner { background: color-mix(in srgb, var(--accent) 70%, #9fe7a4); }
-  .badge-intermediate { background: color-mix(in srgb, var(--accent) 70%, #b5d5ff); }
-  .badge-advanced { background: color-mix(in srgb, var(--accent) 70%, #d6a1ff); }
+  .badge-beginner {
+    background: color-mix(in srgb, var(--accent) 70%, #9fe7a4);
+  }
+  .badge-intermediate {
+    background: color-mix(in srgb, var(--accent) 70%, #b5d5ff);
+  }
+  .badge-advanced {
+    background: color-mix(in srgb, var(--accent) 70%, #d6a1ff);
+  }
 
   .info-section {
     margin: 3.5rem 0 4.5rem;
@@ -230,16 +229,6 @@
     flex-wrap: wrap;
     gap: 0.75rem;
     margin-bottom: 1rem;
-  }
-
-  .info-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-  }
-
-  .info-header p {
-    margin: 0;
-    color: var(--muted);
   }
 
   .features-grid {
@@ -261,16 +250,5 @@
 
   .feature-icon {
     font-size: 1.5rem;
-  }
-
-  .feature h3 {
-    margin: 0;
-    font-size: 1.05rem;
-  }
-
-  .feature p {
-    margin: 0;
-    color: var(--muted);
-    line-height: 1.5;
   }
 </style>

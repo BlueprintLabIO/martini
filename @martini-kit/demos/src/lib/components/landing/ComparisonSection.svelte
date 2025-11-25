@@ -1,21 +1,28 @@
 <script lang="ts">
-  const competitors = ['Martini', 'Colyseus', 'Photon', 'Rune'];
+  const competitors = ["Martini (Phaser today)", "Colyseus", "Photon", "Rune", "Manual"];
 
   const rows = [
-    { feature: 'Declarative game logic', values: ['✓', 'RPC heavy', 'RPC heavy', '~'] },
-    { feature: 'Transport: P2P + server', values: ['✓', 'Server only', 'Server only', 'P2P only'] },
-    { feature: 'Automatic conflict handling', values: ['✓', 'Manual locks', 'Manual locks', 'Manual'] },
-    { feature: 'Tiny sync payloads', values: ['✓', 'Bulk state', 'Bulk state', 'Batched RPCs'] },
-    { feature: 'Open source (Apache 2.0)', values: ['✓', 'Varies', 'No', 'No'] },
-    { feature: 'Works offline / static deploy', values: ['✓', 'No', 'No', 'No'] },
-    { feature: 'Engine agnostic (Phaser/JS/TS)', values: ['✓', '~', '~', '~'] },
-    { feature: 'Host-authoritative ready', values: ['✓', '~', 'Manual', 'Manual'] }
+    { feature: "Declarative game logic", values: ["✓", "RPC / manual", "RPC / manual", "Custom", "x"] },
+    { feature: "Engine helper", values: ["✓ (Phaser)", "~", "Per-engine SDKs", "P2P SDK", "x"] },
+    { feature: "Transport choice", values: ["✓", "Server WS", "Server UDP/WS", "P2P only", "x"] },
+    { feature: "Reconnect & ordering", values: ["✓", "Manual", "Manual", "Manual", "x"] },
+    { feature: "Bandwidth optimized", values: ["✓", "Full state / manual", "Manual", "Batched", "x"] },
+    { feature: "Optimistic updates", values: ["✓", "Manual", "Manual", "Manual", "x"] },
+    { feature: "Interpolation/reconciliation helpers", values: ["✓", "Manual", "Manual", "Manual", "x"] },
+    { feature: "Swap transports without refactor", values: ["✓", "Server only", "Server only", "P2P only", "x"] },
+    { feature: "Host-authoritative or P2P", values: ["✓", "Server only", "Server only", "P2P only", "x"] },
+    { feature: "Schema-free state", values: ["✓", "Manual", "Manual", "Manual", "x"] },
+    { feature: "Plugin adapters (Godot planned)", values: ["✓", "~", "~", "~", "x"] },
+    { feature: "Open source", values: ["✓", "Varies", "No", "No", "x"] },
+    { feature: "Local-first friendly", values: ["✓", "Server only", "Server only", "P2P only", "x"] },
   ];
 </script>
 
 <section id="comparison" class="comparison-section">
   <div class="section-container">
-    <h2 class="section-title" data-text="Comparison Snapshot">Comparison Snapshot</h2>
+    <h2 class="section-title" data-text="Comparison Snapshot">
+      Comparison Snapshot
+    </h2>
     <div class="comparison-table">
       <table>
         <thead>
@@ -47,7 +54,7 @@
   }
 
   .comparison-table {
-    max-width: 900px;
+    max-width: 1100px;
     margin: 0 auto;
     overflow-x: auto;
   }

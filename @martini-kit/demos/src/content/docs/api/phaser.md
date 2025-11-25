@@ -543,8 +543,8 @@ Shapes work with all helpers (SpriteManager, PhysicsManager, etc.).
 ## Next Steps
 
 - **[Quick Start](/docs/getting-started/quick-start)** - Build your first game
-- **[@martini-kit/core API](/docs/api/core)** - Core concepts and runtime
-- **[Transports](/docs/api/transports)** - Choose your networking backend
+- **[@martini-kit/core API](/docs/latest/api/core)** - Core concepts and runtime
+- **[Transports](/docs/latest/api/transports)** - Choose your networking backend
 
 ## Examples
 

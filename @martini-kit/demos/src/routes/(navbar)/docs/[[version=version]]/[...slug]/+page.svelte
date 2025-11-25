@@ -1,21 +1,18 @@
 <script lang="ts">
-	import { Copy, Check, PencilLine, FileText } from '@lucide/svelte';
-	import { onMount } from 'svelte';
-	import PrevNextNav from '$lib/components/docs/PrevNextNav.svelte';
+	import { Copy, Check, PencilLine, FileText } from "@lucide/svelte";
+	import { onMount } from "svelte";
+	import PrevNextNav from "$lib/components/docs/PrevNextNav.svelte";
 
 	let { data } = $props();
 
 	let copiedMarkdown = $state(false);
 	let copyButtonContainer = $state<HTMLElement | null>(null);
 	let articleElement = $state<HTMLElement | null>(null);
-	let versionNotice = $derived.by(() => {
-		if (!data.versionFallback) return null;
-		return `Showing latest docs because ${data.requestedVersion} is not available for this page.`;
-	});
+	let versionNotice = $derived.by(() => null);
 	let scopeLabel = $derived.by(() => {
 		const scope = data.metadata.scope;
-		if (scope === 'phaser') return 'Phaser';
-		if (scope === 'agnostic') return 'Engine-agnostic';
+		if (scope === "phaser") return "Phaser";
+		if (scope === "agnostic") return "Engine-agnostic";
 		return null;
 	});
 
@@ -27,19 +24,19 @@
 				copiedMarkdown = false;
 			}, 2000);
 		} catch (err) {
-			console.error('Failed to copy markdown:', err);
+			console.error("Failed to copy markdown:", err);
 		}
 	}
 
 	// Move copy button next to h1 on mount
 	onMount(() => {
 		if (articleElement && copyButtonContainer) {
-			const h1 = articleElement.querySelector('h1');
+			const h1 = articleElement.querySelector("h1");
 
 			if (h1) {
 				// Create a wrapper for h1 + button
-				const wrapper = document.createElement('div');
-				wrapper.className = 'page-header';
+				const wrapper = document.createElement("div");
+				wrapper.className = "page-header";
 
 				// Insert wrapper before h1
 				h1.parentNode?.insertBefore(wrapper, h1);
@@ -56,7 +53,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.metadata.title || 'Documentation'} | martini-kit</title>
+	<title>{data.metadata.title || "Documentation"} | martini-kit</title>
 	{#if data.metadata.description}
 		<meta name="description" content={data.metadata.description} />
 	{/if}
@@ -80,9 +77,6 @@
 		{#if scopeLabel}
 			<div class="scope-badge">{scopeLabel}</div>
 		{/if}
-		{#if versionNotice}
-			<div class="version-notice">{versionNotice}</div>
-		{/if}
 		{@render data.component()}
 	</article>
 
@@ -90,7 +84,12 @@
 
 	<footer class="doc-footer">
 		<div class="footer-actions">
-			<a href={`https://github.com/BlueprintLabIO/martini-kit/edit/main/@martini-kit/demos/src/content/docs/${data.slug}.md`} target="_blank" rel="noopener noreferrer" class="footer-link">
+			<a
+				href={`https://github.com/BlueprintLabIO/martini-kit/edit/main/@martini-kit/demos/src/content/docs/${data.slug}.md`}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="footer-link"
+			>
 				<PencilLine size={16} />
 				<span>Edit this page on GitHub</span>
 			</a>
@@ -156,7 +155,9 @@
 	.copy-markdown-btn:hover {
 		background: #2563eb;
 		transform: translateY(-1px);
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		box-shadow:
+			0 4px 6px -1px rgba(0, 0, 0, 0.1),
+			0 2px 4px -1px rgba(0, 0, 0, 0.06);
 	}
 
 	.copy-markdown-btn:active {
@@ -206,16 +207,6 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.02em;
-	}
-
-	.version-notice {
-		display: inline-block;
-		margin-bottom: 0.75rem;
-		padding: 0.5rem 0.75rem;
-		border-radius: 8px;
-		background: #fef3c7;
-		color: #92400e;
-		font-size: 0.875rem;
 	}
 
 	@media (max-width: 640px) {

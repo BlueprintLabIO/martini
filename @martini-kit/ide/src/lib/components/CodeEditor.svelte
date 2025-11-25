@@ -75,13 +75,13 @@
 	/**
 	 * Get language extension based on file path
 	 */
-	function getLanguageExtension(path: string) {
-		const ext = path.split('.').pop()?.toLowerCase() || '';
+		function getLanguageExtension(path: string) {
+			const ext = path.split('.').pop()?.toLowerCase() || '';
 
-		if (ext === 'html' || ext === 'htm') return html();
-		if (ext === 'css' || ext === 'scss') return css();
-		if (ext === 'md' || ext === 'markdown') return markdown();
-		if (ext === 'json') return javascript({ json: true });
+			if (ext === 'html' || ext === 'htm') return html();
+			if (ext === 'css' || ext === 'scss') return css();
+			if (ext === 'md' || ext === 'markdown') return markdown();
+			if (ext === 'json') return javascript();
 
 		return javascript({
 			typescript: ext === 'ts' || ext === 'tsx',

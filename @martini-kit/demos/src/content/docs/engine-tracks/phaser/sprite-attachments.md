@@ -353,4 +353,4 @@ For building your own attachment types, see the [SpriteAttachment API reference]
 - [SpriteAttachment API](/docs/latest/api/phaser/sprite-attachment) - Generic attachment system
 - [Phaser Helpers](/docs/latest/api/phaser/helpers) - All available helpers
 - [SpriteManager](/docs/latest/api/phaser/sprite-manager) - Sprite lifecycle management
-- [UI and HUD Guide](./ui-and-hud) - General UI patterns
+- [UI and HUD Guide](./ui-and-hud/01-basics) - General UI patterns

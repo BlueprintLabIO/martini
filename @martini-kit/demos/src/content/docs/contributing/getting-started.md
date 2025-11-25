@@ -199,7 +199,7 @@ Now that you have the development environment set up:
 
 If you run into issues:
 
-- **Check the [Troubleshooting Guide](/docs/latest/troubleshooting/common-issues)**
+- **Check the [Troubleshooting Guide](/docs/latest/operate/troubleshooting/common-issues)**
 - **Ask questions in GitHub Discussions**
 - **Open an issue if you find a bug**
 

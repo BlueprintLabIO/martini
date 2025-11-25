@@ -630,6 +630,6 @@ actions: {
 ## See Also
 
 - [defineGame](./define-game) - Game definition basics
-- [Actions Concepts](/docs/concepts/actions) - Understanding actions
-- [State Management](/docs/concepts/state-management) - State best practices
+- [Actions Concepts](/docs/latest/concepts/actions) - Understanding actions
+- [State Management](/docs/latest/concepts/state-management) - State best practices
 - [SeededRandom](./seeded-random) - Using randomness in tick actions

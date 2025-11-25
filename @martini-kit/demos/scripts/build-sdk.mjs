@@ -89,7 +89,7 @@ async function buildSDK() {
   await generateShims(packages);
 }
 
-async function generateShims(packages: string[]) {
+async function generateShims(packages) {
   const shimsDir = resolve(__dirname, '../static/sdk/shims');
 
   // Ensure the directory exists

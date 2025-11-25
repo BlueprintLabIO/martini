@@ -36,7 +36,7 @@ The core multiplayer engine. Provides declarative game definitions, automatic st
 
 <Callout type="info" title="Engine Agnostic">
 
-`@martini-kit/core` works with any game engine or rendering library. Use [@martini-kit/phaser](/docs/api/phaser) for Phaser 3 integration, or integrate with Unity, Godot, Three.js, etc.
+`@martini-kit/core` works with any game engine or rendering library. Use [@martini-kit/phaser](/docs/latest/api/phaser) for Phaser 3 integration, or integrate with Unity, Godot, Three.js, etc.
 
 </Callout>
 
@@ -472,7 +472,7 @@ interface Transport {
 - `player_join` / `player_leave` - Lifecycle events
 - `heartbeat` / `host_migration` / `host_query` / `host_announce` - Advanced
 
-See [Transports](/docs/api/transports) for available implementations.
+See [Transports](/docs/latest/api/transports) for available implementations.
 
 ## Architecture
 
@@ -545,7 +545,7 @@ const transport = new WebSocketTransport({ url: 'wss://server.com' });
 
 ## Next Steps
 
-- **[defineGame API →](/docs/api/core/define-game)** - Full API reference
-- **[GameRuntime API →](/docs/api/core/game-runtime)** - Runtime methods
+- **[defineGame API →](/docs/latest/api/core/define-game)** - Full API reference
+- **[GameRuntime API →](/docs/latest/api/core/game-runtime)** - Runtime methods
 - **[Core Concepts Guide →](/docs/latest/concepts/architecture)** - Deep dive
 - **[Quick Start →](/docs/getting-started/quick-start)** - Build your first game

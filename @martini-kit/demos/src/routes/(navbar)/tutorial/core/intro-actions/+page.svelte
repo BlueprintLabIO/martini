@@ -1,35 +1,40 @@
 <script lang="ts">
-	import MartiniIDE from '@martini-kit/ide';
-	import type { MartiniKitIDEConfig } from '@martini-kit/ide';
-	import { RefreshCw, Lightbulb, Sparkles } from '@lucide/svelte';
+	import MartiniIDE from "@martini-kit/ide";
+	import type { MartiniKitIDEConfig } from "@martini-kit/ide";
+	import { RefreshCw, Lightbulb, Sparkles } from "@lucide/svelte";
 
 	let { data } = $props();
 
 	let files = $state<Record<string, string>>(data.config?.files ?? {});
 	let ideConfig = $state<MartiniKitIDEConfig | null>(null);
-	let solutionFiles = $state<Record<string, string> | null>(data.solutionFiles || null);
+	let solutionFiles = $state<Record<string, string> | null>(
+		data.solutionFiles || null,
+	);
 	let infoMessage = $state<string | null>(null);
 	let showSolution = $state(false);
 
 	$effect(() => {
 		if (data.config) {
-			console.log('[tutorial] initializing IDE config', {
+			console.log("[tutorial] initializing IDE config", {
 				lesson: data.metadata.title,
-				fileCount: Object.keys(data.config.files ?? {}).length
+				fileCount: Object.keys(data.config.files ?? {}).length,
 			});
 			buildIdeConfig(files || data.config.files);
 		}
 	});
 
 	function buildIdeConfig(newFiles: Record<string, string>) {
-		console.log('[tutorial] rebuilding IDE config with files', Object.keys(newFiles));
+		console.log(
+			"[tutorial] rebuilding IDE config with files",
+			Object.keys(newFiles),
+		);
 		ideConfig = {
 			...data.config,
 			files: newFiles,
 			onChange: (updated) => {
 				files = updated;
-				console.log('[tutorial] IDE onChange', Object.keys(updated));
-			}
+				console.log("[tutorial] IDE onChange", Object.keys(updated));
+			},
 		};
 	}
 
@@ -41,13 +46,13 @@
 	}
 
 	function applySolution() {
-		console.log('[tutorial] applySolution clicked', {
+		console.log("[tutorial] applySolution clicked", {
 			hasSolution: Boolean(solutionFiles),
-			fileCount: solutionFiles ? Object.keys(solutionFiles).length : 0
+			fileCount: solutionFiles ? Object.keys(solutionFiles).length : 0,
 		});
 		if (!solutionFiles) return;
 		files = { ...solutionFiles };
-		infoMessage = 'Solution applied to editor.';
+		infoMessage = "Solution applied to editor.";
 		buildIdeConfig(files);
 	}
 </script>
@@ -67,11 +72,20 @@
 			<p class="desc">{data.metadata.description}</p>
 		</div>
 		<div class="actions">
-			<button class="secondary" onclick={resetLesson} title="Reset to starter code">
+			<button
+				class="secondary"
+				onclick={resetLesson}
+				title="Reset to starter code"
+			>
 				<RefreshCw size={16} />
 				Reset
 			</button>
-			<button class="secondary" onclick={applySolution} disabled={!solutionFiles} title="Replace code with solution">
+			<button
+				class="secondary"
+				onclick={applySolution}
+				disabled={!solutionFiles}
+				title="Replace code with solution"
+			>
 				<Sparkles size={16} />
 				Show solution
 			</button>
@@ -97,11 +111,15 @@
 			{/if}
 
 			{#if data.metadata.solution}
-				<button class="secondary" onclick={() => (showSolution = !showSolution)}>
-					{showSolution ? 'Hide solution' : 'Show solution'}
+				<button
+					class="secondary"
+					onclick={() => (showSolution = !showSolution)}
+				>
+					{showSolution ? "Hide solution" : "Show solution"}
 				</button>
 				{#if showSolution}
-					<pre class="solution"><code>{data.metadata.solution}</code></pre>
+					<pre class="solution"><code>{data.metadata.solution}</code
+						></pre>
 				{/if}
 			{/if}
 
@@ -320,19 +338,6 @@
 		border: 1px solid #bfdbfe;
 	}
 
-	.status-success {
-		background: #ecfdf3;
-		color: #166534;
-		border: 1px solid #bbf7d0;
-	}
-
-	.status-fail {
-		background: #fef2f2;
-		color: #991b1b;
-		border: 1px solid #fecdd3;
-	}
-
-	.primary,
 	.secondary {
 		display: inline-flex;
 		align-items: center;
@@ -342,12 +347,6 @@
 		border: 1px solid transparent;
 		cursor: pointer;
 		font-weight: 600;
-	}
-
-	.primary {
-		background: #3b82f6;
-		border-color: #2563eb;
-		color: white;
 	}
 
 	.secondary {

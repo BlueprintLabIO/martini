@@ -449,5 +449,5 @@ Continue to [Part 3: Advanced →](./03-advanced) for minimaps and performance o
 ## See Also
 
 - [← Part 1: Basics](./01-basics) - HUD setup and health bars
-- [Best Practices](/docs/guides/optimization) - Performance tips
-- [Phaser Integration Guide](/docs/guides/phaser/index) - Deep dive into Phaser patterns
+- [Best Practices](/docs/latest/guides/optimization) - Performance tips
+- [Phaser Integration Guide](/docs/engine-tracks/phaser) - Deep dive into Phaser patterns

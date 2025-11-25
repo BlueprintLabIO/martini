@@ -586,4 +586,4 @@ runtime.broadcastEvent('chat', { message: 'Hello!' });
 - [Transport](./transport) - Network layer
 - [State Synchronization](./sync) - How state sync works
 - [SeededRandom](./seeded-random) - Deterministic randomness
-- [PhaserAdapter](/docs/api/phaser/adapter) - Phaser integration
+- [PhaserAdapter](/docs/latest/api/phaser/adapter) - Phaser integration

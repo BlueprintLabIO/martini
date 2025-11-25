@@ -253,9 +253,9 @@ For local development, martini-kit automatically uses `LocalTransport` which let
 
 ## Next Steps
 
-- **[@martini-kit/core API](/docs/api/core)** - Complete API reference
-- **[@martini-kit/phaser API](/docs/api/phaser)** - Phaser integration details
-- **[Transports](/docs/api/transports)** - Choose your networking backend
+- **[@martini-kit/core API](/docs/latest/api/core)** - Complete API reference
+- **[@martini-kit/phaser API](/docs/latest/api/phaser)** - Phaser integration details
+- **[Transports](/docs/latest/api/transports)** - Choose your networking backend
 
 ## Common Issues
 
@@ -270,4 +270,4 @@ For local development, martini-kit automatically uses `LocalTransport` which let
 - Clients must check `if (!state._sprites) return` before creating sprites
 - Make sure you're using `onChange()` to detect new sprites
 
-Ready to learn more? Check out the [API documentation](/docs/api/core)!
+Ready to learn more? Check out the [API documentation](/docs/latest/api/core)!

@@ -128,11 +128,11 @@
 
 	.docs-layout {
 		display: grid;
-		grid-template-columns: 280px 1fr 280px;
-		gap: 3rem;
-		max-width: 1600px;
+		grid-template-columns: 240px 1fr 200px;
+		gap: 1.5rem;
+		max-width: 1400px;
 		margin: 0 auto;
-		padding: 2rem;
+		padding: 0.5rem 0.75rem;
 		height: calc(100vh - var(--nav-height));
 		overflow: hidden;
 		background: var(--bg-page);
@@ -142,37 +142,37 @@
 	.sidebar,
 	.toc-sidebar,
 	.content {
-		height: calc(100vh - var(--nav-height) - 4rem);
-		max-height: calc(100vh - var(--nav-height) - 4rem);
+		height: calc(100vh - var(--nav-height) - 1.5rem);
+		max-height: calc(100vh - var(--nav-height) - 1.5rem);
 		overflow: auto;
 	}
 
 	.sidebar {
 		position: relative;
-		background: var(--panel);
-		border: 1px solid var(--border);
-		border-radius: 1rem;
-		padding: 1rem;
-		box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+		background: transparent;
+		border: none;
+		border-radius: 0.5rem;
+		padding: 0.5rem;
+		box-shadow: none;
 	}
 
 	.toc-sidebar {
 		position: relative;
-		background: var(--panel);
-		border: 1px solid var(--border);
-		border-radius: 1rem;
-		padding: 1rem;
-		box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+		background: transparent;
+		border: none;
+		border-radius: 0.5rem;
+		padding: 0.5rem;
+		box-shadow: none;
 	}
 
 	.content {
 		min-width: 0;
-		max-width: 900px;
-		background: var(--panel);
-		border: 1px solid var(--border);
-		border-radius: 1.1rem;
-		padding: 2rem;
-		box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+		max-width: 1100px;
+		background: transparent;
+		border: none;
+		border-radius: 0.75rem;
+		padding: 1rem;
+		box-shadow: none;
 	}
 
 	.prose {
@@ -417,8 +417,8 @@
 
 	@media (max-width: 1280px) {
 		.docs-layout {
-			grid-template-columns: 280px 1fr;
-			gap: 2rem;
+			grid-template-columns: 260px 1fr;
+			gap: 1rem;
 			height: calc(100vh - var(--nav-height));
 		}
 
@@ -440,8 +440,8 @@
 
 		.docs-layout {
 			grid-template-columns: 1fr;
-			gap: 2rem;
-			padding: 1rem;
+			gap: 1.1rem;
+			padding: 0.75rem;
 			padding-top: 4rem; /* Account for fixed mobile menu button */
 			height: auto;
 			overflow: visible;

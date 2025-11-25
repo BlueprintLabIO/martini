@@ -543,12 +543,12 @@ class ProductionHUD {
 
 You've completed the UI & HUD guide series! Here's what to explore next:
 
-- [Best Practices](/docs/guides/optimization) - Overall optimization strategies
-- [Phaser Integration Guide](/docs/guides/phaser/index) - Deep dive into Phaser patterns
+- [Best Practices](/docs/latest/guides/optimization) - Overall optimization strategies
+- [Phaser Integration Guide](/docs/latest/engine-tracks/phaser) - Deep dive into Phaser patterns
 - [Examples](/docs/examples/overview) - See production UI implementations
 
 ## See Also
 
 - [← Part 2: Components](./02-components) - Scoreboards, timers, notifications
 - [← Part 1: Basics](./01-basics) - HUD setup and health bars
-- [State Management](/docs/concepts/state-management) - Understanding state sync
+- [State Management](/docs/latest/concepts/state-management) - Understanding state sync

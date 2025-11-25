@@ -7,20 +7,18 @@
 	import ActionTimeline from './components/ActionTimeline.svelte';
 	import StateDiffViewer from './components/StateDiffViewer.svelte';
 	import NetworkMonitor from './components/NetworkMonitor.svelte';
-	import {
-		FilePlus,
-		FolderPlus,
-		ChevronDown,
-		ChevronRight,
-		Folder,
-		FileText,
-		Play,
-		PanelLeftOpen,
-		PanelLeftClose
-	} from '@lucide/svelte';
-	import { VirtualFileSystem } from './core/VirtualFS';
+	import FilePlus from '@lucide/svelte/icons/file-plus';
+	import FolderPlus from '@lucide/svelte/icons/folder-plus';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Folder from '@lucide/svelte/icons/folder';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Play from '@lucide/svelte/icons/play';
+	import PanelLeftOpen from '@lucide/svelte/icons/panel-left-open';
+	import PanelLeftClose from '@lucide/svelte/icons/panel-left-close';
+	import { VirtualFileSystem } from './core/VirtualFS.js';
 	import { IframeBridgeRelay } from '@martini-kit/transport-iframe-bridge';
-	import type { MartiniKitIDEConfig } from './types';
+	import type { MartiniKitIDEConfig } from './types.js';
 	import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
 	import './styles/ide.css';
 
@@ -60,8 +58,17 @@
 	let sidebarVisible = $state(true);
 
 	// File tree UX
-	let inlineEdit = $state<{ mode: 'create-file' | 'create-folder' | 'rename'; path?: string; parent?: string; name: string } | null>(null);
-	let contextMenu = $state<{ x: number; y: number; target: { path: string; isDir: boolean } | null } | null>(null);
+	let inlineEdit = $state<{
+		mode: 'create-file' | 'create-folder' | 'rename';
+		path?: string;
+		parent?: string;
+		name: string;
+	} | null>(null);
+	let contextMenu = $state<{
+		x: number;
+		y: number;
+		target: { path: string; isDir: boolean } | null;
+	} | null>(null);
 	let treeFocused = $state(false);
 	let inlineError = $state<string | null>(null);
 
@@ -75,8 +82,12 @@
 	// DevTools state (shared between both previews)
 	let showDevTools = $state(false);
 	let activeDevToolsTab = $state<'console' | 'state' | 'actions' | 'diff' | 'network'>('console');
-	let hostLogs = $state<Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>>([]);
-	let clientLogs = $state<Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>>([]);
+	let hostLogs = $state<
+		Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>
+	>([]);
+	let clientLogs = $state<
+		Array<{ message: string; timestamp: number; level: 'log' | 'warn' | 'error'; channel?: string }>
+	>([]);
 	let hostStatus = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
 	let clientStatus = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
 	let hostStateSnapshots = $state<StateSnapshot[]>([]);
@@ -85,8 +96,24 @@
 	let clientActions = $state<ActionRecord[]>([]);
 	let hostActionsExcluded = $state(0);
 	let clientActionsExcluded = $state(0);
-	let hostNetworkPackets = $state<Array<{ timestamp: number; direction: 'send' | 'receive'; type: string; size: number; payload: any }>>([]);
-	let clientNetworkPackets = $state<Array<{ timestamp: number; direction: 'send' | 'receive'; type: string; size: number; payload: any }>>([]);
+	let hostNetworkPackets = $state<
+		Array<{
+			timestamp: number;
+			direction: 'send' | 'receive';
+			type: string;
+			size: number;
+			payload: unknown;
+		}>
+	>([]);
+	let clientNetworkPackets = $state<
+		Array<{
+			timestamp: number;
+			direction: 'send' | 'receive';
+			type: string;
+			size: number;
+			payload: unknown;
+		}>
+	>([]);
 	// Room scoping per navigation: include timestamp to ensure fresh room per page load
 	// This prevents phantom peers from previous navigations from appearing in new sessions
 	const sessionRoomId = `${generateRoomId()}-${Date.now()}`;
@@ -144,7 +171,7 @@
 		return clean ? clean.split('/').length : 0;
 	}
 
-	onMount(async () => {
+	onMount(() => {
 		// Initialize IframeBridgeRelay if using iframe-bridge transport
 		if (config.transport.type === 'iframe-bridge') {
 			relay = new IframeBridgeRelay();
@@ -205,7 +232,7 @@
 			// We'll trust the parent to only pass new objects when intended.
 			vfs = new VirtualFileSystem(newFiles);
 			refreshPaths();
-			
+
 			// Refresh active file content if it exists in new VFS
 			if (vfs.exists(activeFile)) {
 				activeFileContent = vfs.readFile(activeFile) || '';
@@ -230,10 +257,11 @@
 	// Pause Inspector when not viewing relevant tabs
 	$effect(() => {
 		// Only run Inspector when viewing tabs that need it
-		const inspectorActive = showDevTools &&
+		const inspectorActive =
+			showDevTools &&
 			(activeDevToolsTab === 'state' ||
-			 activeDevToolsTab === 'actions' ||
-			 activeDevToolsTab === 'diff');
+				activeDevToolsTab === 'actions' ||
+				activeDevToolsTab === 'diff');
 
 		hostPreviewRef?.setInspectorPaused(!inspectorActive);
 		clientPreviewRef?.setInspectorPaused(!inspectorActive);
@@ -287,7 +315,12 @@
 	}
 
 	function startRename(path: string, isDir: boolean) {
-		inlineEdit = { mode: 'rename', path, parent: dirname(path), name: basename(path) || (isDir ? 'untitled' : 'untitled.ts') };
+		inlineEdit = {
+			mode: 'rename',
+			path,
+			parent: dirname(path),
+			name: basename(path) || (isDir ? 'untitled' : 'untitled.ts')
+		};
 		inlineError = null;
 		contextMenu = null;
 	}
@@ -530,9 +563,7 @@
 			return null;
 		};
 
-		return nodes
-			.map((node) => walk(node))
-			.filter((node): node is FileNode => node !== null);
+		return nodes.map((node) => walk(node)).filter((node): node is FileNode => node !== null);
 	}
 
 	const fileTree = $derived(buildFileTree(filePaths, folderPaths));
@@ -587,10 +618,18 @@
 					<div class="sidebar">
 						<div class="sidebar-header">
 							<div class="sidebar-actions">
-								<button class="ghost-button" onclick={() => startCreate('file')} aria-label="New file">
+								<button
+									class="ghost-button"
+									onclick={() => startCreate('file')}
+									aria-label="New file"
+								>
 									<FilePlus size={16} />
 								</button>
-								<button class="ghost-button" onclick={() => startCreate('folder')} aria-label="New folder">
+								<button
+									class="ghost-button"
+									onclick={() => startCreate('folder')}
+									aria-label="New folder"
+								>
 									<FolderPlus size={16} />
 								</button>
 							</div>
@@ -602,11 +641,7 @@
 						</div>
 
 						<div class="search-bar">
-							<input
-								type="text"
-								placeholder="Search files"
-								bind:value={searchQuery}
-							/>
+							<input type="text" placeholder="Search files" bind:value={searchQuery} />
 						</div>
 
 						{#if inlineError}
@@ -616,8 +651,11 @@
 						{#if filteredFileTree.length === 0}
 							<p class="empty-files">No files found</p>
 						{:else}
+							<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 							<ul
 								class="file-tree"
+								role="tree"
 								tabindex="0"
 								onfocus={() => (treeFocused = true)}
 								onblur={() => (treeFocused = false)}
@@ -638,9 +676,12 @@
 													<FileText size={14} />
 												{/if}
 											</span>
+											<!-- svelte-ignore a11y_autofocus -->
 											<input
 												autofocus
-												placeholder={inlineEdit.mode === 'create-folder' ? 'New folder' : 'New file'}
+												placeholder={inlineEdit.mode === 'create-folder'
+													? 'New folder'
+													: 'New file'}
 												bind:value={inlineEdit.name}
 												onkeydown={(event) => {
 													if (event.key === 'Enter') commitInlineEdit();
@@ -653,17 +694,18 @@
 								{/if}
 
 								{#each visibleNodes as node (node.path)}
-									<li
-										class:selected={selectedPath === node.path}
-										class:active={node.path === activeFile}
-										oncontextmenu={(event) => openContextMenu(event, { path: node.path, isDir: node.isDir })}
-									>
-										{#if node.isDir}
-											{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
-												<div
-													class="tree-row inline-editor"
-													style={`padding-left:${node.depth * 12 + 4}px`}
-												>
+										<li
+											class:selected={selectedPath === node.path}
+											class:active={node.path === activeFile}
+											oncontextmenu={(event) =>
+												openContextMenu(event, { path: node.path, isDir: node.isDir })}
+										>
+											{#if node.isDir}
+												{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
+													<div
+														class="tree-row inline-editor"
+														style={`padding-left:${node.depth * 12 + 4}px`}
+													>
 													<span class="chevron-icon">
 														{#if isExpanded(node.path)}
 															<ChevronDown size={14} />
@@ -672,6 +714,7 @@
 														{/if}
 													</span>
 													<span class="node-icon"><Folder size={14} /></span>
+													<!-- svelte-ignore a11y_autofocus -->
 													<input
 														autofocus
 														bind:value={inlineEdit.name}
@@ -702,42 +745,41 @@
 													<span class="folder">{node.name}</span>
 												</button>
 											{/if}
+										{:else if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
+											<div
+												class="file-row inline-editor"
+												style={`padding-left:${node.depth * 12 + 20}px`}
+											>
+												<span class="node-icon"><FileText size={14} /></span>
+												<!-- svelte-ignore a11y_autofocus -->
+												<input
+													autofocus
+													bind:value={inlineEdit.name}
+													onkeydown={(event) => {
+														if (event.key === 'Enter') commitInlineEdit();
+														if (event.key === 'Escape') cancelInlineEdit();
+													}}
+													onblur={commitInlineEdit}
+												/>
+											</div>
 										{:else}
-											{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
-												<div
-													class="file-row inline-editor"
-													style={`padding-left:${node.depth * 12 + 20}px`}
-												>
-													<span class="node-icon"><FileText size={14} /></span>
-													<input
-														autofocus
-														bind:value={inlineEdit.name}
-														onkeydown={(event) => {
-															if (event.key === 'Enter') commitInlineEdit();
-															if (event.key === 'Escape') cancelInlineEdit();
-														}}
-														onblur={commitInlineEdit}
-													/>
-												</div>
-											{:else}
-												<button
-													class="file-row"
-													style={`padding-left:${node.depth * 12 + 20}px`}
-													onclick={() => selectFile(node.path)}
-												>
-													<span class="node-icon"><FileText size={14} /></span>
-													{node.name}
-												</button>
+											<button
+												class="file-row"
+												style={`padding-left:${node.depth * 12 + 20}px`}
+												onclick={() => selectFile(node.path)}
+											>
+												<span class="node-icon"><FileText size={14} /></span>
+												{node.name}
+											</button>
 											{/if}
-										{/if}
-									</li>
-								{/each}
-							</ul>
-						{/if}
+										</li>
+									{/each}
+								</ul>
+							{/if}
 
-						<button class="run-button" onclick={runGame}>
-							<Play size={16} />
-							Run Game
+							<button class="run-button" onclick={runGame}>
+								<Play size={16} />
+								Run Game
 						</button>
 					</div>
 				</Pane>
@@ -746,7 +788,7 @@
 			{/if}
 
 			<!-- Editor -->
-					<Pane defaultSize={sidebarVisible ? 25 : 35} minSize={30} class="editor-pane">
+			<Pane defaultSize={sidebarVisible ? 25 : 35} minSize={30} class="editor-pane">
 				<div class="editor-panel">
 					<div class="editor-header">
 						<button
@@ -785,8 +827,46 @@
 					<PaneGroup direction="vertical" class="preview-group">
 						<!-- Game Canvases -->
 						<Pane defaultSize={50} minSize={30} class="games-pane">
-						{#if config.layout === 'dual'}
-							<div class="dual-preview">
+							{#if config.layout === 'dual'}
+								<div class="dual-preview">
+									<GamePreview
+										bind:this={hostPreviewRef}
+										{vfs}
+										{vfsVersion}
+										{entryPoint}
+										role="host"
+										transportType={config.transport.type}
+										roomId={sessionRoomId}
+										bind:consoleLogs={hostLogs}
+										bind:connectionStatus={hostStatus}
+										bind:stateSnapshots={hostStateSnapshots}
+										bind:actionHistory={hostActions}
+										bind:actionExcludedCount={hostActionsExcluded}
+										bind:networkPackets={hostNetworkPackets}
+										hideDevTools={true}
+										enableDevTools={true}
+										onReady={config.onReady}
+										onError={config.onError}
+									/>
+									<GamePreview
+										bind:this={clientPreviewRef}
+										{vfs}
+										{vfsVersion}
+										{entryPoint}
+										role="client"
+										transportType={config.transport.type}
+										roomId={sessionRoomId}
+										bind:consoleLogs={clientLogs}
+										bind:connectionStatus={clientStatus}
+										bind:stateSnapshots={clientStateSnapshots}
+										bind:actionHistory={clientActions}
+										bind:actionExcludedCount={clientActionsExcluded}
+										bind:networkPackets={clientNetworkPackets}
+										hideDevTools={true}
+										enableDevTools={true}
+									/>
+								</div>
+							{:else}
 								<GamePreview
 									bind:this={hostPreviewRef}
 									{vfs}
@@ -806,110 +886,72 @@
 									onReady={config.onReady}
 									onError={config.onError}
 								/>
-								<GamePreview
-									bind:this={clientPreviewRef}
-									{vfs}
-									{vfsVersion}
-									{entryPoint}
-									role="client"
-									transportType={config.transport.type}
-									roomId={sessionRoomId}
-									bind:consoleLogs={clientLogs}
-									bind:connectionStatus={clientStatus}
-									bind:stateSnapshots={clientStateSnapshots}
-									bind:actionHistory={clientActions}
-									bind:actionExcludedCount={clientActionsExcluded}
-									bind:networkPackets={clientNetworkPackets}
-									hideDevTools={true}
-									enableDevTools={true}
-								/>
-							</div>
-						{:else}
-							<GamePreview
-								bind:this={hostPreviewRef}
-								{vfs}
-								{vfsVersion}
-								{entryPoint}
-								role="host"
-								transportType={config.transport.type}
-								roomId={sessionRoomId}
-								bind:consoleLogs={hostLogs}
-								bind:connectionStatus={hostStatus}
-								bind:stateSnapshots={hostStateSnapshots}
-								bind:actionHistory={hostActions}
-								bind:actionExcludedCount={hostActionsExcluded}
-								bind:networkPackets={hostNetworkPackets}
-								hideDevTools={true}
-								enableDevTools={true}
-								onReady={config.onReady}
-								onError={config.onError}
-							/>
-						{/if}
-					</Pane>
+							{/if}
+						</Pane>
 
-					<!-- Shared DevTools Panel -->
-					<PaneResizer class="resizer-horizontal" />
-					<Pane defaultSize={50} minSize={25} class="devtools-pane">
-						<div class="devtools-container">
-							<!-- Tabs -->
-							<div class="devtools-tabs">
-								<button
-									class="devtools-tab"
-									class:active={activeDevToolsTab === 'console'}
-									onclick={() => (activeDevToolsTab = 'console')}
-								>
-									Console
-								</button>
-								<button
-									class="devtools-tab"
-									class:active={activeDevToolsTab === 'state'}
-									class:disabled={!showDevTools}
-									disabled={!showDevTools}
-									onclick={() => showDevTools && (activeDevToolsTab = 'state')}
-								>
-									State
-								</button>
-								<button
-									class="devtools-tab"
-									class:active={activeDevToolsTab === 'actions'}
-									class:disabled={!showDevTools}
-									disabled={!showDevTools}
-									onclick={() => showDevTools && (activeDevToolsTab = 'actions')}
-								>
-									Actions
-								</button>
-								<button
-									class="devtools-tab"
-									class:active={activeDevToolsTab === 'diff'}
-									class:disabled={!showDevTools}
-									disabled={!showDevTools}
-									onclick={() => showDevTools && (activeDevToolsTab = 'diff')}
-								>
-									Diff {#if hasDivergences}⚠️{/if}
-								</button>
-								<button
-									class="devtools-tab"
-									class:active={activeDevToolsTab === 'network'}
-									class:disabled={!showDevTools}
-									disabled={!showDevTools}
-									onclick={() => showDevTools && (activeDevToolsTab = 'network')}
-								>
-									Network (coming soon)
-								</button>
+						<!-- Shared DevTools Panel -->
+						<PaneResizer class="resizer-horizontal" />
+						<Pane defaultSize={50} minSize={25} class="devtools-pane">
+							<div class="devtools-container">
+								<!-- Tabs -->
+								<div class="devtools-tabs">
+									<button
+										class="devtools-tab"
+										class:active={activeDevToolsTab === 'console'}
+										onclick={() => (activeDevToolsTab = 'console')}
+									>
+										Console
+									</button>
+									<button
+										class="devtools-tab"
+										class:active={activeDevToolsTab === 'state'}
+										class:disabled={!showDevTools}
+										disabled={!showDevTools}
+										onclick={() => showDevTools && (activeDevToolsTab = 'state')}
+									>
+										State
+									</button>
+									<button
+										class="devtools-tab"
+										class:active={activeDevToolsTab === 'actions'}
+										class:disabled={!showDevTools}
+										disabled={!showDevTools}
+										onclick={() => showDevTools && (activeDevToolsTab = 'actions')}
+									>
+										Actions
+									</button>
+									<button
+										class="devtools-tab"
+										class:active={activeDevToolsTab === 'diff'}
+										class:disabled={!showDevTools}
+										disabled={!showDevTools}
+										onclick={() => showDevTools && (activeDevToolsTab = 'diff')}
+									>
+										Diff {#if hasDivergences}⚠️{/if}
+									</button>
+									<button
+										class="devtools-tab"
+										class:active={activeDevToolsTab === 'network'}
+										class:disabled={!showDevTools}
+										disabled={!showDevTools}
+										onclick={() => showDevTools && (activeDevToolsTab = 'network')}
+									>
+										Network (coming soon)
+									</button>
 
-								<!-- DevTools Toggle Switch -->
-								<div class="devtools-toggle-container">
-									<label class="devtools-toggle-label">
-										<input
-											type="checkbox"
-											class="devtools-toggle-checkbox"
-											bind:checked={showDevTools}
-										/>
-										<span class="devtools-toggle-switch"></span>
-										<span class="devtools-toggle-text">Inspector</span>
-									</label>
+									<!-- DevTools Toggle Switch -->
+									<div class="devtools-toggle-container">
+										<label class="devtools-toggle-label">
+											<input
+												type="checkbox"
+												class="devtools-toggle-checkbox"
+												bind:checked={showDevTools}
+											/>
+											<span class="devtools-toggle-switch"></span>
+											<span class="devtools-toggle-text">Inspector</span>
+										</label>
+									</div>
 								</div>
-							</div>
 
 								<!-- Tab Content -->
 								{#if config.layout === 'dual'}
@@ -926,124 +968,149 @@
 											<!-- HOST Section -->
 											<div class="devtools-section">
 												<div class="devtools-section-header">
-												<span class="role-badge role-host">HOST</span>
+													<span class="role-badge role-host">HOST</span>
+													{#if activeDevToolsTab === 'console'}
+														<span
+															class="status-indicator"
+															class:connected={hostStatus === 'connected'}
+														>
+															{hostStatus}
+														</span>
+													{:else if activeDevToolsTab === 'state'}
+														<span class="snapshot-count">
+															{hostStateSnapshots.length} snapshot{hostStateSnapshots.length === 1
+																? ''
+																: 's'}
+														</span>
+													{:else if activeDevToolsTab === 'actions'}
+														<span class="action-count">
+															{hostActions.length} action{hostActions.length === 1 ? '' : 's'}
+														</span>
+													{:else if activeDevToolsTab === 'network'}
+														<span class="packet-count">
+															{hostNetworkPackets.length} packet{hostNetworkPackets.length === 1
+																? ''
+																: 's'}
+														</span>
+													{/if}
+												</div>
+
+												<!-- Console Tab Content -->
 												{#if activeDevToolsTab === 'console'}
-													<span class="status-indicator" class:connected={hostStatus === 'connected'}>
-														{hostStatus}
-													</span>
-												{:else if activeDevToolsTab === 'state'}
-													<span class="snapshot-count">
-														{hostStateSnapshots.length} snapshot{hostStateSnapshots.length === 1 ? '' : 's'}
-													</span>
-												{:else if activeDevToolsTab === 'actions'}
-													<span class="action-count">
-														{hostActions.length} action{hostActions.length === 1 ? '' : 's'}
-													</span>
-												{:else if activeDevToolsTab === 'network'}
-													<span class="packet-count">
-														{hostNetworkPackets.length} packet{hostNetworkPackets.length === 1 ? '' : 's'}
-													</span>
+													<div class="devtools-logs">
+														{#if hostLogs.length === 0}
+															<p class="empty-logs">No console output</p>
+														{:else}
+															{#each hostLogs.slice(-20) as log}
+																<div class="log-entry log-{log.level}">
+																	<span class="log-time"
+																		>{new Date(log.timestamp).toLocaleTimeString()}</span
+																	>
+																	<span class="log-message">{log.message}</span>
+																</div>
+															{/each}
+														{/if}
+													</div>
+												{/if}
+
+												<!-- State Tab Content -->
+												{#if activeDevToolsTab === 'state'}
+													<div class="devtools-content">
+														<StateViewer snapshots={hostStateSnapshots} />
+													</div>
+												{/if}
+
+												<!-- Actions Tab Content -->
+												{#if activeDevToolsTab === 'actions'}
+													<div class="devtools-content">
+														<ActionTimeline
+															actions={hostActions}
+															excludedCount={hostActionsExcluded}
+														/>
+													</div>
+												{/if}
+
+												<!-- Network Tab Content -->
+												{#if activeDevToolsTab === 'network'}
+													<div class="devtools-content">
+														<NetworkMonitor packets={hostNetworkPackets} />
+													</div>
 												{/if}
 											</div>
 
-											<!-- Console Tab Content -->
-											{#if activeDevToolsTab === 'console'}
-												<div class="devtools-logs">
-													{#if hostLogs.length === 0}
-														<p class="empty-logs">No console output</p>
-													{:else}
-														{#each hostLogs.slice(-20) as log}
-															<div class="log-entry log-{log.level}">
-																<span class="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
-																<span class="log-message">{log.message}</span>
-															</div>
-														{/each}
+											<!-- CLIENT Section -->
+											<div class="devtools-section">
+												<div class="devtools-section-header">
+													<span class="role-badge role-client">CLIENT</span>
+													{#if activeDevToolsTab === 'console'}
+														<span
+															class="status-indicator"
+															class:connected={clientStatus === 'connected'}
+														>
+															{clientStatus}
+														</span>
+													{:else if activeDevToolsTab === 'state'}
+														<span class="snapshot-count">
+															{clientStateSnapshots.length} snapshot{clientStateSnapshots.length ===
+															1
+																? ''
+																: 's'}
+														</span>
+													{:else if activeDevToolsTab === 'actions'}
+														<span class="action-count">
+															{clientActions.length} action{clientActions.length === 1 ? '' : 's'}
+														</span>
+													{:else if activeDevToolsTab === 'network'}
+														<span class="packet-count">
+															{clientNetworkPackets.length} packet{clientNetworkPackets.length === 1
+																? ''
+																: 's'}
+														</span>
 													{/if}
 												</div>
-											{/if}
 
-											<!-- State Tab Content -->
-											{#if activeDevToolsTab === 'state'}
-												<div class="devtools-content">
-													<StateViewer snapshots={hostStateSnapshots} />
-												</div>
-											{/if}
-
-											<!-- Actions Tab Content -->
-											{#if activeDevToolsTab === 'actions'}
-												<div class="devtools-content">
-											<ActionTimeline actions={hostActions} excludedCount={hostActionsExcluded} />
-												</div>
-											{/if}
-
-											<!-- Network Tab Content -->
-											{#if activeDevToolsTab === 'network'}
-												<div class="devtools-content">
-													<NetworkMonitor packets={hostNetworkPackets} />
-												</div>
-											{/if}
-										</div>
-
-										<!-- CLIENT Section -->
-										<div class="devtools-section">
-											<div class="devtools-section-header">
-												<span class="role-badge role-client">CLIENT</span>
+												<!-- Console Tab Content -->
 												{#if activeDevToolsTab === 'console'}
-													<span class="status-indicator" class:connected={clientStatus === 'connected'}>
-														{clientStatus}
-													</span>
-												{:else if activeDevToolsTab === 'state'}
-													<span class="snapshot-count">
-														{clientStateSnapshots.length} snapshot{clientStateSnapshots.length === 1 ? '' : 's'}
-													</span>
-												{:else if activeDevToolsTab === 'actions'}
-													<span class="action-count">
-														{clientActions.length} action{clientActions.length === 1 ? '' : 's'}
-													</span>
-												{:else if activeDevToolsTab === 'network'}
-													<span class="packet-count">
-														{clientNetworkPackets.length} packet{clientNetworkPackets.length === 1 ? '' : 's'}
-													</span>
+													<div class="devtools-logs">
+														{#if clientLogs.length === 0}
+															<p class="empty-logs">No console output</p>
+														{:else}
+															{#each clientLogs.slice(-20) as log}
+																<div class="log-entry log-{log.level}">
+																	<span class="log-time"
+																		>{new Date(log.timestamp).toLocaleTimeString()}</span
+																	>
+																	<span class="log-message">{log.message}</span>
+																</div>
+															{/each}
+														{/if}
+													</div>
+												{/if}
+
+												<!-- State Tab Content -->
+												{#if activeDevToolsTab === 'state'}
+													<div class="devtools-content">
+														<StateViewer snapshots={clientStateSnapshots} />
+													</div>
+												{/if}
+
+												<!-- Actions Tab Content -->
+												{#if activeDevToolsTab === 'actions'}
+													<div class="devtools-content">
+														<ActionTimeline
+															actions={clientActions}
+															excludedCount={clientActionsExcluded}
+														/>
+													</div>
+												{/if}
+
+												<!-- Network Tab Content -->
+												{#if activeDevToolsTab === 'network'}
+													<div class="devtools-content">
+														<NetworkMonitor packets={clientNetworkPackets} />
+													</div>
 												{/if}
 											</div>
-
-											<!-- Console Tab Content -->
-											{#if activeDevToolsTab === 'console'}
-												<div class="devtools-logs">
-													{#if clientLogs.length === 0}
-														<p class="empty-logs">No console output</p>
-													{:else}
-														{#each clientLogs.slice(-20) as log}
-															<div class="log-entry log-{log.level}">
-																<span class="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
-																<span class="log-message">{log.message}</span>
-															</div>
-														{/each}
-													{/if}
-												</div>
-											{/if}
-
-											<!-- State Tab Content -->
-											{#if activeDevToolsTab === 'state'}
-												<div class="devtools-content">
-													<StateViewer snapshots={clientStateSnapshots} />
-												</div>
-											{/if}
-
-											<!-- Actions Tab Content -->
-											{#if activeDevToolsTab === 'actions'}
-												<div class="devtools-content">
-											<ActionTimeline actions={clientActions} excludedCount={clientActionsExcluded} />
-												</div>
-											{/if}
-
-											<!-- Network Tab Content -->
-											{#if activeDevToolsTab === 'network'}
-												<div class="devtools-content">
-													<NetworkMonitor packets={clientNetworkPackets} />
-												</div>
-											{/if}
-										</div>
 										</div>
 									{/if}
 								{:else}
@@ -1067,7 +1134,9 @@
 												</span>
 											{:else if activeDevToolsTab === 'state'}
 												<span class="snapshot-count">
-													{hostStateSnapshots.length} snapshot{hostStateSnapshots.length === 1 ? '' : 's'}
+													{hostStateSnapshots.length} snapshot{hostStateSnapshots.length === 1
+														? ''
+														: 's'}
 												</span>
 											{:else if activeDevToolsTab === 'actions'}
 												<span class="action-count">
@@ -1084,7 +1153,9 @@
 												{:else}
 													{#each hostLogs.slice(-20) as log}
 														<div class="log-entry log-{log.level}">
-															<span class="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
+															<span class="log-time"
+																>{new Date(log.timestamp).toLocaleTimeString()}</span
+															>
 															<span class="log-message">{log.message}</span>
 														</div>
 													{/each}
@@ -1133,11 +1204,23 @@
 	{/if}
 
 	{#if contextMenu}
-		<div class="context-menu-overlay" onclick={() => (contextMenu = null)}></div>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="context-menu-overlay"
+			role="button"
+			tabindex="0"
+			onclick={() => (contextMenu = null)}
+			onkeydown={(e) => e.key === 'Escape' && (contextMenu = null)}
+		></div>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="context-menu"
+			role="menu"
+			tabindex="-1"
 			style={`left:${contextMenu.x}px; top:${contextMenu.y}px`}
 			onclick={(event) => event.stopPropagation()}
+			onkeydown={(event) => event.stopPropagation()}
 		>
 			<button onclick={() => handleContextAction('new-file')}>New File</button>
 			<button onclick={() => handleContextAction('new-folder')}>New Folder</button>

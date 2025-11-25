@@ -1,6 +1,7 @@
 import * as esbuild from 'esbuild-wasm';
-import type { VirtualFileSystem } from './VirtualFS';
+import type { VirtualFileSystem } from './VirtualFS.js';
 import type { StateSnapshot, ActionRecord } from '@martini-kit/devtools';
+import type { GameError } from '../types.js';
 
 // Singleton to ensure esbuild is only initialized once globally
 let esbuildInitialized = false;
@@ -48,7 +49,7 @@ export interface ESBuildManagerOptions {
   enableDevTools?: boolean;
 
   /** Error callback */
-  onError?: (error: { type: 'runtime' | 'syntax'; message: string; stack?: string }) => void;
+  onError?: (error: GameError) => void;
 
   /** Ready callback */
   onReady?: () => void;
@@ -71,7 +72,7 @@ export interface ESBuildManagerOptions {
     direction: 'send' | 'receive';
     type: string;
     size: number;
-    payload: any;
+    payload: unknown;
   }) => void;
 }
 

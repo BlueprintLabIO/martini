@@ -1,7 +1,16 @@
 <script lang="ts">
-	import Navbar from '$lib/components/Navbar.svelte';
+	import Navbar from "$lib/components/Navbar.svelte";
+	import { afterNavigate } from "$app/navigation";
 
 	let { children } = $props();
+
+	let pageContent: HTMLElement;
+
+	afterNavigate(() => {
+		if (pageContent) {
+			pageContent.scrollTop = 0;
+		}
+	});
 </script>
 
 <svelte:head>
@@ -9,6 +18,7 @@
 		href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=IBM+Plex+Mono:wght@400;600&display=swap"
 		rel="stylesheet"
 	/>
+	<link rel="icon" type="image/png" href="/favicon.png" />
 </svelte:head>
 
 <div class="app-shell">
@@ -16,7 +26,7 @@
 		<Navbar />
 	</div>
 
-	<div class="page-content">
+	<div class="page-content" bind:this={pageContent}>
 		{@render children()}
 	</div>
 </div>

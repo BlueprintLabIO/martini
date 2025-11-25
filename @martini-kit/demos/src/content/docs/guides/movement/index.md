@@ -11,34 +11,13 @@ scope: agnostic
 
 Movement is a core mechanic in most games. This guide explains how to implement movement in martini-kit, covering both framework-agnostic logic and framework-specific rendering.
 
-## Framework Organization
-
-Movement guides are split into two categories:
-
-### Core Logic (`/guides/movement/core/`)
-
-Framework-agnostic movement logic that works with any engine:
-- State structure
-- Input handling patterns
-- Velocity calculations
-- Collision logic
-
-### Phaser Implementation (`/guides/movement/phaser/`)
-
-Phaser-specific rendering and physics:
-- Sprite creation
-- Physics bodies
-- Input managers
-- Camera following
-
 ## Movement Types
 
 ### Top-Down Movement
 
 8-directional or analog movement from a bird's-eye view.
 
-- **[Core Logic →](./core/top-down)** - Velocity, input state
-- **[Phaser Implementation →](./phaser/top-down)** - Sprites, physics
+- **[Top-Down Movement →](/docs/latest/guides/movement/01-top-down)** - Complete guide
 
 **Best for:** RPGs, twin-stick shooters, strategy games
 
@@ -48,21 +27,19 @@ Phaser-specific rendering and physics:
 
 Side-scrolling movement with jumping and gravity.
 
-- **[Core Logic →](./core/platformer)** - Jump mechanics, gravity
-- **[Phaser Implementation →](./phaser/platformer)** - Arcade physics
+- **[Platformer Movement →](/docs/latest/guides/movement/02-platformer)** - Complete guide
 
 **Best for:** Platformers, side-scrollers, Metroidvanias
 
 ---
 
-### Grid-Based Movement
+### Advanced Movement
 
-Discrete movement on a grid (tile-by-tile).
+Advanced movement techniques and patterns.
 
-- **[Core Logic →](./core/grid-based)** - Grid positions, pathfinding
-- **[Phaser Implementation →](./phaser/grid-based)** - Tile rendering
+- **[Advanced Movement →](/docs/latest/guides/movement/03-advanced)** - Complete guide
 
-**Best for:** Puzzle games, roguelikes, tactics games
+**Best for:** Complex movement systems, special mechanics
 
 ---
 

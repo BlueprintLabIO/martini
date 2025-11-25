@@ -86,14 +86,14 @@
 	});
 </script>
 
-<div
-	class="devtools-overlay"
-	class:minimized={isMinimized}
-	class:dragging={isDragging}
-	style="left: {position.x}px; top: {position.y}px;"
->
-	<!-- Header -->
-	<div class="overlay-header" onmousedown={handleMouseDown}>
+	<div
+		class="devtools-overlay"
+		class:minimized={isMinimized}
+		class:dragging={isDragging}
+		style="left: {position.x}px; top: {position.y}px;"
+	>
+		<!-- Header -->
+		<div class="overlay-header" role="presentation" onmousedown={handleMouseDown}>
 		<div class="header-left">
 			<span class="role-badge role-{role}">{role}</span>
 			<span class="status-dot" style="background-color: {getStatusColor(status)};"></span>

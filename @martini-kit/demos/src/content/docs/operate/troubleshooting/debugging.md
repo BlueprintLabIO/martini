@@ -474,4 +474,4 @@ If you're stuck:
 
 ---
 
-For common issues and solutions, see [Common Issues](/docs/latest/troubleshooting/common-issues).
+For common issues and solutions, see [Common Issues](/docs/latest/operate/troubleshooting/common-issues).

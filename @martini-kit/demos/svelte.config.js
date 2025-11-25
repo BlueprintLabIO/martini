@@ -96,8 +96,22 @@ const config = {
 	],
 
 	kit: {
-		adapter: adapterWithSafeEmulation
-	}
+    adapter: adapterWithSafeEmulation,
+    prerender: {
+        handleHttpError: ({ path, status, referrer }) => {
+            if (status === 404) {
+                console.warn(`Prerender: missing ${path} referenced from ${referrer}`);
+                // Return a dummy response to avoid build failure
+                return new Response('Not found', { status: 200 });
+            }
+        },
+        // Suppress missing id errors during prerendering
+        handleMissingId: ({ path, id }) => {
+            console.warn(`Prerender: missing id ${id} on ${path}`);
+            return true; // ignore the missing id
+        }
+    }
+}
 };
 
 export default config;

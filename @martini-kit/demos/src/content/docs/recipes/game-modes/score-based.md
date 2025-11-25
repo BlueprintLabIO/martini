@@ -151,4 +151,4 @@ console.log('Top 3:', leaderboard.slice(0, 3));
 
 - **[Team-Based →](./team-based)** - Team scoring
 - **[Time-Limited →](./time-limited)** - Timed matches
-- **[UI/HUD Guide →](/docs/guides/phaser/ui-and-hud)** - Score display
+- **[UI/HUD Guide →](/docs/latest/guides/ui-and-hud/01-basics)** - Score display

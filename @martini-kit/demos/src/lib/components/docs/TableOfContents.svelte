@@ -94,10 +94,10 @@
 		top: 2rem;
 		max-height: calc(100vh - 4rem);
 		overflow-y: auto;
-		padding: 1.5rem;
-		background: var(--bg-secondary, #f9fafb);
-		border-radius: 8px;
-		border: 1px solid var(--border-color, #e5e5e5);
+		padding: 0.5rem;
+		background: transparent;
+		border-radius: 0;
+		border: none;
 	}
 
 	.toc-title {
