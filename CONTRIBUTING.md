@@ -512,7 +512,7 @@ Include examples of:
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/BlueprintLabIO/martini/issues)
 - **GitHub Discussions**: [Ask questions or share ideas](https://github.com/BlueprintLabIO/martini/discussions)
-- **Documentation**: [Read the docs](https://martini.blueprintlab.io/docs)
+- **Documentation**: [Read the docs](https://martini-kit.com/docs)
 
 ### Staying Updated
 
@@ -570,6 +570,6 @@ By contributing to martini-kit, you agree that your contributions will be licens
 If you have questions not covered here, feel free to:
 - Open a [Discussion](https://github.com/BlueprintLabIO/martini/discussions)
 - Reach out to the maintainers
-- Check the [documentation](https://martini.blueprintlab.io/docs)
+- Check the [documentation](https://martini-kit.com/docs)
 
 Thank you for contributing to martini-kit! 🎮✨

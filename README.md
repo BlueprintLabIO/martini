@@ -12,7 +12,7 @@ Build real-time multiplayer games without writing a single line of networking co
 [![Build](https://github.com/BlueprintLabIO/martini/actions/workflows/build.yml/badge.svg)](https://github.com/BlueprintLabIO/martini/actions/workflows/build.yml)
 [![Test](https://github.com/BlueprintLabIO/martini/actions/workflows/test.yml/badge.svg)](https://github.com/BlueprintLabIO/martini/actions/workflows/test.yml)
 
-[Website](https://martini.blueprintlab.io/) • [Documentation](https://martini.blueprintlab.io/docs) • [Live Demos](https://martini.blueprintlab.io/preview) • [GitHub](https://github.com/BlueprintLabIO/martini)
+[Website](https://martini-kit.com/) • [Documentation](https://martini-kit.com/docs) • [Live Demos](https://martini-kit.com/preview) • [GitHub](https://github.com/BlueprintLabIO/martini)
 
 </div>
 
@@ -758,8 +758,8 @@ martini-kit is **smart** about what it sends:
 
 - **GitHub Issues**: [Report bugs](https://github.com/BlueprintLabIO/martini/issues)
 - **Discussions**: [Ask questions](https://github.com/BlueprintLabIO/martini/discussions)
-- **Documentation**: [Full docs](https://martini.blueprintlab.io/docs)
-- **Examples**: [Live demos](https://martini.blueprintlab.io/preview)
+- **Documentation**: [Full docs](https://martini-kit.com/docs)
+- **Examples**: [Live demos](https://martini-kit.com/preview)
 
 ---
 
@@ -812,6 +812,6 @@ Built with:
 
 **Stop writing networking code. Start building games.**
 
-[Get Started](https://martini.blueprintlab.io/docs/getting-started) • [View Demos](https://martini.blueprintlab.io/preview) • [Read Docs](https://martini.blueprintlab.io/docs)
+[Get Started](https://martini-kit.com/docs/getting-started) • [View Demos](https://martini-kit.com/preview) • [Read Docs](https://martini-kit.com/docs)
 
 </div>
