@@ -71,4 +71,13 @@ export const demoGames: DemoGame[] = [
     difficulty: 'intermediate',
     controls: ['Mouse - Click column to drop token'],
   },
+  {
+    id: 'tnt-dude',
+    name: 'TNT Dude',
+    description: 'Classic Bomberman-style battle. Place bombs, grab powerups, and outlast your opponents to win!',
+    players: '2-4',
+    type: 'Competitive Arena',
+    difficulty: 'advanced',
+    controls: ['WASD or Arrow Keys - Move', 'Space - Place Bomb'],
+  },
 ];

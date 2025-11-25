@@ -220,6 +220,51 @@ export class GameRuntime<TState = any> {
   }
 
   /**
+   * Wait until the desired number of players (including self) are present.
+   * Helpful for P2P transports where peers join asynchronously.
+   */
+  async waitForPlayers(minPlayers: number, options: { timeoutMs?: number; includeSelf?: boolean } = {}): Promise<void> {
+    const includeSelf = options.includeSelf !== false;
+    const target = Math.max(1, minPlayers);
+    const getCount = () => (includeSelf ? 1 : 0) + this.transport.getPeerIds().length;
+
+    if (getCount() >= target) return;
+
+    // Attempt transport-level readiness if available (e.g., Trystero waitForReady)
+    const maybeWaitForReady = (this.transport as any).waitForReady;
+    if (typeof maybeWaitForReady === 'function') {
+      try {
+        await maybeWaitForReady.call(this.transport);
+      } catch {
+        // Ignore readiness errors here; onPeerJoin may still fire.
+      }
+      if (getCount() >= target) return;
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      let resolved = false;
+      const timeout =
+        options.timeoutMs && options.timeoutMs > 0
+          ? setTimeout(() => {
+              if (!resolved) {
+                resolved = true;
+                reject(new Error(`Timed out waiting for ${target} players`));
+              }
+            }, options.timeoutMs)
+          : null;
+
+      const unsubscribe = this.transport.onPeerJoin(() => {
+        if (getCount() >= target && !resolved) {
+          resolved = true;
+          if (timeout) clearTimeout(timeout);
+          unsubscribe();
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
    * Listen for state changes (typed)
    */
   onChange(callback: StateChangeCallback<TState>): () => void {

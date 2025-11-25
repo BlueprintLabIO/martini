@@ -13,6 +13,8 @@ import { PhysicsManager, type PhysicsManagerConfig } from './helpers/PhysicsMana
 import { StateDrivenSpawner, type StateDrivenSpawnerConfig } from './helpers/StateDrivenSpawner.js';
 import { HealthBarManager, type HealthBarConfig } from './helpers/HealthBarManager.js';
 import { GridClickHelper, type GridClickConfig } from './helpers/GridClickHelper.js';
+import { GridCollisionManager, type GridCollisionConfig, type GridMovementConfig } from './helpers/GridCollisionManager.js';
+import { GridLockedMovementManager, type GridLockedMovementConfig } from './helpers/GridLockedMovementManager.js';
 export interface SpriteTrackingOptions {
     /** Sync interval in ms (default: 50ms / 20 FPS) */
     syncInterval?: number;
@@ -70,6 +72,17 @@ export interface PhaserAdapterConfig {
      * Maximum time to extrapolate without new data
      */
     deadReckoningMaxDuration?: number;
+    /**
+     * Automatically call tick action in scene.update() (default: true)
+     * When enabled, eliminates need for manual runtime.submitAction('tick', {delta})
+     * Set to false only if you need manual tick control.
+     */
+    autoTick?: boolean;
+    /**
+     * Name of the tick action to auto-call (default: 'tick')
+     * Only used when autoTick is enabled
+     */
+    tickAction?: string;
 }
 export declare class PhaserAdapter<TState = any> {
     private runtime;
@@ -87,6 +100,9 @@ export declare class PhaserAdapter<TState = any> {
     private readonly deadReckoningMaxDuration;
     private spriteManagers;
     private lastUpdateTime;
+    private readonly autoTick;
+    private readonly tickAction;
+    private lastTickTime;
     constructor(runtime: GameRuntime<TState>, scene: any, // Phaser.Scene
     config?: PhaserAdapterConfig);
     /**
@@ -258,6 +274,24 @@ export declare class PhaserAdapter<TState = any> {
      * Listen for custom events
      */
     on(eventName: string, callback: (senderId: string, payload: any) => void): () => void;
+    /**
+     * Call this in your Phaser scene's update() loop
+     *
+     * When autoTick is enabled, this automatically calls the tick action.
+     * Always handles remote sprite interpolation (on clients).
+     *
+     * @param time - Phaser time (total elapsed time in ms)
+     * @param delta - Phaser delta (time since last frame in ms)
+     *
+     * @example
+     * ```ts
+     * // In your Phaser scene:
+     * update(time: number, delta: number) {
+     *   adapter.update(time, delta);
+     * }
+     * ```
+     */
+    update(time: number, delta: number): void;
     /**
      * Cleanup
      */
@@ -509,6 +543,63 @@ export declare class PhaserAdapter<TState = any> {
      * ```
      */
     createClickableGrid(config: GridClickConfig): GridClickHelper;
+    /**
+     * Create a GridCollisionManager for smooth movement with grid-aligned collision
+     *
+     * ⚠️ NOTE: This provides SMOOTH movement, not grid-locked movement.
+     * For cell-to-cell committed movement (classic Bomberman), use createGridLockedMovementManager().
+     *
+     * @example
+     * ```ts
+     * const gridCollision = adapter.createGridCollisionManager({
+     *   tileSize: 52,
+     *   gridWidth: 13,
+     *   gridHeight: 13,
+     *   collisionCheck: createMultiCollisionCheck(
+     *     { name: 'blocks', fn: (x, y) => hasBlock(state.blocks, x, y) },
+     *     { name: 'bombs', fn: (x, y) => hasBomb(state.bombs, x, y) }
+     *   ),
+     *   debug: false // Enable to see grid overlay
+     * });
+     *
+     * // In tick action:
+     * gridCollision.moveEntity(player, input, delta);
+     * ```
+     */
+    createGridCollisionManager(config: GridCollisionConfig): GridCollisionManager;
+    /**
+     * Create a GridLockedMovementManager for true grid-locked movement
+     *
+     * Provides cell-to-cell committed movement where entities:
+     * - Align to grid cell centers
+     * - Commit to moving one full cell at a time
+     * - Can only change direction when aligned
+     * - Smoothly animate between cells
+     *
+     * Perfect for: Classic Bomberman, Pacman, Sokoban, turn-based grid games.
+     *
+     * @example
+     * ```ts
+     * const gridLocked = adapter.createGridLockedMovementManager({
+     *   tileSize: 52,
+     *   gridWidth: 13,
+     *   gridHeight: 13,
+     *   collisionCheck: createMultiCollisionCheck(
+     *     { name: 'blocks', fn: (x, y) => hasBlock(state.blocks, x, y) },
+     *     { name: 'bombs', fn: (x, y) => hasBomb(state.bombs, x, y) }
+     *   ),
+     *   baseSpeed: 3.0 // cells per second
+     * });
+     *
+     * // In tick action:
+     * gridLocked.moveEntity(player, input, delta);
+     * ```
+     */
+    createGridLockedMovementManager(config: GridLockedMovementConfig): GridLockedMovementManager;
+    /**
+     * @deprecated Use createGridCollisionManager instead. GridMovementManager has been renamed to GridCollisionManager for clarity.
+     */
+    createGridMovementManager(config: GridMovementConfig): GridCollisionManager;
     /**
      * Create a HealthBarManager for automatic health bar management
      *

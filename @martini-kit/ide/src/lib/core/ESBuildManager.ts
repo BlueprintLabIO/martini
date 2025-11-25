@@ -43,7 +43,17 @@ export interface ESBuildManagerOptions {
   roomId: string;
 
   /** Transport type */
-  transportType: 'local' | 'iframe-bridge';
+  transportType: 'local' | 'iframe-bridge' | 'trystero';
+
+  /** Transport options (Trystero) */
+  transportOptions?: {
+    appId?: string;
+    rtcConfig?: RTCConfiguration;
+    relayUrls?: string[];
+  };
+
+  /** Minimum players required before game starts (passed to platform config) */
+  minPlayers?: number;
 
   /** Enable DevTools */
   enableDevTools?: boolean;
@@ -149,6 +159,7 @@ export class ESBuildManager {
           '@martini-kit/devtools',
           '@martini-kit/transport-local',
           '@martini-kit/transport-iframe-bridge',
+          '@martini-kit/transport-trystero',
           'phaser'
         ],
 
@@ -324,8 +335,10 @@ export class ESBuildManager {
       transport: {
         type: this.options.transportType,
         roomId: this.options.roomId,
-        isHost: this.options.role === 'host'
-      }
+        isHost: this.options.role === 'host',
+        ...(this.options.transportOptions || {})
+      },
+      minPlayers: this.options.minPlayers
     };
 
     const configSetup = `// Injected by martini-kit IDE - setup config before any imports
@@ -508,6 +521,7 @@ window['__martini-kit_IDE__'] = {
       "@martini-kit/devtools": "/sdk/shims/devtools.js",
       "@martini-kit/transport-local": "/sdk/shims/transport-local.js",
       "@martini-kit/transport-iframe-bridge": "/sdk/shims/transport-iframe-bridge.js",
+      "@martini-kit/transport-trystero": "/sdk/shims/transport-trystero.js",
       "phaser": "/sdk/shims/phaser-global.js"
     }
   }

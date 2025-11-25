@@ -7,7 +7,7 @@
 
 import { GameRuntime, type GameDefinition } from '@martini-kit/core';
 import { LocalTransport } from '@martini-kit/transport-local';
-// import { TrysteroTransport } from '@martini-kit/transport-trystero'; // Disabled for IDE
+import { TrysteroTransport } from '@martini-kit/transport-trystero';
 import { IframeBridgeTransport } from '@martini-kit/transport-iframe-bridge';
 import type { Transport } from '@martini-kit/core';
 import Phaser from 'phaser';
@@ -21,7 +21,15 @@ export interface MartiniKitConfig {
     roomId: string;
     isHost: boolean;
     appId?: string; // For Trystero
+    rtcConfig?: RTCConfiguration; // For Trystero
+    relayUrls?: string[]; // For Trystero
   };
+
+  /**
+   * Minimum players required before starting the game loop/rendering.
+   * Useful for P2P transports where peers join asynchronously.
+   */
+  minPlayers?: number;
 }
 
 /**
@@ -86,9 +94,9 @@ function clearGlobalCleanup(): void {
  * });
  * ```
  */
-export function initializeGame<TState = any>(
+export async function initializeGame<TState = any>(
   config: GameConfig<TState>
-): { runtime: GameRuntime<TState>; phaser: Phaser.Game } {
+): Promise<{ runtime: GameRuntime<TState>; phaser: Phaser.Game }> {
   const hot = typeof import.meta !== 'undefined' ? (import.meta as any).hot : undefined;
 
   // During HMR, ensure any prior game instance is cleaned up before creating a new one
@@ -123,15 +131,33 @@ export function initializeGame<TState = any>(
   // Create transport based on platform config
   const transport = createTransport(platformConfig.transport);
 
+  // Wait for transport readiness (important for P2P host discovery)
+  if (typeof (transport as any).waitForReady === 'function') {
+    await (transport as any).waitForReady();
+  }
+
+  // Seed only self; peers will be added via onPeerJoin to avoid double-seeding/ordering bugs
+  const initialPlayerIds = [transport.getPlayerId()];
+
   // Create runtime with own player ID (peers discovered via onPeerJoin)
   const runtime = new GameRuntime(
     config.game,
     transport,
     {
       isHost: platformConfig.transport.isHost,
-      playerIds: [transport.getPlayerId()]
+      playerIds: initialPlayerIds
     }
   );
+
+  // Optionally wait for minimum players before continuing
+  const minPlayers = platformConfig.minPlayers && platformConfig.minPlayers > 0 ? platformConfig.minPlayers : 1;
+  if (minPlayers > 1) {
+    try {
+      await runtime.waitForPlayers(minPlayers, { timeoutMs: 10000 });
+    } catch (err) {
+      console.warn('[Martini] waitForPlayers timed out:', err);
+    }
+  }
 
   // Resolve Phaser from import or global (Sandpack can fail to hydrate default import)
   const PhaserLib = Phaser ?? (typeof window !== 'undefined' ? (window as any).Phaser : undefined);
@@ -246,14 +272,16 @@ function createTransport(config: MartiniKitConfig['transport']): Transport {
         isHost: config.isHost
       });
 
-    // case 'trystero':
-    //   return new TrysteroTransport({
-    //     appId: config.appId || 'martini-kit',
-    //     roomId: config.roomId,
-    //     isHost: config.isHost
-    //   });
+    case 'trystero':
+      return new TrysteroTransport({
+        appId: config.appId || 'martini-kit',
+        roomId: config.roomId,
+        isHost: config.isHost,
+        rtcConfig: config.rtcConfig,
+        relayUrls: config.relayUrls
+      });
 
     default:
-      throw new Error(`Unknown transport type: ${(config as any).type}. Only 'local' and 'iframe-bridge' are supported in IDE mode.`);
+      throw new Error(`Unknown transport type: ${(config as any).type}. Only 'local', 'iframe-bridge', and 'trystero' are supported in IDE mode.`);
   }
 }

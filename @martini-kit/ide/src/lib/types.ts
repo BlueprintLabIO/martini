@@ -11,7 +11,11 @@ export interface MartiniKitIDEConfig {
 
 	/** Multiplayer transport */
 	transport: {
-		type: 'local' | 'iframe-bridge';
+		type: 'local' | 'iframe-bridge' | 'trystero';
+		roomId?: string;
+		appId?: string;
+		rtcConfig?: RTCConfiguration;
+		relayUrls?: string[];
 	};
 
 	/** Layout mode */

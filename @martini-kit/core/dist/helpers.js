@@ -27,6 +27,48 @@ export function createPlayers(playerIds, factory) {
     return Object.fromEntries(playerIds.map((id, index) => [id, factory(id, index)]));
 }
 /**
+ * Create a multi-type collision check function
+ *
+ * Combines multiple collision checks and warns if only one type is specified.
+ * This helps prevent the common mistake of checking only blocks and forgetting
+ * about bombs, enemies, or other obstacles.
+ *
+ * ⚠️ PREVENTS BUG: Forgetting to check multiple collision types
+ * In grid-based games, you typically need to check:
+ * - Blocks (walls, obstacles)
+ * - Bombs (placed by players)
+ * - Enemies (NPCs, other players)
+ * - Hazards (traps, environmental dangers)
+ *
+ * @param checks - Array of named collision check functions
+ * @returns Combined collision check function
+ *
+ * @example
+ * ```ts
+ * // ❌ BAD - Only checks blocks, players can walk through bombs!
+ * collisionCheck: (x, y) => hasBlock(state.blocks, x, y)
+ *
+ * // ✅ GOOD - Checks all obstacle types
+ * collisionCheck: createMultiCollisionCheck(
+ *   { name: 'hard-blocks', fn: (x, y) => hasHardBlock(state.blocks, x, y) },
+ *   { name: 'soft-blocks', fn: (x, y) => hasSoftBlock(state.blocks, x, y) },
+ *   { name: 'bombs', fn: (x, y) => hasBomb(state.bombs, x, y) }
+ * )
+ * ```
+ */
+export function createMultiCollisionCheck(...checks) {
+    if (checks.length === 0) {
+        console.warn('⚠️ createMultiCollisionCheck: No collision checks provided. ' +
+            'Entities will pass through everything!');
+        return () => false;
+    }
+    if (checks.length === 1) {
+        console.warn(`⚠️ createMultiCollisionCheck: Only checking '${checks[0].name}'. ` +
+            `Did you forget to check: bombs? enemies? hazards?`);
+    }
+    return (x, y) => checks.some(c => c.fn(x, y));
+}
+/**
  * Create a standard input action
  *
  * Returns an action definition that stores input in state[stateKey][context.targetId]
@@ -100,5 +142,59 @@ export function createTickAction(tickFn) {
             tickFn(state, delta, context);
         }
     };
+}
+/**
+ * Iterate over all player inputs in the state
+ *
+ * Eliminates the boilerplate `for (const [playerId, player] of Object.entries(state.players))`
+ * loop and automatically handles missing inputs.
+ *
+ * @param state - Game state
+ * @param callback - Function called for each player with input
+ * @param options - Optional configuration
+ *
+ * @example
+ * ```ts
+ * tick: createTickAction((state, delta) => {
+ *   forEachPlayerInput(state, (player, input, playerId) => {
+ *     // Move player based on input
+ *     const dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+ *     const dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+ *     player.x += dx * 150 * (delta / 1000);
+ *     player.y += dy * 150 * (delta / 1000);
+ *   });
+ * })
+ * ```
+ *
+ * @example With custom keys and filter
+ * ```ts
+ * forEachPlayerInput(state, (player, input) => {
+ *   // Process movement for alive players only
+ *   updateMovement(player, input);
+ * }, {
+ *   playersKey: 'characters',
+ *   inputsKey: 'controls',
+ *   filter: (player) => player.alive
+ * });
+ * ```
+ */
+export function forEachPlayerInput(state, callback, options) {
+    const playersKey = options?.playersKey || 'players';
+    const inputsKey = options?.inputsKey || 'inputs';
+    const filter = options?.filter;
+    const players = state[playersKey];
+    const inputs = state[inputsKey];
+    if (!players || !inputs)
+        return;
+    for (const [playerId, player] of Object.entries(players)) {
+        // Skip if filter rejects this player
+        if (filter && !filter(player, playerId)) {
+            continue;
+        }
+        const input = inputs[playerId];
+        if (!input)
+            continue; // Skip if no input for this player
+        callback(player, input, playerId);
+    }
 }
 //# sourceMappingURL=helpers.js.map

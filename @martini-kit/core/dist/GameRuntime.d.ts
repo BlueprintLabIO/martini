@@ -89,6 +89,14 @@ export declare class GameRuntime<TState = any> {
      */
     onEvent(eventName: string, callback: EventCallback): () => void;
     /**
+     * Wait until the desired number of players (including self) are present.
+     * Helpful for P2P transports where peers join asynchronously.
+     */
+    waitForPlayers(minPlayers: number, options?: {
+        timeoutMs?: number;
+        includeSelf?: boolean;
+    }): Promise<void>;
+    /**
      * Listen for state changes (typed)
      */
     onChange(callback: StateChangeCallback<TState>): () => void;

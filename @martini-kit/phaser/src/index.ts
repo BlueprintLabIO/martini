@@ -26,6 +26,10 @@ export { HealthBarManager } from './helpers/HealthBarManager.js';
 export type { HealthBarConfig } from './helpers/HealthBarManager.js';
 export { GridClickHelper } from './helpers/GridClickHelper.js';
 export type { GridClickConfig } from './helpers/GridClickHelper.js';
+export { GridCollisionManager, GridMovementManager } from './helpers/GridCollisionManager.js';
+export type { GridCollisionConfig, GridMovementConfig, GridEntity, MovementInput, GridPosition } from './helpers/GridCollisionManager.js';
+export { GridLockedMovementManager } from './helpers/GridLockedMovementManager.js';
+export type { GridLockedMovementConfig, GridLockedEntity } from './helpers/GridLockedMovementManager.js';
 
 // Input Profiles
 export { registerProfile, getProfile, listProfiles, BUILT_IN_PROFILES } from './helpers/InputProfiles.js';
@@ -34,6 +38,19 @@ export type { InputProfile, ProfileOptions } from './helpers/InputProfiles.js';
 // HUD Helper
 export { createPlayerHUD } from './helpers/HUDHelper.js';
 export type { PlayerHUD, PlayerHUDConfig, HUDLayout, HUDTextStyle } from './helpers/HUDHelper.js';
+
+// Player Stats Panel Helper
+export { createPlayerStatsPanel } from './helpers/PlayerStatsPanel.js';
+export type { PlayerStatsPanel, PlayerStatsPanelConfig, StatConfig, StatPosition } from './helpers/PlayerStatsPanel.js';
+
+// Collectible Manager Helper
+export { createCollectibleManager } from './helpers/CollectibleManager.js';
+export type { CollectibleManager, CollectibleManagerConfig, CollectibleConfig, CollisionType } from './helpers/CollectibleManager.js';
+
+// Round Manager Helper
+export { createRoundManager } from './helpers/RoundManager.js';
+export type { RoundManager, RoundManagerConfig, TimerUIConfig, AnnouncementUIConfig, ScoreboardUIConfig } from './helpers/RoundManager.js';
+
 
 // Speed Display Helper
 export { createSpeedDisplay } from './helpers/SpeedDisplay.js';

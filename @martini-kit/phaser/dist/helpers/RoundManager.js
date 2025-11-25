@@ -1,0 +1,234 @@
+/**
+ * RoundManager - Complete round-based game system with timer, announcements, and scoring
+ *
+ * Eliminates 200+ lines of boilerplate for round-based games.
+ * Perfect for fighting games, battle royales, sports games, etc.
+ *
+ * Features:
+ * - Round timer with visual warnings
+ * - Automatic round end detection
+ * - Freeze frames and announcements between rounds
+ * - Score tracking UI
+ * - Match winner detection
+ * - Customizable UI and flow
+ *
+ * @example
+ * ```ts
+ * import { createRoundManager } from '@martini-kit/phaser';
+ *
+ * // In scene.create()
+ * this.rounds = createRoundManager(this.adapter, this, {
+ *   roundsToWin: 3,
+ *
+ *   // State keys
+ *   timerStateKey: 'roundTimer',
+ *   roundStateKey: 'round',
+ *
+ *   // Win detection
+ *   checkWinner: (state) => {
+ *     const alive = Object.entries(state.players).filter(([, p]) => p.alive);
+ *     if (alive.length === 1) return alive[0][0];
+ *     if (state.roundTimer <= 0) return null; // Draw
+ *     return undefined; // Continue
+ *   },
+ *
+ *   ui: {
+ *     timer: {
+ *       position: { x: 400, y: 50 },
+ *       format: (ms) => `${Math.ceil(ms / 1000)}s`,
+ *       warningAt: 30000
+ *     }
+ *   }
+ * });
+ * ```
+ */
+/**
+ * Create a round manager with timer, announcements, and scoring
+ *
+ * @param adapter - PhaserAdapter instance
+ * @param scene - Phaser scene
+ * @param config - Round manager configuration
+ * @returns RoundManager instance
+ */
+export function createRoundManager(adapter, scene, config) {
+    const runtime = adapter.getRuntime();
+    // State keys
+    const timerKey = config.timerStateKey || 'roundTimer';
+    const roundKey = config.roundStateKey || 'round';
+    const playersKey = config.playersKey || 'players';
+    const gameOverKey = config.gameOverKey || 'gameOver';
+    const winnerKey = config.winnerKey || 'winner';
+    // UI elements
+    let timerText = null;
+    let announcementText = null;
+    const scoreTexts = [];
+    // Create timer UI
+    if (config.ui.timer) {
+        const timerConfig = config.ui.timer;
+        const defaultStyle = {
+            fontSize: '24px',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            ...timerConfig.style
+        };
+        timerText = scene.add.text(timerConfig.position.x, timerConfig.position.y, '', defaultStyle);
+        timerText.setOrigin(0.5);
+    }
+    // Create announcement UI (hidden initially)
+    if (config.ui.announcement) {
+        const announcementConfig = config.ui.announcement;
+        const camera = scene.cameras.main;
+        const pos = announcementConfig.position || { x: camera.width / 2, y: camera.height / 2 };
+        const defaultStyle = {
+            fontSize: '48px',
+            color: '#fbbf24',
+            fontStyle: 'bold',
+            stroke: '#000',
+            strokeThickness: 6,
+            ...announcementConfig.style
+        };
+        announcementText = scene.add.text(pos.x, pos.y, '', defaultStyle);
+        announcementText.setOrigin(0.5);
+        announcementText.setVisible(false);
+        announcementText.setDepth(1000); // Always on top
+    }
+    // Freeze state
+    let isFrozen = false;
+    let freezeTimer = 0;
+    /**
+     * Show announcement and freeze gameplay
+     */
+    const showAnnouncement = (text, duration) => {
+        if (!announcementText)
+            return;
+        announcementText.setText(text);
+        announcementText.setVisible(true);
+        // Fade in
+        announcementText.setAlpha(0);
+        scene.tweens.add({
+            targets: announcementText,
+            alpha: 1,
+            duration: 200,
+            ease: 'Cubic.easeOut'
+        });
+        // Freeze gameplay
+        isFrozen = true;
+        freezeTimer = duration;
+        // Auto-hide after duration
+        scene.time.delayedCall(duration, () => {
+            if (!announcementText)
+                return;
+            // Fade out
+            scene.tweens.add({
+                targets: announcementText,
+                alpha: 0,
+                duration: 300,
+                ease: 'Cubic.easeIn',
+                onComplete: () => {
+                    announcementText?.setVisible(false);
+                    isFrozen = false;
+                }
+            });
+        });
+    };
+    /**
+     * Update all UI elements
+     */
+    const update = () => {
+        const state = runtime.getState();
+        // Update timer
+        if (timerText && config.ui.timer) {
+            const timerValue = state[timerKey] || 0;
+            const formatted = config.ui.timer.format(timerValue);
+            timerText.setText(formatted);
+            // Apply warning style
+            const warningAt = config.ui.timer.warningAt ?? 30000;
+            if (timerValue <= warningAt && config.ui.timer.warningStyle) {
+                timerText.setStyle(config.ui.timer.warningStyle);
+            }
+            else if (config.ui.timer.style) {
+                timerText.setStyle(config.ui.timer.style);
+            }
+        }
+        // Update scoreboard
+        if (config.ui.scoreboard) {
+            const scoreConfig = config.ui.scoreboard;
+            const players = state[playersKey] || {};
+            const playerEntries = Object.entries(players);
+            // Remove old score texts
+            scoreTexts.forEach((text) => text.destroy());
+            scoreTexts.length = 0;
+            // Create new score texts
+            let yOffset = 0;
+            const spacing = scoreConfig.spacing ?? 25;
+            playerEntries.forEach(([playerId, player], index) => {
+                const text = scene.add.text(scoreConfig.position.x, scoreConfig.position.y + yOffset, scoreConfig.format(player, index, playerId), scoreConfig.style || { fontSize: '16px', color: '#ffffff' });
+                scoreTexts.push(text);
+                yOffset += spacing;
+            });
+        }
+        // Check for round end (host only)
+        if (adapter.isHost() && !isFrozen && !state[gameOverKey]) {
+            const winnerId = config.checkWinner(state);
+            if (winnerId !== undefined) {
+                // Round ended!
+                const players = state[playersKey] || {};
+                if (winnerId === null) {
+                    // Draw
+                    if (config.ui.announcement) {
+                        const text = config.ui.announcement.draw();
+                        const duration = config.ui.announcement.freezeDuration ?? 3000;
+                        showAnnouncement(text, duration);
+                    }
+                    // Submit endRound action with null winner
+                    runtime.submitAction('endRound', { winnerId: null });
+                }
+                else {
+                    // Player won
+                    const winner = players[winnerId];
+                    // Check for match win
+                    const score = winner.score || 0;
+                    const isMatchWin = score + 1 >= config.roundsToWin;
+                    if (config.ui.announcement) {
+                        const text = isMatchWin
+                            ? config.ui.announcement.matchWin(winner, winnerId)
+                            : config.ui.announcement.winner(winner, winnerId);
+                        const duration = config.ui.announcement.freezeDuration ?? 3000;
+                        showAnnouncement(text, duration);
+                    }
+                    // Submit endRound action
+                    runtime.submitAction('endRound', { winnerId });
+                }
+            }
+        }
+        // Show game over announcement
+        if (state[gameOverKey] && state[winnerKey]) {
+            const players = state[playersKey] || {};
+            const winner = players[state[winnerKey]];
+            if (winner && config.ui.announcement && announcementText && !announcementText.visible) {
+                const text = config.ui.announcement.matchWin(winner, state[winnerKey]);
+                announcementText.setText(text);
+                announcementText.setVisible(true);
+                announcementText.setAlpha(1);
+            }
+        }
+    };
+    // Subscribe to state changes
+    const unsubscribe = adapter.onChange(() => {
+        update();
+    });
+    // Initial update
+    update();
+    return {
+        update,
+        destroy: () => {
+            unsubscribe();
+            timerText?.destroy();
+            announcementText?.destroy();
+            scoreTexts.forEach((text) => text.destroy());
+        },
+        getTimerText: () => timerText,
+        getAnnouncementText: () => announcementText
+    };
+}
+//# sourceMappingURL=RoundManager.js.map

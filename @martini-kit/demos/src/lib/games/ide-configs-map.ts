@@ -15,6 +15,7 @@ import blobBattleConfig from './configs/blob-battle';
 import arenaBlasterConfig from './configs/arena-blaster';
 import circuitRacerConfig from './configs/circuit-racer';
 import tileMatcherConfig from './configs/tile-matcher';
+import tntDudeConfig from './configs/tnt-dude';
 
 export interface GamePreviewMetadata {
 	title: string;
@@ -55,6 +56,11 @@ export const gameMetadata: Record<string, GamePreviewMetadata> = {
 		title: 'Connect Four',
 		description: 'Classic Connect Four game. Get 4 in a row to win!',
 		difficulty: 'intermediate'
+	},
+	'tnt-dude': {
+		title: 'TNT Dude',
+		description: 'Classic Bomberman-style battle. Place bombs, grab powerups, and outlast your opponents!',
+		difficulty: 'advanced'
 	}
 };
 
@@ -67,7 +73,8 @@ const ideConfigs: Record<string, MartiniKitIDEConfig> = {
 	'blob-battle': blobBattleConfig,
 	'arena-blaster': arenaBlasterConfig,
 	'circuit-racer': circuitRacerConfig,
-	'tile-matcher': tileMatcherConfig
+	'tile-matcher': tileMatcherConfig,
+	'tnt-dude': tntDudeConfig
 };
 
 /**

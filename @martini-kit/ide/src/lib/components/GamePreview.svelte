@@ -21,7 +21,13 @@
 		vfsVersion?: number;
 		entryPoint: string;
 		role: 'host' | 'client';
-		transportType: 'local' | 'iframe-bridge';
+		transportType: 'local' | 'iframe-bridge' | 'trystero';
+		transportOptions?: {
+			appId?: string;
+			rtcConfig?: RTCConfiguration;
+			relayUrls?: string[];
+		};
+		minPlayers?: number;
 		onError?: (error: GameError) => void;
 		onReady?: () => void;
 		consoleLogs?: Array<LogEntry>;
@@ -41,6 +47,8 @@
 		entryPoint,
 		role,
 		transportType,
+		transportOptions,
+		minPlayers = 1,
 		onError,
 		onReady,
 		consoleLogs = $bindable([]),
@@ -171,6 +179,8 @@
 			role,
 			roomId: sessionRoomId,
 			transportType,
+			transportOptions,
+			minPlayers,
 			enableDevTools,
 			onError: (err: GameError) => {
 				if (destroyed) return;

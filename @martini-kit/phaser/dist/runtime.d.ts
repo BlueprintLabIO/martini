@@ -15,7 +15,14 @@ export interface MartiniKitConfig {
         roomId: string;
         isHost: boolean;
         appId?: string;
+        rtcConfig?: RTCConfiguration;
+        relayUrls?: string[];
     };
+    /**
+     * Minimum players required before starting the game loop/rendering.
+     * Useful for P2P transports where peers join asynchronously.
+     */
+    minPlayers?: number;
 }
 /**
  * User-provided game configuration
@@ -56,8 +63,8 @@ export interface GameConfig<TState = any> {
  * });
  * ```
  */
-export declare function initializeGame<TState = any>(config: GameConfig<TState>): {
+export declare function initializeGame<TState = any>(config: GameConfig<TState>): Promise<{
     runtime: GameRuntime<TState>;
     phaser: Phaser.Game;
-};
+}>;
 //# sourceMappingURL=runtime.d.ts.map

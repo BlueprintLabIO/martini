@@ -18,7 +18,6 @@
 		href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=IBM+Plex+Mono:wght@400;600&display=swap"
 		rel="stylesheet"
 	/>
-	<link rel="icon" type="image/png" href="/favicon.png" />
 </svelte:head>
 
 <div class="app-shell">

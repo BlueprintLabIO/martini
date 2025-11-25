@@ -1998,6 +1998,396 @@ var GridClickHelper = class {
   }
 };
 
+// src/helpers/GridCollisionManager.ts
+var GridCollisionManager = class {
+  constructor(adapter, config) {
+    __publicField(this, "config");
+    __publicField(this, "debugGraphics");
+    // Phaser.GameObjects.Graphics
+    __publicField(this, "adapter");
+    this.adapter = adapter;
+    this.config = {
+      baseSpeed: 150,
+      normalizeDiagonal: true,
+      debug: false,
+      debugColor: 16711680,
+      ...config
+    };
+    if (this.config.debug) {
+      this.debugGraphics = adapter.getScene().add.graphics();
+      this.renderDebugGrid();
+    }
+  }
+  /**
+   * Move an entity based on input
+   * Handles collision detection and smooth movement
+   *
+   * @param entity - Entity with x, y, and optional speed multiplier
+   * @param input - Input with up/down/left/right flags
+   * @param delta - Time delta in milliseconds
+   */
+  moveEntity(entity, input, delta) {
+    const dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+    const dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+    if (dx === 0 && dy === 0) return;
+    const speedMultiplier = entity.speed ?? 1;
+    let speed = this.config.baseSpeed * speedMultiplier * (delta / 1e3);
+    if (this.config.normalizeDiagonal && dx !== 0 && dy !== 0) {
+      const length = Math.sqrt(dx * dx + dy * dy);
+      speed /= length;
+    }
+    const nextX = entity.x + dx * speed;
+    const nextY = entity.y + dy * speed;
+    const gridPos = this.worldToGrid(nextX, nextY);
+    const hasCollision = this.config.collisionCheck(gridPos.gridX, gridPos.gridY);
+    const worldSize = {
+      width: this.config.gridWidth * this.config.tileSize,
+      height: this.config.gridHeight * this.config.tileSize
+    };
+    const outOfBounds = nextX < 0 || nextX >= worldSize.width || nextY < 0 || nextY >= worldSize.height;
+    if (!hasCollision && !outOfBounds) {
+      entity.x = nextX;
+      entity.y = nextY;
+    }
+    if (this.config.debug && this.debugGraphics) {
+      this.updateDebugVisualization(entity, hasCollision ? gridPos : null);
+    }
+  }
+  /**
+   * Convert world position to grid coordinates
+   *
+   * @param x - World X position in pixels
+   * @param y - World Y position in pixels
+   * @returns Grid coordinates and alignment status
+   */
+  worldToGrid(x, y) {
+    const gridX = Math.floor(x / this.config.tileSize);
+    const gridY = Math.floor(y / this.config.tileSize);
+    const threshold = this.config.tileSize * 0.1;
+    const offsetX = Math.abs(x - (gridX * this.config.tileSize + this.config.tileSize / 2));
+    const offsetY = Math.abs(y - (gridY * this.config.tileSize + this.config.tileSize / 2));
+    const isAligned = offsetX < threshold && offsetY < threshold;
+    return { gridX, gridY, isAligned };
+  }
+  /**
+   * Convert grid coordinates to world position (center of cell)
+   *
+   * @param gridX - Grid X coordinate
+   * @param gridY - Grid Y coordinate
+   * @returns World position in pixels (center of cell)
+   */
+  gridToWorld(gridX, gridY) {
+    return {
+      x: gridX * this.config.tileSize + this.config.tileSize / 2,
+      y: gridY * this.config.tileSize + this.config.tileSize / 2
+    };
+  }
+  /**
+   * Snap an entity to the nearest grid cell center
+   *
+   * @param entity - Entity to snap
+   */
+  snapToGrid(entity) {
+    const gridPos = this.worldToGrid(entity.x, entity.y);
+    const worldPos = this.gridToWorld(gridPos.gridX, gridPos.gridY);
+    entity.x = worldPos.x;
+    entity.y = worldPos.y;
+  }
+  /**
+   * Check if a grid cell is walkable (not blocked)
+   *
+   * @param gridX - Grid X coordinate
+   * @param gridY - Grid Y coordinate
+   * @returns True if cell is walkable
+   */
+  isWalkable(gridX, gridY) {
+    if (gridX < 0 || gridX >= this.config.gridWidth) return false;
+    if (gridY < 0 || gridY >= this.config.gridHeight) return false;
+    return !this.config.collisionCheck(gridX, gridY);
+  }
+  /**
+   * Get the current grid cell of an entity
+   *
+   * @param entity - Entity with x, y position
+   * @returns Grid position with alignment status
+   */
+  getEntityGridPosition(entity) {
+    return this.worldToGrid(entity.x, entity.y);
+  }
+  /**
+   * Render debug grid overlay
+   */
+  renderDebugGrid() {
+    if (!this.debugGraphics) return;
+    this.debugGraphics.clear();
+    this.debugGraphics.lineStyle(1, this.config.debugColor, 0.2);
+    const worldWidth = this.config.gridWidth * this.config.tileSize;
+    const worldHeight = this.config.gridHeight * this.config.tileSize;
+    for (let i = 0; i <= this.config.gridWidth; i++) {
+      const x = i * this.config.tileSize;
+      this.debugGraphics.lineBetween(x, 0, x, worldHeight);
+    }
+    for (let i = 0; i <= this.config.gridHeight; i++) {
+      const y = i * this.config.tileSize;
+      this.debugGraphics.lineBetween(0, y, worldWidth, y);
+    }
+  }
+  /**
+   * Update debug visualization
+   */
+  updateDebugVisualization(entity, blockedCell) {
+    if (!this.debugGraphics) return;
+    this.renderDebugGrid();
+    this.debugGraphics.fillStyle(65280, 0.8);
+    this.debugGraphics.fillCircle(entity.x, entity.y, 4);
+    const gridPos = this.worldToGrid(entity.x, entity.y);
+    const worldPos = this.gridToWorld(gridPos.gridX, gridPos.gridY);
+    this.debugGraphics.lineStyle(2, 65280, 0.6);
+    this.debugGraphics.strokeRect(
+      worldPos.x - this.config.tileSize / 2,
+      worldPos.y - this.config.tileSize / 2,
+      this.config.tileSize,
+      this.config.tileSize
+    );
+    if (blockedCell) {
+      const blockedWorld = this.gridToWorld(blockedCell.gridX, blockedCell.gridY);
+      this.debugGraphics.fillStyle(this.config.debugColor, 0.4);
+      this.debugGraphics.fillRect(
+        blockedWorld.x - this.config.tileSize / 2,
+        blockedWorld.y - this.config.tileSize / 2,
+        this.config.tileSize,
+        this.config.tileSize
+      );
+    }
+  }
+  /**
+   * Cleanup debug graphics
+   */
+  destroy() {
+    if (this.debugGraphics) {
+      this.debugGraphics.destroy();
+      this.debugGraphics = void 0;
+    }
+  }
+};
+var GridMovementManager = GridCollisionManager;
+
+// src/helpers/GridLockedMovementManager.ts
+var GridLockedMovementManager = class {
+  constructor(adapter, config) {
+    __publicField(this, "config");
+    __publicField(this, "debugGraphics");
+    // Phaser.GameObjects.Graphics
+    __publicField(this, "adapter");
+    this.adapter = adapter;
+    this.config = {
+      baseSpeed: 3,
+      debug: false,
+      debugColor: 16711680,
+      ...config
+    };
+    if (this.config.debug) {
+      this.debugGraphics = adapter.getScene().add.graphics();
+      this.renderDebugGrid();
+    }
+  }
+  /**
+   * Move an entity with grid-locked behavior
+   * 
+   * The entity will:
+   * 1. Continue moving to targetCell if already in motion
+   * 2. Accept new direction input only when aligned to a cell
+   * 3. Smoothly interpolate position between cells
+   *
+   * @param entity - Entity with grid position state
+   * @param input - Input with up/down/left/right flags
+   * @param delta - Time delta in milliseconds
+   */
+  moveEntity(entity, input, delta) {
+    if (!entity.currentCell) {
+      const gridPos = this.worldToGrid(entity.x, entity.y);
+      entity.currentCell = { x: gridPos.gridX, y: gridPos.gridY };
+      entity.targetCell = null;
+      entity.moveProgress = 0;
+    }
+    const speedMultiplier = entity.speed ?? 1;
+    const cellsPerSecond = this.config.baseSpeed * speedMultiplier;
+    const progressDelta = cellsPerSecond * delta / 1e3;
+    if (entity.targetCell && entity.moveProgress !== void 0) {
+      entity.moveProgress += progressDelta;
+      if (entity.moveProgress >= 1) {
+        entity.currentCell = { ...entity.targetCell };
+        entity.targetCell = null;
+        entity.moveProgress = 0;
+        const worldPos = this.gridToWorld(entity.currentCell.x, entity.currentCell.y);
+        entity.x = worldPos.x;
+        entity.y = worldPos.y;
+      } else {
+        const currentWorld = this.gridToWorld(entity.currentCell.x, entity.currentCell.y);
+        const targetWorld = this.gridToWorld(entity.targetCell.x, entity.targetCell.y);
+        entity.x = this.lerp(currentWorld.x, targetWorld.x, entity.moveProgress);
+        entity.y = this.lerp(currentWorld.y, targetWorld.y, entity.moveProgress);
+      }
+    } else {
+      const direction = this.getDirection(input);
+      if (direction.dx !== 0 || direction.dy !== 0) {
+        const nextCell = {
+          x: entity.currentCell.x + direction.dx,
+          y: entity.currentCell.y + direction.dy
+        };
+        if (this.isWalkable(nextCell.x, nextCell.y)) {
+          entity.targetCell = nextCell;
+          entity.moveProgress = 0;
+        }
+      }
+    }
+    if (this.config.debug && this.debugGraphics) {
+      this.updateDebugVisualization(entity);
+    }
+  }
+  /**
+   * Snap entity to nearest grid cell center
+   */
+  snapToGrid(entity) {
+    const gridPos = this.worldToGrid(entity.x, entity.y);
+    const worldPos = this.gridToWorld(gridPos.gridX, gridPos.gridY);
+    entity.x = worldPos.x;
+    entity.y = worldPos.y;
+    entity.currentCell = { x: gridPos.gridX, y: gridPos.gridY };
+    entity.targetCell = null;
+    entity.moveProgress = 0;
+  }
+  /**
+   * Check if entity is aligned to a grid cell
+   */
+  isAligned(entity) {
+    return !entity.targetCell && entity.moveProgress === 0;
+  }
+  /**
+   * Get entity's current grid position
+   */
+  getGridPosition(entity) {
+    if (entity.currentCell) {
+      return { ...entity.currentCell };
+    }
+    const gridPos = this.worldToGrid(entity.x, entity.y);
+    return { x: gridPos.gridX, y: gridPos.gridY };
+  }
+  /**
+   * Convert world coordinates to grid coordinates
+   */
+  worldToGrid(x, y) {
+    const gridX = Math.floor(x / this.config.tileSize);
+    const gridY = Math.floor(y / this.config.tileSize);
+    const centerX = gridX * this.config.tileSize + this.config.tileSize / 2;
+    const centerY = gridY * this.config.tileSize + this.config.tileSize / 2;
+    const threshold = this.config.tileSize * 0.1;
+    const isAligned = Math.abs(x - centerX) < threshold && Math.abs(y - centerY) < threshold;
+    return { gridX, gridY, isAligned };
+  }
+  /**
+   * Convert grid coordinates to world position (center of cell)
+   */
+  gridToWorld(gridX, gridY) {
+    return {
+      x: gridX * this.config.tileSize + this.config.tileSize / 2,
+      y: gridY * this.config.tileSize + this.config.tileSize / 2
+    };
+  }
+  /**
+   * Check if a grid cell is walkable
+   */
+  isWalkable(gridX, gridY) {
+    if (gridX < 0 || gridX >= this.config.gridWidth) return false;
+    if (gridY < 0 || gridY >= this.config.gridHeight) return false;
+    return !this.config.collisionCheck(gridX, gridY);
+  }
+  /**
+   * Extract direction from input
+   */
+  getDirection(input) {
+    const dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+    const dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+    if (dx !== 0 && dy !== 0) {
+      return { dx, dy: 0 };
+    }
+    return { dx, dy };
+  }
+  /**
+   * Linear interpolation
+   */
+  lerp(start, end, t) {
+    return start + (end - start) * t;
+  }
+  /**
+   * Render debug grid overlay
+   */
+  renderDebugGrid() {
+    if (!this.debugGraphics) return;
+    this.debugGraphics.clear();
+    this.debugGraphics.lineStyle(1, this.config.debugColor, 0.3);
+    const worldWidth = this.config.gridWidth * this.config.tileSize;
+    const worldHeight = this.config.gridHeight * this.config.tileSize;
+    for (let i = 0; i <= this.config.gridWidth; i++) {
+      const x = i * this.config.tileSize;
+      this.debugGraphics.lineBetween(x, 0, x, worldHeight);
+    }
+    for (let i = 0; i <= this.config.gridHeight; i++) {
+      const y = i * this.config.tileSize;
+      this.debugGraphics.lineBetween(0, y, worldWidth, y);
+    }
+  }
+  /**
+   * Update debug visualization for an entity
+   */
+  updateDebugVisualization(entity) {
+    if (!this.debugGraphics) return;
+    this.renderDebugGrid();
+    if (entity.currentCell) {
+      const worldPos = this.gridToWorld(entity.currentCell.x, entity.currentCell.y);
+      this.debugGraphics.fillStyle(this.config.debugColor, 0.2);
+      this.debugGraphics.fillRect(
+        worldPos.x - this.config.tileSize / 2,
+        worldPos.y - this.config.tileSize / 2,
+        this.config.tileSize,
+        this.config.tileSize
+      );
+    }
+    if (entity.targetCell) {
+      const worldPos = this.gridToWorld(entity.targetCell.x, entity.targetCell.y);
+      this.debugGraphics.fillStyle(this.config.debugColor, 0.4);
+      this.debugGraphics.fillRect(
+        worldPos.x - this.config.tileSize / 2,
+        worldPos.y - this.config.tileSize / 2,
+        this.config.tileSize,
+        this.config.tileSize
+      );
+      if (entity.currentCell) {
+        const currentWorld = this.gridToWorld(entity.currentCell.x, entity.currentCell.y);
+        const targetWorld = this.gridToWorld(entity.targetCell.x, entity.targetCell.y);
+        this.debugGraphics.lineStyle(2, this.config.debugColor, 0.8);
+        this.debugGraphics.lineBetween(
+          currentWorld.x,
+          currentWorld.y,
+          targetWorld.x,
+          targetWorld.y
+        );
+      }
+    }
+    this.debugGraphics.fillStyle(16777215, 1);
+    this.debugGraphics.fillCircle(entity.x, entity.y, 3);
+  }
+  /**
+   * Cleanup debug graphics
+   */
+  destroy() {
+    if (this.debugGraphics) {
+      this.debugGraphics.destroy();
+      this.debugGraphics = void 0;
+    }
+  }
+};
+
 // src/PhaserAdapter.ts
 var PhaserAdapter = class {
   constructor(runtime, scene, config = {}) {
@@ -2017,6 +2407,9 @@ var PhaserAdapter = class {
     __publicField(this, "spriteManagers", /* @__PURE__ */ new Set());
     // Track all registered SpriteManagers
     __publicField(this, "lastUpdateTime", Date.now());
+    __publicField(this, "autoTick");
+    __publicField(this, "tickAction");
+    __publicField(this, "lastTickTime", Date.now());
     this.spriteNamespace = config.spriteNamespace || "_sprites";
     this.autoInterpolate = config.autoInterpolate !== false;
     this.lerpFactor = config.lerpFactor ?? 0.3;
@@ -2025,6 +2418,8 @@ var PhaserAdapter = class {
     this.snapshotBufferSize = config.snapshotBufferSize ?? 3;
     this.enableDeadReckoning = config.enableDeadReckoning !== false;
     this.deadReckoningMaxDuration = config.deadReckoningMaxDuration ?? 200;
+    this.autoTick = config.autoTick !== false;
+    this.tickAction = config.tickAction || "tick";
     this.runtime.mutateState((state) => {
       if (!state[this.spriteNamespace]) {
         state[this.spriteNamespace] = {};
@@ -2297,6 +2692,34 @@ var PhaserAdapter = class {
     return this.runtime.onEvent(eventName, (senderId, _eventName, payload) => {
       callback(senderId, payload);
     });
+  }
+  /**
+   * Call this in your Phaser scene's update() loop
+   *
+   * When autoTick is enabled, this automatically calls the tick action.
+   * Always handles remote sprite interpolation (on clients).
+   *
+   * @param time - Phaser time (total elapsed time in ms)
+   * @param delta - Phaser delta (time since last frame in ms)
+   *
+   * @example
+   * ```ts
+   * // In your Phaser scene:
+   * update(time: number, delta: number) {
+   *   adapter.update(time, delta);
+   * }
+   * ```
+   */
+  update(time, delta) {
+    if (this.autoTick && this.isHost()) {
+      const now = Date.now();
+      const tickDelta = now - this.lastTickTime;
+      this.lastTickTime = now;
+      this.runtime.submitAction(this.tickAction, { delta: tickDelta });
+    }
+    if (!this.isHost() && this.autoInterpolate) {
+      this.updateInterpolation(delta);
+    }
   }
   /**
    * Cleanup
@@ -2789,6 +3212,69 @@ var PhaserAdapter = class {
     return new GridClickHelper(this, this.scene, config);
   }
   /**
+   * Create a GridCollisionManager for smooth movement with grid-aligned collision
+   *
+   * ⚠️ NOTE: This provides SMOOTH movement, not grid-locked movement.
+   * For cell-to-cell committed movement (classic Bomberman), use createGridLockedMovementManager().
+   *
+   * @example
+   * ```ts
+   * const gridCollision = adapter.createGridCollisionManager({
+   *   tileSize: 52,
+   *   gridWidth: 13,
+   *   gridHeight: 13,
+   *   collisionCheck: createMultiCollisionCheck(
+   *     { name: 'blocks', fn: (x, y) => hasBlock(state.blocks, x, y) },
+   *     { name: 'bombs', fn: (x, y) => hasBomb(state.bombs, x, y) }
+   *   ),
+   *   debug: false // Enable to see grid overlay
+   * });
+   *
+   * // In tick action:
+   * gridCollision.moveEntity(player, input, delta);
+   * ```
+   */
+  createGridCollisionManager(config) {
+    return new GridCollisionManager(this, config);
+  }
+  /**
+   * Create a GridLockedMovementManager for true grid-locked movement
+   *
+   * Provides cell-to-cell committed movement where entities:
+   * - Align to grid cell centers
+   * - Commit to moving one full cell at a time
+   * - Can only change direction when aligned
+   * - Smoothly animate between cells
+   *
+   * Perfect for: Classic Bomberman, Pacman, Sokoban, turn-based grid games.
+   *
+   * @example
+   * ```ts
+   * const gridLocked = adapter.createGridLockedMovementManager({
+   *   tileSize: 52,
+   *   gridWidth: 13,
+   *   gridHeight: 13,
+   *   collisionCheck: createMultiCollisionCheck(
+   *     { name: 'blocks', fn: (x, y) => hasBlock(state.blocks, x, y) },
+   *     { name: 'bombs', fn: (x, y) => hasBomb(state.bombs, x, y) }
+   *   ),
+   *   baseSpeed: 3.0 // cells per second
+   * });
+   *
+   * // In tick action:
+   * gridLocked.moveEntity(player, input, delta);
+   * ```
+   */
+  createGridLockedMovementManager(config) {
+    return new GridLockedMovementManager(this, config);
+  }
+  /**
+   * @deprecated Use createGridCollisionManager instead. GridMovementManager has been renamed to GridCollisionManager for clarity.
+   */
+  createGridMovementManager(config) {
+    return new GridCollisionManager(this, config);
+  }
+  /**
    * Create a HealthBarManager for automatic health bar management
    *
    * Auto-creates, positions, scales, and colors health bars for all sprites.
@@ -2980,6 +3466,397 @@ function createPlayerHUD(adapter, scene, config) {
     getTitleText: () => titleText,
     getRoleText: () => roleText,
     getControlsText: () => controlsText
+  };
+}
+
+// src/helpers/PlayerStatsPanel.ts
+function createPlayerStatsPanel(adapter, scene, config) {
+  const playersKey = config.playersKey || "players";
+  const style = {
+    backgroundColor: config.style?.backgroundColor || "rgba(0, 0, 0, 0.7)",
+    padding: config.style?.padding ?? 8,
+    iconSize: config.style?.iconSize ?? 24,
+    fontSize: config.style?.fontSize || "16px",
+    spacing: config.style?.spacing ?? 6,
+    highlightColor: config.style?.highlightColor || "#fbbf24"
+  };
+  const getPosition = () => {
+    if (typeof config.position === "object" && "x" in config.position) {
+      return config.position;
+    }
+    const camera = scene.cameras.main;
+    const padding = 20;
+    switch (config.position) {
+      case "top-left":
+        return { x: padding, y: padding };
+      case "top-right":
+        return { x: camera.width - padding, y: padding };
+      case "bottom-left":
+        return { x: padding, y: camera.height - padding };
+      case "bottom-right":
+        return { x: camera.width - padding, y: camera.height - padding };
+      default:
+        return { x: padding, y: padding };
+    }
+  };
+  const pos = getPosition();
+  const container = scene.add.container(pos.x, pos.y);
+  const background = scene.add.rectangle(0, 0, 100, 100, 0, 0.7);
+  container.add(background);
+  const statElements = /* @__PURE__ */ new Map();
+  const update = () => {
+    const state = adapter.getState();
+    const myPlayer = adapter.getMyPlayer(playersKey);
+    if (!myPlayer) {
+      container.setVisible(false);
+      return;
+    }
+    container.setVisible(true);
+    let currentY = style.padding;
+    let maxWidth = 0;
+    const visibleStats = [];
+    for (const [statName, statConfig] of Object.entries(config.stats)) {
+      if (statConfig.visible && !statConfig.visible(myPlayer)) {
+        const element = statElements.get(statName);
+        if (element) {
+          element.iconText.setVisible(false);
+          element.valueText.setVisible(false);
+          element.highlight?.setVisible(false);
+        }
+        continue;
+      }
+      visibleStats.push([statName, statConfig]);
+    }
+    for (const [statName, statConfig] of visibleStats) {
+      let element = statElements.get(statName);
+      if (!element) {
+        const iconText = scene.add.text(style.padding, currentY, statConfig.icon, {
+          fontSize: `${style.iconSize}px`
+        });
+        const valueText = scene.add.text(
+          style.padding + style.iconSize + 4,
+          currentY,
+          String(statConfig.getValue(myPlayer)),
+          {
+            fontSize: style.fontSize,
+            color: "#ffffff"
+          }
+        );
+        const highlight = scene.add.rectangle(
+          0,
+          currentY + style.iconSize / 2,
+          0,
+          style.iconSize + 4,
+          parseInt(style.highlightColor.replace("#", "0x"), 16),
+          0.3
+        );
+        highlight.setOrigin(0, 0.5);
+        highlight.setVisible(false);
+        container.add([highlight, iconText, valueText]);
+        element = { iconText, valueText, highlight };
+        statElements.set(statName, element);
+      }
+      element.iconText.setText(statConfig.icon);
+      element.valueText.setText(String(statConfig.getValue(myPlayer)));
+      element.iconText.setVisible(true);
+      element.valueText.setVisible(true);
+      element.iconText.setPosition(style.padding, currentY);
+      element.valueText.setPosition(style.padding + style.iconSize + 4, currentY);
+      const shouldHighlight = statConfig.highlight ? statConfig.highlight(myPlayer) : false;
+      if (element.highlight) {
+        element.highlight.setVisible(shouldHighlight);
+        element.highlight.setPosition(style.padding - 2, currentY + style.iconSize / 2);
+        const textWidth = element.valueText.width;
+        element.highlight.width = style.iconSize + 4 + textWidth + 4;
+      }
+      const elementWidth = style.iconSize + 4 + element.valueText.width;
+      maxWidth = Math.max(maxWidth, elementWidth);
+      currentY += style.iconSize + style.spacing;
+    }
+    const bgWidth = maxWidth + style.padding * 2;
+    const bgHeight = currentY - style.spacing + style.padding;
+    background.setSize(bgWidth, bgHeight);
+    if (config.position === "top-right" || config.position === "bottom-right") {
+      background.setOrigin(1, 0);
+      container.x = pos.x;
+    } else {
+      background.setOrigin(0, 0);
+    }
+  };
+  const unsubscribe = adapter.onChange(() => {
+    update();
+  });
+  update();
+  return {
+    update,
+    destroy: () => {
+      unsubscribe();
+      container.destroy();
+    },
+    getContainer: () => container
+  };
+}
+
+// src/helpers/CollectibleManager.ts
+function createCollectibleManager(adapter, scene, config) {
+  const runtime = adapter.getRuntime();
+  let unsubscribe;
+  const checkCollision = (playerPos, itemPos, radius, collisionType) => {
+    if (collisionType === "grid") {
+      const playerGridX = Math.round(playerPos.x / radius);
+      const playerGridY = Math.round(playerPos.y / radius);
+      const itemGridX = Math.round(itemPos.x / radius);
+      const itemGridY = Math.round(itemPos.y / radius);
+      return playerGridX === itemGridX && playerGridY === itemGridY;
+    } else {
+      const dx = playerPos.x - itemPos.x;
+      const dy = playerPos.y - itemPos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < radius;
+    }
+  };
+  const showFeedback = (itemPos, feedback) => {
+    if (feedback.popup) {
+      const text = scene.add.text(itemPos.x, itemPos.y - 20, feedback.popup, {
+        fontSize: "16px",
+        color: "#fbbf24",
+        fontStyle: "bold",
+        stroke: "#000",
+        strokeThickness: 3
+      });
+      text.setOrigin(0.5);
+      scene.tweens.add({
+        targets: text,
+        y: itemPos.y - 50,
+        alpha: 0,
+        duration: 800,
+        ease: "Cubic.easeOut",
+        onComplete: () => text.destroy()
+      });
+    }
+    if (feedback.sound && scene.sound) {
+      try {
+        scene.sound.play(feedback.sound);
+      } catch (e) {
+      }
+    }
+    if (feedback.particle) {
+      for (let i = 0; i < 8; i++) {
+        const angle = i / 8 * Math.PI * 2;
+        const speed = 50 + Math.random() * 50;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        const particle = scene.add.circle(itemPos.x, itemPos.y, 3, 16498468);
+        scene.tweens.add({
+          targets: particle,
+          x: itemPos.x + vx,
+          y: itemPos.y + vy,
+          alpha: 0,
+          scale: 0,
+          duration: 400,
+          ease: "Cubic.easeOut",
+          onComplete: () => particle.destroy()
+        });
+      }
+    }
+  };
+  const update = () => {
+    if (!adapter.isHost()) return;
+    const state = runtime.getState();
+    const myPlayerId = runtime.getMyPlayerId();
+    const myPlayer = state.players?.[myPlayerId];
+    if (!myPlayer) return;
+    for (const [collectibleType, collectibleConfig] of Object.entries(config)) {
+      const items = state[collectibleConfig.stateKey];
+      if (!Array.isArray(items)) continue;
+      const idField = collectibleConfig.idField || "id";
+      const playerPos = collectibleConfig.getPlayerPosition ? collectibleConfig.getPlayerPosition(myPlayer) : { x: myPlayer.x, y: myPlayer.y };
+      for (const item of items) {
+        const itemPos = collectibleConfig.getPosition(item);
+        const collisionType = collectibleConfig.collisionType || "continuous";
+        if (checkCollision(playerPos, itemPos, collectibleConfig.radius, collisionType)) {
+          const itemId = item[idField];
+          const feedback = collectibleConfig.onCollect?.(item, scene);
+          if (feedback) {
+            showFeedback(itemPos, feedback);
+          }
+          runtime.submitAction(collectibleConfig.collectAction, { [idField]: itemId });
+        }
+      }
+    }
+  };
+  const collect = (collectibleType, itemId) => {
+    const collectibleConfig = config[collectibleType];
+    if (!collectibleConfig) {
+      console.warn(`Unknown collectible type: ${collectibleType}`);
+      return;
+    }
+    const idField = collectibleConfig.idField || "id";
+    runtime.submitAction(collectibleConfig.collectAction, { [idField]: itemId });
+  };
+  return {
+    update,
+    collect,
+    destroy: () => {
+      unsubscribe?.();
+    }
+  };
+}
+
+// src/helpers/RoundManager.ts
+function createRoundManager(adapter, scene, config) {
+  const runtime = adapter.getRuntime();
+  const timerKey = config.timerStateKey || "roundTimer";
+  const roundKey = config.roundStateKey || "round";
+  const playersKey = config.playersKey || "players";
+  const gameOverKey = config.gameOverKey || "gameOver";
+  const winnerKey = config.winnerKey || "winner";
+  let timerText = null;
+  let announcementText = null;
+  const scoreTexts = [];
+  if (config.ui.timer) {
+    const timerConfig = config.ui.timer;
+    const defaultStyle = {
+      fontSize: "24px",
+      color: "#ffffff",
+      fontStyle: "bold",
+      ...timerConfig.style
+    };
+    timerText = scene.add.text(
+      timerConfig.position.x,
+      timerConfig.position.y,
+      "",
+      defaultStyle
+    );
+    timerText.setOrigin(0.5);
+  }
+  if (config.ui.announcement) {
+    const announcementConfig = config.ui.announcement;
+    const camera = scene.cameras.main;
+    const pos = announcementConfig.position || { x: camera.width / 2, y: camera.height / 2 };
+    const defaultStyle = {
+      fontSize: "48px",
+      color: "#fbbf24",
+      fontStyle: "bold",
+      stroke: "#000",
+      strokeThickness: 6,
+      ...announcementConfig.style
+    };
+    announcementText = scene.add.text(pos.x, pos.y, "", defaultStyle);
+    announcementText.setOrigin(0.5);
+    announcementText.setVisible(false);
+    announcementText.setDepth(1e3);
+  }
+  let isFrozen = false;
+  let freezeTimer = 0;
+  const showAnnouncement = (text, duration) => {
+    if (!announcementText) return;
+    announcementText.setText(text);
+    announcementText.setVisible(true);
+    announcementText.setAlpha(0);
+    scene.tweens.add({
+      targets: announcementText,
+      alpha: 1,
+      duration: 200,
+      ease: "Cubic.easeOut"
+    });
+    isFrozen = true;
+    freezeTimer = duration;
+    scene.time.delayedCall(duration, () => {
+      if (!announcementText) return;
+      scene.tweens.add({
+        targets: announcementText,
+        alpha: 0,
+        duration: 300,
+        ease: "Cubic.easeIn",
+        onComplete: () => {
+          announcementText?.setVisible(false);
+          isFrozen = false;
+        }
+      });
+    });
+  };
+  const update = () => {
+    const state = runtime.getState();
+    if (timerText && config.ui.timer) {
+      const timerValue = state[timerKey] || 0;
+      const formatted = config.ui.timer.format(timerValue);
+      timerText.setText(formatted);
+      const warningAt = config.ui.timer.warningAt ?? 3e4;
+      if (timerValue <= warningAt && config.ui.timer.warningStyle) {
+        timerText.setStyle(config.ui.timer.warningStyle);
+      } else if (config.ui.timer.style) {
+        timerText.setStyle(config.ui.timer.style);
+      }
+    }
+    if (config.ui.scoreboard) {
+      const scoreConfig = config.ui.scoreboard;
+      const players = state[playersKey] || {};
+      const playerEntries = Object.entries(players);
+      scoreTexts.forEach((text) => text.destroy());
+      scoreTexts.length = 0;
+      let yOffset = 0;
+      const spacing = scoreConfig.spacing ?? 25;
+      playerEntries.forEach(([playerId, player], index) => {
+        const text = scene.add.text(
+          scoreConfig.position.x,
+          scoreConfig.position.y + yOffset,
+          scoreConfig.format(player, index, playerId),
+          scoreConfig.style || { fontSize: "16px", color: "#ffffff" }
+        );
+        scoreTexts.push(text);
+        yOffset += spacing;
+      });
+    }
+    if (adapter.isHost() && !isFrozen && !state[gameOverKey]) {
+      const winnerId = config.checkWinner(state);
+      if (winnerId !== void 0) {
+        const players = state[playersKey] || {};
+        if (winnerId === null) {
+          if (config.ui.announcement) {
+            const text = config.ui.announcement.draw();
+            const duration = config.ui.announcement.freezeDuration ?? 3e3;
+            showAnnouncement(text, duration);
+          }
+          runtime.submitAction("endRound", { winnerId: null });
+        } else {
+          const winner = players[winnerId];
+          const score = winner.score || 0;
+          const isMatchWin = score + 1 >= config.roundsToWin;
+          if (config.ui.announcement) {
+            const text = isMatchWin ? config.ui.announcement.matchWin(winner, winnerId) : config.ui.announcement.winner(winner, winnerId);
+            const duration = config.ui.announcement.freezeDuration ?? 3e3;
+            showAnnouncement(text, duration);
+          }
+          runtime.submitAction("endRound", { winnerId });
+        }
+      }
+    }
+    if (state[gameOverKey] && state[winnerKey]) {
+      const players = state[playersKey] || {};
+      const winner = players[state[winnerKey]];
+      if (winner && config.ui.announcement && announcementText && !announcementText.visible) {
+        const text = config.ui.announcement.matchWin(winner, state[winnerKey]);
+        announcementText.setText(text);
+        announcementText.setVisible(true);
+        announcementText.setAlpha(1);
+      }
+    }
+  };
+  const unsubscribe = adapter.onChange(() => {
+    update();
+  });
+  update();
+  return {
+    update,
+    destroy: () => {
+      unsubscribe();
+      timerText?.destroy();
+      announcementText?.destroy();
+      scoreTexts.forEach((text) => text.destroy());
+    },
+    getTimerText: () => timerText,
+    getAnnouncementText: () => announcementText
   };
 }
 
@@ -3247,6 +4124,7 @@ function createDualRuntimePreview(config) {
 // src/runtime.ts
 import { GameRuntime as GameRuntime2 } from "@martini-kit/core";
 import { LocalTransport as LocalTransport2 } from "@martini-kit/transport-local";
+import { TrysteroTransport } from "@martini-kit/transport-trystero";
 import { IframeBridgeTransport } from "@martini-kit/transport-iframe-bridge";
 import Phaser from "phaser";
 var GLOBAL_GAME_KEY = "__martini-kit_CURRENT_GAME__";
@@ -3263,7 +4141,7 @@ function clearGlobalCleanup() {
   if (typeof globalThis === "undefined") return;
   delete globalThis[GLOBAL_GAME_KEY];
 }
-function initializeGame(config) {
+async function initializeGame(config) {
   const hot = typeof import.meta !== "undefined" ? import.meta.hot : void 0;
   const previousCleanup = getExistingCleanup();
   if (previousCleanup) {
@@ -3287,14 +4165,26 @@ function initializeGame(config) {
     );
   }
   const transport = createTransport(platformConfig.transport);
+  if (typeof transport.waitForReady === "function") {
+    await transport.waitForReady();
+  }
+  const initialPlayerIds = [transport.getPlayerId()];
   const runtime = new GameRuntime2(
     config.game,
     transport,
     {
       isHost: platformConfig.transport.isHost,
-      playerIds: [transport.getPlayerId()]
+      playerIds: initialPlayerIds
     }
   );
+  const minPlayers = platformConfig.minPlayers && platformConfig.minPlayers > 0 ? platformConfig.minPlayers : 1;
+  if (minPlayers > 1) {
+    try {
+      await runtime.waitForPlayers(minPlayers, { timeoutMs: 1e4 });
+    } catch (err) {
+      console.warn("[Martini] waitForPlayers timed out:", err);
+    }
+  }
   const PhaserLib = Phaser ?? (typeof window !== "undefined" ? window.Phaser : void 0);
   if (!PhaserLib) {
     throw new Error("Phaser failed to load. Ensure the Phaser script is available in the sandbox.");
@@ -3373,20 +4263,25 @@ function createTransport(config) {
         roomId: config.roomId,
         isHost: config.isHost
       });
-    // case 'trystero':
-    //   return new TrysteroTransport({
-    //     appId: config.appId || 'martini-kit',
-    //     roomId: config.roomId,
-    //     isHost: config.isHost
-    //   });
+    case "trystero":
+      return new TrysteroTransport({
+        appId: config.appId || "martini-kit",
+        roomId: config.roomId,
+        isHost: config.isHost,
+        rtcConfig: config.rtcConfig,
+        relayUrls: config.relayUrls
+      });
     default:
-      throw new Error(`Unknown transport type: ${config.type}. Only 'local' and 'iframe-bridge' are supported in IDE mode.`);
+      throw new Error(`Unknown transport type: ${config.type}. Only 'local', 'iframe-bridge', and 'trystero' are supported in IDE mode.`);
   }
 }
 export {
   BUILT_IN_PROFILES,
   CollisionManager,
   GridClickHelper,
+  GridCollisionManager,
+  GridLockedMovementManager,
+  GridMovementManager,
   HealthBarManager,
   InputManager,
   PhaserAdapter,
@@ -3396,9 +4291,12 @@ export {
   StateDrivenSpawner,
   attachDirectionalIndicator,
   createCameraFollower,
+  createCollectibleManager,
   createCompositeAttachment,
   createDualRuntimePreview,
   createPlayerHUD,
+  createPlayerStatsPanel,
+  createRoundManager,
   createSpeedDisplay,
   createSpriteAttachment,
   createSpriteAttachments,
