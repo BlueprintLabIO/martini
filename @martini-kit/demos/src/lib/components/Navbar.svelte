@@ -2,7 +2,6 @@
 	import { page } from "$app/stores";
 	import { Menu, X } from "@lucide/svelte";
 	import ThemeToggle from "./ThemeToggle.svelte";
-	import logo from "/image.png";
 
 	let mobileMenuOpen = $state(false);
 
@@ -45,7 +44,7 @@
 		<div class="nav-surface">
 			<!-- Logo / Branding -->
 			<a href="/" class="nav-brand">
-				<img src={logo} alt="martini-kit logo" class="brand-logo" />
+				<img src="/image.png" alt="martini-kit logo" class="brand-logo" />
 				<span class="brand-text">martini-kit</span>
 			</a>
 
