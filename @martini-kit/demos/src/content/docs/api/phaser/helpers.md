@@ -66,6 +66,12 @@ const hud = createPlayerHUD(adapter, this, {
 
 Automatic per-player health bars and labels for all players.
 
+### Player Stats Panel
+
+Single-player HUD overlay for the **local player** (powerups, stats, buffs). Auto-updates on state changes with icons, values, and optional highlights/tooltips.
+
+[Full docs →](./player-stats-panel)
+
 ### CollisionManager
 
 Simplified collision detection setup (coming soon).
@@ -73,6 +79,12 @@ Simplified collision detection setup (coming soon).
 ### PhysicsManager
 
 Advanced physics configuration (coming soon).
+
+### Collectible Manager
+
+Host-only collision detection for pickups (grid or continuous) with optional popup/particle/sound feedback.
+
+[Full docs →](./collectible-manager)
 
 ### StateDrivenSpawner
 
@@ -126,6 +138,18 @@ const gridHelper = adapter.createClickableGrid({
 
 [Full docs →](./grid-click-helper)
 
+### Grid Collision Manager
+
+Smooth movement with grid-aligned collision checks (Zelda/modern Bomberman style).
+
+[Full docs →](./grid-collision-manager)
+
+### Grid Locked Movement Manager
+
+True cell-to-cell committed movement (Bomberman classic/Pacman). Movement changes only when aligned to a grid cell.
+
+[Full docs →](./grid-locked-movement-manager)
+
 ### CameraFollower
 
 Automatic camera following with smooth tracking modes.
@@ -172,6 +196,12 @@ onCreate: (key, data) => {
 **Pit of Success:** Automatically handles Phaser rotation offsets and cleans up when sprite/scene is destroyed.
 
 [Full guide →](../../guides/sprite-attachments)
+
+### Round Manager
+
+Timer, announcements/freeze frames, and scoreboard for round-based games.
+
+[Full docs →](./round-manager)
 
 ## Sprite Attachment System
 

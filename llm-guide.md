@@ -34,6 +34,8 @@ adapter.createStateDrivenSpawner()     // Auto-create sprites from state arrays
 // Player Systems
 adapter.createPlayerUIManager()        // Auto UI for all players (scores, names, etc)
 adapter.createHealthBarManager()       // Health bars above sprites
+createPlayerStatsPanel()               // Local player powerup/stats panel
+createRoundManager()                   // Timer + announcements + scoreboard
 
 // Input & Physics
 adapter.createInputManager()           // Keyboard input with profiles (topDown, sideScroller)
@@ -42,10 +44,12 @@ adapter.createCollisionManager()       // Collision detection
 
 // Grid-Based Games
 adapter.createClickableGrid()          // MOUSE-BASED grid interaction (Connect Four, Chess)
-adapter.createGridMovementManager()    // KEYBOARD-BASED grid movement (Bomberman, Pacman, Snake)
+adapter.createGridCollisionManager()   // Smooth movement w/ grid collisions (Zelda/modern Bomberman)
+adapter.createGridLockedMovementManager() // Cell-to-cell movement (Bomberman classic, Pacman)
 
 // UI & Camera
 adapter.createCameraFollower()         // Camera tracking
+createCollectibleManager()             // Host-only collectible collisions w/ feedback
 ```
 
 **Common Mistake:** `createClickableGrid()` is for MOUSE CLICKS (turn-based games), not keyboard movement.
@@ -87,9 +91,9 @@ Need game logic? → ALWAYS wrap in createTickAction()
 ## Common Patterns
 
 ### Pattern: Grid-Based Movement (Bomberman, Pacman)
-**Status:** ✅ Use `createGridMovementManager()` + `forEachPlayerInput()`
+**Status:** ✅ Use `createGridCollisionManager()` (smooth) or `createGridLockedMovementManager()` (cell-locked) + `forEachPlayerInput()`
 ```typescript
-const gridMovement = adapter.createGridMovementManager({
+const gridMovement = adapter.createGridLockedMovementManager({
   tileSize: 52,
   gridWidth: 13,
   gridHeight: 13,
@@ -101,6 +105,21 @@ tick: createTickAction((state, delta) => {
     gridMovement.moveEntity(player, input, delta);
   });
 })
+```
+
+### Pattern: Round Timer + Scoreboard
+**Status:** ✅ Use `createRoundManager()`
+```typescript
+const rounds = createRoundManager(adapter, scene, {
+  roundsToWin: 3,
+  checkWinner: (state) => {
+    const alive = Object.entries(state.players).filter(([, p]) => p.alive);
+    if (alive.length === 1) return alive[0][0];
+    if (state.roundTimer <= 0) return null;
+    return undefined;
+  },
+  ui: { timer: { position: { x: 400, y: 40 }, format: (ms) => `${Math.ceil(ms/1000)}s` } }
+});
 ```
 
 ### Pattern: Timer Management (Bombs, Cooldowns)
@@ -152,8 +171,8 @@ tick: createTickAction((state, delta) => {
 ```typescript
 // BAD - GridClickHelper is for MOUSE CLICKS only
 adapter.createClickableGrid() // For turn-based games
-// GOOD - Use GridMovementManager for keyboard
-adapter.createGridMovementManager()
+// GOOD - Use GridCollisionManager (smooth) or GridLockedMovementManager (cell-to-cell)
+adapter.createGridCollisionManager()
 ```
 
 ❌ **Manual player iteration in tick**
