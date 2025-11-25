@@ -52,6 +52,7 @@
 		"@martini-kit/transport-trystero": "workspace:*",
 		"@sveltejs/adapter-cloudflare": "^7.2.4",
 		"fuse.js": "^7.1.0",
-		"phaser": "^3.80.1"
+		"phaser": "^3.80.1",
+		"posthog-js": "^1.298.0"
 	}
 }

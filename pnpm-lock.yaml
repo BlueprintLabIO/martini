@@ -10,10 +10,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      posthog-js:
-        specifier: ^1.298.0
-        version: 1.298.0
     devDependencies:
       '@supabase/supabase-js':
         specifier: ^2.80.0
@@ -105,6 +101,9 @@ importers:
       phaser:
         specifier: ^3.80.1
         version: 3.90.0
+      posthog-js:
+        specifier: ^1.298.0
+        version: 1.298.0
     devDependencies:
       '@rehype-pretty/transformers':
         specifier: ^0.13.2
