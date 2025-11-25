@@ -12,7 +12,7 @@
 	}
 
 	const navLinks: NavLink[] = [
-		{ label: "Play", href: "/play" },
+		// { label: "Play", href: "/play" },
 		{ label: "Games", href: "/preview" },
 		{ label: "Docs", href: "/docs" },
 		{
