@@ -7,9 +7,10 @@
 		"node": ">=18"
 	},
 	"scripts": {
-		"dev": "turbo run build --filter=demos^... && pnpm run build:sdk && pnpm --filter=demos run dev",
+		"dev": "pnpm run bundle:ide && turbo run dev dev:build-sdk --filter=demos --parallel",
 		"dev:watch": "turbo watch dev --filter=demos",
 		"dev:demos": "pnpm --filter=demos run dev",
+		"bundle:ide": "pnpm -r --filter @martini-kit/core --filter @martini-kit/phaser --filter @martini-kit/transport-local --filter @martini-kit/transport-iframe-bridge run bundle:ide",
 		"build:sdk": "pnpm --filter=demos run build:sdk",
 		"build": "turbo run build",
 		"build:demos": "pnpm --filter=demos run build",

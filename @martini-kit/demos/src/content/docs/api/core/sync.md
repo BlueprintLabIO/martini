@@ -536,7 +536,7 @@ deepClone(obj);  // ❌ Stack overflow
 - **Don't manually manage patches** - Use GameRuntime's built-in sync
 - **Don't assume ordering** - Use sequence numbers if needed
 - **Don't store non-serializable data** - Breaks diff/patch
-- **Don't sync every tick** - Use `syncInterval` to throttle (default 50ms)
+- **Don't sync every tick** - Use `syncInterval` to throttle (default 16ms)
 
 ## See Also
 

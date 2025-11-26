@@ -70,7 +70,7 @@ Use `StateInspector` from `@martini-kit/devtools` - see [Troubleshooting](/docs/
 ### What's the recommended state sync rate?
 
 - **Slow-paced** (turn-based): 100-200ms
-- **Normal** (platformers): 50ms (default)
+- **Normal** (platformers): 16ms (default)
 - **Fast-paced** (shooters): 33ms or 16ms
 
 See [Performance guide](/docs/latest/guides/performance-guide) for optimization tips.

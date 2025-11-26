@@ -578,9 +578,8 @@ export function createScene(runtime: GameRuntime) {
 		private keys!: any;
 
 		create() {
+			// Initialize adapter - always-on snapshot smoothing (~32ms visual delay)
 			this.adapter = new PhaserAdapter(runtime, this, {
-				interpolationMode: 'snapshot-buffer',
-				snapshotBufferSize: 2,
 				autoTick: true // ✅ Automatically call tick action in update()
 			});
 

@@ -101,7 +101,7 @@ export interface RuntimeConfig {
     isHost: boolean;
     /** Initial player IDs (optional, can be added dynamically) */
     playerIds?: string[];
-    /** How often to sync state (ms) - default 50ms (20 FPS) */
+    /** How often to sync state (ms) - default 16ms (60 FPS) */
     syncInterval?: number;
 }
 //# sourceMappingURL=transport.d.ts.map

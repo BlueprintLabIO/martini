@@ -14,12 +14,15 @@ export class GameRuntime {
     previousState = {};
     _isHost;
     syncIntervalId = null;
+    syncTickerId = null;
     unsubscribes = [];
     strict;
     actionCounter = 100000; // For seeding action random (start high to avoid LCG collisions)
     stateChangeCallbacks = [];
     eventCallbacks = new Map();
     patchListeners = [];
+    lastSyncSent = Date.now();
+    heartbeatIntervalMs = 100;
     constructor(gameDef, transport, config) {
         this.gameDef = gameDef;
         this.transport = transport;
@@ -42,8 +45,8 @@ export class GameRuntime {
         this.setupTransport();
         // Start sync loop if host
         if (this._isHost) {
-            const syncInterval = config.syncInterval || 50; // 20 FPS default
-            this.syncIntervalId = setInterval(() => this.syncState(), syncInterval);
+            const syncInterval = config.syncInterval || 13; // ~75 FPS default for smoother arrivals
+            this.startSyncLoop(syncInterval);
         }
     }
     /**
@@ -245,6 +248,9 @@ export class GameRuntime {
         if (this.syncIntervalId) {
             clearInterval(this.syncIntervalId);
         }
+        if (this.syncTickerId && typeof globalThis.cancelAnimationFrame === 'function') {
+            globalThis.cancelAnimationFrame(this.syncTickerId);
+        }
         this.unsubscribes.forEach(unsub => unsub());
         this.unsubscribes = [];
     }
@@ -284,6 +290,12 @@ export class GameRuntime {
                     this.handleStateSync(msg.payload);
                 }
                 break;
+            case 'heartbeat':
+                // Lightweight keep-alive to keep arrival cadence stable (clients only)
+                if (!this._isHost) {
+                    this.notifyStateChange();
+                }
+                break;
             case 'action':
                 // Only host processes actions from clients
                 if (this._isHost && senderId !== this.transport.getPlayerId()) {
@@ -307,6 +319,10 @@ export class GameRuntime {
                 applyPatch(this.state, patch);
             }
             this.notifyStateChange(payload.patches); // Reuse host-computed patches
+        }
+        else if (payload?.heartbeat) {
+            // Keep arrival cadence stable even when no state diff
+            this.notifyStateChange();
         }
     }
     handleActionFromClient(payload) {
@@ -337,7 +353,7 @@ export class GameRuntime {
             callback(senderId, eventName, eventPayload);
         }
     }
-    syncState() {
+    syncState(now = Date.now()) {
         if (!this._isHost)
             return;
         // Generate diff from last sync
@@ -350,10 +366,54 @@ export class GameRuntime {
             });
             // Notify all listeners (Inspector + state change callbacks)
             this.notifyStateChange(patches);
+            this.lastSyncSent = now;
         }
         // Update baseline for next sync (even if no patches this time)
         // This captures all mutations that happened since last sync
         this.previousState = deepClone(this.state);
+        // Heartbeat to keep arrival cadence stable when idle
+        if (patches.length === 0 && now - this.lastSyncSent >= this.heartbeatIntervalMs) {
+            this.transport.send({
+                type: 'heartbeat',
+                payload: { heartbeat: true }
+            });
+            this.notifyStateChange();
+            this.lastSyncSent = now;
+        }
+    }
+    /**
+     * Start a jitter-resistant sync loop.
+     * Prefer requestAnimationFrame with an accumulator; fall back to setInterval when rAF is unavailable.
+     */
+    startSyncLoop(intervalMs) {
+        // Clear any existing loop
+        if (this.syncIntervalId) {
+            clearInterval(this.syncIntervalId);
+            this.syncIntervalId = null;
+        }
+        if (this.syncTickerId && typeof globalThis.cancelAnimationFrame === 'function') {
+            globalThis.cancelAnimationFrame(this.syncTickerId);
+            this.syncTickerId = null;
+        }
+        const raf = globalThis.requestAnimationFrame;
+        const useRaf = typeof raf === 'function';
+        if (useRaf) {
+            let last = performance.now();
+            const tick = (now) => {
+                if (!this._isHost)
+                    return; // bail if role changes
+                const elapsed = now - last;
+                if (elapsed >= intervalMs - 0.5) {
+                    this.syncState(now);
+                    last = now;
+                }
+                this.syncTickerId = raf(tick);
+            };
+            this.syncTickerId = raf(tick);
+        }
+        else {
+            this.syncIntervalId = setInterval(() => this.syncState(), intervalMs);
+        }
     }
     /**
      * Unified state change notification - ensures all listeners are notified consistently

@@ -30,6 +30,7 @@ export class SpriteManager {
     adapter;
     unsubscribe;
     namespace;
+    effectiveSyncInterval;
     /**
      * Track sprites created locally via add() method
      * This eliminates the need to know player IDs for filtering
@@ -52,6 +53,15 @@ export class SpriteManager {
         this.adapter = adapter;
         this.config = config;
         this.namespace = config.namespace || '_sprites';
+        const hasPhysicsManager = adapter.hasPhysicsManagedNamespace(this.namespace);
+        const motionProfile = config.motionProfile;
+        this.effectiveSyncInterval =
+            config.sync?.interval ??
+                (motionProfile === 'platformer' || hasPhysicsManager ? 13 : 13);
+        if (hasPhysicsManager && config.sync?.direction !== 'toSprite') {
+            console.warn(`[SpriteManager] Namespace "${this.namespace}" is managed by PhysicsManager. ` +
+                'For platformer-style movement, set sync.direction: "toSprite" or disable syncPositionToState in PhysicsManager to avoid double writers.');
+        }
         // Create Phaser group for collision management
         const scene = adapter.getScene();
         this.group = scene.add.group();
@@ -101,13 +111,15 @@ export class SpriteManager {
         }
         // Track for automatic sync (host only)
         const syncProperties = this.config.sync?.properties || ['x', 'y', 'rotation', 'alpha'];
-        const syncInterval = this.config.sync?.interval;
-        const adaptiveSync = this.config.sync?.adaptive;
+        const syncInterval = this.effectiveSyncInterval;
+        // Phase 1: Enable adaptive sync by default for bandwidth efficiency
+        const adaptiveSync = this.config.sync?.adaptive ?? true; // Default: true
         const adaptiveSyncThreshold = this.config.sync?.adaptiveThreshold;
         this.adapter.trackSprite(sprite, key, {
             properties: syncProperties,
             syncInterval: syncInterval,
             namespace: this.namespace,
+            motionProfile: this.config.motionProfile,
             adaptiveSync: adaptiveSync,
             adaptiveSyncThreshold: adaptiveSyncThreshold
         });

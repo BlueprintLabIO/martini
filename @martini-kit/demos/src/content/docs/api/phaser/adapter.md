@@ -82,15 +82,15 @@ class PhaserAdapter<TState = any> {
 
 ```typescript
 interface PhaserAdapterConfig {
-  spriteNamespace?: string;    // Default: '_sprites'
-  autoInterpolate?: boolean;    // Default: true
-  lerpFactor?: number;          // Default: 0.3 (range: 0.1-0.5)
+  spriteNamespace?: string;     // Default: '_sprites'
+  snapshotBufferSize?: number;  // Optional: override auto-sized snapshot buffer (~32ms delay)
+  autoTick?: boolean;           // Default: true (auto-submits tick action)
+  tickAction?: string;          // Default: 'tick'
 }
 
 interface SpriteTrackingOptions {
-  syncInterval?: number;        // Default: 50ms (20 FPS)
+  syncInterval?: number;        // Default: 16ms (60 FPS)
   properties?: string[];        // Default: ['x', 'y', 'rotation', 'alpha']
-  interpolate?: boolean;        // Default: true
   namespace?: string;           // Default: adapter's spriteNamespace
 }
 ```
@@ -126,9 +126,8 @@ class GameScene extends Phaser.Scene {
 
     // Create adapter
     this.adapter = new PhaserAdapter(runtime, this, {
-      spriteNamespace: '_sprites',  // Where sprite data is stored in state
-      autoInterpolate: true,         // Smooth remote sprite movement
-      lerpFactor: 0.3               // Interpolation speed
+      spriteNamespace: '_sprites',   // Where sprite data is stored in state
+      snapshotBufferSize: 3          // Optional: more smoothing (delay = 3 * syncInterval)
     });
   }
 }
@@ -353,7 +352,7 @@ trackSprite(
 
 **What it does:**
 - **Host:** Reads sprite properties → writes to state → broadcasts to clients
-- **Clients:** Read state → update sprite properties → interpolate for smoothness
+- **Clients:** Read state → update sprite properties → render via snapshot buffer for smoothness
 
 **Example:**
 
@@ -376,22 +375,11 @@ this.adapter.trackSprite(enemySprite, 'enemy-1', {
 this.adapter.trackSprite(sprite, 'projectile-1', {
   namespace: 'projectiles'
 });
-
-// Disable interpolation (for instant teleports)
-this.adapter.trackSprite(sprite, 'teleporter', {
-  interpolate: false
-});
 ```
 
-**Automatic interpolation:**
+**Automatic smoothing:**
 
-By default, remote sprites smoothly lerp to their target positions:
-
-```typescript
-// On client, sprite smoothly moves to server position
-// Instead of: sprite.x = stateX (jerky)
-// Does: sprite.x += (stateX - sprite.x) * lerpFactor (smooth)
-```
+Remote sprites always render from a snapshot buffer about 32ms in the past. The buffer auto-sizes to your sync rate and you can opt into a larger buffer via `snapshotBufferSize` on the adapter config for extra smoothing.
 
 ### untrackSprite()
 

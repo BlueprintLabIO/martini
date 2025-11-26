@@ -41,6 +41,7 @@
     "build": "tsc && node scripts/build-browser-bundle.js",
     "build:types": "tsc",
     "build:browser": "node scripts/build-browser-bundle.js",
+    "bundle:ide": "pnpm run build && node --experimental-strip-types scripts/generate-ide-bundle.ts",
     "dev": "tsc --watch",
     "test": "vitest",
     "test:coverage": "vitest --coverage",

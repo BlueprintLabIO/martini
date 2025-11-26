@@ -104,11 +104,8 @@ export function createScene(runtime: GameRuntime) {
 		}
 
 		create() {
-			// Enable snapshot-buffer interpolation for smoothest ball movement
-			this.adapter = new PhaserAdapter(runtime, this, {
-				interpolationMode: 'snapshot-buffer',
-				snapshotBufferSize: 3
-			});
+			// Initialize adapter - always-on snapshot smoothing (~32ms visual delay)
+			this.adapter = new PhaserAdapter(runtime, this);
 			(this as any).debugLog = (event: string, payload?: any) => {
 				const role = this.adapter.isHost() ? 'HOST' : 'CLIENT';
 				console.log('[PaddleBattle][' + role + '] ' + event, payload ?? '');
@@ -238,7 +235,7 @@ export function createScene(runtime: GameRuntime) {
 			// Input handling (auto-sends move actions via profile)
 			this.inputManager.update();
 
-			// Sprite interpolation
+			// Snapshot interpolation
 			this.spriteManager.update();
 
 			// HOST ONLY - Ball physics + scoring
@@ -268,16 +265,9 @@ export function createScene(runtime: GameRuntime) {
 			}
 
 			let scored = false;
-			let ballSnapshot: { x: number; y: number; velocityX: number; velocityY: number } | undefined;
 
 				if (this.ball) {
 					const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
-					ballSnapshot = {
-						x: this.ball.x,
-						y: this.ball.y,
-					velocityX: ballBody.velocity.x,
-					velocityY: ballBody.velocity.y
-				};
 
 				const rightPlayerId = this.getPlayerIdBySide('right');
 				const leftPlayerId = this.getPlayerIdBySide('left');
@@ -310,20 +300,14 @@ export function createScene(runtime: GameRuntime) {
 					}
 				}
 
-			if (Object.keys(paddlePositions).length || (ballSnapshot && !scored)) {
-				const snapshot = scored ? undefined : ballSnapshot;
+			// FIX: Only sync paddle positions, not ball (trackSprite already handles ball)
+			// Manual ball syncing conflicts with trackSprite causing rubber banding
+			if (Object.keys(paddlePositions).length) {
 				runtime.mutateState((nextState: any) => {
 					for (const [playerId, y] of Object.entries(paddlePositions)) {
 						if (nextState.players?.[playerId]) {
 							nextState.players[playerId].y = y;
 						}
-					}
-
-					if (snapshot && nextState.ball) {
-						nextState.ball.x = snapshot.x;
-						nextState.ball.y = snapshot.y;
-						nextState.ball.velocityX = snapshot.velocityX;
-						nextState.ball.velocityY = snapshot.velocityY;
 					}
 				});
 			}

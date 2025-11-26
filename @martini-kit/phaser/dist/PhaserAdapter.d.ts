@@ -16,12 +16,12 @@ import { GridClickHelper, type GridClickConfig } from './helpers/GridClickHelper
 import { GridCollisionManager, type GridCollisionConfig, type GridMovementConfig } from './helpers/GridCollisionManager.js';
 import { GridLockedMovementManager, type GridLockedMovementConfig } from './helpers/GridLockedMovementManager.js';
 export interface SpriteTrackingOptions {
-    /** Sync interval in ms (default: 50ms / 20 FPS) */
+    /** Sync interval in ms (default: 16ms / 60 FPS) */
     syncInterval?: number;
     /** Properties to sync (default: x, y, rotation, alpha) */
     properties?: string[];
-    /** Interpolate movement on clients for smoothness */
-    interpolate?: boolean;
+    /** Optional motion profile to tune sync behavior */
+    motionProfile?: 'platformer' | 'projectile' | 'prop';
     /** Namespace to write sprite data to (default: uses adapter's spriteNamespace) */
     namespace?: string;
     /** Enable adaptive sync rate (default: false) - syncs faster when moving, slower when idle */
@@ -36,42 +36,13 @@ export interface PhaserAdapterConfig {
      */
     spriteNamespace?: string;
     /**
-     * Enable automatic interpolation for remote sprites (default: true)
-     * When enabled, remote sprites smoothly lerp to target positions
-     */
-    autoInterpolate?: boolean;
-    /**
-     * Interpolation lerp factor (default: 0.3)
-     * Lower = smoother but laggier, Higher = snappier but jerkier
-     * Range: 0.1 (very smooth) to 0.5 (very snappy)
-     */
-    lerpFactor?: number;
-    /**
-     * Interpolation mode (default: 'lerp')
-     * - 'lerp': Exponential smoothing (frame-rate dependent, legacy)
-     * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
-     * - 'snapshot-buffer': Render past with buffered snapshots (smoothest, adds 50-100ms latency)
-     */
-    interpolationMode?: 'lerp' | 'time-based' | 'snapshot-buffer';
-    /**
-     * Interpolation speed in pixels per second (for 'time-based' mode, default: 400)
-     */
-    interpolationSpeed?: number;
-    /**
-     * Snapshot buffer size (for 'snapshot-buffer' mode, default: 3)
-     * Higher = smoother but more latency
+     * Snapshot buffer size in sync-intervals (optional)
+     *
+     * Defaults to auto-calculated `ceil(32ms / syncInterval)` so visuals always render
+     * ~32ms in the past, regardless of the host's sync rate. Override to trade
+     * smoothness vs latency (higher = smoother, more delay).
      */
     snapshotBufferSize?: number;
-    /**
-     * Enable dead reckoning/extrapolation (default: true)
-     * Continues movement based on velocity during packet loss
-     */
-    enableDeadReckoning?: boolean;
-    /**
-     * Dead reckoning max duration in ms (default: 200)
-     * Maximum time to extrapolate without new data
-     */
-    deadReckoningMaxDuration?: number;
     /**
      * Automatically call tick action in scene.update() (default: true)
      * When enabled, eliminates need for manual runtime.submitAction('tick', {delta})
@@ -91,15 +62,11 @@ export declare class PhaserAdapter<TState = any> {
     private remoteSprites;
     private syncIntervalId;
     private readonly spriteNamespace;
-    private readonly autoInterpolate;
-    private readonly lerpFactor;
-    private readonly interpolationMode;
-    private readonly interpolationSpeed;
-    private readonly snapshotBufferSize;
-    private readonly enableDeadReckoning;
-    private readonly deadReckoningMaxDuration;
+    private readonly snapshotBufferSizeOverride?;
+    private readonly targetInterpolationDelayMs;
+    private readonly defaultSyncIntervalMs;
     private spriteManagers;
-    private lastUpdateTime;
+    private physicsManagedNamespaces;
     private readonly autoTick;
     private readonly tickAction;
     private lastTickTime;
@@ -322,6 +289,18 @@ export declare class PhaserAdapter<TState = any> {
      */
     private updateSpritesFromState;
     /**
+     * Blend new sync interval measurements with previous estimate for stability
+     */
+    private smoothSyncInterval;
+    /**
+     * Number of snapshots we should keep to cover the target render delay window
+     */
+    private getMaxSnapshots;
+    /**
+     * Compute delay intervals (in sync steps) for this sprite
+     */
+    private getDelayIntervals;
+    /**
      * Apply sprite data to a sprite
      */
     private applySpriteData;
@@ -350,22 +329,10 @@ export declare class PhaserAdapter<TState = any> {
      * Call this in your Phaser update() loop to smoothly interpolate remote sprites
      * This should be called every frame (60 FPS) for smooth movement
      *
-     * Note: If autoInterpolate is enabled in config, you don't need to call this manually.
-     *
-     * Supports three interpolation modes:
-     * - 'lerp': Exponential smoothing (legacy, frame-rate dependent)
-     * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
-     * - 'snapshot-buffer': Buffered interpolation (smoothest, adds latency)
+     * Clients always render between the last 2 received snapshots for buttery smooth motion.
+     * This eliminates frame timing jitter while adding ~32ms consistent latency.
      */
-    updateInterpolation(delta?: number): void;
-    /**
-     * Legacy exponential lerp interpolation (frame-rate dependent)
-     */
-    private updateLerpInterpolation;
-    /**
-     * Time-based linear interpolation (frame-rate independent)
-     */
-    private updateTimeBasedInterpolation;
+    updateInterpolation(_delta?: number): void;
     /**
      * Snapshot buffer interpolation (smoothest, renders in the past)
      */
@@ -421,6 +388,10 @@ export declare class PhaserAdapter<TState = any> {
     registerSpriteManager(manager: {
         namespace: string;
     }): void;
+    /**
+     * Check if a namespace is already managed by PhysicsManager (for conflict warnings/defaults)
+     */
+    hasPhysicsManagedNamespace(namespace: string): boolean;
     /**
      * Create a typed registry of sprite managers
      *

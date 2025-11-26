@@ -18,14 +18,14 @@ import { GridCollisionManager, GridMovementManager, type GridCollisionConfig, ty
 import { GridLockedMovementManager, type GridLockedMovementConfig } from './helpers/GridLockedMovementManager.js';
 
 export interface SpriteTrackingOptions {
-  /** Sync interval in ms (default: 50ms / 20 FPS) */
+  /** Sync interval in ms (default: 16ms / 60 FPS) */
   syncInterval?: number;
 
   /** Properties to sync (default: x, y, rotation, alpha) */
   properties?: string[];
 
-  /** Interpolate movement on clients for smoothness */
-  interpolate?: boolean;
+  /** Optional motion profile to tune sync behavior */
+  motionProfile?: 'platformer' | 'projectile' | 'prop';
 
   /** Namespace to write sprite data to (default: uses adapter's spriteNamespace) */
   namespace?: string;
@@ -45,48 +45,13 @@ export interface PhaserAdapterConfig {
   spriteNamespace?: string;
 
   /**
-   * Enable automatic interpolation for remote sprites (default: true)
-   * When enabled, remote sprites smoothly lerp to target positions
-   */
-  autoInterpolate?: boolean;
-
-  /**
-   * Interpolation lerp factor (default: 0.3)
-   * Lower = smoother but laggier, Higher = snappier but jerkier
-   * Range: 0.1 (very smooth) to 0.5 (very snappy)
-   */
-  lerpFactor?: number;
-
-  /**
-   * Interpolation mode (default: 'lerp')
-   * - 'lerp': Exponential smoothing (frame-rate dependent, legacy)
-   * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
-   * - 'snapshot-buffer': Render past with buffered snapshots (smoothest, adds 50-100ms latency)
-   */
-  interpolationMode?: 'lerp' | 'time-based' | 'snapshot-buffer';
-
-  /**
-   * Interpolation speed in pixels per second (for 'time-based' mode, default: 400)
-   */
-  interpolationSpeed?: number;
-
-  /**
-   * Snapshot buffer size (for 'snapshot-buffer' mode, default: 3)
-   * Higher = smoother but more latency
+   * Snapshot buffer size in sync-intervals (optional)
+   *
+   * Defaults to auto-calculated `ceil(32ms / syncInterval)` so visuals always render
+   * ~32ms in the past, regardless of the host's sync rate. Override to trade
+   * smoothness vs latency (higher = smoother, more delay).
    */
   snapshotBufferSize?: number;
-
-  /**
-   * Enable dead reckoning/extrapolation (default: true)
-   * Continues movement based on velocity during packet loss
-   */
-  enableDeadReckoning?: boolean;
-
-  /**
-   * Dead reckoning max duration in ms (default: 200)
-   * Maximum time to extrapolate without new data
-   */
-  deadReckoningMaxDuration?: number;
 
   /**
    * Automatically call tick action in scene.update() (default: true)
@@ -109,8 +74,7 @@ export interface PhaserAdapterConfig {
  * ```ts
  * const adapter = new PhaserAdapter(runtime, scene, {
  *   spriteNamespace: 'gameSprites', // optional, defaults to '_sprites'
- *   autoInterpolate: true,           // optional, defaults to true
- *   lerpFactor: 0.3                  // optional, defaults to 0.3
+ *   snapshotBufferSize: 3           // optional, defaults to auto-sized for ~32ms delay
  * });
  * adapter.trackSprite(playerSprite, `player-${playerId}`);
  * // That's it! Sprite automatically syncs across network
@@ -128,32 +92,29 @@ interface SpriteSnapshot {
 interface RemoteSpriteData {
   sprite: any;
   namespace: string;
-  // Legacy lerp targets
-  _targetX?: number;
-  _targetY?: number;
-  _targetRotation?: number;
-  // Snapshot buffer for snapshot-buffer mode
-  snapshots?: SpriteSnapshot[];
-  // Dead reckoning state
-  velocityX?: number;
-  velocityY?: number;
-  lastUpdateTime?: number;
+  snapshots: SpriteSnapshot[];
+  estimatedSyncInterval?: number;
+  delayIntervals?: number;
 }
 
 export class PhaserAdapter<TState = any> {
-  private trackedSprites: Map<string, { sprite: any; options: SpriteTrackingOptions; lastPosition?: { x: number; y: number } }> = new Map();
+  private trackedSprites: Map<
+    string,
+    {
+      sprite: any;
+      options: SpriteTrackingOptions;
+      lastPosition?: { x: number; y: number };
+      lastGrounded?: boolean;
+    }
+  > = new Map();
   private remoteSprites: Map<string, RemoteSpriteData> = new Map();
   private syncIntervalId: any = null;
   private readonly spriteNamespace: string;
-  private readonly autoInterpolate: boolean;
-  private readonly lerpFactor: number;
-  private readonly interpolationMode: 'lerp' | 'time-based' | 'snapshot-buffer';
-  private readonly interpolationSpeed: number;
-  private readonly snapshotBufferSize: number;
-  private readonly enableDeadReckoning: boolean;
-  private readonly deadReckoningMaxDuration: number;
+  private readonly snapshotBufferSizeOverride?: number;
+  private readonly targetInterpolationDelayMs: number = 32;
+  private readonly defaultSyncIntervalMs: number = 13;
   private spriteManagers: Set<{ namespace: string }> = new Set(); // Track all registered SpriteManagers
-  private lastUpdateTime: number = Date.now();
+  private physicsManagedNamespaces: Set<string> = new Set(); // Track namespaces driven by PhysicsManager
   private readonly autoTick: boolean;
   private readonly tickAction: string;
   private lastTickTime: number = Date.now();
@@ -164,13 +125,7 @@ export class PhaserAdapter<TState = any> {
     config: PhaserAdapterConfig = {}
   ) {
     this.spriteNamespace = config.spriteNamespace || '_sprites';
-    this.autoInterpolate = config.autoInterpolate !== false; // default true
-    this.lerpFactor = config.lerpFactor ?? 0.3;
-    this.interpolationMode = config.interpolationMode || 'time-based';
-    this.interpolationSpeed = config.interpolationSpeed ?? 400; // pixels per second
-    this.snapshotBufferSize = config.snapshotBufferSize ?? 3;
-    this.enableDeadReckoning = config.enableDeadReckoning !== false; // default true
-    this.deadReckoningMaxDuration = config.deadReckoningMaxDuration ?? 200; // ms
+    this.snapshotBufferSizeOverride = config.snapshotBufferSize ?? 4;
     this.autoTick = config.autoTick !== false; // default true
     this.tickAction = config.tickAction || 'tick';
 
@@ -449,11 +404,16 @@ export class PhaserAdapter<TState = any> {
    * ```
    */
   trackSprite(sprite: any, key: string, options: SpriteTrackingOptions = {}): void {
-    this.trackedSprites.set(key, { sprite, options, lastPosition: { x: sprite.x, y: sprite.y } });
+    this.trackedSprites.set(key, {
+      sprite,
+      options,
+      lastPosition: { x: sprite.x, y: sprite.y },
+      lastGrounded: undefined
+    });
 
     // Start sync loop if not already running (host only)
     if (this.isHost() && !this.syncIntervalId) {
-      const interval = options.syncInterval || 50;
+      const interval = options.syncInterval || 16;
       this.syncIntervalId = setInterval(() => this.syncAllSprites(), interval);
     }
 
@@ -542,7 +502,7 @@ export class PhaserAdapter<TState = any> {
     }
 
     // Always update interpolation on clients
-    if (!this.isHost() && this.autoInterpolate) {
+    if (!this.isHost()) {
       this.updateInterpolation(delta);
     }
   }
@@ -570,9 +530,21 @@ export class PhaserAdapter<TState = any> {
 
     for (const [key, tracked] of this.trackedSprites.entries()) {
       const { sprite, options, lastPosition } = tracked;
+      const motionProfile = options.motionProfile;
+
+      // Detect ground contact for platformers to force an immediate sync
+      let forceSync = false;
+      if (motionProfile === 'platformer' && sprite?.body) {
+        const body = sprite.body as any;
+        const grounded = !!(body.blocked?.down || body.touching?.down);
+        if (grounded && tracked.lastGrounded === false) {
+          forceSync = true; // landing transition
+        }
+        tracked.lastGrounded = grounded;
+      }
 
       // Adaptive sync: skip if sprite hasn't moved much
-      if (options.adaptiveSync && lastPosition) {
+      if (!forceSync && options.adaptiveSync && lastPosition) {
         const threshold = options.adaptiveSyncThreshold ?? 1;
         const dx = Math.abs(sprite.x - lastPosition.x);
         const dy = Math.abs(sprite.y - lastPosition.y);
@@ -673,70 +645,86 @@ export class PhaserAdapter<TState = any> {
       }
 
       // Update remote sprites (sprites from other players)
-      // Store target positions for interpolation
+      // Store snapshot for interpolation
       const now = Date.now();
       for (const [key, spriteData] of Object.entries(sprites)) {
         // Skip if this is our own sprite
         if (this.trackedSprites.has(key)) continue;
 
-        // If we have a remote sprite for this key, store target position
         const remoteSpriteData = this.remoteSprites.get(key);
-        if (remoteSpriteData && remoteSpriteData.namespace === namespace) {
-          const sprite = remoteSpriteData.sprite;
-          const data = spriteData as any;
+        if (!remoteSpriteData || remoteSpriteData.namespace !== namespace) continue;
 
-          // Calculate velocity for dead reckoning
-          if (this.enableDeadReckoning && remoteSpriteData.lastUpdateTime) {
-            const dt = (now - remoteSpriteData.lastUpdateTime) / 1000; // seconds
-            if (dt > 0 && sprite._targetX !== undefined) {
-              remoteSpriteData.velocityX = (data.x - sprite._targetX) / dt;
-              remoteSpriteData.velocityY = (data.y - sprite._targetY) / dt;
-            }
+        const data = spriteData as any;
+        const snapshots = remoteSpriteData.snapshots;
+
+        snapshots.push({
+          x: data.x,
+          y: data.y,
+          rotation: data.rotation,
+          timestamp: now
+        });
+
+        // Update estimated sync interval for adaptive buffering
+        if (snapshots.length >= 2) {
+          const latest = snapshots[snapshots.length - 1].timestamp;
+          const previous = snapshots[snapshots.length - 2].timestamp;
+          const interval = latest - previous;
+          if (interval > 0) {
+            remoteSpriteData.estimatedSyncInterval = this.smoothSyncInterval(
+              remoteSpriteData.estimatedSyncInterval,
+              interval
+            );
           }
+        }
 
-          // Snapshot buffer mode: Store snapshot instead of direct target
-          if (this.interpolationMode === 'snapshot-buffer') {
-            if (!remoteSpriteData.snapshots) {
-              remoteSpriteData.snapshots = [];
-            }
+        // Keep only the snapshots needed to cover the target delay window
+        const maxSnapshots = this.getMaxSnapshots(remoteSpriteData);
+        while (snapshots.length > maxSnapshots) {
+          snapshots.shift();
+        }
 
-            // Add new snapshot
-            remoteSpriteData.snapshots.push({
-              x: data.x,
-              y: data.y,
-              rotation: data.rotation,
-              timestamp: now
-            });
-
-            // Keep only last N snapshots
-            if (remoteSpriteData.snapshots.length > this.snapshotBufferSize) {
-              remoteSpriteData.snapshots.shift();
-            }
-
-            // First update - snap to position immediately
-            if (sprite.x === undefined) {
-              sprite.x = data.x;
-              sprite.y = data.y;
-              sprite.rotation = data.rotation || 0;
-            }
-          } else {
-            // Legacy lerp / time-based mode: Store target positions
-            sprite._targetX = data.x;
-            sprite._targetY = data.y;
-            sprite._targetRotation = data.rotation;
-
-            // First update - snap to position immediately
-            if (sprite._targetX !== undefined && sprite.x === undefined) {
-              sprite.x = sprite._targetX;
-              sprite.y = sprite._targetY;
-              sprite.rotation = sprite._targetRotation || 0;
-            }
-          }
-
-          remoteSpriteData.lastUpdateTime = now;
+        // First update - snap to position immediately
+        const sprite = remoteSpriteData.sprite;
+        if (sprite.x === undefined || Number.isNaN(sprite.x)) {
+          sprite.x = data.x;
+          sprite.y = data.y;
+          sprite.rotation = data.rotation || 0;
         }
       }
     }
+  }
+
+  /**
+   * Blend new sync interval measurements with previous estimate for stability
+   */
+  private smoothSyncInterval(previous: number | undefined, next: number): number {
+    if (!previous) return next;
+    const alpha = 0.2; // simple EMA to avoid jitter in delay calculation
+    return previous * (1 - alpha) + next * alpha;
+  }
+
+  /**
+   * Number of snapshots we should keep to cover the target render delay window
+   */
+  private getMaxSnapshots(remoteSpriteData: RemoteSpriteData): number {
+    const delayIntervals = this.getDelayIntervals(remoteSpriteData);
+    // Need one more snapshot than delay intervals to bracket the render time
+    return Math.max(2, delayIntervals + 1);
+  }
+
+  /**
+   * Compute delay intervals (in sync steps) for this sprite
+   */
+  private getDelayIntervals(remoteSpriteData: RemoteSpriteData): number {
+    if (this.snapshotBufferSizeOverride) {
+      remoteSpriteData.delayIntervals = Math.max(1, this.snapshotBufferSizeOverride);
+      return remoteSpriteData.delayIntervals;
+    }
+
+    const syncInterval = remoteSpriteData.estimatedSyncInterval ?? this.defaultSyncIntervalMs;
+    const autoSize = Math.max(1, Math.ceil(this.targetInterpolationDelayMs / syncInterval));
+    remoteSpriteData.delayIntervals = autoSize;
+    return autoSize;
   }
 
   /**
@@ -775,7 +763,8 @@ export class PhaserAdapter<TState = any> {
   registerRemoteSprite(key: string, sprite: any, namespace?: string): void {
     this.remoteSprites.set(key, {
       sprite,
-      namespace: namespace || this.spriteNamespace
+      namespace: namespace || this.spriteNamespace,
+      snapshots: []
     });
   }
 
@@ -783,100 +772,18 @@ export class PhaserAdapter<TState = any> {
    * Call this in your Phaser update() loop to smoothly interpolate remote sprites
    * This should be called every frame (60 FPS) for smooth movement
    *
-   * Note: If autoInterpolate is enabled in config, you don't need to call this manually.
-   *
-   * Supports three interpolation modes:
-   * - 'lerp': Exponential smoothing (legacy, frame-rate dependent)
-   * - 'time-based': Linear interpolation at constant speed (frame-rate independent)
-   * - 'snapshot-buffer': Buffered interpolation (smoothest, adds latency)
+   * Clients always render between the last 2 received snapshots for buttery smooth motion.
+   * This eliminates frame timing jitter while adding ~32ms consistent latency.
    */
-  updateInterpolation(delta?: number): void {
+  updateInterpolation(_delta?: number): void {
     if (this.isHost()) return; // Only clients interpolate
 
     const now = Date.now();
-    const dt = delta ? delta / 1000 : (now - this.lastUpdateTime) / 1000; // Convert to seconds
-    this.lastUpdateTime = now;
 
     for (const [key, remoteSpriteData] of this.remoteSprites.entries()) {
       const sprite = remoteSpriteData.sprite;
-
-      if (this.interpolationMode === 'snapshot-buffer') {
-        // Snapshot buffer mode: Interpolate between buffered snapshots
-        this.updateSnapshotBufferInterpolation(sprite, remoteSpriteData, now);
-      } else if (this.interpolationMode === 'time-based') {
-        // Time-based mode: Linear interpolation at constant speed
-        this.updateTimeBasedInterpolation(sprite, remoteSpriteData, dt, now);
-      } else {
-        // Legacy lerp mode: Exponential smoothing
-        this.updateLerpInterpolation(sprite, remoteSpriteData);
-      }
-    }
-  }
-
-  /**
-   * Legacy exponential lerp interpolation (frame-rate dependent)
-   */
-  private updateLerpInterpolation(sprite: any, remoteSpriteData: RemoteSpriteData): void {
-    if (sprite._targetX !== undefined) {
-      sprite.x += (sprite._targetX - sprite.x) * this.lerpFactor;
-      sprite.y += (sprite._targetY - sprite.y) * this.lerpFactor;
-
-      if (sprite._targetRotation !== undefined) {
-        sprite.rotation += (sprite._targetRotation - sprite.rotation) * this.lerpFactor;
-      }
-    }
-  }
-
-  /**
-   * Time-based linear interpolation (frame-rate independent)
-   */
-  private updateTimeBasedInterpolation(
-    sprite: any,
-    remoteSpriteData: RemoteSpriteData,
-    dt: number,
-    now: number
-  ): void {
-    if (sprite._targetX === undefined) return;
-
-    // Calculate distance to target
-    const dx = sprite._targetX - sprite.x;
-    const dy = sprite._targetY - sprite.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    if (distance < 0.1) {
-      // Snap to target if very close
-      sprite.x = sprite._targetX;
-      sprite.y = sprite._targetY;
-      if (sprite._targetRotation !== undefined) {
-        sprite.rotation = sprite._targetRotation;
-      }
-      return;
-    }
-
-    // Dead reckoning: Extrapolate if no recent updates
-    const timeSinceUpdate = now - (remoteSpriteData.lastUpdateTime || now);
-    if (
-      this.enableDeadReckoning &&
-      timeSinceUpdate > 0 &&
-      timeSinceUpdate < this.deadReckoningMaxDuration &&
-      remoteSpriteData.velocityX !== undefined
-    ) {
-      // Use velocity to extrapolate position
-      sprite.x += remoteSpriteData.velocityX * dt;
-      sprite.y += remoteSpriteData.velocityY! * dt;
-    } else {
-      // Normal interpolation: Move at constant speed towards target
-      const moveDistance = this.interpolationSpeed * dt;
-      const t = Math.min(moveDistance / distance, 1); // Clamp to 1 to prevent overshoot
-
-      sprite.x += dx * t;
-      sprite.y += dy * t;
-
-      // Rotation interpolation
-      if (sprite._targetRotation !== undefined) {
-        const dr = sprite._targetRotation - sprite.rotation;
-        sprite.rotation += dr * t;
-      }
+      // Snapshot buffer interpolation: Render between last 2 snapshots
+      this.updateSnapshotBufferInterpolation(sprite, remoteSpriteData, now);
     }
   }
 
@@ -891,23 +798,30 @@ export class PhaserAdapter<TState = any> {
     const snapshots = remoteSpriteData.snapshots;
     if (!snapshots || snapshots.length < 2) return;
 
-    // Render 100ms in the past (or buffer size * sync interval)
-    const renderTime = now - 100;
+    const syncInterval = remoteSpriteData.estimatedSyncInterval ?? this.defaultSyncIntervalMs;
+    const delayIntervals = this.getDelayIntervals(remoteSpriteData);
+    const renderDelay = delayIntervals * syncInterval;
+    const renderTime = now - renderDelay;
 
     // Find two snapshots to interpolate between
-    let snapshot0: SpriteSnapshot | null = null;
-    let snapshot1: SpriteSnapshot | null = null;
+    let snapshot0: SpriteSnapshot = snapshots[0];
+    let snapshot1: SpriteSnapshot = snapshots[snapshots.length - 1];
 
     for (let i = 0; i < snapshots.length - 1; i++) {
-      if (snapshots[i].timestamp <= renderTime && snapshots[i + 1].timestamp >= renderTime) {
-        snapshot0 = snapshots[i];
-        snapshot1 = snapshots[i + 1];
+      const current = snapshots[i];
+      const next = snapshots[i + 1];
+      if (current.timestamp <= renderTime && next.timestamp >= renderTime) {
+        snapshot0 = current;
+        snapshot1 = next;
         break;
       }
     }
 
-    // Fallback to latest two snapshots
-    if (!snapshot0 || !snapshot1) {
+    // Clamp to earliest/latest if renderTime is outside buffered window
+    if (renderTime <= snapshots[0].timestamp) {
+      snapshot0 = snapshots[0];
+      snapshot1 = snapshots[1] ?? snapshots[0];
+    } else if (renderTime >= snapshots[snapshots.length - 1].timestamp) {
       snapshot0 = snapshots[snapshots.length - 2];
       snapshot1 = snapshots[snapshots.length - 1];
     }
@@ -915,7 +829,8 @@ export class PhaserAdapter<TState = any> {
     // Interpolate between snapshots
     const t0 = snapshot0.timestamp;
     const t1 = snapshot1.timestamp;
-    const t = (renderTime - t0) / (t1 - t0);
+    const denom = t1 - t0;
+    const t = denom === 0 ? 1 : (renderTime - t0) / denom;
     const clamped = Math.max(0, Math.min(1, t));
 
     sprite.x = snapshot0.x + (snapshot1.x - snapshot0.x) * clamped;
@@ -1000,6 +915,13 @@ export class PhaserAdapter<TState = any> {
    */
   registerSpriteManager(manager: { namespace: string }): void {
     this.spriteManagers.add(manager);
+  }
+
+  /**
+   * Check if a namespace is already managed by PhysicsManager (for conflict warnings/defaults)
+   */
+  hasPhysicsManagedNamespace(namespace: string): boolean {
+    return this.physicsManagedNamespaces.has(namespace);
   }
 
   /**
@@ -1096,6 +1018,9 @@ export class PhaserAdapter<TState = any> {
    * Create a PhysicsManager for automatic physics behaviors
    */
   createPhysicsManager(config: PhysicsManagerConfig): PhysicsManager {
+    if ((config as any).spriteManager?.namespace && (config as any).syncPositionToState !== false) {
+      this.physicsManagedNamespaces.add((config as any).spriteManager.namespace);
+    }
     return new PhysicsManager(this.runtime, config);
   }
 

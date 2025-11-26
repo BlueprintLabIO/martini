@@ -180,7 +180,7 @@ Understanding how data flows through the system:
 ### State Synchronization Flow
 
 ```
-Host (every 50ms by default):
+Host (every 16ms by default):
 
 1. Check if state changed since last sync
 2. If changed: generateDiff(oldState, newState)
@@ -201,7 +201,7 @@ Clients (on receiving patches):
 
 <Callout type="warning" title="Sync Rate Tuning">
 
-Default sync rate is **50ms (20 FPS)**. For fast-paced games, decrease to 30ms (33 FPS). For slow-paced games, increase to 100ms (10 FPS) to save bandwidth.
+Default sync rate is **16ms (60 FPS)**. For slow-paced games, increase to 50-100ms to save bandwidth.
 
 Configure via `config.syncInterval` in `GameRuntime`.
 
@@ -381,7 +381,7 @@ runtime.getState().players['p1'].x; // ✅ Typed
 ### Bandwidth Usage
 
 - **State size**: Depends on your game (typically 1-10 KB)
-- **Sync frequency**: 20 FPS (50ms) default
+- **Sync frequency**: 60 FPS (16ms) default
 - **Optimization**: Only diffs are sent (not full state)
 
 **Typical bandwidth**: 1-10 KB/s per client

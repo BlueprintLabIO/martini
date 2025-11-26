@@ -50,7 +50,7 @@ export function createScene(runtime: GameRuntime) {
 		private hud: any;
 
 		create() {
-			// Initialize adapter
+			// Initialize adapter - always-on snapshot smoothing (~32ms visual delay)
 			this.adapter = new PhaserAdapter(runtime, this);
 
 			// Background
@@ -83,6 +83,7 @@ export function createScene(runtime: GameRuntime) {
 
 			// NEW: SpriteManager with staticProperties + built-in labels
 			this.spriteManager = this.adapter.createSpriteManager({
+				motionProfile: 'platformer',
 				// Static metadata (synced once, not every frame)
 				staticProperties: ['role'],
 
@@ -137,7 +138,10 @@ export function createScene(runtime: GameRuntime) {
 			// Phase 3: PhysicsManager - automates all physics!
 			this.physicsManager = this.adapter.createPhysicsManager({
 				spriteManager: this.spriteManager,
-				inputKey: 'inputs'
+				inputKey: 'inputs',
+				// FIX: Disable position sync - SpriteManager's trackSprite already handles it
+				// Having both enabled causes rubber banding from competing position updates
+				syncPositionToState: false
 			});
 			this.physicsManager.addBehavior('platformer', {
 				speed: 200,

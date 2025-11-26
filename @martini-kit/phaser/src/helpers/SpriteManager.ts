@@ -34,6 +34,12 @@ export interface SpriteData {
 
 export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
   /**
+   * Optional motion profile to auto-tune sync defaults.
+   * 'platformer' → faster sync (16ms) to match physics frame rate.
+   */
+  motionProfile?: 'platformer' | 'projectile' | 'prop';
+
+  /**
    * Factory function to create a sprite
    * Called on both host and client
    *
@@ -119,7 +125,7 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
    * // Default: Sync sprite → state (physics-driven, host only)
    * sync: {
    *   properties: ['x', 'y', 'rotation', 'alpha'],  // default
-   *   interval: 50  // ms, default
+   *   interval: 16  // ms, default (60 FPS)
    * }
    *
    * // Adaptive sync: Only sync when sprite moves
@@ -150,7 +156,7 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
     direction?: 'toState' | 'toSprite';
 
     /**
-     * Sync interval in milliseconds (default: 50ms / 20 FPS)
+     * Sync interval in milliseconds (default: 16ms / 60 FPS)
      */
     interval?: number;
 
@@ -208,6 +214,7 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
   private adapter: PhaserAdapter;
   private unsubscribe?: () => void;
   public readonly namespace: string;
+  private readonly effectiveSyncInterval?: number;
 
   /**
    * Track sprites created locally via add() method
@@ -233,6 +240,18 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
     this.adapter = adapter;
     this.config = config;
     this.namespace = config.namespace || '_sprites';
+    const hasPhysicsManager = adapter.hasPhysicsManagedNamespace(this.namespace);
+    const motionProfile = config.motionProfile;
+    this.effectiveSyncInterval =
+      config.sync?.interval ??
+      (motionProfile === 'platformer' || hasPhysicsManager ? 13 : 13);
+
+    if (hasPhysicsManager && config.sync?.direction !== 'toSprite') {
+      console.warn(
+        `[SpriteManager] Namespace "${this.namespace}" is managed by PhysicsManager. ` +
+          'For platformer-style movement, set sync.direction: "toSprite" or disable syncPositionToState in PhysicsManager to avoid double writers.'
+      );
+    }
 
     // Create Phaser group for collision management
     const scene = adapter.getScene();
@@ -292,14 +311,16 @@ export class SpriteManager<TData extends SpriteData = SpriteData> {
 
     // Track for automatic sync (host only)
     const syncProperties = this.config.sync?.properties || ['x', 'y', 'rotation', 'alpha'];
-    const syncInterval = this.config.sync?.interval;
-    const adaptiveSync = this.config.sync?.adaptive;
+    const syncInterval = this.effectiveSyncInterval;
+    // Phase 1: Enable adaptive sync by default for bandwidth efficiency
+    const adaptiveSync = this.config.sync?.adaptive ?? true; // Default: true
     const adaptiveSyncThreshold = this.config.sync?.adaptiveThreshold;
 
     this.adapter.trackSprite(sprite, key, {
       properties: syncProperties,
       syncInterval: syncInterval,
       namespace: this.namespace,
+      motionProfile: this.config.motionProfile,
       adaptiveSync: adaptiveSync,
       adaptiveSyncThreshold: adaptiveSyncThreshold
     });

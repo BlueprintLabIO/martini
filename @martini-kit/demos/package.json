@@ -4,7 +4,7 @@
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"dev": "npm run build:sdk && vite dev",
+		"dev": "vite dev",
 		"dev:build-sdk": "node scripts/build-sdk.mjs --watch",
 		"build": "npm run build:sdk && vite build",
 		"build:sdk": "node scripts/build-sdk.mjs",

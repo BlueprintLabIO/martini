@@ -31,6 +31,11 @@ export interface SpriteData {
 }
 export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
     /**
+     * Optional motion profile to auto-tune sync defaults.
+     * 'platformer' → faster sync (16ms) to match physics frame rate.
+     */
+    motionProfile?: 'platformer' | 'projectile' | 'prop';
+    /**
      * Factory function to create a sprite
      * Called on both host and client
      *
@@ -105,7 +110,7 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
      * // Default: Sync sprite → state (physics-driven, host only)
      * sync: {
      *   properties: ['x', 'y', 'rotation', 'alpha'],  // default
-     *   interval: 50  // ms, default
+     *   interval: 16  // ms, default (60 FPS)
      * }
      *
      * // Adaptive sync: Only sync when sprite moves
@@ -134,7 +139,7 @@ export interface SpriteManagerConfig<TData extends SpriteData = SpriteData> {
          */
         direction?: 'toState' | 'toSprite';
         /**
-         * Sync interval in milliseconds (default: 50ms / 20 FPS)
+         * Sync interval in milliseconds (default: 16ms / 60 FPS)
          */
         interval?: number;
         /**
@@ -186,6 +191,7 @@ export declare class SpriteManager<TData extends SpriteData = SpriteData> {
     private adapter;
     private unsubscribe?;
     readonly namespace: string;
+    private readonly effectiveSyncInterval?;
     /**
      * Track sprites created locally via add() method
      * This eliminates the need to know player IDs for filtering

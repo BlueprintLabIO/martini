@@ -36,14 +36,15 @@
   ],
   "scripts": {
     "build": "tsc && node scripts/build-browser-bundle.js",
+    "build:types": "tsc",
+    "build:browser": "node scripts/build-browser-bundle.js",
+    "bundle:ide": "pnpm run build && node --experimental-strip-types scripts/generate-ide-bundle.ts",
     "dev": "tsc --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "clean": "rm -rf dist",
-    "build:types": "tsc",
-    "build:browser": "node scripts/build-browser-bundle.js"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@martini-kit/core": "workspace:*"

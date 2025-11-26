@@ -154,7 +154,7 @@ new GameRuntime<TState>(
 interface GameRuntimeConfig {
   isHost: boolean;           // Is this peer the host?
   playerIds: string[];       // Initial player IDs
-  syncInterval?: number;     // State sync rate in ms (default: 50ms / 20 FPS)
+  syncInterval?: number;     // State sync rate in ms (default: 16ms / 60 FPS)
 }
 ```
 

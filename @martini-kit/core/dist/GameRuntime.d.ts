@@ -35,12 +35,15 @@ export declare class GameRuntime<TState = any> {
     private previousState;
     private _isHost;
     private syncIntervalId;
+    private syncTickerId;
     private unsubscribes;
     private strict;
     private actionCounter;
     private stateChangeCallbacks;
     private eventCallbacks;
     private patchListeners;
+    private lastSyncSent;
+    private readonly heartbeatIntervalMs;
     constructor(gameDef: GameDefinition<TState>, transport: Transport, config: GameRuntimeConfig);
     /**
      * Get current state (read-only, typed)
@@ -116,6 +119,11 @@ export declare class GameRuntime<TState = any> {
     private handleActionFromClient;
     private handleEvent;
     private syncState;
+    /**
+     * Start a jitter-resistant sync loop.
+     * Prefer requestAnimationFrame with an accumulator; fall back to setInterval when rAF is unavailable.
+     */
+    private startSyncLoop;
     /**
      * Unified state change notification - ensures all listeners are notified consistently
      * @param patches - Optional pre-computed patches (e.g., from host sync). If not provided, generates them.

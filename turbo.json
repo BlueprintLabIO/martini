@@ -7,6 +7,15 @@
       "inputs": ["src/**", "package.json", "tsconfig.json", "scripts/**"],
       "outputs": [".svelte-kit/**", "dist/**", "dist/sdk-bundle.json"]
     },
+    "build:sdk": {
+      "cache": false,
+      "outputs": ["@martini-kit/ide/src/lib/core/sdk-bundle.json"]
+    },
+    "dev:build-sdk": {
+      "cache": false,
+      "persistent": true,
+      "outputs": ["@martini-kit/ide/src/lib/core/sdk-bundle.json"]
+    },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,

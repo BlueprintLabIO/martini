@@ -49,8 +49,8 @@ const runtime = new GameRuntime(game, transport, { isHost: true });
 await runtime.start();
 
 // 3) Engine glue (Phaser)
-const adapter = new PhaserAdapter(this, runtime);
-adapter.trackSprite(myId, playerSprite); // auto-sync position/rotation/velocity
+const adapter = new PhaserAdapter(runtime, this);
+adapter.trackSprite(playerSprite, `player-${myId}`); // auto-sync position/rotation/velocity
 
 // 4) Dispatch actions anywhere
 runtime.dispatchAction('move', { playerId: myId, dx: 10, dy: 0 });
@@ -102,8 +102,8 @@ Both sides share memory, so you can:
 
 ### Engine adapters (Phaser example)
 ```ts
-const adapter = new PhaserAdapter(scene, runtime);
-adapter.trackSprite(playerId, sprite); // syncs pos/vel/flip/anim hooks
+const adapter = new PhaserAdapter(runtime, scene);
+adapter.trackSprite(sprite, `player-${playerId}`); // syncs pos/vel/flip/anim hooks
 
 // Physics stays native:
 sprite.setVelocity(200, 0); // host simulates, clients mirror
@@ -146,7 +146,7 @@ if (runtime.isHost) {
 Clients never run the collision; they just receive patched state. Speed hacks and bogus collisions are ignored.
 
 ### Interpolation & smoothing (Phaser)
-Adapter can lerp positions between state updates; you keep native physics. Choose how much smoothing you want per entity.
+Snapshot interpolation is always on for clients: everything renders ~32ms in the past for jitter-free motion. No modes to pick—raise `snapshotBufferSize` on the adapter if you want extra smoothing.
 
 ### Pluggable transports & backends
 - Keep your existing backend for auth/matchmaking/metrics.

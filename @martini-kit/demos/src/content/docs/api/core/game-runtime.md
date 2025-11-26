@@ -44,7 +44,7 @@ interface GameRuntimeConfig {
   isHost: boolean;              // Is this the authoritative host?
   playerIds: string[];          // Initial list of player IDs
   seed?: number;                // Random seed (optional, auto-generated)
-  syncInterval?: number;        // State sync rate in ms (default: 50ms = 20 FPS)
+  syncInterval?: number;        // State sync rate in ms (default: 16ms = 60 FPS)
   strict?: boolean;             // Throw errors instead of warnings (dev mode)
   strictPlayerInit?: boolean;   // Validate player initialization (dev mode)
   playersKey?: string;          // State key for players (default: 'players')
@@ -100,7 +100,7 @@ const transport = new LocalTransport({
 const runtime = new GameRuntime(game, transport, {
   isHost: true,
   playerIds: [transport.getPlayerId()],
-  syncInterval: 50  // 20 FPS (default)
+  syncInterval: 16  // 60 FPS (default)
 });
 ```
 
@@ -394,7 +394,7 @@ Controls how often the host broadcasts state updates to clients.
 const runtime = new GameRuntime(game, transport, {
   isHost: true,
   playerIds: ['p1'],
-  syncInterval: 50  // 20 FPS (default)
+  syncInterval: 16  // 60 FPS (default)
 });
 ```
 
@@ -404,7 +404,7 @@ const runtime = new GameRuntime(game, transport, {
 |-------|-----|---------|-----------|----------|
 | 16ms  | 60  | Low     | High      | Fast-paced action games |
 | 33ms  | 30  | Medium  | Medium    | Most games (good balance) |
-| 50ms  | 20  | Medium  | Low       | Default, works well |
+| 16ms  | 60  | Medium  | Medium    | Default, works well |
 | 100ms | 10  | High    | Very Low  | Slow-paced, turn-based |
 
 ### strict
@@ -553,7 +553,7 @@ const transport = new LocalTransport({
 const runtime = new GameRuntime(game, transport, {
   isHost: true,
   playerIds: [transport.getPlayerId()],
-  syncInterval: 50,
+  syncInterval: 16,
   strict: true
 });
 

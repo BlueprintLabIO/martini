@@ -302,13 +302,13 @@ interface Patch {
 
 ### Sync Frequency
 
-By default, state syncs **every 50ms (20 FPS)**:
+By default, state syncs **every 16ms (60 FPS)**:
 
 ```typescript
 const runtime = new GameRuntime(game, transport, {
   isHost: true,
   playerIds: ['p1', 'p2'],
-  syncInterval: 50  // Sync every 50ms (20 FPS)
+  syncInterval: 16  // Sync every 16ms (60 FPS)
 });
 ```
 
@@ -318,7 +318,7 @@ const runtime = new GameRuntime(game, transport, {
 |-----------|----------------------|
 | Turn-based | 200-500ms (2-5 FPS) |
 | Slow-paced (puzzle, card) | 100ms (10 FPS) |
-| Medium-paced (platformer) | 50ms (20 FPS) - **default** |
+| Medium-paced (platformer) | 16ms (60 FPS) - **default** |
 | Fast-paced (shooter, racing) | 30ms (33 FPS) |
 
 <Callout type="tip">

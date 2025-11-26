@@ -245,7 +245,7 @@ Typical bandwidth usage:
 
 ### Sync Rate
 
-Default sync rate is **50ms (20 FPS)**. You can adjust this:
+Default sync rate is **16ms (60 FPS)**. You can adjust this:
 
 ```typescript
 const runtime = new GameRuntime(game, transport, {
@@ -257,7 +257,7 @@ const runtime = new GameRuntime(game, transport, {
 
 **Recommendations:**
 - **Fast-paced games** (shooters, racing): 16-33ms (30-60 FPS)
-- **Medium-paced games** (platformers): 33-50ms (20-30 FPS)
+- **Medium-paced games** (platformers): 16-33ms (30-60 FPS)
 - **Slow-paced games** (turn-based, strategy): 100-200ms (5-10 FPS)
 
 ## Debugging Transports

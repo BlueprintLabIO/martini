@@ -238,7 +238,7 @@ Configure automatic property synchronization.
 sync?: {
   properties?: string[];        // Default: ['x', 'y', 'rotation', 'alpha']
   direction?: 'toState' | 'toSprite';  // Default: 'toState'
-  interval?: number;             // Default: 50ms (20 FPS)
+  interval?: number;             // Default: 16ms (60 FPS)
 }
 ```
 

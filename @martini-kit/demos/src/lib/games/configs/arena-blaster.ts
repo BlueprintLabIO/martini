@@ -179,8 +179,8 @@ export const game = defineGame({
 				state.winner = null;
 				state.gameOver = false;
 			}
-		}
-	},
+			}
+		},
 
 	onPlayerJoin: (state, playerId) => {
 		playerManager.handleJoin(state.players, playerId);
@@ -215,9 +215,23 @@ export function createScene(runtime: GameRuntime) {
 		private healthBarManager: any;
 		private scoreText: Phaser.GameObjects.Text | null = null;
 		private winText: Phaser.GameObjects.Text | null = null;
+		private debugInterval?: any;
+		private debugWindowCount = 0;
+		private readonly debugMaxWindows = 6; // auto-stop after ~30s
+		private debugStats = {
+			fps: { sum: 0, count: 0, min: Number.POSITIVE_INFINITY, max: 0 },
+			hostSync: { lastTs: 0, sum: 0, count: 0, max: 0 },
+			arrival: { lastTs: 0, sum: 0, count: 0, max: 0 },
+			bufferBuckets: { len1: 0, len2: 0, len3: 0, len4p: 0 },
+			clamps: 0
+		};
 
 		create() {
-			this.adapter = new PhaserAdapter(runtime, this);
+			this.adapter = new PhaserAdapter(runtime, this, {
+				// Slightly deeper buffer to absorb arrival jitter in preview
+				snapshotBufferSize: 3
+			});
+			const isHost = this.adapter.isHost();
 
 			// Background
 			this.add.rectangle(400, 300, 800, 600, 0x2d3748);
@@ -305,6 +319,83 @@ export function createScene(runtime: GameRuntime) {
 				'R': 'reset'
 			});
 
+			// Debug: low-noise telemetry every 5s to hunt jitter
+			runtime.onChange(() => {
+				const now = Date.now();
+				if (isHost) {
+					if (this.debugStats.hostSync.lastTs) {
+						const delta = now - this.debugStats.hostSync.lastTs;
+						this.debugStats.hostSync.sum += delta;
+						this.debugStats.hostSync.count += 1;
+						this.debugStats.hostSync.max = Math.max(this.debugStats.hostSync.max, delta);
+					}
+					this.debugStats.hostSync.lastTs = now;
+				} else {
+					if (this.debugStats.arrival.lastTs) {
+						const delta = now - this.debugStats.arrival.lastTs;
+						this.debugStats.arrival.sum += delta;
+						this.debugStats.arrival.count += 1;
+						this.debugStats.arrival.max = Math.max(this.debugStats.arrival.max, delta);
+					}
+					this.debugStats.arrival.lastTs = now;
+				}
+			});
+
+			this.debugInterval = setInterval(() => {
+				this.debugWindowCount += 1;
+
+				// Snapshot buffer depth sampling
+				const remoteSprites = (this.adapter as any).remoteSprites as Map<string, any>;
+				if (remoteSprites) {
+					for (const [, data] of remoteSprites.entries()) {
+						const len = data.snapshots?.length || 0;
+						if (len <= 1) {
+							this.debugStats.bufferBuckets.len1 += 1;
+							this.debugStats.clamps += 1;
+						} else if (len === 2) {
+							this.debugStats.bufferBuckets.len2 += 1;
+						} else if (len === 3) {
+							this.debugStats.bufferBuckets.len3 += 1;
+						} else {
+							this.debugStats.bufferBuckets.len4p += 1;
+						}
+					}
+				}
+
+				// Console debug intentionally removed (was logging every 5s)
+
+				// Reset rolling stats for next window
+				this.debugStats.fps = { sum: 0, count: 0, min: Number.POSITIVE_INFINITY, max: 0 };
+				this.debugStats.hostSync = {
+					...this.debugStats.hostSync,
+					sum: 0,
+					count: 0,
+					max: 0,
+					lastTs: 0
+				};
+				this.debugStats.arrival = {
+					...this.debugStats.arrival,
+					sum: 0,
+					count: 0,
+					max: 0,
+					lastTs: 0
+				};
+				this.debugStats.bufferBuckets = { len1: 0, len2: 0, len3: 0, len4p: 0 };
+				this.debugStats.clamps = 0;
+
+				if (this.debugWindowCount >= this.debugMaxWindows) {
+					clearInterval(this.debugInterval);
+					this.debugInterval = undefined;
+				}
+			}, 5000);
+
+			this.events.on('shutdown', () => {
+				if (this.debugInterval) {
+					clearInterval(this.debugInterval);
+					this.debugInterval = undefined;
+				}
+			});
+
 			// Capture Arrow + WASD movement keys manually (submit via adapter)
 			this.cursors = this.input.keyboard.createCursorKeys();
 			this.wasdKeys = this.input.keyboard.addKeys({
@@ -353,6 +444,11 @@ export function createScene(runtime: GameRuntime) {
 
 		update(time: number, delta: number) {
 			const state = runtime.getState();
+			const fps = this.game.loop.actualFps || 0;
+			this.debugStats.fps.sum += fps;
+			this.debugStats.fps.count += 1;
+			this.debugStats.fps.min = Math.min(this.debugStats.fps.min, fps);
+			this.debugStats.fps.max = Math.max(this.debugStats.fps.max, fps);
 
 			// Capture movement input (Arrow + WASD) and submit when changed
 			const moveInput = {
@@ -482,6 +578,11 @@ export function createScene(runtime: GameRuntime) {
 
 			// PhysicsManager handles movement
 			this.physicsManager.update();
+		}
+
+		private safeAvg(sum: number, count: number): string {
+			if (!count) return '0.0';
+			return (sum / count).toFixed(1);
 		}
 	};
 }
