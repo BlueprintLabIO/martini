@@ -15,6 +15,7 @@ export type { Patch } from './sync.js';
 export { SeededRandom } from './SeededRandom.js';
 export { Logger, logger } from './Logger.js';
 export type { LogLevel, LogEntry, LogListener } from './Logger.js';
+export type { GamePhase, PlayerPresence, LobbyConfig, LobbyState, PhaseChangeContext, WithLobby } from './lobby.js';
 export { createPlayerManager } from './PlayerManager.js';
 export type { PlayerManager, PlayerManagerConfig, PlayerFactory } from './PlayerManager.js';
 export { createPlayers, createMultiCollisionCheck, createInputAction, createTickAction, forEachPlayerInput } from './helpers.js';

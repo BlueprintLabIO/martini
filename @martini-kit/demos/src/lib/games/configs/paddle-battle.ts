@@ -15,6 +15,15 @@ const playerManager = createPlayerManager({
 });
 
 export const game = defineGame({
+	// ✨ NEW: Lobby system configuration
+	lobby: {
+		minPlayers: 2,
+		maxPlayers: 2,
+		requireAllReady: true,
+		autoStartTimeout: 30000, // 30 seconds
+		allowLateJoin: false
+	},
+
 	setup: ({ playerIds }) => ({
 		players: playerManager.initialize(playerIds),
 		ball: {
@@ -23,8 +32,8 @@ export const game = defineGame({
 			velocityX: 200,
 			velocityY: 150
 		},
-		inputs: {},
-		gameStarted: false
+		inputs: {}
+		// ✅ Removed manual 'gameStarted' flag - runtime manages phase
 	}),
 
 	actions: {
@@ -44,13 +53,25 @@ export const game = defineGame({
 				state.ball.velocityX = 200 * (Math.random() > 0.5 ? 1 : -1);
 				state.ball.velocityY = 150 * (Math.random() > 0.5 ? 1 : -1);
 			}
-		},
-
-		startGame: {
-			apply: (state) => {
-				state.gameStarted = true;
-			}
 		}
+
+		// ✅ Removed manual 'startGame' action - runtime provides __lobbyStart
+	},
+
+	// ✨ NEW: Phase change callback
+	onPhaseChange: (state, { from, to, reason }) => {
+		console.log(\`[Paddle Battle] Phase: \${from} → \${to} (\${reason})\`);
+
+		if (to === 'playing') {
+			// Reset ball velocity when game starts
+			state.ball.velocityX = 200 * (Math.random() > 0.5 ? 1 : -1);
+			state.ball.velocityY = 150 * (Math.random() > 0.5 ? 1 : -1);
+		}
+	},
+
+	// ✨ NEW: Ready state callback
+	onPlayerReady: (state, playerId, ready) => {
+		console.log(\`[Paddle Battle] Player \${playerId} is \${ready ? 'ready' : 'not ready'}\`);
 	},
 
 	onPlayerJoin: (state, playerId) => {
@@ -64,7 +85,7 @@ export const game = defineGame({
 `,
 
 		'/src/scene.ts': `import type { GameRuntime } from '@martini-kit/core';
-import { PhaserAdapter, createPlayerHUD, CollisionManager, PlayerUIManager } from '@martini-kit/phaser';
+import { PhaserAdapter, createPlayerHUD, CollisionManager, PlayerUIManager, LobbyUI } from '@martini-kit/phaser';
 import Phaser from 'phaser';
 
 export function createScene(runtime: GameRuntime) {
@@ -76,6 +97,7 @@ export function createScene(runtime: GameRuntime) {
 		private playerUI!: PlayerUIManager;
 		private hud: any;
 		private ball?: Phaser.GameObjects.Arc;
+		private lobbyUI?: LobbyUI;
 
 		private addHostPaddle(playerId: string, playerData: any) {
 			if (!this.adapter.isHost()) return;
@@ -111,109 +133,125 @@ export function createScene(runtime: GameRuntime) {
 				console.log('[PaddleBattle][' + role + '] ' + event, payload ?? '');
 			};
 
- 			// Background
+			// Create lobby UI
+			this.lobbyUI = new LobbyUI(this.adapter, this, {
+				title: 'Paddle Battle',
+				subtitle: 'Waiting for players...',
+				position: { x: 400, y: 200 },
+				showInstructions: true
+			});
+
+			// Update lobby UI on state changes
+			this.adapter.onChange((state: any) => {
+				if (this.lobbyUI && state.__lobby) {
+					this.lobbyUI.update(state.__lobby);
+
+					// Show/hide lobby based on phase
+					if (state.__lobby.phase === 'lobby') {
+						this.lobbyUI.show();
+					} else {
+						this.lobbyUI.hide();
+					}
+				}
+			});
+
+ 			// Background (static - always visible)
 			this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
 
-			// Center line
+			// Center line (static - always visible)
 			for (let i = 0; i < 600; i += 20) {
 				this.add.rectangle(400, i + 10, 4, 10, 0x444444);
 			}
 
-			// HUD Helper
-			this.hud = createPlayerHUD(this.adapter, this, {
-				title: 'Paddle Battle',
-				titleStyle: { fontSize: '24px', color: '#fff', fontStyle: 'bold' },
+			// ✅ Pit of success: Game objects only created when playing starts
+			this.adapter.onPlaying((state: any) => {
+				// HUD Helper
+				this.hud = createPlayerHUD(this.adapter, this, {
+					title: 'Paddle Battle',
+					titleStyle: { fontSize: '24px', color: '#fff', fontStyle: 'bold' },
 
-				roleText: (myPlayer: any) => {
-					if (!myPlayer) return 'Spectator';
-					return \`\${myPlayer.side === 'left' ? 'Left' : 'Right'} Paddle\`;
-				},
-				roleStyle: { fontSize: '16px', color: '#fff' },
+					roleText: (myPlayer: any) => {
+						if (!myPlayer) return 'Spectator';
+						return \`\${myPlayer.side === 'left' ? 'Left' : 'Right'} Paddle\`;
+					},
+					roleStyle: { fontSize: '16px', color: '#fff' },
 
-				controlHints: () => 'UP/DOWN Arrows to Move',
-				controlsStyle: { fontSize: '14px', color: '#aaa' },
+					controlHints: () => 'UP/DOWN Arrows to Move',
+					controlsStyle: { fontSize: '14px', color: '#aaa' },
 
-				layout: {
-					title: { x: 400, y: 15 },
-					role: { x: 400, y: 45 },
-					controls: { x: 400, y: 575 }
-				}
-			});
-
-			// SpriteManager for paddles (host-authoritative by default!)
-			this.spriteManager = this.adapter.createSpriteManager({
-				staticProperties: ['side', 'y'],
-
-				onCreate: (key: string, data: any) => {
-					(this as any).debugLog?.('spriteManager.onCreate', { key, data });
-					const x = data.side === 'left' ? 30 : 770;
-					return this.add.rectangle(x, data.y, 15, 80, 0xffffff);
-				},
-
-				onCreatePhysics: (sprite: any) => {
-					this.physics.add.existing(sprite);
-					const body = sprite.body as Phaser.Physics.Arcade.Body;
-					body.setImmovable(true);
-					body.setCollideWorldBounds(true);
-				}
-			});
-
-			// PlayerUIManager - Handles scores for ALL players automatically!
-			// Waits for 'side' metadata before creating, preventing overlap bug
-			this.playerUI = this.adapter.createPlayerUIManager({
-				score: {
-					position: (player: any) => ({
-						x: player.side === 'left' ? 200 : 600,
-						y: 80
-					}),
-					getText: (player: any) => String(player.score || 0),
-					style: { fontSize: '48px', color: '#ffffff' },
-					origin: 0.5,
-					requiredMetadata: ['side'] // Wait for 'side' before creating!
-				}
-			});
-
-			// InputManager with top-down profile
-			this.inputManager = this.adapter.createInputManager();
-			this.inputManager.useProfile('topDown');
-
-			// HOST ONLY: Create game objects
-			if (this.adapter.isHost()) {
-				const initialState = runtime.getState();
-
-				// Create paddles (host-authoritative!)
-				for (const [playerId, playerData] of Object.entries(initialState.players)) {
-					this.addHostPaddle(playerId, playerData);
-				}
-				// Create ball - NO world bounds collision (we handle manually)
-				this.ball = this.add.circle(initialState.ball.x, initialState.ball.y, 10, 0xff6b6b);
-				this.physics.add.existing(this.ball);
-				const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
-				ballBody.setBounce(1, 1);
-				ballBody.setCollideWorldBounds(false); // Disable - we check manually
-				ballBody.setVelocity(initialState.ball.velocityX, initialState.ball.velocityY);
-
-				// Track ball for automatic sync with high update rate
-				this.adapter.trackSprite(this.ball, 'ball', {
-					properties: ['x', 'y'],
-					syncInterval: 16, // 60 FPS sync for fast-moving ball
-					namespace: '_sprites'
+					layout: {
+						title: { x: 400, y: 15 },
+						role: { x: 400, y: 45 },
+						controls: { x: 400, y: 575 }
+					}
 				});
 
-				// CollisionManager - Declare collision rules ONCE
-				// Automatically handles collisions for ALL paddles (early and late-joining!)
-				this.collisionManager = this.adapter.createCollisionManager();
-				this.collisionManager.registerSprite('ball', this.ball);
-				this.collisionManager.addCollision('ball', this.spriteManager);
-			}
+				// SpriteManager for paddles (host-authoritative by default!)
+				this.spriteManager = this.adapter.createSpriteManager({
+					staticProperties: ['side', 'y'],
 
-			// CLIENT: Mirror ball using adapter's interpolation system
-			this.adapter.onChange((state: any) => {
-				if (this.adapter.isHost()) return;
-				if (!state.ball) return;
+					onCreate: (key: string, data: any) => {
+						(this as any).debugLog?.('spriteManager.onCreate', { key, data });
+						const x = data.side === 'left' ? 30 : 770;
+						return this.add.rectangle(x, data.y, 15, 80, 0xffffff);
+					},
 
-				// Create ball sprite once
-				if (!this.ball) {
+					onCreatePhysics: (sprite: any) => {
+						this.physics.add.existing(sprite);
+						const body = sprite.body as Phaser.Physics.Arcade.Body;
+						body.setImmovable(true);
+						body.setCollideWorldBounds(true);
+					}
+				});
+
+				// PlayerUIManager - Handles scores for ALL players automatically!
+				// Waits for 'side' metadata before creating, preventing overlap bug
+				this.playerUI = this.adapter.createPlayerUIManager({
+					score: {
+						position: (player: any) => ({
+							x: player.side === 'left' ? 200 : 600,
+							y: 80
+						}),
+						getText: (player: any) => String(player.score || 0),
+						style: { fontSize: '48px', color: '#ffffff' },
+						origin: 0.5,
+						requiredMetadata: ['side'] // Wait for 'side' before creating!
+					}
+				});
+
+				// InputManager with top-down profile
+				this.inputManager = this.adapter.createInputManager();
+				this.inputManager.useProfile('topDown');
+
+				// HOST ONLY: Create game objects
+				if (this.adapter.isHost()) {
+					// Create paddles (host-authoritative!)
+					for (const [playerId, playerData] of Object.entries(state.players)) {
+						this.addHostPaddle(playerId, playerData);
+					}
+
+					// Create ball - NO world bounds collision (we handle manually)
+					this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
+					this.physics.add.existing(this.ball);
+					const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
+					ballBody.setBounce(1, 1);
+					ballBody.setCollideWorldBounds(false); // Disable - we check manually
+					ballBody.setVelocity(state.ball.velocityX, state.ball.velocityY);
+
+					// Track ball for automatic sync with high update rate
+					this.adapter.trackSprite(this.ball, 'ball', {
+						properties: ['x', 'y'],
+						syncInterval: 16, // 60 FPS sync for fast-moving ball
+						namespace: '_sprites'
+					});
+
+					// CollisionManager - Declare collision rules ONCE
+					// Automatically handles collisions for ALL paddles (early and late-joining!)
+					this.collisionManager = this.adapter.createCollisionManager();
+					this.collisionManager.registerSprite('ball', this.ball);
+					this.collisionManager.addCollision('ball', this.spriteManager);
+				} else {
+					// CLIENT: Create ball sprite for mirroring
 					this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
 					// Register as remote sprite for smooth interpolation
 					this.adapter.registerRemoteSprite('ball', this.ball);
@@ -222,6 +260,9 @@ export function createScene(runtime: GameRuntime) {
 		}
 
 		update() {
+			// ✅ Pit of success: Only run game logic during 'playing' phase
+			if (!this.adapter.isPlaying()) return;
+
 			const state = runtime.getState();
 			const isHost = this.adapter.isHost();
 
@@ -233,10 +274,10 @@ export function createScene(runtime: GameRuntime) {
 			}
 
 			// Input handling (auto-sends move actions via profile)
-			this.inputManager.update();
+			this.inputManager?.update();
 
 			// Snapshot interpolation
-			this.spriteManager.update();
+			this.spriteManager?.update();
 
 			// HOST ONLY - Ball physics + scoring
 			if (!isHost) return;

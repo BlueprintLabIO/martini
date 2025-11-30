@@ -16,6 +16,14 @@ const playerManager = createPlayerManager({
 });
 
 export const game = defineGame({
+	lobby: {
+		minPlayers: 2,
+		maxPlayers: 2,
+		requireAllReady: true,
+		autoStartTimeout: 30000,
+		allowLateJoin: false
+	},
+
 	setup: ({ playerIds }) => ({
 		players: playerManager.initialize(playerIds),
 		inputs: {}
@@ -24,6 +32,14 @@ export const game = defineGame({
 	actions: {
 		// Phase 1: createInputAction helper (uses targetId correctly)
 		move: createInputAction('inputs')
+	},
+
+	onPhaseChange: (state, { from, to, reason }) => {
+		console.log(\`[Fire & Ice] Phase: \${from} -> \${to} (\${reason})\`);
+	},
+
+	onPlayerReady: (state, playerId, ready) => {
+		console.log(\`[Fire & Ice] Player \${playerId} is \${ready ? 'ready' : 'not ready'}\`);
 	},
 
 	onPlayerJoin: (state, playerId) => {
@@ -37,7 +53,7 @@ export const game = defineGame({
 `,
 
 		'/src/scene.ts': `import type { GameRuntime } from '@martini-kit/core';
-import { PhaserAdapter, createPlayerHUD } from '@martini-kit/phaser';
+import { PhaserAdapter, createPlayerHUD, LobbyUI } from '@martini-kit/phaser';
 import Phaser from 'phaser';
 
 export function createScene(runtime: GameRuntime) {
@@ -48,10 +64,31 @@ export function createScene(runtime: GameRuntime) {
 		private physicsManager: any;
 		private inputManager: any;
 		private hud: any;
+		private lobbyUI?: LobbyUI;
 
 		create() {
 			// Initialize adapter - always-on snapshot smoothing (~32ms visual delay)
 			this.adapter = new PhaserAdapter(runtime, this);
+
+			// Create lobby UI
+			this.lobbyUI = new LobbyUI(this.adapter, this, {
+				title: 'Fire & Ice',
+				subtitle: 'Waiting for players...',
+				position: { x: 400, y: 200 },
+				showInstructions: true
+			});
+
+			// Update lobby UI on state changes
+			this.adapter.onChange((state: any) => {
+				if (this.lobbyUI && state.__lobby) {
+					this.lobbyUI.update(state.__lobby);
+					if (state.__lobby.phase === 'lobby') {
+						this.lobbyUI.show();
+					} else {
+						this.lobbyUI.hide();
+					}
+				}
+			});
 
 			// Background
 			this.add.rectangle(400, 300, 800, 600, 0x87ceeb);

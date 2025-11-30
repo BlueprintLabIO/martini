@@ -25,6 +25,7 @@ export declare class LocalTransport implements Transport {
     private peerJoinHandlers;
     private peerLeaveHandlers;
     private hostDisconnectHandlers;
+    private isLocked;
     constructor(config: LocalTransportConfig);
     send(message: WireMessage, targetId?: string): void;
     onMessage(handler: MessageHandler): () => void;
@@ -34,7 +35,17 @@ export declare class LocalTransport implements Transport {
     getPlayerId(): string;
     getPeerIds(): string[];
     isHost(): boolean;
+    /**
+     * Lock the room - prevent new peers from joining
+     * For LocalTransport, this is a simple flag check
+     */
+    lock(): void;
     disconnect(): void;
+    /**
+     * Check if room is locked
+     * @internal
+     */
+    isRoomLocked(): boolean;
     /** @internal */
     deliver(message: WireMessage, senderId: string): void;
     /** @internal */

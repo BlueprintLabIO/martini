@@ -18,6 +18,9 @@ export class GameRuntime {
     unsubscribes = [];
     strict;
     actionCounter = 100000; // For seeding action random (start high to avoid LCG collisions)
+    // Lobby system state
+    lobbyTimeoutId = null;
+    hasLobby = false;
     stateChangeCallbacks = [];
     eventCallbacks = new Map();
     patchListeners = [];
@@ -40,6 +43,13 @@ export class GameRuntime {
         // Validate player initialization (dev mode)
         if (process.env.NODE_ENV !== 'production' && initialPlayerIds.length > 0) {
             this.validatePlayerInitialization(initialPlayerIds);
+        }
+        // Initialize lobby system if configured
+        if (gameDef.lobby) {
+            this.hasLobby = true;
+            this.injectLobbyState();
+            this.injectLobbyActions();
+            this.startLobbyPhase();
         }
         // Setup transport listeners
         this.setupTransport();
@@ -176,8 +186,25 @@ export class GameRuntime {
     /**
      * Wait until the desired number of players (including self) are present.
      * Helpful for P2P transports where peers join asynchronously.
+     *
+     * @deprecated Use the lobby system instead for better player coordination:
+     * ```ts
+     * defineGame({
+     *   lobby: {
+     *     minPlayers: 2,
+     *     requireAllReady: true
+     *   }
+     * })
+     * ```
+     * This method is automatically skipped when lobby system is enabled.
      */
     async waitForPlayers(minPlayers, options = {}) {
+        // Warn if lobby system is enabled
+        if (this.hasLobby) {
+            console.warn('[GameRuntime] waitForPlayers() is deprecated when using the lobby system. ' +
+                'The lobby automatically manages player coordination via minPlayers config.');
+            return;
+        }
         const includeSelf = options.includeSelf !== false;
         const target = Math.max(1, minPlayers);
         const getCount = () => (includeSelf ? 1 : 0) + this.transport.getPeerIds().length;
@@ -264,8 +291,15 @@ export class GameRuntime {
         }));
         // Listen for peer join
         this.unsubscribes.push(this.transport.onPeerJoin((peerId) => {
-            if (this.gameDef.onPlayerJoin) {
-                this.gameDef.onPlayerJoin(this.state, peerId);
+            // Use lobby handler if lobby system enabled
+            if (this.hasLobby) {
+                this.handlePeerJoinWithLobby(peerId);
+            }
+            else {
+                // Legacy behavior (no lobby)
+                if (this.gameDef.onPlayerJoin) {
+                    this.gameDef.onPlayerJoin(this.state, peerId);
+                }
             }
             // If we're the host, send full state to new peer
             if (this._isHost) {
@@ -277,8 +311,15 @@ export class GameRuntime {
         }));
         // Listen for peer leave
         this.unsubscribes.push(this.transport.onPeerLeave((peerId) => {
-            if (this.gameDef.onPlayerLeave) {
-                this.gameDef.onPlayerLeave(this.state, peerId);
+            // Use lobby handler if lobby system enabled
+            if (this.hasLobby) {
+                this.handlePeerLeaveWithLobby(peerId);
+            }
+            else {
+                // Legacy behavior (no lobby)
+                if (this.gameDef.onPlayerLeave) {
+                    this.gameDef.onPlayerLeave(this.state, peerId);
+                }
             }
         }));
     }
@@ -563,6 +604,227 @@ export class GameRuntime {
             }
             else {
                 console.warn(message);
+            }
+        }
+    }
+    // ============================================================================
+    // Lobby System (Private methods)
+    // ============================================================================
+    /**
+     * Inject lobby metadata into state
+     */
+    injectLobbyState() {
+        const myId = this.transport.getPlayerId();
+        this.state.__lobby = {
+            phase: 'lobby',
+            players: {
+                [myId]: {
+                    playerId: myId,
+                    ready: false,
+                    joinedAt: Date.now()
+                }
+            },
+            config: this.gameDef.lobby,
+            startedAt: undefined,
+            endedAt: undefined
+        };
+    }
+    /**
+     * Inject built-in lobby actions
+     */
+    injectLobbyActions() {
+        if (!this.gameDef.actions) {
+            this.gameDef.actions = {};
+        }
+        // Add internal lobby actions (prefixed with __)
+        this.gameDef.actions.__lobbyReady = {
+            apply: (state, context, input) => {
+                this.handleLobbyReady(state, context, input);
+            }
+        };
+        this.gameDef.actions.__lobbyStart = {
+            apply: (state, context) => {
+                this.handleLobbyStart(state, context);
+            }
+        };
+        this.gameDef.actions.__lobbyEnd = {
+            apply: (state, context) => {
+                this.handleLobbyEnd(state, context);
+            }
+        };
+    }
+    /**
+     * Start lobby phase with auto-start timer
+     */
+    startLobbyPhase() {
+        const lobbyConfig = this.gameDef.lobby;
+        if (lobbyConfig.autoStartTimeout && lobbyConfig.autoStartTimeout > 0) {
+            this.lobbyTimeoutId = setTimeout(() => {
+                const lobbyState = this.state.__lobby;
+                const playerCount = Object.keys(lobbyState.players).length;
+                if (playerCount >= lobbyConfig.minPlayers && lobbyState.phase === 'lobby') {
+                    this.transitionPhase(this.state, 'playing', 'timeout');
+                }
+            }, lobbyConfig.autoStartTimeout);
+        }
+    }
+    /**
+     * Handle __lobbyReady action
+     */
+    handleLobbyReady(state, context, input) {
+        const lobbyState = state.__lobby;
+        const presence = lobbyState.players[context.targetId];
+        if (!presence)
+            return;
+        presence.ready = input.ready;
+        // Trigger callback
+        if (this.gameDef.onPlayerReady) {
+            this.gameDef.onPlayerReady(state, context.targetId, input.ready);
+        }
+        // Check if all players ready
+        this.checkLobbyStartConditions(state);
+    }
+    /**
+     * Handle __lobbyStart action
+     */
+    handleLobbyStart(state, context) {
+        const lobbyState = state.__lobby;
+        const lobbyConfig = this.gameDef.lobby;
+        // Only host or all-ready can force start
+        if (!context.isHost && lobbyConfig.requireAllReady && !this.allPlayersReady(state)) {
+            return; // Ignore non-host start attempts if all-ready required
+        }
+        this.transitionPhase(state, 'playing', 'manual');
+    }
+    /**
+     * Handle __lobbyEnd action
+     */
+    handleLobbyEnd(state, _context) {
+        this.transitionPhase(state, 'ended', 'manual');
+    }
+    /**
+     * Transition between phases
+     */
+    transitionPhase(state, newPhase, reason) {
+        const lobbyState = state.__lobby;
+        const oldPhase = lobbyState.phase;
+        if (oldPhase === newPhase)
+            return;
+        lobbyState.phase = newPhase;
+        if (newPhase === 'playing') {
+            lobbyState.startedAt = Date.now();
+            // Clear auto-start timeout
+            if (this.lobbyTimeoutId) {
+                clearTimeout(this.lobbyTimeoutId);
+                this.lobbyTimeoutId = null;
+            }
+            // Lock room (prevent late joins if configured)
+            if (!this.gameDef.lobby.allowLateJoin) {
+                this.lockRoom();
+            }
+        }
+        else if (newPhase === 'ended') {
+            lobbyState.endedAt = Date.now();
+        }
+        // Trigger callback
+        if (this.gameDef.onPhaseChange) {
+            this.gameDef.onPhaseChange(state, {
+                from: oldPhase,
+                to: newPhase,
+                reason,
+                timestamp: Date.now()
+            });
+        }
+        this.notifyStateChange();
+    }
+    /**
+     * Check if lobby can transition to playing
+     */
+    checkLobbyStartConditions(state) {
+        const lobbyState = state.__lobby;
+        const lobbyConfig = this.gameDef.lobby;
+        if (lobbyState.phase !== 'lobby')
+            return;
+        const players = Object.values(lobbyState.players);
+        const readyCount = players.filter(p => p.ready).length;
+        // Auto-start conditions
+        const hasMinPlayers = players.length >= lobbyConfig.minPlayers;
+        const allReady = lobbyConfig.requireAllReady ? readyCount === players.length : true;
+        if (hasMinPlayers && allReady) {
+            this.transitionPhase(state, 'playing', 'all_ready');
+        }
+    }
+    /**
+     * Check if all players are ready
+     */
+    allPlayersReady(state) {
+        const lobbyState = state.__lobby;
+        const players = Object.values(lobbyState.players);
+        return players.length > 0 && players.every(p => p.ready);
+    }
+    /**
+     * Handle peer join with lobby presence
+     */
+    handlePeerJoinWithLobby(peerId) {
+        const lobbyState = this.state.__lobby;
+        const lobbyConfig = this.gameDef.lobby;
+        // Check max players
+        if (lobbyConfig.maxPlayers && Object.keys(lobbyState.players).length >= lobbyConfig.maxPlayers) {
+            console.warn(`[Lobby] Max players (${lobbyConfig.maxPlayers}) reached, rejecting ${peerId}`);
+            // TODO: Implement transport.reject(peerId) when available
+            return;
+        }
+        // Check late join
+        if (lobbyState.phase === 'playing' && !lobbyConfig.allowLateJoin) {
+            console.warn(`[Lobby] Game in progress, late join disabled, rejecting ${peerId}`);
+            // TODO: Implement transport.reject(peerId) when available
+            return;
+        }
+        // Add player presence
+        lobbyState.players[peerId] = {
+            playerId: peerId,
+            ready: false,
+            joinedAt: Date.now()
+        };
+        // Call user's onPlayerJoin
+        if (this.gameDef.onPlayerJoin) {
+            this.gameDef.onPlayerJoin(this.state, peerId);
+        }
+        // Check if ready to start
+        this.checkLobbyStartConditions(this.state);
+    }
+    /**
+     * Handle peer leave with lobby cleanup
+     */
+    handlePeerLeaveWithLobby(peerId) {
+        const lobbyState = this.state.__lobby;
+        // Remove player presence
+        delete lobbyState.players[peerId];
+        // Call user's onPlayerLeave
+        if (this.gameDef.onPlayerLeave) {
+            this.gameDef.onPlayerLeave(this.state, peerId);
+        }
+        // Check if game should end due to insufficient players
+        const lobbyConfig = this.gameDef.lobby;
+        if (lobbyState.phase === 'playing') {
+            const remaining = Object.keys(lobbyState.players).length;
+            if (remaining < lobbyConfig.minPlayers) {
+                this.transitionPhase(this.state, 'ended', 'player_left');
+            }
+        }
+    }
+    /**
+     * Lock room (prevent new joins)
+     */
+    lockRoom() {
+        const transport = this.transport;
+        if (typeof transport.lock === 'function') {
+            transport.lock();
+        }
+        else {
+            // Warn if lock not implemented
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn('[Lobby] Transport does not implement lock() - late joins cannot be prevented');
             }
         }
     }

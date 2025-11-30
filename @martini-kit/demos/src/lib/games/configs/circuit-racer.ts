@@ -17,6 +17,14 @@ const playerManager = createPlayerManager({
 });
 
 export const game = defineGame({
+	lobby: {
+		minPlayers: 2,
+		maxPlayers: 2,
+		requireAllReady: true,
+		autoStartTimeout: 30000,
+		allowLateJoin: false
+	},
+
 	setup: ({ playerIds }) => ({
 		players: playerManager.initialize(playerIds),
 		inputs: {}
@@ -25,6 +33,14 @@ export const game = defineGame({
 	actions: {
 		// createInputAction - auto-stores input per player
 		move: createInputAction('inputs')
+	},
+
+	onPhaseChange: (state, { from, to, reason }) => {
+		console.log(\`[Circuit Racer] Phase: \${from} -> \${to} (\${reason})\`);
+	},
+
+	onPlayerReady: (state, playerId, ready) => {
+		console.log(\`[Circuit Racer] Player \${playerId} is \${ready ? 'ready' : 'not ready'}\`);
 	},
 
 	onPlayerJoin: (state, playerId) => {
@@ -38,7 +54,7 @@ export const game = defineGame({
 `,
 
 		'/src/scene.ts': `import type { GameRuntime } from '@martini-kit/core';
-import { PhaserAdapter, createSpeedDisplay, attachDirectionalIndicator } from '@martini-kit/phaser';
+import { PhaserAdapter, createSpeedDisplay, attachDirectionalIndicator, LobbyUI } from '@martini-kit/phaser';
 import Phaser from 'phaser';
 
 export function createScene(runtime: GameRuntime) {
@@ -48,9 +64,30 @@ export function createScene(runtime: GameRuntime) {
 		private physicsManager: any;
 		private inputManager: any;
 		private speedDisplay: any;
+		private lobbyUI?: LobbyUI;
 
 		create() {
 			this.adapter = new PhaserAdapter(runtime, this);
+
+			// Create lobby UI
+			this.lobbyUI = new LobbyUI(this.adapter, this, {
+				title: 'Circuit Racer',
+				subtitle: 'Waiting for players...',
+				position: { x: 400, y: 200 },
+				showInstructions: true
+			});
+
+			// Update lobby UI on state changes
+			this.adapter.onChange((state: any) => {
+				if (this.lobbyUI && state.__lobby) {
+					this.lobbyUI.update(state.__lobby);
+					if (state.__lobby.phase === 'lobby') {
+						this.lobbyUI.show();
+					} else {
+						this.lobbyUI.hide();
+					}
+				}
+			});
 
 			// Background - racing track
 			this.add.rectangle(400, 300, 800, 600, 0x228b22);

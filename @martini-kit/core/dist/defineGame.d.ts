@@ -4,6 +4,7 @@
  * Host-authoritative: the host runs the game, others mirror the state.
  */
 import type { SeededRandom } from './SeededRandom.js';
+import type { LobbyConfig, PhaseChangeContext } from './lobby.js';
 /**
  * Setup context - provides initial player list and deterministic random
  */
@@ -113,6 +114,65 @@ export interface GameDefinition<TState = any> {
     onPlayerJoin?: (state: TState, playerId: string) => void;
     /** Called when a player leaves */
     onPlayerLeave?: (state: TState, playerId: string) => void;
+    /**
+     * Lobby configuration - enables multiplayer lifecycle management
+     *
+     * When provided, GameRuntime automatically:
+     * - Injects `__lobby` state with phase tracking
+     * - Provides `__lobbyReady`, `__lobbyStart`, `__lobbyEnd` actions
+     * - Enforces minPlayers/maxPlayers restrictions
+     * - Manages ready-up coordination
+     *
+     * @example
+     * ```ts
+     * export const game = defineGame({
+     *   lobby: {
+     *     minPlayers: 2,
+     *     maxPlayers: 4,
+     *     requireAllReady: true,
+     *     autoStartTimeout: 30000
+     *   },
+     *   // ... rest of definition
+     * });
+     * ```
+     */
+    lobby?: LobbyConfig;
+    /**
+     * Called when game phase changes
+     *
+     * Phases: 'lobby' → 'playing' → 'ended'
+     *
+     * Use this to reset game state, show/hide UI, etc.
+     *
+     * @example
+     * ```ts
+     * onPhaseChange: (state, { from, to, reason }) => {
+     *   console.log(`${from} → ${to} (${reason})`);
+     *
+     *   if (to === 'playing') {
+     *     // Reset ball, start timer, etc.
+     *   }
+     * }
+     * ```
+     */
+    onPhaseChange?: (state: TState, context: PhaseChangeContext) => void;
+    /**
+     * Called when a player changes ready state
+     *
+     * Use this to show ready indicators in lobby UI.
+     *
+     * @param state - Current game state
+     * @param playerId - Player who changed ready state
+     * @param ready - New ready state (true = ready, false = not ready)
+     *
+     * @example
+     * ```ts
+     * onPlayerReady: (state, playerId, ready) => {
+     *   console.log(`${playerId} is ${ready ? 'ready' : 'not ready'}`);
+     * }
+     * ```
+     */
+    onPlayerReady?: (state: TState, playerId: string, ready: boolean) => void;
 }
 /**
  * Define a multiplayer game with full TypeScript type safety

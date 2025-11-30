@@ -90,6 +90,24 @@ export interface Transport {
     /** Is this peer the host */
     isHost(): boolean;
     /**
+     * Lock the room - prevent new peers from joining
+     *
+     * Optional method for lobby system. When the game transitions from
+     * 'lobby' to 'playing' phase, this is called if `allowLateJoin: false`.
+     *
+     * Transports that don't implement this will emit a warning in development.
+     *
+     * @example
+     * ```typescript
+     * // In transport implementation (optional)
+     * lock() {
+     *   this.isLocked = true;
+     *   // Reject new connection attempts
+     * }
+     * ```
+     */
+    lock?(): void;
+    /**
      * Optional metrics interface for observability
      * Transports can implement this to expose connection state,
      * message statistics, and other debugging information.

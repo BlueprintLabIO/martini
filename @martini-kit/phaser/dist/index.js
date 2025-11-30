@@ -37,6 +37,8 @@ export { attachDirectionalIndicator } from './helpers/DirectionalIndicator.js';
 export { createCameraFollower } from './helpers/CameraFollower.js';
 // Dual Runtime Factory
 export { createDualRuntimePreview } from './helpers/DualRuntimeFactory.js';
+// Lobby UI Helper
+export { LobbyUI, attachLobbyUI } from './helpers/LobbyUI.js';
 // Runtime initialization (transport abstraction)
 export { initializeGame } from './runtime.js';
 //# sourceMappingURL=index.js.map

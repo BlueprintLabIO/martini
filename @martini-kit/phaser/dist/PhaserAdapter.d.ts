@@ -350,6 +350,59 @@ export declare class PhaserAdapter<TState = any> {
      */
     getState(): TState;
     /**
+     * Register a callback that only runs once when transitioning to 'playing' phase
+     *
+     * ✅ Pit of success: Prevents creating game objects during lobby phase
+     *
+     * @example
+     * ```ts
+     * create() {
+     *   // Static setup (background, lobby UI)
+     *   this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
+     *
+     *   // ✅ Game objects only created when playing starts
+     *   this.adapter.onPlaying((state) => {
+     *     this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
+     *     this.physics.add.existing(this.ball);
+     *   });
+     * }
+     * ```
+     */
+    onPlaying(callback: (state: TState) => void): () => void;
+    /**
+     * Register a callback that only runs while in 'playing' phase
+     *
+     * Runs every state update during gameplay, stops when game ends.
+     *
+     * @example
+     * ```ts
+     * this.adapter.whilePlaying((state) => {
+     *   // Physics updates, collision checks, etc.
+     *   this.handleGameLogic(state);
+     * });
+     * ```
+     */
+    whilePlaying(callback: (state: TState) => void): () => void;
+    /**
+     * Register a callback that runs when game ends
+     *
+     * @example
+     * ```ts
+     * this.adapter.onEnded((state) => {
+     *   this.showResults(state);
+     * });
+     * ```
+     */
+    onEnded(callback: (state: TState) => void): () => void;
+    /**
+     * Check if game is currently in lobby phase
+     */
+    isInLobby(): boolean;
+    /**
+     * Check if game is currently playing
+     */
+    isPlaying(): boolean;
+    /**
      * Get the runtime (for advanced usage)
      */
     getRuntime(): GameRuntime<TState>;

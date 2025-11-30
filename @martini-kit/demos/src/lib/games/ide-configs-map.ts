@@ -20,6 +20,8 @@ import tntDudeConfig from './configs/tnt-dude';
 export interface GamePreviewMetadata {
 	title: string;
 	description: string;
+	tagline?: string;
+	theme?: { primary: string };
 	difficulty?: 'beginner' | 'intermediate' | 'advanced';
 }
 
@@ -30,36 +32,43 @@ export const gameMetadata: Record<string, GamePreviewMetadata> = {
 	'fire-and-ice': {
 		title: 'Fire & Ice',
 		description: 'A two-player platformer where teamwork is key. Fire (red) and Ice (blue) must work together!',
+		tagline: 'Dash, solve, and sync co-op',
 		difficulty: 'beginner'
 	},
 	'paddle-battle': {
 		title: 'Paddle Battle',
 		description: 'Classic Pong reimagined for multiplayer. First to 5 points wins!',
+		tagline: 'A sharper, faster Pong',
 		difficulty: 'beginner'
 	},
 	'blob-battle': {
 		title: 'Blob Battle',
 		description: 'Showcasing StateDrivenSpawner (auto-spawns players & food from state) and createTickAction (server-side physics with collisions). Click to move, eat food to grow, eat smaller blobs to win!',
+		tagline: 'Grow, chase, outmaneuver',
 		difficulty: 'beginner'
 	},
 	'arena-blaster': {
 		title: 'Arena Blaster',
 		description: 'Twin-stick shooter action! WASD to move, Space to shoot.',
+		tagline: 'Twin-stick chaos in sync',
 		difficulty: 'advanced'
 	},
 	'circuit-racer': {
 		title: 'Circuit Racer',
 		description: 'Showcasing event-driven architecture: createSpeedDisplay auto-updates via PhysicsManager.onVelocityChange, and attachDirectionalIndicator handles Phaser rotation conventions automatically. No manual update() calls, no rotation offset bugs!',
+		tagline: 'Tight top-down racing',
 		difficulty: 'intermediate'
 	},
 	'tile-matcher': {
 		title: 'Connect Four',
 		description: 'Classic Connect Four game. Get 4 in a row to win!',
+		tagline: 'Connect Four with friends',
 		difficulty: 'intermediate'
 	},
 	'tnt-dude': {
 		title: 'TNT Dude',
 		description: 'Classic Bomberman-style battle. Place bombs, grab powerups, and outlast your opponents!',
+		tagline: 'Explosive arena battles',
 		difficulty: 'advanced'
 	}
 };

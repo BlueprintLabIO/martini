@@ -17,7 +17,15 @@ const playerManager = createPlayerManager({
 });
 
 export const game = defineGame({
-	setup: ({ playerIds }) => ({
+	lobby: {
+		minPlayers: 2,
+		maxPlayers: 2,
+		requireAllReady: true,
+		autoStartTimeout: 30000,
+		allowLateJoin: false
+	},
+
+	setup: ({ playerIds, random }) => ({
 		players: playerManager.initialize(playerIds),
 		// Grid: array of columns, each column is array of tokens (null = empty)
 		// grid[col][row] where row 0 is bottom
@@ -98,6 +106,14 @@ export const game = defineGame({
 		}
 	},
 
+	onPhaseChange: (state, { from, to, reason }) => {
+		console.log(\`[Tile Matcher] Phase: \${from} -> \${to} (\${reason})\`);
+	},
+
+	onPlayerReady: (state, playerId, ready) => {
+		console.log(\`[Tile Matcher] Player \${playerId} is \${ready ? 'ready' : 'not ready'}\`);
+	},
+
 	onPlayerJoin: (state, playerId) => {
 		playerManager.handleJoin(state.players, playerId);
 	},
@@ -166,7 +182,7 @@ function checkDirection(
 `,
 
 		'/src/scene.ts': `import type { GameRuntime } from '@martini-kit/core';
-import { PhaserAdapter, createPlayerHUD } from '@martini-kit/phaser';
+import { PhaserAdapter, createPlayerHUD, LobbyUI } from '@martini-kit/phaser';
 import Phaser from 'phaser';
 
 const COLS = 7;
@@ -183,10 +199,31 @@ export function createScene(runtime: GameRuntime) {
 		private tokens: Phaser.GameObjects.Arc[][] = [];
 		private gridHelper: any; // GridClickHelper
 		private winLineGraphics!: Phaser.GameObjects.Graphics;
-		private resetButton?: Phaser.GameObjects.Container;
+		private hud: any;
+		private lobbyUI?: LobbyUI;
 
 		create() {
 			this.adapter = new PhaserAdapter(runtime, this);
+
+			// Create lobby UI
+			this.lobbyUI = new LobbyUI(this.adapter, this, {
+				title: 'Tile Matcher',
+				subtitle: 'Waiting for players...',
+				position: { x: 400, y: 200 },
+				showInstructions: true
+			});
+
+			// Update lobby UI on state changes
+			this.adapter.onChange((state: any) => {
+				if (this.lobbyUI && state.__lobby) {
+					this.lobbyUI.update(state.__lobby);
+					if (state.__lobby.phase === 'lobby') {
+						this.lobbyUI.show();
+					} else {
+						this.lobbyUI.hide();
+					}
+				}
+			});
 
 			// Background
 			this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);

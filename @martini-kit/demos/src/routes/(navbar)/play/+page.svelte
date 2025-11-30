@@ -1,21 +1,23 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { gameMetadata } from '$lib/games/ide-configs-map';
+	import { goto } from "$app/navigation";
+	import { gameMetadata } from "$lib/games/ide-configs-map";
 
 	const curatedGameIds = Object.keys(gameMetadata);
-	const defaultGame = curatedGameIds[0] ?? '';
+	const defaultGame = curatedGameIds[0] ?? "";
 
-	let manualRoomCode = $state('');
+	let manualRoomCode = $state("");
 	let manualGameId = $state(defaultGame);
 
 	function generateRoomId(gameId: string) {
-		const seed = gameId || 'martini';
-		return `play-${seed}-${Math.random().toString(36).slice(2, 8)}`;
+		return Math.random().toString(36).slice(2, 8);
 	}
 
 	function hostGame(gameId: string) {
 		const roomId = generateRoomId(gameId);
-		const search = new URLSearchParams({ game: gameId, role: 'host' }).toString();
+		const search = new URLSearchParams({
+			game: gameId,
+			role: "host",
+		}).toString();
 		goto(`/play/room/${roomId}?${search}`);
 	}
 
@@ -35,36 +37,37 @@
 	<div class="page-container">
 		<header class="hero">
 			<div class="hero-copy">
-				<p class="eyebrow">martini-kit live play</p>
-				<h1>Pick a game, host a room, share the link.</h1>
+				<h1>Play with friends</h1>
 				<p class="lead">
-					Host a curated martini-kit game or jump into a friend's room code. Peer-to-peer by default,
-					no extra setup needed.
+					Host a game or join a room. Peer-to-peer, no setup needed.
 				</p>
-				<div class="pill-row">
-					<span class="pill">P2P sessions</span>
-					<span class="pill">Shareable URLs</span>
-					<span class="pill">Curated demos</span>
-				</div>
 			</div>
-			<div class="join-card">
-				<div class="card-top">
-					<p class="label">Have a room code?</p>
-					<p class="hint">Room code is the last part of the shared URL (e.g. play-xxxxxx).</p>
-				</div>
-				<div class="inputs">
-					<input
-						placeholder="Enter room code"
-						bind:value={manualRoomCode}
-						onkeydown={(e) => e.key === 'Enter' && joinManual()}
-					/>
-					<select bind:value={manualGameId} aria-label="Select game to join">
-						{#each curatedGameIds as id}
-							<option value={id}>{gameMetadata[id]?.title ?? id}</option>
-						{/each}
-					</select>
-					<button class="primary" onclick={joinManual} disabled={!manualRoomCode}>Join room</button>
-				</div>
+
+			<div class="join-row">
+				<input
+					placeholder="Enter room code"
+					bind:value={manualRoomCode}
+					onkeydown={(e) => e.key === "Enter" && joinManual()}
+				/>
+				<button
+					class="primary"
+					onclick={joinManual}
+					disabled={!manualRoomCode}>Join</button
+				>
+				<span class="or-divider">or</span>
+				<select
+					bind:value={manualGameId}
+					aria-label="Select game to host"
+				>
+					{#each curatedGameIds as id}
+						<option value={id}
+							>{gameMetadata[id]?.title ?? id}</option
+						>
+					{/each}
+				</select>
+				<button class="secondary" onclick={() => hostGame(manualGameId)}
+					>Host Game</button
+				>
 			</div>
 		</header>
 
@@ -74,7 +77,8 @@
 					<p class="eyebrow">Curated demos</p>
 					<h2>Host any martini-kit sample</h2>
 					<p class="muted">
-						Start a fresh room or preview the experience first. These samples mirror the ones in /preview.
+						Start a fresh room or preview the experience first.
+						These samples mirror the ones in /preview.
 					</p>
 				</div>
 			</div>
@@ -83,15 +87,32 @@
 					<div class="card">
 						<div class="card-header">
 							<div>
-								<p class="eyebrow">{gameMetadata[id]?.difficulty ?? 'multiplayer'}</p>
+								<p class="eyebrow">
+									{gameMetadata[id]?.difficulty ??
+										"multiplayer"}
+								</p>
 								<h3>{gameMetadata[id]?.title ?? id}</h3>
 							</div>
-							<span class="badge">{gameMetadata[id]?.difficulty ?? 'ready to play'}</span>
+							<span class="badge"
+								>{gameMetadata[id]?.difficulty ??
+									"ready to play"}</span
+							>
 						</div>
-						<p class="description">{gameMetadata[id]?.description ?? 'Playable martini-kit game'}</p>
+						<p class="description">
+							{gameMetadata[id]?.tagline ??
+								gameMetadata[id]?.description ??
+								"Playable martini-kit game"}
+						</p>
 						<div class="actions">
-							<button class="primary" onclick={() => hostGame(id)}>Host room</button>
-							<a class="ghost" href={`/preview/${id}`} target="_blank" rel="noreferrer">Preview</a>
+							<button class="primary" onclick={() => hostGame(id)}
+								>Host room</button
+							>
+							<a
+								class="ghost"
+								href={`/editor/${id}`}
+								target="_blank"
+								rel="noreferrer">Preview</a
+							>
 						</div>
 					</div>
 				{/each}
@@ -103,7 +124,13 @@
 <style>
 	.play-hub {
 		min-height: 100vh;
-		background: var(--bg-page);
+		background: radial-gradient(
+				circle at 18% 18%,
+				#f3f6ff 0,
+				transparent 30%
+			),
+			radial-gradient(circle at 82% 12%, #eef7ff 0, transparent 30%),
+			#fbfcff;
 		color: var(--text);
 		padding: 3.5rem 1.5rem 4rem;
 	}
@@ -114,123 +141,88 @@
 	}
 
 	.hero {
-		display: grid;
-		grid-template-columns: 1.2fr 0.9fr;
-		gap: 1.5rem;
+		display: flex;
+		flex-direction: column;
 		align-items: center;
-		padding: 2rem;
-		border-radius: 18px;
-		border: 1px solid var(--border);
-		background: linear-gradient(135deg, #ffffff, #f4f7ff);
-		box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
-		position: relative;
-		overflow: hidden;
+		text-align: center;
+		gap: 2rem;
+		padding: 3rem 1rem 4rem;
 	}
 
-	.hero::after {
-		content: "";
-		position: absolute;
-		inset: -30% 30% auto auto;
-		height: 360px;
-		width: 360px;
-		background: radial-gradient(circle, rgba(124, 231, 207, 0.2), transparent 60%);
-		filter: blur(4px);
-		pointer-events: none;
-	}
-
-	.hero-copy {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.eyebrow {
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--muted-2);
-		font-weight: 700;
-		font-size: 0.78rem;
-		margin: 0;
-	}
-
-	.lead {
-		margin: 0;
-		color: var(--muted);
-		line-height: 1.6;
-	}
-
-	.join-card {
-		padding: 1.25rem;
-		border-radius: 14px;
-		border: 1px solid var(--border);
-		background: #ffffff;
-		box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		position: relative;
-	}
-
-	.card-top {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.label {
-		margin: 0;
+	.hero-copy h1 {
+		margin: 0 0 1rem 0;
+		font-size: clamp(2.6rem, 4.4vw, 3.9rem);
+		font-weight: 800;
+		letter-spacing: -0.02em;
 		color: var(--text);
-		font-weight: 700;
 	}
 
-	.hint {
-		margin: 0 0 0.25rem 0;
-		color: var(--muted);
+	.join-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		max-width: 800px;
+	}
+
+	.or-divider {
+		color: var(--muted-2);
+		font-weight: 500;
 		font-size: 0.9rem;
-	}
-
-	.inputs {
-		display: grid;
-		grid-template-columns: 1.2fr 1fr auto;
-		gap: 0.65rem;
+		padding: 0 0.5rem;
 	}
 
 	input,
 	select {
+		padding: 0.75rem 1rem;
 		border-radius: 10px;
 		border: 1px solid var(--border);
-		background: #f8fafc;
-		color: var(--text);
-		padding: 0.75rem 0.8rem;
+		background: #ffffff;
 		font-size: 1rem;
-	}
-
-	select {
-		min-width: 180px;
+		min-width: 200px;
 	}
 
 	.primary {
 		background: linear-gradient(135deg, var(--accent), var(--accent-2));
 		color: #fff;
 		border: none;
-		border-radius: 12px;
-		padding: 0.65rem 1.2rem;
-		font-weight: 700;
+		border-radius: 10px;
+		padding: 0.75rem 1.5rem;
+		font-weight: 600;
 		cursor: pointer;
-		box-shadow: 0 10px 30px rgba(37, 99, 235, 0.25);
-		transition: transform 0.15s ease, box-shadow 0.15s ease;
+		box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease,
+			opacity 0.15s;
 	}
 
 	.primary:hover {
 		transform: translateY(-1px);
-		box-shadow: 0 14px 36px rgba(37, 99, 235, 0.28);
+		box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+		opacity: 1;
 	}
 
 	.primary:disabled {
-		opacity: 0.55;
+		opacity: 0.5;
 		cursor: not-allowed;
-		transform: none;
-		box-shadow: none;
+	}
+
+	.secondary {
+		background: #ffffff;
+		color: var(--text);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		padding: 0.75rem 1.5rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+
+	.secondary:hover {
+		background: #f8fafc;
 	}
 
 	.ghost {
@@ -242,7 +234,10 @@
 		cursor: pointer;
 		text-decoration: none;
 		font-weight: 600;
-		transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+		transition:
+			border-color 0.15s ease,
+			color 0.15s ease,
+			transform 0.15s ease;
 	}
 
 	.ghost:hover {
@@ -251,23 +246,13 @@
 		transform: translateY(-1px);
 	}
 
-	.pill-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
-
-	.pill {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		padding: 0.45rem 0.7rem;
-		border-radius: 999px;
-		background: #eef2ff;
-		color: #1d2753;
+	.eyebrow {
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted-2);
 		font-weight: 700;
-		font-size: 0.9rem;
-		border: 1px solid var(--border);
+		font-size: 0.78rem;
+		margin: 0;
 	}
 
 	.gallery {
@@ -305,7 +290,10 @@
 		gap: 0.5rem;
 		height: 100%;
 		box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-		transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease,
+			border-color 0.15s ease;
 	}
 
 	.card:hover {

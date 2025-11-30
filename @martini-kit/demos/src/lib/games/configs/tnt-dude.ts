@@ -105,6 +105,14 @@ function generateBlocks(): any[] {
 }
 
 export const game = defineGame({
+	lobby: {
+		minPlayers: 2,
+		maxPlayers: 4,
+		requireAllReady: true,
+		autoStartTimeout: 30000,
+		allowLateJoin: false
+	},
+
 	setup: ({ playerIds, random }) => ({
 		players: playerManager.initialize(playerIds),
 		bombs: [] as Array<{
@@ -541,6 +549,14 @@ export const game = defineGame({
 		})
 	},
 
+	onPhaseChange: (state, { from, to, reason }) => {
+		console.log(\`[TNT Dude] Phase: \${from} -> \${to} (\${reason})\`);
+	},
+
+	onPlayerReady: (state, playerId, ready) => {
+		console.log(\`[TNT Dude] Player \${playerId} is \${ready ? 'ready' : 'not ready'}\`);
+	},
+
 	onPlayerJoin: (state, playerId) => {
 		playerManager.handleJoin(state.players, playerId);
 	},
@@ -556,7 +572,8 @@ import {
 	PhaserAdapter, 
 	createPlayerStatsPanel,
 	createCollectibleManager,
-	createRoundManager
+	createRoundManager,
+	LobbyUI
 } from '@martini-kit/phaser';
 import Phaser from 'phaser';
 
@@ -576,11 +593,33 @@ export function createScene(runtime: GameRuntime) {
 		private collectibleManager?: ReturnType<typeof createCollectibleManager>;
 		private roundManager?: ReturnType<typeof createRoundManager>;
 		private keys!: any;
+		private powerupSpawner: any;
+		private lobbyUI?: LobbyUI;
 
 		create() {
 			// Initialize adapter - always-on snapshot smoothing (~32ms visual delay)
 			this.adapter = new PhaserAdapter(runtime, this, {
 				autoTick: true // ✅ Automatically call tick action in update()
+			});
+
+			// Create lobby UI
+			this.lobbyUI = new LobbyUI(this.adapter, this, {
+				title: 'TNT Dude',
+				subtitle: 'Waiting for players...',
+				position: { x: 400, y: 200 },
+				showInstructions: true
+			});
+
+			// Update lobby UI on state changes
+			this.adapter.onChange((state: any) => {
+				if (this.lobbyUI && state.__lobby) {
+					this.lobbyUI.update(state.__lobby);
+					if (state.__lobby.phase === 'lobby') {
+						this.lobbyUI.show();
+					} else {
+						this.lobbyUI.hide();
+					}
+				}
 			});
 
 			// Background

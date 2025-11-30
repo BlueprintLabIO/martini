@@ -25,10 +25,20 @@ class LocalTransportRegistry {
     if (!this.rooms.has(roomId)) {
       this.rooms.set(roomId, new Set());
     }
-    this.rooms.get(roomId)!.add(transport);
+
+    const room = this.rooms.get(roomId)!;
+
+    // Check if any existing peer has locked the room
+    const isRoomLocked = Array.from(room).some(peer => peer.isRoomLocked());
+    if (isRoomLocked) {
+      console.warn(`[LocalTransport] Room ${roomId} is locked, rejecting new peer ${transport.playerId}`);
+      // Don't add the transport to the room
+      return;
+    }
+
+    room.add(transport);
 
     // Notify existing peers about the new peer
-    const room = this.rooms.get(roomId)!;
     for (const peer of room) {
       if (peer !== transport) {
         // Notify existing peer about new peer
@@ -178,6 +188,7 @@ export class LocalTransport implements Transport {
   private peerJoinHandlers: PeerHandler[] = [];
   private peerLeaveHandlers: PeerHandler[] = [];
   private hostDisconnectHandlers: (() => void)[] = [];
+  private isLocked: boolean = false;
 
   constructor(config: LocalTransportConfig) {
     this.roomId = config.roomId;
@@ -251,9 +262,25 @@ export class LocalTransport implements Transport {
     return this._isHost;
   }
 
+  /**
+   * Lock the room - prevent new peers from joining
+   * For LocalTransport, this is a simple flag check
+   */
+  lock(): void {
+    this.isLocked = true;
+  }
+
   disconnect(): void {
     (this.metrics as LocalTransportMetrics).setDisconnected();
     LocalTransportRegistry.unregister(this.roomId, this);
+  }
+
+  /**
+   * Check if room is locked
+   * @internal
+   */
+  isRoomLocked(): boolean {
+    return this.isLocked;
   }
 
   // Internal methods called by the registry

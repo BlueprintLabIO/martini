@@ -32,6 +32,14 @@ const playerManager = createPlayerManager({
 });
 
 export const game = defineGame({
+	lobby: {
+		minPlayers: 2,
+		maxPlayers: 2,
+		requireAllReady: true,
+		autoStartTimeout: 30000,
+		allowLateJoin: false
+	},
+
 	setup: ({ playerIds }) => {
 		return {
 			players: playerManager.initialize(playerIds),
@@ -182,6 +190,14 @@ export const game = defineGame({
 			}
 		},
 
+	onPhaseChange: (state, { from, to, reason }) => {
+		console.log(\`[Arena Blaster] Phase: \${from} -> \${to} (\${reason})\`);
+	},
+
+	onPlayerReady: (state, playerId, ready) => {
+		console.log(\`[Arena Blaster] Player \${playerId} is \${ready ? 'ready' : 'not ready'}\`);
+	},
+
 	onPlayerJoin: (state, playerId) => {
 		playerManager.handleJoin(state.players, playerId);
 	},
@@ -193,7 +209,7 @@ export const game = defineGame({
 `,
 
 		'/src/scene.ts': `import type { GameRuntime } from '@martini-kit/core';
-import { PhaserAdapter, attachDirectionalIndicator } from '@martini-kit/phaser';
+import { PhaserAdapter, attachDirectionalIndicator, LobbyUI } from '@martini-kit/phaser';
 import Phaser from 'phaser';
 
 const PLAYER_SPEED = 200;
@@ -215,6 +231,7 @@ export function createScene(runtime: GameRuntime) {
 		private healthBarManager: any;
 		private scoreText: Phaser.GameObjects.Text | null = null;
 		private winText: Phaser.GameObjects.Text | null = null;
+		private lobbyUI?: LobbyUI;
 		private debugInterval?: any;
 		private debugWindowCount = 0;
 		private readonly debugMaxWindows = 6; // auto-stop after ~30s
@@ -231,9 +248,29 @@ export function createScene(runtime: GameRuntime) {
 				// Slightly deeper buffer to absorb arrival jitter in preview
 				snapshotBufferSize: 3
 			});
-			const isHost = this.adapter.isHost();
+		const isHost = this.adapter.isHost();
 
-			// Background
+		// Create lobby UI
+		this.lobbyUI = new LobbyUI(this.adapter, this, {
+			title: 'Arena Blaster',
+			subtitle: 'Waiting for players...',
+			position: { x: 400, y: 200 },
+			showInstructions: true
+		});
+
+		// Update lobby UI on state changes
+		this.adapter.onChange((state: any) => {
+			if (this.lobbyUI && state.__lobby) {
+				this.lobbyUI.update(state.__lobby);
+				if (state.__lobby.phase === 'lobby') {
+					this.lobbyUI.show();
+				} else {
+					this.lobbyUI.hide();
+				}
+			}
+		});
+
+		// Background
 			this.add.rectangle(400, 300, 800, 600, 0x2d3748);
 
 			// Arena walls

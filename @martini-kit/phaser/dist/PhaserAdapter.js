@@ -690,6 +690,109 @@ export class PhaserAdapter {
     getState() {
         return this.runtime.getState();
     }
+    // ============================================================================
+    // Lobby System Helpers (Pit of Success)
+    // ============================================================================
+    /**
+     * Register a callback that only runs once when transitioning to 'playing' phase
+     *
+     * ✅ Pit of success: Prevents creating game objects during lobby phase
+     *
+     * @example
+     * ```ts
+     * create() {
+     *   // Static setup (background, lobby UI)
+     *   this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
+     *
+     *   // ✅ Game objects only created when playing starts
+     *   this.adapter.onPlaying((state) => {
+     *     this.ball = this.add.circle(state.ball.x, state.ball.y, 10, 0xff6b6b);
+     *     this.physics.add.existing(this.ball);
+     *   });
+     * }
+     * ```
+     */
+    onPlaying(callback) {
+        let hasStarted = false;
+        return this.runtime.onChange((state) => {
+            // If no lobby system, run immediately
+            if (!state.__lobby) {
+                if (!hasStarted) {
+                    hasStarted = true;
+                    callback(state);
+                }
+                return;
+            }
+            // With lobby: only run when transitioning to 'playing'
+            if (!hasStarted && state.__lobby.phase === 'playing') {
+                hasStarted = true;
+                callback(state);
+            }
+        });
+    }
+    /**
+     * Register a callback that only runs while in 'playing' phase
+     *
+     * Runs every state update during gameplay, stops when game ends.
+     *
+     * @example
+     * ```ts
+     * this.adapter.whilePlaying((state) => {
+     *   // Physics updates, collision checks, etc.
+     *   this.handleGameLogic(state);
+     * });
+     * ```
+     */
+    whilePlaying(callback) {
+        return this.runtime.onChange((state) => {
+            // If no lobby system, always run
+            if (!state.__lobby) {
+                callback(state);
+                return;
+            }
+            // With lobby: only run during 'playing' phase
+            if (state.__lobby.phase === 'playing') {
+                callback(state);
+            }
+        });
+    }
+    /**
+     * Register a callback that runs when game ends
+     *
+     * @example
+     * ```ts
+     * this.adapter.onEnded((state) => {
+     *   this.showResults(state);
+     * });
+     * ```
+     */
+    onEnded(callback) {
+        let hasEnded = false;
+        return this.runtime.onChange((state) => {
+            if (!state.__lobby)
+                return; // No lobby system
+            if (!hasEnded && state.__lobby.phase === 'ended') {
+                hasEnded = true;
+                callback(state);
+            }
+        });
+    }
+    /**
+     * Check if game is currently in lobby phase
+     */
+    isInLobby() {
+        const state = this.runtime.getState();
+        return state.__lobby?.phase === 'lobby';
+    }
+    /**
+     * Check if game is currently playing
+     */
+    isPlaying() {
+        const state = this.runtime.getState();
+        if (!state.__lobby)
+            return true; // No lobby = always playing
+        return state.__lobby.phase === 'playing';
+    }
     /**
      * Get the runtime (for advanced usage)
      */

@@ -9,6 +9,7 @@ import type { GameDefinition } from './defineGame.js';
 import type { Transport, WireMessage, RuntimeConfig } from './transport.js';
 import { generateDiff, applyPatch, deepClone, type Patch } from './sync.js';
 import { SeededRandom } from './SeededRandom.js';
+import type { LobbyState, GamePhase, PhaseChangeContext, PlayerPresence } from './lobby.js';
 
 type StateChangeCallback<TState> = (state: TState) => void;
 type EventCallback = (senderId: string, eventName: string, payload: any) => void;
@@ -44,6 +45,10 @@ export class GameRuntime<TState = any> {
   private strict: boolean;
   private actionCounter: number = 100000; // For seeding action random (start high to avoid LCG collisions)
 
+  // Lobby system state
+  private lobbyTimeoutId: any = null;
+  private hasLobby: boolean = false;
+
   private stateChangeCallbacks: StateChangeCallback<TState>[] = [];
   private eventCallbacks: Map<string, EventCallback[]> = new Map();
   private patchListeners: Array<(patches: Patch[]) => void> = [];
@@ -70,6 +75,14 @@ export class GameRuntime<TState = any> {
     // Validate player initialization (dev mode)
     if (process.env.NODE_ENV !== 'production' && initialPlayerIds.length > 0) {
       this.validatePlayerInitialization(initialPlayerIds);
+    }
+
+    // Initialize lobby system if configured
+    if (gameDef.lobby) {
+      this.hasLobby = true;
+      this.injectLobbyState();
+      this.injectLobbyActions();
+      this.startLobbyPhase();
     }
 
     // Setup transport listeners
@@ -225,8 +238,28 @@ export class GameRuntime<TState = any> {
   /**
    * Wait until the desired number of players (including self) are present.
    * Helpful for P2P transports where peers join asynchronously.
+   *
+   * @deprecated Use the lobby system instead for better player coordination:
+   * ```ts
+   * defineGame({
+   *   lobby: {
+   *     minPlayers: 2,
+   *     requireAllReady: true
+   *   }
+   * })
+   * ```
+   * This method is automatically skipped when lobby system is enabled.
    */
   async waitForPlayers(minPlayers: number, options: { timeoutMs?: number; includeSelf?: boolean } = {}): Promise<void> {
+    // Warn if lobby system is enabled
+    if (this.hasLobby) {
+      console.warn(
+        '[GameRuntime] waitForPlayers() is deprecated when using the lobby system. ' +
+        'The lobby automatically manages player coordination via minPlayers config.'
+      );
+      return;
+    }
+
     const includeSelf = options.includeSelf !== false;
     const target = Math.max(1, minPlayers);
     const getCount = () => (includeSelf ? 1 : 0) + this.transport.getPeerIds().length;
@@ -323,8 +356,14 @@ export class GameRuntime<TState = any> {
     // Listen for peer join
     this.unsubscribes.push(
       this.transport.onPeerJoin((peerId) => {
-        if (this.gameDef.onPlayerJoin) {
-          this.gameDef.onPlayerJoin(this.state, peerId);
+        // Use lobby handler if lobby system enabled
+        if (this.hasLobby) {
+          this.handlePeerJoinWithLobby(peerId);
+        } else {
+          // Legacy behavior (no lobby)
+          if (this.gameDef.onPlayerJoin) {
+            this.gameDef.onPlayerJoin(this.state, peerId);
+          }
         }
 
         // If we're the host, send full state to new peer
@@ -340,8 +379,14 @@ export class GameRuntime<TState = any> {
     // Listen for peer leave
     this.unsubscribes.push(
       this.transport.onPeerLeave((peerId) => {
-        if (this.gameDef.onPlayerLeave) {
-          this.gameDef.onPlayerLeave(this.state, peerId);
+        // Use lobby handler if lobby system enabled
+        if (this.hasLobby) {
+          this.handlePeerLeaveWithLobby(peerId);
+        } else {
+          // Legacy behavior (no lobby)
+          if (this.gameDef.onPlayerLeave) {
+            this.gameDef.onPlayerLeave(this.state, peerId);
+          }
         }
       })
     );
@@ -660,6 +705,268 @@ export class GameRuntime<TState = any> {
         throw new Error(message);
       } else {
         console.warn(message);
+      }
+    }
+  }
+
+  // ============================================================================
+  // Lobby System (Private methods)
+  // ============================================================================
+
+  /**
+   * Inject lobby metadata into state
+   */
+  private injectLobbyState(): void {
+    const myId = this.transport.getPlayerId();
+
+    (this.state as any).__lobby = {
+      phase: 'lobby' as GamePhase,
+      players: {
+        [myId]: {
+          playerId: myId,
+          ready: false,
+          joinedAt: Date.now()
+        } as PlayerPresence
+      },
+      config: this.gameDef.lobby!,
+      startedAt: undefined,
+      endedAt: undefined
+    } as LobbyState;
+  }
+
+  /**
+   * Inject built-in lobby actions
+   */
+  private injectLobbyActions(): void {
+    if (!this.gameDef.actions) {
+      this.gameDef.actions = {};
+    }
+
+    // Add internal lobby actions (prefixed with __)
+    this.gameDef.actions.__lobbyReady = {
+      apply: (state, context, input: { ready: boolean }) => {
+        this.handleLobbyReady(state, context, input);
+      }
+    };
+
+    this.gameDef.actions.__lobbyStart = {
+      apply: (state, context) => {
+        this.handleLobbyStart(state, context);
+      }
+    };
+
+    this.gameDef.actions.__lobbyEnd = {
+      apply: (state, context) => {
+        this.handleLobbyEnd(state, context);
+      }
+    };
+  }
+
+  /**
+   * Start lobby phase with auto-start timer
+   */
+  private startLobbyPhase(): void {
+    const lobbyConfig = this.gameDef.lobby!;
+
+    if (lobbyConfig.autoStartTimeout && lobbyConfig.autoStartTimeout > 0) {
+      this.lobbyTimeoutId = setTimeout(() => {
+        const lobbyState = (this.state as any).__lobby as LobbyState;
+        const playerCount = Object.keys(lobbyState.players).length;
+
+        if (playerCount >= lobbyConfig.minPlayers && lobbyState.phase === 'lobby') {
+          this.transitionPhase(this.state, 'playing', 'timeout');
+        }
+      }, lobbyConfig.autoStartTimeout);
+    }
+  }
+
+  /**
+   * Handle __lobbyReady action
+   */
+  private handleLobbyReady(state: TState, context: any, input: { ready: boolean }): void {
+    const lobbyState = (state as any).__lobby as LobbyState;
+    const presence = lobbyState.players[context.targetId];
+
+    if (!presence) return;
+
+    presence.ready = input.ready;
+
+    // Trigger callback
+    if (this.gameDef.onPlayerReady) {
+      this.gameDef.onPlayerReady(state, context.targetId, input.ready);
+    }
+
+    // Check if all players ready
+    this.checkLobbyStartConditions(state);
+  }
+
+  /**
+   * Handle __lobbyStart action
+   */
+  private handleLobbyStart(state: TState, context: any): void {
+    const lobbyState = (state as any).__lobby as LobbyState;
+    const lobbyConfig = this.gameDef.lobby!;
+
+    // Only host or all-ready can force start
+    if (!context.isHost && lobbyConfig.requireAllReady && !this.allPlayersReady(state)) {
+      return; // Ignore non-host start attempts if all-ready required
+    }
+
+    this.transitionPhase(state, 'playing', 'manual');
+  }
+
+  /**
+   * Handle __lobbyEnd action
+   */
+  private handleLobbyEnd(state: TState, _context: any): void {
+    this.transitionPhase(state, 'ended', 'manual');
+  }
+
+  /**
+   * Transition between phases
+   */
+  private transitionPhase(
+    state: TState,
+    newPhase: GamePhase,
+    reason: PhaseChangeContext['reason']
+  ): void {
+    const lobbyState = (state as any).__lobby as LobbyState;
+    const oldPhase = lobbyState.phase;
+
+    if (oldPhase === newPhase) return;
+
+    lobbyState.phase = newPhase;
+
+    if (newPhase === 'playing') {
+      lobbyState.startedAt = Date.now();
+      // Clear auto-start timeout
+      if (this.lobbyTimeoutId) {
+        clearTimeout(this.lobbyTimeoutId);
+        this.lobbyTimeoutId = null;
+      }
+      // Lock room (prevent late joins if configured)
+      if (!this.gameDef.lobby!.allowLateJoin) {
+        this.lockRoom();
+      }
+    } else if (newPhase === 'ended') {
+      lobbyState.endedAt = Date.now();
+    }
+
+    // Trigger callback
+    if (this.gameDef.onPhaseChange) {
+      this.gameDef.onPhaseChange(state, {
+        from: oldPhase,
+        to: newPhase,
+        reason,
+        timestamp: Date.now()
+      });
+    }
+
+    this.notifyStateChange();
+  }
+
+  /**
+   * Check if lobby can transition to playing
+   */
+  private checkLobbyStartConditions(state: TState): void {
+    const lobbyState = (state as any).__lobby as LobbyState;
+    const lobbyConfig = this.gameDef.lobby!;
+
+    if (lobbyState.phase !== 'lobby') return;
+
+    const players = Object.values(lobbyState.players) as PlayerPresence[];
+    const readyCount = players.filter(p => p.ready).length;
+
+    // Auto-start conditions
+    const hasMinPlayers = players.length >= lobbyConfig.minPlayers;
+    const allReady = lobbyConfig.requireAllReady ? readyCount === players.length : true;
+
+    if (hasMinPlayers && allReady) {
+      this.transitionPhase(state, 'playing', 'all_ready');
+    }
+  }
+
+  /**
+   * Check if all players are ready
+   */
+  private allPlayersReady(state: TState): boolean {
+    const lobbyState = (state as any).__lobby as LobbyState;
+    const players = Object.values(lobbyState.players) as PlayerPresence[];
+    return players.length > 0 && players.every(p => p.ready);
+  }
+
+  /**
+   * Handle peer join with lobby presence
+   */
+  private handlePeerJoinWithLobby(peerId: string): void {
+    const lobbyState = (this.state as any).__lobby as LobbyState;
+    const lobbyConfig = this.gameDef.lobby!;
+
+    // Check max players
+    if (lobbyConfig.maxPlayers && Object.keys(lobbyState.players).length >= lobbyConfig.maxPlayers) {
+      console.warn(`[Lobby] Max players (${lobbyConfig.maxPlayers}) reached, rejecting ${peerId}`);
+      // TODO: Implement transport.reject(peerId) when available
+      return;
+    }
+
+    // Check late join
+    if (lobbyState.phase === 'playing' && !lobbyConfig.allowLateJoin) {
+      console.warn(`[Lobby] Game in progress, late join disabled, rejecting ${peerId}`);
+      // TODO: Implement transport.reject(peerId) when available
+      return;
+    }
+
+    // Add player presence
+    lobbyState.players[peerId] = {
+      playerId: peerId,
+      ready: false,
+      joinedAt: Date.now()
+    };
+
+    // Call user's onPlayerJoin
+    if (this.gameDef.onPlayerJoin) {
+      this.gameDef.onPlayerJoin(this.state, peerId);
+    }
+
+    // Check if ready to start
+    this.checkLobbyStartConditions(this.state);
+  }
+
+  /**
+   * Handle peer leave with lobby cleanup
+   */
+  private handlePeerLeaveWithLobby(peerId: string): void {
+    const lobbyState = (this.state as any).__lobby as LobbyState;
+
+    // Remove player presence
+    delete lobbyState.players[peerId];
+
+    // Call user's onPlayerLeave
+    if (this.gameDef.onPlayerLeave) {
+      this.gameDef.onPlayerLeave(this.state, peerId);
+    }
+
+    // Check if game should end due to insufficient players
+    const lobbyConfig = this.gameDef.lobby!;
+    if (lobbyState.phase === 'playing') {
+      const remaining = Object.keys(lobbyState.players).length;
+      if (remaining < lobbyConfig.minPlayers) {
+        this.transitionPhase(this.state, 'ended', 'player_left');
+      }
+    }
+  }
+
+  /**
+   * Lock room (prevent new joins)
+   */
+  private lockRoom(): void {
+    const transport = this.transport as any;
+    if (typeof transport.lock === 'function') {
+      transport.lock();
+    } else {
+      // Warn if lock not implemented
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[Lobby] Transport does not implement lock() - late joins cannot be prevented');
       }
     }
   }

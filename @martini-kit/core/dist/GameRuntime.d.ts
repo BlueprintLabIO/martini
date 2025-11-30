@@ -39,6 +39,8 @@ export declare class GameRuntime<TState = any> {
     private unsubscribes;
     private strict;
     private actionCounter;
+    private lobbyTimeoutId;
+    private hasLobby;
     private stateChangeCallbacks;
     private eventCallbacks;
     private patchListeners;
@@ -94,6 +96,17 @@ export declare class GameRuntime<TState = any> {
     /**
      * Wait until the desired number of players (including self) are present.
      * Helpful for P2P transports where peers join asynchronously.
+     *
+     * @deprecated Use the lobby system instead for better player coordination:
+     * ```ts
+     * defineGame({
+     *   lobby: {
+     *     minPlayers: 2,
+     *     requireAllReady: true
+     *   }
+     * })
+     * ```
+     * This method is automatically skipped when lobby system is enabled.
      */
     waitForPlayers(minPlayers: number, options?: {
         timeoutMs?: number;
@@ -150,6 +163,54 @@ export declare class GameRuntime<TState = any> {
      * Emits warning or throws error based on configuration
      */
     private validatePlayerInitialization;
+    /**
+     * Inject lobby metadata into state
+     */
+    private injectLobbyState;
+    /**
+     * Inject built-in lobby actions
+     */
+    private injectLobbyActions;
+    /**
+     * Start lobby phase with auto-start timer
+     */
+    private startLobbyPhase;
+    /**
+     * Handle __lobbyReady action
+     */
+    private handleLobbyReady;
+    /**
+     * Handle __lobbyStart action
+     */
+    private handleLobbyStart;
+    /**
+     * Handle __lobbyEnd action
+     */
+    private handleLobbyEnd;
+    /**
+     * Transition between phases
+     */
+    private transitionPhase;
+    /**
+     * Check if lobby can transition to playing
+     */
+    private checkLobbyStartConditions;
+    /**
+     * Check if all players are ready
+     */
+    private allPlayersReady;
+    /**
+     * Handle peer join with lobby presence
+     */
+    private handlePeerJoinWithLobby;
+    /**
+     * Handle peer leave with lobby cleanup
+     */
+    private handlePeerLeaveWithLobby;
+    /**
+     * Lock room (prevent new joins)
+     */
+    private lockRoom;
 }
 export {};
 //# sourceMappingURL=GameRuntime.d.ts.map

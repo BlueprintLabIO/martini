@@ -150,8 +150,11 @@ export async function initializeGame<TState = any>(
   );
 
   // Optionally wait for minimum players before continuing
+  // Skip if lobby system is enabled - it handles player coordination
+  const hasLobby = config.game.lobby !== undefined;
   const minPlayers = platformConfig.minPlayers && platformConfig.minPlayers > 0 ? platformConfig.minPlayers : 1;
-  if (minPlayers > 1) {
+
+  if (!hasLobby && minPlayers > 1) {
     try {
       await runtime.waitForPlayers(minPlayers, { timeoutMs: 10000 });
     } catch (err) {

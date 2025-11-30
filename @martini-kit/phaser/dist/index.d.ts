@@ -47,6 +47,8 @@ export { createCameraFollower } from './helpers/CameraFollower.js';
 export type { CameraFollower, CameraFollowerConfig, CameraFollowerTarget } from './helpers/CameraFollower.js';
 export { createDualRuntimePreview } from './helpers/DualRuntimeFactory.js';
 export type { DualRuntimePreview, DualRuntimePreviewConfig } from './helpers/DualRuntimeFactory.js';
+export { LobbyUI, attachLobbyUI } from './helpers/LobbyUI.js';
+export type { LobbyUIConfig } from './helpers/LobbyUI.js';
 export { initializeGame } from './runtime.js';
 export type { MartiniKitConfig, GameConfig } from './runtime.js';
 export type { GameDefinition, Transport, GameRuntime } from '@martini-kit/core';

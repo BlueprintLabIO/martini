@@ -9,6 +9,7 @@
 	import NetworkMonitor from './components/NetworkMonitor.svelte';
 	import FilePlus from '@lucide/svelte/icons/file-plus';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
+	import Download from '@lucide/svelte/icons/download';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Folder from '@lucide/svelte/icons/folder';
@@ -33,9 +34,10 @@
 
 	interface Props {
 		config: MartiniKitIDEConfig;
+		onDownload?: () => void;
 	}
 
-	let { config }: Props = $props();
+	let { config, onDownload }: Props = $props();
 
 	// Core systems
 	let vfs = $state<VirtualFileSystem>(new VirtualFileSystem(config.files));
@@ -632,6 +634,16 @@
 								>
 									<FolderPlus size={16} />
 								</button>
+								{#if onDownload}
+									<button
+										class="ghost-button"
+										onclick={onDownload}
+										aria-label="Download code"
+										title="Download as ZIP"
+									>
+										<Download size={16} />
+									</button>
+								{/if}
 							</div>
 							{#if saveState !== 'saved'}
 								<span class="badge" class:saving={saveState === 'saving'}>
@@ -694,18 +706,18 @@
 								{/if}
 
 								{#each visibleNodes as node (node.path)}
-										<li
-											class:selected={selectedPath === node.path}
-											class:active={node.path === activeFile}
-											oncontextmenu={(event) =>
-												openContextMenu(event, { path: node.path, isDir: node.isDir })}
-										>
-											{#if node.isDir}
-												{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
-													<div
-														class="tree-row inline-editor"
-														style={`padding-left:${node.depth * 12 + 4}px`}
-													>
+									<li
+										class:selected={selectedPath === node.path}
+										class:active={node.path === activeFile}
+										oncontextmenu={(event) =>
+											openContextMenu(event, { path: node.path, isDir: node.isDir })}
+									>
+										{#if node.isDir}
+											{#if inlineEdit && inlineEdit.mode === 'rename' && inlineEdit.path === node.path}
+												<div
+													class="tree-row inline-editor"
+													style={`padding-left:${node.depth * 12 + 4}px`}
+												>
 													<span class="chevron-icon">
 														{#if isExpanded(node.path)}
 															<ChevronDown size={14} />
@@ -771,15 +783,15 @@
 												<span class="node-icon"><FileText size={14} /></span>
 												{node.name}
 											</button>
-											{/if}
-										</li>
-									{/each}
-								</ul>
-							{/if}
+										{/if}
+									</li>
+								{/each}
+							</ul>
+						{/if}
 
-							<button class="run-button" onclick={runGame}>
-								<Play size={16} />
-								Run Game
+						<button class="run-button" onclick={runGame}>
+							<Play size={16} />
+							Run Game
 						</button>
 					</div>
 				</Pane>

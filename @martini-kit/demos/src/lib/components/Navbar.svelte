@@ -12,8 +12,8 @@
 	}
 
 	const navLinks: NavLink[] = [
-		// { label: "Play", href: "/play" },
-		{ label: "Games", href: "/preview" },
+		{ label: "Play", href: "/play" },
+		{ label: "Editor", href: "/editor" },
 		{ label: "Docs", href: "/docs" },
 		{
 			label: "GitHub",
@@ -45,7 +45,11 @@
 		<div class="nav-surface">
 			<!-- Logo / Branding -->
 			<a href="/" class="nav-brand">
-				<img src="/image.png" alt="martini-kit logo" class="brand-logo" />
+				<img
+					src="/image.png"
+					alt="martini-kit logo"
+					class="brand-logo"
+				/>
 				<span class="brand-text">martini-kit</span>
 			</a>
 
