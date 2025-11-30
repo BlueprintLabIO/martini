@@ -47,6 +47,7 @@ export class GameRuntime<TState = any> {
 
   // Lobby system state
   private lobbyTimeoutId: any = null;
+  private lobbyReconcileIntervalId: any = null;
   private hasLobby: boolean = false;
 
   private stateChangeCallbacks: StateChangeCallback<TState>[] = [];
@@ -83,6 +84,11 @@ export class GameRuntime<TState = any> {
       this.injectLobbyState();
       this.injectLobbyActions();
       this.startLobbyPhase();
+
+      // Start lobby-transport reconciliation (host only, defense in depth)
+      if (this._isHost) {
+        this.startLobbyReconciliation();
+      }
     }
 
     // Setup transport listeners
@@ -336,6 +342,12 @@ export class GameRuntime<TState = any> {
     }
     if (this.syncTickerId && typeof (globalThis as any).cancelAnimationFrame === 'function') {
       (globalThis as any).cancelAnimationFrame(this.syncTickerId);
+    }
+    if (this.lobbyTimeoutId) {
+      clearTimeout(this.lobbyTimeoutId);
+    }
+    if (this.lobbyReconcileIntervalId) {
+      clearInterval(this.lobbyReconcileIntervalId);
     }
     this.unsubscribes.forEach(unsub => unsub());
     this.unsubscribes = [];
@@ -718,16 +730,22 @@ export class GameRuntime<TState = any> {
    */
   private injectLobbyState(): void {
     const myId = this.transport.getPlayerId();
+    const allPeerIds = [myId, ...this.transport.getPeerIds()];
+
+    // Initialize lobby with ALL known peers from transport (not just self!)
+    // This prevents the bug where clients initialize with only themselves
+    const lobbyPlayers: Record<string, PlayerPresence> = {};
+    for (const peerId of allPeerIds) {
+      lobbyPlayers[peerId] = {
+        playerId: peerId,
+        ready: false,
+        joinedAt: Date.now()
+      };
+    }
 
     (this.state as any).__lobby = {
       phase: 'lobby' as GamePhase,
-      players: {
-        [myId]: {
-          playerId: myId,
-          ready: false,
-          joinedAt: Date.now()
-        } as PlayerPresence
-      },
+      players: lobbyPlayers,
       config: this.gameDef.lobby!,
       startedAt: undefined,
       endedAt: undefined
@@ -968,6 +986,68 @@ export class GameRuntime<TState = any> {
       if (process.env.NODE_ENV !== 'production') {
         console.warn('[Lobby] Transport does not implement lock() - late joins cannot be prevented');
       }
+    }
+  }
+
+  /**
+   * Start periodic lobby-transport reconciliation (HOST ONLY)
+   *
+   * Defense in depth: Periodically checks transport.getPeerIds() against lobby.players
+   * and removes disconnected players. This handles edge cases where:
+   * - WebRTC onPeerLeave doesn't fire (page refresh, browser crash)
+   * - Health check hasn't detected timeout yet
+   * - Network partitions or other anomalies
+   *
+   * Runs every 30 seconds (conservative interval to avoid spam)
+   */
+  private startLobbyReconciliation(): void {
+    this.lobbyReconcileIntervalId = setInterval(() => {
+      this.reconcileLobbyWithTransport();
+    }, 30000); // 30 seconds
+  }
+
+  /**
+   * Reconcile lobby players with transport peer list
+   *
+   * Removes players from lobby that are no longer connected according to transport.
+   * This is the "source of truth" synchronization between transport layer and game layer.
+   */
+  private reconcileLobbyWithTransport(): void {
+    if (!this.hasLobby || !this._isHost) return;
+
+    const lobbyState = (this.state as any).__lobby as LobbyState;
+    const transportPeers = new Set([
+      this.transport.getPlayerId(),
+      ...this.transport.getPeerIds()
+    ]);
+
+    let removedAny = false;
+
+    // Remove players from lobby who aren't in transport's peer list
+    for (const playerId in lobbyState.players) {
+      if (!transportPeers.has(playerId)) {
+        console.warn(`[GameRuntime] Reconciliation: Removing disconnected player ${playerId} from lobby`);
+        delete lobbyState.players[playerId];
+        removedAny = true;
+
+        // Also remove from game state
+        if (this.gameDef.onPlayerLeave) {
+          this.gameDef.onPlayerLeave(this.state, playerId);
+        }
+      }
+    }
+
+    // Check if game should end due to insufficient players
+    if (removedAny && lobbyState.phase === 'playing') {
+      const lobbyConfig = this.gameDef.lobby!;
+      const remaining = Object.keys(lobbyState.players).length;
+      if (remaining < lobbyConfig.minPlayers) {
+        this.transitionPhase(this.state, 'ended', 'player_left');
+      }
+    }
+
+    if (removedAny) {
+      this.notifyStateChange();
     }
   }
 }

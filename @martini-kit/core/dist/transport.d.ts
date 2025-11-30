@@ -2,7 +2,7 @@
  * Transport interface - how messages flow between peers
  */
 export interface WireMessage {
-    type: 'state_sync' | 'action' | 'player_join' | 'player_leave' | 'event' | 'heartbeat' | 'host_migration' | 'host_query' | 'host_announce';
+    type: 'state_sync' | 'action' | 'player_join' | 'player_leave' | 'event' | 'heartbeat' | 'host_migration' | 'host_query' | 'host_announce' | 'health_ping' | 'health_pong';
     payload?: any;
     senderId?: string;
     timestamp?: number;

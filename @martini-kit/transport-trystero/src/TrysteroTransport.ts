@@ -76,6 +76,12 @@ export class TrysteroTransport implements Transport {
   private readyResolve: (() => void) | null = null;
   private explicitHostMode: boolean | undefined; // Track if host mode was explicitly set
 
+  // Health check for detecting stale/zombie connections
+  private peerLastSeen = new Map<string, number>();
+  private healthCheckInterval: any = null;
+  private readonly HEALTH_CHECK_INTERVAL = 5000; // Ping every 5 seconds
+  private readonly PEER_TIMEOUT = 15000; // Timeout after 15 seconds of no response
+
   constructor(options: TrysteroTransportOptions) {
     const {
       roomId,
@@ -116,6 +122,24 @@ export class TrysteroTransport implements Transport {
 
     // Listen for incoming messages
     const cleanup = receive((message, peerId) => {
+      // Update last seen timestamp for health check
+      this.peerLastSeen.set(peerId, Date.now());
+
+      // Handle health check ping/pong
+      if ('type' in message && message.type === 'health_ping') {
+        // Respond to ping with pong
+        this.send({
+          type: 'health_pong' as any,
+          timestamp: Date.now()
+        }, peerId);
+        return; // Don't propagate ping to game logic
+      }
+
+      if ('type' in message && message.type === 'health_pong') {
+        // Pong received - peer is alive (already updated lastSeen above)
+        return; // Don't propagate pong to game logic
+      }
+
       // Handle host discovery protocol
       if ('type' in message && message.type === 'host_query') {
         // Someone is asking who the host is
@@ -181,6 +205,7 @@ export class TrysteroTransport implements Transport {
     // Setup peer join/leave listeners
     this.room.onPeerJoin((peerId) => {
       this.peers.add(peerId);
+      this.peerLastSeen.set(peerId, Date.now()); // Initialize health check timestamp
 
       // STICKY HOST: Only set host if not already set AND not in explicit client mode
       if (this.permanentHost === null) {
@@ -212,6 +237,7 @@ export class TrysteroTransport implements Transport {
 
     this.room.onPeerLeave((peerId) => {
       this.peers.delete(peerId);
+      this.peerLastSeen.delete(peerId); // Clean up health check timestamp
       this.updateConnectionState();
 
       // STICKY HOST: If host disconnects, notify and do NOT migrate
@@ -238,6 +264,9 @@ export class TrysteroTransport implements Transport {
     // Instead, host election happens in onPeerJoin() or waitForReady() timeout.
 
     this.updateConnectionState();
+
+    // Start health check system to detect zombie/stale connections
+    this.startHealthCheck();
 
     console.log('[TrysteroTransport] Initialized:', {
       selfId,
@@ -352,6 +381,12 @@ export class TrysteroTransport implements Transport {
    */
   disconnect(): void {
     try {
+      // Stop health check
+      if (this.healthCheckInterval) {
+        clearInterval(this.healthCheckInterval);
+        this.healthCheckInterval = null;
+      }
+
       this.receiveWireCleanup();
       this.room.leave();
       this.setConnectionState('disconnected');
@@ -360,6 +395,7 @@ export class TrysteroTransport implements Transport {
       this.peerLeaveHandlers = [];
       this.connectionChangeHandlers = [];
       this.errorHandlers = [];
+      this.peerLastSeen.clear();
     } catch (error) {
       console.error('[TrysteroTransport] Disconnect error:', error);
       this.notifyError(error as Error);
@@ -508,6 +544,46 @@ export class TrysteroTransport implements Transport {
         console.error('[TrysteroTransport] Error handler threw:', err);
       }
     });
+  }
+
+  /**
+   * Start health check system to detect zombie/stale peer connections
+   *
+   * Sends ping every 5 seconds and removes peers that haven't responded in 15 seconds.
+   * This fixes the issue where WebRTC onPeerLeave doesn't fire on page refresh/crash.
+   */
+  private startHealthCheck(): void {
+    this.healthCheckInterval = setInterval(() => {
+      const now = Date.now();
+
+      // Send ping to all peers
+      this.send({
+        type: 'health_ping',
+        timestamp: now
+      });
+
+      // Check for stale peers (no message received in PEER_TIMEOUT ms)
+      for (const [peerId, lastSeen] of this.peerLastSeen.entries()) {
+        if (now - lastSeen > this.PEER_TIMEOUT) {
+          console.warn('[TrysteroTransport] Peer timed out (no response in 15s):', peerId);
+
+          // Remove stale peer
+          this.peers.delete(peerId);
+          this.peerLastSeen.delete(peerId);
+
+          // Notify listeners (triggers GameRuntime.onPeerLeave)
+          this.peerLeaveHandlers.forEach(handler => handler(peerId));
+
+          // Check if it was the host
+          if (peerId === this.permanentHost) {
+            console.log('[TrysteroTransport] HOST TIMEOUT - Game should end!');
+            this.hostDisconnectHandlers.forEach(handler => handler());
+          }
+
+          this.updateConnectionState();
+        }
+      }
+    }, this.HEALTH_CHECK_INTERVAL);
   }
 
   // ============================================================================

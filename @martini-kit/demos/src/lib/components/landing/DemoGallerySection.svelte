@@ -44,7 +44,7 @@
         <a
           class="demo-card"
           style={`--accent:${demo.color};`}
-          href={`/preview/${demo.id}`}
+          href={`/editor/${demo.id}`}
           data-sveltekit-preload-data="off"
         >
           <div class="card-top">

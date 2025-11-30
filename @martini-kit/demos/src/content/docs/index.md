@@ -124,7 +124,7 @@ State inspection, action history, and debugging tools for development. [Learn mo
 - [Core Concepts](/docs/latest/concepts/architecture) - Understand martini-kit's architecture
 - [Actions Guide](/docs/latest/concepts/actions) - Learn how to define and use actions
 - [Phaser Integration Guide](/docs/latest/engine-tracks/phaser) - Deep dive into Phaser + martini-kit
-- [Examples](/preview) - Explore complete game examples
+- [Examples](/examples/overview) - Explore complete game examples
 - [Contributing](/docs/latest/contributing/getting-started) - Help improve martini-kit
 
 ## Need Help?

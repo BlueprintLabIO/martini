@@ -65,6 +65,10 @@ export declare class TrysteroTransport implements Transport {
     private hadRemotePeers;
     private readyResolve;
     private explicitHostMode;
+    private peerLastSeen;
+    private healthCheckInterval;
+    private readonly HEALTH_CHECK_INTERVAL;
+    private readonly PEER_TIMEOUT;
     constructor(options: TrysteroTransportOptions);
     /**
      * Send message to specific peer or broadcast to all
@@ -142,6 +146,13 @@ export declare class TrysteroTransport implements Transport {
     private setConnectionState;
     private updateConnectionState;
     private notifyError;
+    /**
+     * Start health check system to detect zombie/stale peer connections
+     *
+     * Sends ping every 5 seconds and removes peers that haven't responded in 15 seconds.
+     * This fixes the issue where WebRTC onPeerLeave doesn't fire on page refresh/crash.
+     */
+    private startHealthCheck;
     /**
      * Get the Trystero room instance (for advanced use cases)
      */

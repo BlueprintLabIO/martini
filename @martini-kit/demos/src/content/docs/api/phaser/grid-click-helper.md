@@ -431,4 +431,4 @@ canHighlight: (col, row) => {
 
 - [PhaserAdapter](/docs/latest/api/phaser/adapter) - Main adapter class
 - [InputManager](/docs/latest/api/phaser/input-manager) - Keyboard input handling
-- [Tile Matcher Demo](/preview/tile-matcher) - Live example using GridClickHelper
+- [Tile Matcher Demo](/editor/tile-matcher) - Live example using GridClickHelper

@@ -341,9 +341,5 @@
 		.hero {
 			grid-template-columns: 1fr;
 		}
-
-		.inputs {
-			grid-template-columns: 1fr;
-		}
 	}
 </style>

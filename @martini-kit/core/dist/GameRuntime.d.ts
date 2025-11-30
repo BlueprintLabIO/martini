@@ -40,6 +40,7 @@ export declare class GameRuntime<TState = any> {
     private strict;
     private actionCounter;
     private lobbyTimeoutId;
+    private lobbyReconcileIntervalId;
     private hasLobby;
     private stateChangeCallbacks;
     private eventCallbacks;
@@ -211,6 +212,25 @@ export declare class GameRuntime<TState = any> {
      * Lock room (prevent new joins)
      */
     private lockRoom;
+    /**
+     * Start periodic lobby-transport reconciliation (HOST ONLY)
+     *
+     * Defense in depth: Periodically checks transport.getPeerIds() against lobby.players
+     * and removes disconnected players. This handles edge cases where:
+     * - WebRTC onPeerLeave doesn't fire (page refresh, browser crash)
+     * - Health check hasn't detected timeout yet
+     * - Network partitions or other anomalies
+     *
+     * Runs every 30 seconds (conservative interval to avoid spam)
+     */
+    private startLobbyReconciliation;
+    /**
+     * Reconcile lobby players with transport peer list
+     *
+     * Removes players from lobby that are no longer connected according to transport.
+     * This is the "source of truth" synchronization between transport layer and game layer.
+     */
+    private reconcileLobbyWithTransport;
 }
 export {};
 //# sourceMappingURL=GameRuntime.d.ts.map

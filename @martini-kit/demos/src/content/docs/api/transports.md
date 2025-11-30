@@ -304,6 +304,6 @@ Game code stays identical - just swap the transport.
 ## Examples
 
 Working transport examples:
-- [Fire & Ice](/preview/fire-and-ice) - Uses LocalTransport for IDE
-- [Blob Battle](/preview/blob-battle) - Supports all transports
-- [Paddle Battle](/preview/paddle-battle) - Local + Trystero ready
+- [Fire & Ice](/editor/fire-and-ice) - Uses LocalTransport for IDE
+- [Blob Battle](/editor/blob-battle) - Supports all transports
+- [Paddle Battle](/editor/paddle-battle) - Local + Trystero ready

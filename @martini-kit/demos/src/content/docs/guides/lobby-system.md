@@ -528,10 +528,10 @@ onPhaseChange: (state, { to }) => {
 
 ## Examples
 
-See the [paddle-battle example](/examples/paddle-battle) for a complete implementation.
+See the [paddle-battle example](/editor/paddle-battle) for a complete implementation.
 
 ## API Reference
 
-- [defineGame()](/api/core/define-game) - Game definition API
-- [PhaserAdapter](/api/phaser/scene-integration) - Scene integration
-- [LobbyUI](/api/phaser/lobby-ui) - Lobby UI component
+- [defineGame()](/docs/latest/api/core/define-game) - Game definition API
+- [PhaserAdapter](/docs/latest/api/phaser/scene-integration) - Scene integration
+- [Phaser API](/docs/latest/api/phaser) - Phaser integration documentation

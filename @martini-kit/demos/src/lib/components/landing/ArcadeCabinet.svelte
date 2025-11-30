@@ -12,7 +12,7 @@
   export let demo: ArcadeDemo;
 </script>
 
-<a class="arcade-cabinet" style={`--game-color:${demo.color};`} href={`/preview/${demo.id}`}>
+<a class="arcade-cabinet" style={`--game-color:${demo.color};`} href={`/editor/${demo.id}`}>
   <div class="cabinet-marquee">
     <div class="marquee-lights">
       <span class="marquee-light"></span>
