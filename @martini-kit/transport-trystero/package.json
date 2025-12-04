@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/transport-trystero",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "description": "P2P WebRTC transport for martini-kit. Multiplayer without networking servers.",
   "main": "./dist/index.js",
@@ -36,7 +36,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",

@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "description": "Multiplayer without networking. Engine-agnostic multiplayer SDK with host-authoritative state sync.",
   "main": "./dist/index.js",
@@ -43,7 +43,7 @@
     "bundle:ide": "pnpm run build && node --experimental-strip-types scripts/generate-ide-bundle.ts",
     "dev": "tsc --watch",
     "dev:build": "tsc --watch --preserveWatchOutput",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",

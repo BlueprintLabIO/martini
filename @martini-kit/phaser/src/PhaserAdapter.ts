@@ -111,7 +111,7 @@ export class PhaserAdapter<TState = any> {
   private syncIntervalId: any = null;
   private readonly spriteNamespace: string;
   private readonly snapshotBufferSizeOverride?: number;
-  private readonly targetInterpolationDelayMs: number = 32;
+  private readonly targetInterpolationDelayMs: number = 78; // Increased from 32ms for smoother curves (6 snapshots at 13ms sync)
   private readonly defaultSyncIntervalMs: number = 13;
   private spriteManagers: Set<{ namespace: string }> = new Set(); // Track all registered SpriteManagers
   private physicsManagedNamespaces: Set<string> = new Set(); // Track namespaces driven by PhysicsManager
@@ -788,7 +788,8 @@ export class PhaserAdapter<TState = any> {
   }
 
   /**
-   * Snapshot buffer interpolation (smoothest, renders in the past)
+   * Snapshot buffer interpolation with Catmull-Rom splines for smooth curved motion
+   * Falls back to cubic-eased linear interpolation when fewer snapshots available
    */
   private updateSnapshotBufferInterpolation(
     sprite: any,
@@ -803,6 +804,93 @@ export class PhaserAdapter<TState = any> {
     const renderDelay = delayIntervals * syncInterval;
     const renderTime = now - renderDelay;
 
+    // Try Catmull-Rom spline interpolation if we have 4+ snapshots
+    if (snapshots.length >= 4) {
+      this.interpolateCatmullRom(sprite, snapshots, renderTime);
+    } else {
+      // Fallback to cubic-eased linear interpolation
+      this.interpolateLinearWithEasing(sprite, snapshots, renderTime);
+    }
+  }
+
+  /**
+   * Catmull-Rom spline interpolation for smooth curved paths (requires 4 points)
+   */
+  private interpolateCatmullRom(
+    sprite: any,
+    snapshots: SpriteSnapshot[],
+    renderTime: number
+  ): void {
+    // Find the segment where renderTime falls between P1 and P2
+    let p0: SpriteSnapshot | null = null;
+    let p1: SpriteSnapshot | null = null;
+    let p2: SpriteSnapshot | null = null;
+    let p3: SpriteSnapshot | null = null;
+
+    for (let i = 1; i < snapshots.length - 2; i++) {
+      if (snapshots[i].timestamp <= renderTime && snapshots[i + 1].timestamp >= renderTime) {
+        p0 = snapshots[i - 1];
+        p1 = snapshots[i];
+        p2 = snapshots[i + 1];
+        p3 = snapshots[i + 2];
+        break;
+      }
+    }
+
+    // If not found in middle, use edge segments
+    if (!p1 || !p2) {
+      if (renderTime <= snapshots[1].timestamp) {
+        p0 = snapshots[0];
+        p1 = snapshots[0];
+        p2 = snapshots[1];
+        p3 = snapshots[2];
+      } else {
+        const len = snapshots.length;
+        p0 = snapshots[len - 3];
+        p1 = snapshots[len - 2];
+        p2 = snapshots[len - 1];
+        p3 = snapshots[len - 1];
+      }
+    }
+
+    // Calculate t (0 to 1) between p1 and p2
+    const ts1 = p1.timestamp;
+    const ts2 = p2.timestamp;
+    const denom = ts2 - ts1;
+    const t = denom === 0 ? 1 : Math.max(0, Math.min(1, (renderTime - ts1) / denom));
+
+    // Catmull-Rom spline formula
+    const tSquared = t * t;
+    const tCubed = tSquared * t;
+
+    sprite.x = 0.5 * (
+      (2 * p1.x) +
+      (-p0!.x + p2.x) * t +
+      (2 * p0!.x - 5 * p1.x + 4 * p2.x - p3!.x) * tSquared +
+      (-p0!.x + 3 * p1.x - 3 * p2.x + p3!.x) * tCubed
+    );
+
+    sprite.y = 0.5 * (
+      (2 * p1.y) +
+      (-p0!.y + p2.y) * t +
+      (2 * p0!.y - 5 * p1.y + 4 * p2.y - p3!.y) * tSquared +
+      (-p0!.y + 3 * p1.y - 3 * p2.y + p3!.y) * tCubed
+    );
+
+    // Interpolate rotation if available (linear is fine for rotation)
+    if (p1.rotation !== undefined && p2.rotation !== undefined) {
+      sprite.rotation = p1.rotation + (p2.rotation - p1.rotation) * t;
+    }
+  }
+
+  /**
+   * Linear interpolation with cubic easing for smoother feel
+   */
+  private interpolateLinearWithEasing(
+    sprite: any,
+    snapshots: SpriteSnapshot[],
+    renderTime: number
+  ): void {
     // Find two snapshots to interpolate between
     let snapshot0: SpriteSnapshot = snapshots[0];
     let snapshot1: SpriteSnapshot = snapshots[snapshots.length - 1];
@@ -822,22 +910,25 @@ export class PhaserAdapter<TState = any> {
       snapshot0 = snapshots[0];
       snapshot1 = snapshots[1] ?? snapshots[0];
     } else if (renderTime >= snapshots[snapshots.length - 1].timestamp) {
-      snapshot0 = snapshots[snapshots.length - 2];
+      snapshot0 = snapshots[snapshots.length - 2] ?? snapshots[0];
       snapshot1 = snapshots[snapshots.length - 1];
     }
 
-    // Interpolate between snapshots
+    // Calculate linear t
     const t0 = snapshot0.timestamp;
     const t1 = snapshot1.timestamp;
     const denom = t1 - t0;
     const t = denom === 0 ? 1 : (renderTime - t0) / denom;
-    const clamped = Math.max(0, Math.min(1, t));
+    const linear = Math.max(0, Math.min(1, t));
 
-    sprite.x = snapshot0.x + (snapshot1.x - snapshot0.x) * clamped;
-    sprite.y = snapshot0.y + (snapshot1.y - snapshot0.y) * clamped;
+    // Apply cubic ease-in-out (smoothstep)
+    const eased = linear * linear * (3 - 2 * linear);
+
+    sprite.x = snapshot0.x + (snapshot1.x - snapshot0.x) * eased;
+    sprite.y = snapshot0.y + (snapshot1.y - snapshot0.y) * eased;
 
     if (snapshot0.rotation !== undefined && snapshot1.rotation !== undefined) {
-      sprite.rotation = snapshot0.rotation + (snapshot1.rotation - snapshot0.rotation) * clamped;
+      sprite.rotation = snapshot0.rotation + (snapshot1.rotation - snapshot0.rotation) * eased;
     }
   }
 

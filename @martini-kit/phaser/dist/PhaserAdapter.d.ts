@@ -334,9 +334,18 @@ export declare class PhaserAdapter<TState = any> {
      */
     updateInterpolation(_delta?: number): void;
     /**
-     * Snapshot buffer interpolation (smoothest, renders in the past)
+     * Snapshot buffer interpolation with Catmull-Rom splines for smooth curved motion
+     * Falls back to cubic-eased linear interpolation when fewer snapshots available
      */
     private updateSnapshotBufferInterpolation;
+    /**
+     * Catmull-Rom spline interpolation for smooth curved paths (requires 4 points)
+     */
+    private interpolateCatmullRom;
+    /**
+     * Linear interpolation with cubic easing for smoother feel
+     */
+    private interpolateLinearWithEasing;
     /**
      * Unregister a remote sprite
      */

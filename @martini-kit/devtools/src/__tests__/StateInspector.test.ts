@@ -110,6 +110,9 @@ describe('StateInspector', () => {
     runtime.submitAction('increment', {});
     runtime.submitAction('increment', {});
 
+    // Wait for microtask queue to flush
+    await Promise.resolve();
+
     expect(inspector.getActionHistory()).toHaveLength(1);
     const action = inspector.getActionHistory()[0];
     expect(action.count).toBe(2);
@@ -134,6 +137,9 @@ describe('StateInspector', () => {
     inspector.onStateChange(listener);
 
     runtime.submitAction('setValue', { value: 42 });
+
+    // Wait for microtask queue to flush
+    await Promise.resolve();
 
     const snapshots = inspector.getSnapshots();
     const latest = snapshots[snapshots.length - 1];

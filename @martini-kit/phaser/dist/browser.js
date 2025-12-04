@@ -2408,7 +2408,8 @@ var PhaserAdapter = class {
     __publicField(this, "syncIntervalId", null);
     __publicField(this, "spriteNamespace");
     __publicField(this, "snapshotBufferSizeOverride");
-    __publicField(this, "targetInterpolationDelayMs", 32);
+    __publicField(this, "targetInterpolationDelayMs", 78);
+    // Increased from 32ms for smoother curves (6 snapshots at 13ms sync)
     __publicField(this, "defaultSyncIntervalMs", 13);
     __publicField(this, "spriteManagers", /* @__PURE__ */ new Set());
     // Track all registered SpriteManagers
@@ -2953,7 +2954,8 @@ var PhaserAdapter = class {
     }
   }
   /**
-   * Snapshot buffer interpolation (smoothest, renders in the past)
+   * Snapshot buffer interpolation with Catmull-Rom splines for smooth curved motion
+   * Falls back to cubic-eased linear interpolation when fewer snapshots available
    */
   updateSnapshotBufferInterpolation(sprite, remoteSpriteData, now) {
     const snapshots = remoteSpriteData.snapshots;
@@ -2962,6 +2964,59 @@ var PhaserAdapter = class {
     const delayIntervals = this.getDelayIntervals(remoteSpriteData);
     const renderDelay = delayIntervals * syncInterval;
     const renderTime = now - renderDelay;
+    if (snapshots.length >= 4) {
+      this.interpolateCatmullRom(sprite, snapshots, renderTime);
+    } else {
+      this.interpolateLinearWithEasing(sprite, snapshots, renderTime);
+    }
+  }
+  /**
+   * Catmull-Rom spline interpolation for smooth curved paths (requires 4 points)
+   */
+  interpolateCatmullRom(sprite, snapshots, renderTime) {
+    let p0 = null;
+    let p1 = null;
+    let p2 = null;
+    let p3 = null;
+    for (let i = 1; i < snapshots.length - 2; i++) {
+      if (snapshots[i].timestamp <= renderTime && snapshots[i + 1].timestamp >= renderTime) {
+        p0 = snapshots[i - 1];
+        p1 = snapshots[i];
+        p2 = snapshots[i + 1];
+        p3 = snapshots[i + 2];
+        break;
+      }
+    }
+    if (!p1 || !p2) {
+      if (renderTime <= snapshots[1].timestamp) {
+        p0 = snapshots[0];
+        p1 = snapshots[0];
+        p2 = snapshots[1];
+        p3 = snapshots[2];
+      } else {
+        const len = snapshots.length;
+        p0 = snapshots[len - 3];
+        p1 = snapshots[len - 2];
+        p2 = snapshots[len - 1];
+        p3 = snapshots[len - 1];
+      }
+    }
+    const ts1 = p1.timestamp;
+    const ts2 = p2.timestamp;
+    const denom = ts2 - ts1;
+    const t = denom === 0 ? 1 : Math.max(0, Math.min(1, (renderTime - ts1) / denom));
+    const tSquared = t * t;
+    const tCubed = tSquared * t;
+    sprite.x = 0.5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tSquared + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * tCubed);
+    sprite.y = 0.5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tSquared + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * tCubed);
+    if (p1.rotation !== void 0 && p2.rotation !== void 0) {
+      sprite.rotation = p1.rotation + (p2.rotation - p1.rotation) * t;
+    }
+  }
+  /**
+   * Linear interpolation with cubic easing for smoother feel
+   */
+  interpolateLinearWithEasing(sprite, snapshots, renderTime) {
     let snapshot0 = snapshots[0];
     let snapshot1 = snapshots[snapshots.length - 1];
     for (let i = 0; i < snapshots.length - 1; i++) {
@@ -2977,18 +3032,19 @@ var PhaserAdapter = class {
       snapshot0 = snapshots[0];
       snapshot1 = snapshots[1] ?? snapshots[0];
     } else if (renderTime >= snapshots[snapshots.length - 1].timestamp) {
-      snapshot0 = snapshots[snapshots.length - 2];
+      snapshot0 = snapshots[snapshots.length - 2] ?? snapshots[0];
       snapshot1 = snapshots[snapshots.length - 1];
     }
     const t0 = snapshot0.timestamp;
     const t1 = snapshot1.timestamp;
     const denom = t1 - t0;
     const t = denom === 0 ? 1 : (renderTime - t0) / denom;
-    const clamped = Math.max(0, Math.min(1, t));
-    sprite.x = snapshot0.x + (snapshot1.x - snapshot0.x) * clamped;
-    sprite.y = snapshot0.y + (snapshot1.y - snapshot0.y) * clamped;
+    const linear = Math.max(0, Math.min(1, t));
+    const eased = linear * linear * (3 - 2 * linear);
+    sprite.x = snapshot0.x + (snapshot1.x - snapshot0.x) * eased;
+    sprite.y = snapshot0.y + (snapshot1.y - snapshot0.y) * eased;
     if (snapshot0.rotation !== void 0 && snapshot1.rotation !== void 0) {
-      sprite.rotation = snapshot0.rotation + (snapshot1.rotation - snapshot0.rotation) * clamped;
+      sprite.rotation = snapshot0.rotation + (snapshot1.rotation - snapshot0.rotation) * eased;
     }
   }
   /**

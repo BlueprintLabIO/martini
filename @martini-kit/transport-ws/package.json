@@ -1,6 +1,6 @@
 {
   "name": "@martini-kit/transport-ws",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "description": "WebSocket transport for @martini-kit/core - production-ready client-server networking",
   "main": "./dist/index.js",
@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest",
+    "test": "vitest run",
     "test:coverage": "vitest --coverage",
     "clean": "rm -rf dist"
   },

@@ -7,7 +7,7 @@ description: Explore complete game examples built with Martini
 
 Explore our collection of multiplayer games built with Martini. Each example demonstrates different features and patterns you can use in your own games.
 
-## <a id="fire--ice"></a>Fire & Ice
+## Fire & Ice
 
 A cooperative platformer where players must work together to navigate challenges using complementary abilities.
 
@@ -19,7 +19,7 @@ A cooperative platformer where players must work together to navigate challenges
 
 [Try it now →](/editor/fire-and-ice)
 
-## <a id="paddle-battle"></a>Paddle Battle
+## Paddle Battle
 
 A modern take on classic Pong with multiplayer support and smooth physics.
 
@@ -31,7 +31,7 @@ A modern take on classic Pong with multiplayer support and smooth physics.
 
 [Try it now →](/editor/paddle-battle)
 
-## <a id="blob-battle"></a>Blob Battle
+## Blob Battle
 
 An agar.io-style competitive game where players grow by consuming collectibles.
 
@@ -43,7 +43,7 @@ An agar.io-style competitive game where players grow by consuming collectibles.
 
 [Try it now →](/editor/blob-battle)
 
-## <a id="arena-blaster"></a>Arena Blaster
+## Arena Blaster
 
 A twin-stick shooter with fast-paced combat and scoring systems.
 
@@ -55,7 +55,7 @@ A twin-stick shooter with fast-paced combat and scoring systems.
 
 [Try it now →](/editor/arena-blaster)
 
-## <a id="circuit-racer"></a>Circuit Racer
+## Circuit Racer
 
 A top-down racing game with smooth vehicle controls.
 
@@ -67,7 +67,7 @@ A top-down racing game with smooth vehicle controls.
 
 [Try it now →](/editor/circuit-racer)
 
-## <a id="tile-matcher"></a>Tile Matcher
+## Tile Matcher
 
 A Connect Four-style game demonstrating grid-based gameplay.
 
@@ -79,7 +79,7 @@ A Connect Four-style game demonstrating grid-based gameplay.
 
 [Try it now →](/editor/tile-matcher)
 
-## <a id="tnt-dude"></a>TNT Dude
+## TNT Dude
 
 A Bomberman-inspired game with explosive gameplay.
 
