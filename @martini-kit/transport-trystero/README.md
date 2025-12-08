@@ -156,7 +156,7 @@ const transport = new TrysteroTransport({
 
 ### Methods
 
-Implements the [`Transport` interface](../../docs/martini-kit-sdk-v2/api-reference-core.md#transport):
+Implements the [`Transport` interface](https://martini-kit.com/docs/latest/api/core/transport):
 
 - `send(message, targetId?)` - Send message to peer or broadcast
 - `onMessage(handler)` - Listen for messages
@@ -401,8 +401,8 @@ pnpm clean
 - [@martini-kit/core](../core) - Core multiplayer SDK
 - [@martini-kit/phaser](../phaser) - Phaser adapter
 - [Trystero](https://github.com/dmotz/trystero) - Underlying P2P library
-- [Demo](../demo-vite) - Fire Boy & Water Girl example
-- [API Reference](../../docs/martini-kit-sdk-v2/api-reference-core.md#transport)
+- [Live demos](https://martini-kit.com/preview) - Playable examples
+- [API Reference](https://martini-kit.com/docs/latest/api/core/transport)
 
 ---
 

@@ -211,7 +211,7 @@ class GameScene extends Phaser.Scene {
 }
 ```
 
-See [Phaser Adapter docs](../../docs/martini-kit-sdk-v2/phaser-adapter.md) for details.
+See [Phaser Adapter docs](https://martini-kit.com/docs/latest/api/phaser) for details.
 
 ### Other Engines
 
@@ -279,29 +279,27 @@ interface Transport {
 
 ## API Reference
 
-- **[defineGame](../../docs/martini-kit-sdk-v2/api-reference-core.md#definegame)** - Define game logic
-- **[GameRuntime](../../docs/martini-kit-sdk-v2/api-reference-core.md#gameruntime)** - Runtime instance
-- **[Diff/Patch Utilities](../../docs/martini-kit-sdk-v2/api-reference-core.md#diffpatch-utilities)** - State sync internals
+- **[defineGame](https://martini-kit.com/docs/latest/api/core/define-game)** - Define game logic
+- **[GameRuntime](https://martini-kit.com/docs/latest/api/core/game-runtime)** - Runtime instance
+- **[Diff/Patch Utilities](https://martini-kit.com/docs/latest/api/core/sync)** - State sync internals
 
-Full documentation: [API Reference](../../docs/martini-kit-sdk-v2/api-reference-core.md)
+Full documentation: [API Reference](https://martini-kit.com/docs/latest/api/core)
 
 ---
 
 ## Examples
 
-### Fire Boy & Water Girl Demo
+### Examples
 
-See [@martini-kit/demo-vite](../demo-vite) for a complete working example:
+See interactive demos:
 
-- URL-based host selection (Jackbox-style)
-- Phaser physics integration
-- P2P networking via Trystero
-- Automatic sprite syncing
+- [Examples overview](https://martini-kit.com/docs/latest/examples/overview) - Playable demos built with martini-kit
+- [Live preview](https://martini-kit.com/preview) - Try transports in the browser
 
-Run it:
+Run them locally:
 
 ```bash
-cd @martini-kit/demo-vite
+cd @martini-kit/demos
 pnpm dev
 ```
 
@@ -436,6 +434,6 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md)
 
 ## Support
 
-- **Documentation:** [martini-kit-sdk-v2](../../docs/martini-kit-sdk-v2/)
+- **Documentation:** [martini-kit docs](https://martini-kit.com/docs/latest)
 - **Issues:** [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues)
-- **Demo:** [@martini-kit/demo-vite](../demo-vite)
+- **Demo:** [Live preview](https://martini-kit.com/preview)

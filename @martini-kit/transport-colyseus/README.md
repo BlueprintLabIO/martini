@@ -324,11 +324,7 @@ The server should send these control messages:
 
 ## Complete Example
 
-See [examples/colyseus-game](../../examples/colyseus-game) for a full working example with:
-- Colyseus server setup
-- Client-side game logic with martini-kit
-- Matchmaking UI
-- Host migration handling
+Use the client/server snippets above as a starting point. For end-to-end demos, see the [examples overview](https://martini-kit.com/docs/latest/examples/overview) and adapt the patterns to your Colyseus rooms.
 
 ## Comparison to Other Approaches
 
@@ -404,8 +400,7 @@ const game = defineGame({
 
 - [martini-kit Core Documentation](../core/README.md)
 - [Colyseus Documentation](https://docs.colyseus.io/)
-- [Example Projects](../../examples)
-- [Migration Guide](./docs/migration.md)
+- [Examples overview](https://martini-kit.com/docs/latest/examples/overview)
 
 ## License
 

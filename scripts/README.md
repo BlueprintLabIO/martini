@@ -257,4 +257,4 @@ See main project docs for implementation!
 
 ---
 
-**Questions?** Check [STARTER_ASSETS_SETUP.md](../STARTER_ASSETS_SETUP.md) or ask for help!
+**Questions?** Ask in your team channel or reach out to the maintainers for help!

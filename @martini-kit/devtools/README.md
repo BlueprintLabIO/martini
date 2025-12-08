@@ -328,9 +328,9 @@ describe('MyGame', () => {
 
 ## Next Steps
 
-- See [martini-kit SDK Documentation](../../docs/martini-kit-sdk-v2/README.md)
+- See [martini-kit SDK Documentation](https://martini-kit.com/docs/latest/api/devtools/state-inspector)
 - Check out the [demos](../demos) for working examples
-- Read about [Best Practices](../../docs/martini-kit-sdk-v2/05-best-practices.md)
+- Read about [Best Practices](https://martini-kit.com/docs/latest/guides/optimization)
 
 ## License
 

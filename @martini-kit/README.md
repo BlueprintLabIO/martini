@@ -151,9 +151,10 @@ const transport = new WebSocketTransport({ url: 'wss://game.com' });
 
 | Package | Purpose | Status |
 |---------|---------|--------|
-| [@martini-kit/core](../core) | Core state sync engine | ✅ Stable (96%+ test coverage) |
-| [@martini-kit/phaser](../phaser) | Phaser 3 adapter with auto sprite sync | ✅ Stable |
-| [@martini-kit/transport-trystero](../transport-trystero) | P2P WebRTC transport | ✅ Stable |
+| [@martini-kit/core](./core) | Core state sync engine | ✅ Stable (96%+ test coverage) |
+| [@martini-kit/phaser](./phaser) | Phaser 3 adapter with auto sprite sync | ✅ Stable |
+| [@martini-kit/transport-local](./transport-local) | Shared-memory transport for tests/demos |
+| [@martini-kit/transport-trystero](./transport-trystero) | P2P WebRTC transport | ✅ Stable |
 | @martini-kit/transport-ws | WebSocket transport | 🚧 Coming Soon |
 | @martini-kit/unity | Unity C# bindings | 📋 Planned |
 | @martini-kit/godot | Godot GDScript bindings | 📋 Planned |
@@ -201,40 +202,32 @@ const transport = new WebSocketTransport({ url: 'wss://game.com' });
 ## Documentation
 
 ### Getting Started
-- **[Quick Start Guide](./martini-kit-sdk-v2/quick-start.md)** - 5-minute tutorial
-- **[Core Concepts](./martini-kit-sdk-v2/01-core-concepts.md)** - Mental model
-- **[Fire Boy & Water Girl Demo](../demo-vite)** - Complete working example
+- **[Quick Start Guide](https://martini-kit.com/docs/latest/getting-started/quick-start)** - 5-minute tutorial
+- **[Core Concepts](https://martini-kit.com/docs/latest/concepts)** - Mental model
+- **[Examples overview](https://martini-kit.com/docs/latest/examples/overview)** - Playable demos and sample code
 
 ### API Reference
-- **[@martini-kit/core API](./martini-kit-sdk-v2/api-reference-core.md)** - defineGame, GameRuntime, state sync
-- **[Phaser Adapter](./martini-kit-sdk-v2/phaser-adapter.md)** - Auto sprite syncing
-- **[Transports](./martini-kit-sdk-v2/transports.md)** - P2P, WebSocket, custom
+- **[@martini-kit/core API](https://martini-kit.com/docs/latest/api/core)** - defineGame, GameRuntime, state sync
+- **[Phaser Adapter](https://martini-kit.com/docs/latest/api/phaser)** - Auto sprite syncing
+- **[Transports](https://martini-kit.com/docs/latest/api/transports)** - P2P, WebSocket, custom
 
 ### Guides
-- **[Platform Comparison](./martini-kit-sdk-v2/platform-comparison.md)** - vs Rune, Photon, Colyseus
-- **[Migration from gameAPI](./martini-kit-sdk-v2/migration-from-gameapi.md)** - Upgrade guide
+- **[Transport layer](https://martini-kit.com/docs/latest/concepts/transport-layer)** - Choosing networking options
+- **[Optimization guide](https://martini-kit.com/docs/latest/guides/optimization)** - Performance and best practices
 
 ---
 
 ## Examples
 
-### Fire Boy & Water Girl
+Explore interactive examples:
+- [Examples overview](https://martini-kit.com/docs/latest/examples/overview) - Playable demos built with martini-kit
+- [Live preview](https://martini-kit.com/preview) - Try transports in the browser
 
-Complete 2-player cooperative game:
-
+Run the docs/demos app locally:
 ```bash
-cd @martini-kit/demo-vite
+cd @martini-kit/demos
 pnpm dev
 ```
-
-**Features:**
-- URL-based host selection (Jackbox-style)
-- Phaser physics (gravity, collisions)
-- P2P networking via Trystero
-- Automatic sprite syncing
-- Input actions for movement
-
-[View Source](../demo-vite/main.js)
 
 ---
 
@@ -310,7 +303,7 @@ Developers shouldn't write networking logic:
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](../../CONTRIBUTING.md).
+We welcome contributions! See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 **Areas needing help:**
 - WebSocket transport implementation
@@ -324,7 +317,7 @@ We welcome contributions! See [CONTRIBUTING.md](../../CONTRIBUTING.md).
 ## Community & Support
 
 - **Documentation:** You're reading it!
-- **Demo:** [@martini-kit/demo-vite](../demo-vite)
+- **Demo:** [@martini-kit/demos](./demos)
 - **Issues:** [GitHub Issues](https://github.com/BlueprintLabIO/martini/issues)
 - **Tests:** Run `pnpm test` in any package
 
@@ -332,7 +325,7 @@ We welcome contributions! See [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## License
 
-MIT License - see [LICENSE](../../LICENSE)
+MIT License - see [LICENSE](../LICENSE)
 
 ---
 
@@ -346,4 +339,4 @@ Built with inspiration from:
 
 ---
 
-**Ready to build multiplayer games?** Start with the [Quick Start Guide](./martini-kit-sdk-v2/quick-start.md)!
+**Ready to build multiplayer games?** Start with the [Quick Start Guide](https://martini-kit.com/docs/latest/getting-started/quick-start)!

@@ -455,7 +455,7 @@ const transport = new ColyseusTransport(room);
 PhaserAdapter.start({ game, transport });
 ```
 
-See [08-platform-comparison.md](../../docs/martini-kit-sdk-v2/08-platform-comparison.md) for more integration patterns.
+See the [transport layer guide](https://martini-kit.com/docs/latest/concepts/transport-layer) for more integration patterns.
 
 ---
 
@@ -522,7 +522,7 @@ Contributions welcome! Please:
 2. Update this README
 3. Run `pnpm test` before submitting PR
 
-See [CONTRIBUTING.md](../../../CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ---
 
